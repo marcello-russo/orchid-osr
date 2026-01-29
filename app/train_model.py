@@ -11,6 +11,7 @@ from app.preprocessing_tools.reproducibility import set_seed, seed_worker
 import numpy as np
 import random
 import os
+import copy
 
 config = dotenv_values(".env") # Non più necessario, veniva usato in precedenza quando i parametri venivano passati tramite file .env e non all'interno del notebook
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -18,18 +19,22 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 def train_model(model, train_loader, val_loader, criterion, optimizer, scheduler, device, num_epochs, classSize, modelPath):
     lastF1Score = 0
+    best_model_wts = copy.deepcopy(model.state_dict())
     for epoch in range(num_epochs):
         print(f'Epoch {epoch}/{num_epochs}')
         running_loss = train_one_epoch(model, train_loader, criterion, optimizer, device)
         _, actualF1Score, _, _, val_loss = validate_one_epoch(model, val_loader, criterion, device, classSize)
         if actualF1Score >= lastF1Score or epoch < 5:
             lastF1Score = actualF1Score
-            highest_f1_model = model          
+            best_model_wts = copy.deepcopy(model.state_dict())
             logging.info(f'Saving model with F1 Score: {actualF1Score}')
         scheduler.step(val_loss)
-    saveModel(highest_f1_model, modelPath)
+    
     saveModel(model, modelPath.replace('.pt', '_last.pt'))
-    return highest_f1_model
+    model.load_state_dict(best_model_wts)
+    saveModel(model, modelPath)
+    
+    return model
 
 def train_one_epoch(model, train_loader, criterion, optimizer, device):
     model.train()
