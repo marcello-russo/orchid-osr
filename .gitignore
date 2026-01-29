@@ -1,0 +1,26 @@
+
+# Data and Models
+dataset/
+models/
+inference/
+results/
+logs/
+
+# Environment and Secrets
+.env
+
+# Docker artifacts
+ProjectDocker/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.ipynb_checkpoints/
+
+# IDEs
+.vscode/
+.idea/
+
+# System
+.DS_Store
