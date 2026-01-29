@@ -70,9 +70,11 @@ def calculate_fresh_mean_std(loader):
     return mean, std
 
 def get_mean():
+    config = dotenv_values(".env")
     return [float(x) for x in config['MEAN'].split()]
 
 def get_std():
+    config = dotenv_values(".env")
     return [float(x) for x in config['STD'].split()]
 
 def converto_to_rgb(x):

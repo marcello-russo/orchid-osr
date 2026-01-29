@@ -47,7 +47,7 @@ def getTransforms(width, height, shouldNormalize, mean, std):
 
 def getDataset(path, width, height, shouldNormalize, mean=None, std=None):
     # ImageFolderWithName è una classe che estende ImageFolder, le trasformazioni vengono applicate nell'ordine in cui vengono definite
-    dataset = ImageFolderWithName(path, transform=getTransforms(width, height, shouldNormalize, mean, std), allow_empty=True)
+    dataset = ImageFolderWithName(path, transform=getTransforms(width, height, shouldNormalize, mean, std))
     return dataset
 
 
