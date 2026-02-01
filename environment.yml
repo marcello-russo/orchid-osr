@@ -1,0 +1,32 @@
+name: orchid-mps
+channels:
+  - pytorch
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.10
+  # PyTorch with MPS support (on Mac arm64, default pytorch build supports MPS)
+  - pytorch
+  - torchvision
+  - torchaudio
+  # Core Data Science / CV
+  - numpy
+  - pandas
+  - matplotlib
+  - scikit-learn
+  - pillow
+  - opencv
+  # App / Notebook
+  - flask
+  - jupyter
+  - notebook
+  # Utilities
+  - python-dotenv
+  - captum
+  # Dependencies best installed via pip or not standard in main conda channels
+  - pip
+  - pip:
+    - torcheval
+    # 'dotenv' is often a mistake for 'python-dotenv' in requirements.txt. 
+    # Since python-dotenv provides the 'dotenv' module used in the code, 
+    # ensuring python-dotenv is installed (above) is usually sufficient.
