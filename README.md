@@ -1,71 +1,150 @@
+# Orchid Classification with ResNet18
 
-# ResNet18 Orchid Classification Project
+A deep learning pipeline for classifying orchid species of the genus *Ophrys* using transfer learning with ResNet18.
 
-This project implements a ResNet18-based image classification pipeline for orchid species. It is containerized using Podman (compatible with Docker) and includes a complete workflow from data augmentation to training and inference.
+📄 **Related Paper:** [ScienceDirect - S2590005625001079](https://www.sciencedirect.com/science/article/pii/S2590005625001079)
 
-## 🚀 Getting Started
+---
+
+## Credits
+
+| Role | Name |
+|------|------|
+| Original Research & Implementation | **Davide Di Pierro** (UNINA) |
+| Repository Maintainer | Marcello Russo |
+
+This project extends the original thesis work by Davide Di Pierro at Università degli Studi di Napoli Federico II.
+
+---
+
+## Species Classified
+
+| Class | Scientific Name |
+|-------|-----------------|
+| O. exaltata | *Ophrys exaltata* |
+| O. garganica | *Ophrys garganica* |
+| O. incubacea | *Ophrys incubacea* |
+| O. majellensis | *Ophrys majellensis* |
+| O. sphegodes | *Ophrys sphegodes* |
+| O. sphegodes_Palena | *Ophrys sphegodes* (Palena variant) |
+
+---
+
+## Performance
+
+### Original Implementation (Davide Di Pierro)
+
+| Phase | Duration |
+|-------|----------|
+| Augmentation | ~118 min |
+| Normalization | ~20 sec |
+| Preprocessing | ~77 sec |
+| Training (26 epochs) | ~30 min |
+| Testing | ~27 min |
+| **Total** | **~3 hours** |
+
+| Metric | Score |
+|--------|-------|
+| Accuracy | TBD |
+| F1 Score (Macro) | TBD |
+| F1 Score (Micro) | TBD |
+| Precision | TBD |
+| Recall | TBD |
+
+### Current Implementation
+
+*Results will be added after re-running the pipeline.*
+
+---
+
+## Changelog
+
+| Date | Author | Description |
+|------|--------|-------------|
+| 2026-01-29 | Davide Di Pierro | Initial implementation and thesis defense |
+| 2026-02-23 | Marcello Russo | Repository setup, fixed timing system, added clean notebook |
+| | | |
+
+---
+
+## Quick Start
 
 ### Prerequisites
-- **Linux Environment** (Tested on Ubuntu)
-- **Podman** (System installation via APT recommended)
-- **NVIDIA GPU** & Drivers (for training)
-- **NVIDIA Container Toolkit**
+- Linux (tested on Ubuntu/Pop!_OS)
+- Podman (or Docker)
+- NVIDIA GPU + Drivers + Container Toolkit
 
-### Installation
+### Run
 
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/marcellorussox/orchid-dipierro.git
-    cd orchid-dipierro
-    ```
+```bash
+# Clone the repository
+git clone https://github.com/marcellorussox/orchid-dipierro.git
+cd orchid-dipierro
 
-2.  **Start the environment:**
-    The project uses `podman-compose` to manage the container.
-    ```bash
-    podman compose up -d --build
-    ```
-    This command will:
-    *   Build the Docker image (optimised with PyTorch & CUDA 12.4).
-    *   Mount the necessary volumes (`dataset`, `models`, `logs`, `results`).
-    *   Start the Jupyter Notebook server on port **8888**.
+# Start the container
+./run_container.sh
 
-3.  **Access the Notebook:**
-    Open your browser or VS Code and connect to:
-    `http://localhost:8888`
+# Open Jupyter
+# http://localhost:8888
+```
 
-## 📊 Project Workflow
+### Notebooks
 
-The core logic is contained in `notebook.ipynb`. The workflow consists of:
+| File | Description |
+|------|-------------|
+| `notebook.ipynb` | Original notebook (fixed timing) |
+| `notebook_clean.ipynb` | Clean restructured version |
 
-1.  **Configuration**: Setup of paths, hyperparameters, and device consistency.
-2.  **Augmentation**: Dynamic data augmentation to balance classes (saved to `dataset/augmented`).
-3.  **Normalization**: Calculation of Mean and STD for the dataset.
-4.  **Preprocessing**: Conversion of images to tensors (saved to `dataset/processed`).
-5.  **Training**: Fine-tuning of the ResNet18 model.
-6.  **Testing**: Evaluation of the model on the test set.
+---
 
-## ⏱️ Performance Logging
+## Pipeline
 
-The notebook is instrumented to measure execution time for critical blocks.
-The timing data is printed to the console and automatically saved to a CSV file on the host:
+```
+Raw Images → Augmentation → Normalization → Preprocessing → Training → Testing
+```
 
-*   **Log File**: `logs/timing_log.csv`
-*   **Format**: `Timestamp, Block Name, Duration (s)`
+1. **Augmentation**: Balance classes with flips, rotations
+2. **Normalization**: Calculate mean/std for the dataset
+3. **Preprocessing**: Convert images to tensors
+4. **Training**: Fine-tune ResNet18 (pretrained on ImageNet)
+5. **Testing**: Evaluate on test set with confusion matrix
 
-## 📂 Directory Structure
+---
 
-*   `app/`: Source code for model, training, and preprocessing logic.
-    *   `timing.py`: Utility functions for execution timing and logging.
-*   `dataset/`: Contains raw, augmented, and processed data.
-*   `models/`: Stores trained model checkpoints (`.pt` files).
-*   `logs/`: persistent storage for execution logs.
-*   `results/`: Output images and inference results.
-*   `ProjectDocker/`: Original docker context (legacy).
-*   `docker-compose.yaml`: Service definition.
-*   `dockerfile`: Container build definition.
+## Project Structure
 
-## 🛠️ Tech Stack
-*   **PyTorch**: Deep Learning framework.
-*   **Podman**: Container runtime.
-*   **Jupyter**: Interactive development environment.
-*   **Python 3.10**: Programming language.
+```
+├── app/                    # Source code
+│   ├── preprocessing_tools/
+│   ├── explenability_tools/
+│   ├── train_model.py
+│   ├── test_model.py
+│   └── timing.py
+├── dataset/
+│   ├── raw/               # Original images by class
+│   ├── augmented/         # Augmented train/val/test
+│   └── processed/         # Saved tensors (.pt)
+├── models/                # Trained models
+├── logs/                  # Timing logs
+├── results/               # Test outputs
+├── notebook.ipynb         # Original notebook
+├── notebook_clean.ipynb   # Clean notebook
+├── Dockerfile
+└── docker-compose.yaml
+```
+
+---
+
+## Tech Stack
+
+- **PyTorch 2.1.0** - Deep learning framework
+- **ResNet18** - CNN architecture (pretrained on ImageNet)
+- **Captum** - Model explainability (Integrated Gradients, Occlusion)
+- **Podman** - Container runtime with GPU support
+- **CUDA 11.8** - GPU acceleration
+
+---
+
+## License
+
+See [LICENSE](LICENSE) for details.
