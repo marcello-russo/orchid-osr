@@ -142,7 +142,11 @@ def modelLoader(MODEL_PATH, CLASS_SIZE, device):
     return model
 
 def deviceLoader():
-    return torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    if torch.cuda.is_available():
+        return torch.device('cuda')
+    elif torch.backends.mps.is_available():
+        return torch.device('mps')
+    return torch.device('cpu')
 
 
 # Questa funzione non è disponibile nel notebook jupyter, permette di visualizzare le immagini del dataset di test con un'interfaccia interattiva 
@@ -150,7 +154,12 @@ def deviceLoader():
 # Questa funzione non è stata inserita nel notebook jupyter perché non sono riuscito ad implementare l'interfaccia interattiva in un notebook
 def testModelWrapper(CLASS_NAMES, PROCESSED_DATA_TEST_PATH, MODEL_PATH, BATCH_SIZE, NUM_WORKERS, DESTINATION_PATH, SLIDING_WINDOW_SIZE, STRIDE):
     CLASS_SIZE = len(CLASS_NAMES)
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    if torch.cuda.is_available():
+        device = torch.device('cuda')
+    elif torch.backends.mps.is_available():
+        device = torch.device('mps')
+    else:
+        device = torch.device('cpu')
     model = models.resnet18()
     model.fc = nn.Linear(model.fc.in_features, CLASS_SIZE)
     model_dict = torch.load(MODEL_PATH, weights_only=False)

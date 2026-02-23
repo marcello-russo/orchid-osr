@@ -33,11 +33,12 @@ def testInference(test_dataset, model, device, classNames):
 
 
 def loadDevice(forceCpu=False):
-    if torch.cuda.is_available() and not forceCpu:
-        device = torch.device('cuda')
-    else:
-        device = torch.device('cpu')
-    return device
+    if not forceCpu:
+        if torch.cuda.is_available():
+            return torch.device('cuda')
+        elif torch.backends.mps.is_available():
+            return torch.device('mps')
+    return torch.device('cpu')
 
 def loadModel(modelPath, classSize, device):
     model = models.resnet18()
