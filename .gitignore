@@ -5,6 +5,7 @@ models/
 inference/
 results/
 logs/
+*_og_old/
 
 # Environment and Secrets
 .env
