@@ -43,13 +43,43 @@ This project extends the original thesis work by Davide Di Pierro at Università
 | Testing | ~27 min |
 | **Total** | **~3 hours** |
 
-| Metric | Score |
-|--------|-------|
-| Accuracy | TBD |
-| F1 Score (Macro) | TBD |
-| F1 Score (Micro) | TBD |
-| Precision | TBD |
-| Recall | TBD |
+### Overall Metrics
+
+| Metric (Macro) | Score |
+|----------------|-------|
+| Accuracy | 89.19% |
+| F1 Score | 88.78% |
+| Precision | 88.52% |
+| Recall | 89.19% |
+
+| Metric (Micro) | Score |
+|----------------|-------|
+| Accuracy | 91.16% |
+| F1 Score | 91.16% |
+| Precision | 91.16% |
+| Recall | 91.16% |
+
+### Per-Class Results
+
+| Class | Accuracy | F1 Score | Precision | Recall |
+|-------|----------|----------|-----------|--------|
+| O. exaltata | 92.86% | 92.86% | 92.86% | 92.86% |
+| O. garganica | 92.00% | 92.93% | 93.88% | 92.00% |
+| O. incubacea | 93.55% | 87.88% | 82.86% | 93.55% |
+| O. majellensis | 92.50% | 93.67% | 94.87% | 92.50% |
+| O. sphegodes | 70.00% | 68.29% | 66.67% | 70.00% |
+| O. sphegodes_Palena | 94.23% | 97.03% | 100.00% | 94.23% |
+
+### Confusion Matrix
+
+```
+[[52,  0,  0,  0,  4,  0],
+ [ 0, 46,  4,  0,  0,  0],
+ [ 0,  2, 29,  0,  0,  0],
+ [ 0,  0,  0, 37,  3,  0],
+ [ 4,  1,  0,  1, 14,  0],
+ [ 0,  0,  2,  1,  0, 49]]
+```
 
 ### Current Implementation
 
