@@ -108,11 +108,11 @@ This project extends the original thesis work by Davide Di Pierro at Università
 
 ```bash
 # Clone the repository
-git clone https://github.com/marcellorussox/orchid-dipierro.git
+git clone https://github.com/marcello-russo/orchid-dipierro.git
 cd orchid-dipierro
 
 # Start the container
-./run_container.sh
+podman compose up -d --build
 
 # Open Jupyter
 # http://localhost:8888
