@@ -1,10 +1,12 @@
 
 # Data and Models
-dataset/
-models/
-inference/
-results/
-logs/
+dataset*/
+models*/
+inference*/
+results*/
+logs*/
+experiments/
+analysis/
 
 # Versioned outputs (_1, _2, etc.)
 *_1/
