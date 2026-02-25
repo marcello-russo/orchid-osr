@@ -30,6 +30,44 @@ Questo progetto estende il lavoro di tesi originale di Davide Di Pierro presso l
 
 ---
 
+## Galleria
+
+### Immagini Raw
+
+| O. exaltata | O. garganica | O. incubacea |
+|:-----------:|:------------:|:------------:|
+| ![](docs/images/raw/O_exaltata.png) | ![](docs/images/raw/O_garganica.png) | ![](docs/images/raw/O_incubacea.png) |
+
+| O. majellensis | O. sphegodes | O. sphegodes_Palena |
+|:--------------:|:------------:|:-------------------:|
+| ![](docs/images/raw/O_majellensis.jpg) | ![](docs/images/raw/O_sphegodes.png) | ![](docs/images/raw/O_sphegodes_Palena.png) |
+
+### Immagini Augmentate
+
+Dopo l'augmentation (flip, rotazioni) per il bilanciamento delle classi:
+
+| O. exaltata | O. garganica | O. incubacea |
+|:-----------:|:------------:|:------------:|
+| ![](docs/images/augmented/O_exaltata.jpg) | ![](docs/images/augmented/O_garganica.jpg) | ![](docs/images/augmented/O_incubacea.jpg) |
+
+| O. majellensis | O. sphegodes | O. sphegodes_Palena |
+|:--------------:|:------------:|:-------------------:|
+| ![](docs/images/augmented/O_majellensis.jpg) | ![](docs/images/augmented/O_sphegodes.jpg) | ![](docs/images/augmented/O_sphegodes_Palena.jpg) |
+
+### Output del Modello
+
+Risultati della classificazione con visualizzazione sliding window:
+
+| O. exaltata | O. garganica | O. incubacea |
+|:-----------:|:------------:|:------------:|
+| ![](docs/images/results/O_exaltata.png) | ![](docs/images/results/O_garganica.png) | ![](docs/images/results/O_incubacea.png) |
+
+| O. majellensis | O. sphegodes | O. sphegodes_Palena |
+|:--------------:|:------------:|:-------------------:|
+| ![](docs/images/results/O_majellensis.png) | ![](docs/images/results/O_sphegodes.png) | ![](docs/images/results/O_sphegodes_Palena.png) |
+
+---
+
 ## Prestazioni
 
 ### Implementazione Originale (Davide Di Pierro)
@@ -108,8 +146,8 @@ Questo progetto estende il lavoro di tesi originale di Davide Di Pierro presso l
 
 ```bash
 # Clona la repository
-git clone https://github.com/marcello-russo/orchid-dipierro.git
-cd orchid-dipierro
+git clone https://github.com/marcello-russo/OrchID.git
+cd OrchID
 
 # Avvia il container
 podman compose up -d --build

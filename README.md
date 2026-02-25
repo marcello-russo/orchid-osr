@@ -30,6 +30,44 @@ This project extends the original thesis work by Davide Di Pierro at Università
 
 ---
 
+## Gallery
+
+### Raw Images
+
+| O. exaltata | O. garganica | O. incubacea |
+|:-----------:|:------------:|:------------:|
+| ![](docs/images/raw/O_exaltata.png) | ![](docs/images/raw/O_garganica.png) | ![](docs/images/raw/O_incubacea.png) |
+
+| O. majellensis | O. sphegodes | O. sphegodes_Palena |
+|:--------------:|:------------:|:-------------------:|
+| ![](docs/images/raw/O_majellensis.jpg) | ![](docs/images/raw/O_sphegodes.png) | ![](docs/images/raw/O_sphegodes_Palena.png) |
+
+### Augmented Images
+
+After augmentation (flips, rotations) for class balancing:
+
+| O. exaltata | O. garganica | O. incubacea |
+|:-----------:|:------------:|:------------:|
+| ![](docs/images/augmented/O_exaltata.jpg) | ![](docs/images/augmented/O_garganica.jpg) | ![](docs/images/augmented/O_incubacea.jpg) |
+
+| O. majellensis | O. sphegodes | O. sphegodes_Palena |
+|:--------------:|:------------:|:-------------------:|
+| ![](docs/images/augmented/O_majellensis.jpg) | ![](docs/images/augmented/O_sphegodes.jpg) | ![](docs/images/augmented/O_sphegodes_Palena.jpg) |
+
+### Model Output
+
+Classification results with sliding window visualization:
+
+| O. exaltata | O. garganica | O. incubacea |
+|:-----------:|:------------:|:------------:|
+| ![](docs/images/results/O_exaltata.png) | ![](docs/images/results/O_garganica.png) | ![](docs/images/results/O_incubacea.png) |
+
+| O. majellensis | O. sphegodes | O. sphegodes_Palena |
+|:--------------:|:------------:|:-------------------:|
+| ![](docs/images/results/O_majellensis.png) | ![](docs/images/results/O_sphegodes.png) | ![](docs/images/results/O_sphegodes_Palena.png) |
+
+---
+
 ## Performance
 
 ### Original Implementation (Davide Di Pierro)
@@ -108,8 +146,8 @@ This project extends the original thesis work by Davide Di Pierro at Università
 
 ```bash
 # Clone the repository
-git clone https://github.com/marcello-russo/orchid-dipierro.git
-cd orchid-dipierro
+git clone https://github.com/marcello-russo/OrchID.git
+cd OrchID
 
 # Start the container
 podman compose up -d --build
