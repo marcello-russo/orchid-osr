@@ -2,7 +2,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: dockerfile
+      dockerfile: Dockerfile
     container_name: pytorch_app
     working_dir: /workspace
     volumes:
