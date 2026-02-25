@@ -5,7 +5,10 @@ models/
 inference/
 results/
 logs/
-*_og_old/
+
+# Versioned outputs (_1, _2, etc.)
+*_1/
+*_2/
 
 # Environment and Secrets
 .env
