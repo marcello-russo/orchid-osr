@@ -1,23 +1,36 @@
+# Development compose - fast iteration with volume mounts
 services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile
-    container_name: pytorch_app
+      dockerfile: Dockerfile.dev
+    container_name: pytorch_dev
     working_dir: /workspace
     volumes:
-      - ./dataset:/workspace/dataset
-      - ./models:/workspace/models
-      - ./inference:/workspace/inference
+      # Code - hot reload enabled
       - ./app:/workspace/app
       - ./requirements.txt:/workspace/requirements.txt
-      - ./notebook.ipynb:/workspace/notebook.ipynb
-      - ./.env:/workspace/.env
+      # Data (read-only for safety)
+      - ./dataset:/workspace/dataset:ro
+      - ./models:/workspace/models:ro
+      - ./models_1:/workspace/models_1:ro
+      # Output directories
+      - ./inference:/workspace/inference
       - ./logs:/workspace/logs
       - ./results:/workspace/results
-    ports:
-      - "8888:8888"
+      # Notebooks
+      - ./notebook_clean.ipynb:/workspace/notebook_clean.ipynb
+      # Env
+      - ./.env:/workspace/.env:ro
     shm_size: "16g"
+    environment:
+      - PYTHONUNBUFFERED=1
+    develop:
+      watch:
+        - action: rebuild
+          path: requirements.txt
     devices:
       - nvidia.com/gpu=all
-    command: [ "jupyter", "notebook", "--ip=0.0.0.0", "--port=8888", "--allow-root", "--no-browser", "--NotebookApp.token=''", "--NotebookApp.password=''" ]
+    # Interactive shell - use: podman compose -f docker-compose.dev.yaml run app bash
+    stdin_open: true
+    tty: true
