@@ -29,8 +29,8 @@ services:
       watch:
         - action: rebuild
           path: requirements.txt
+    ports:
+      - "8888:8888"
     devices:
       - nvidia.com/gpu=all
-    # Interactive shell - use: podman compose -f docker-compose.dev.yaml run app bash
-    stdin_open: true
-    tty: true
+    command: ["jupyter", "notebook", "--ip=0.0.0.0", "--port=8888", "--allow-root", "--no-browser", "--NotebookApp.token=''", "--NotebookApp.password=''"]
