@@ -1,36 +1,23 @@
-# Development compose - fast iteration with volume mounts
 services:
   app:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: pytorch_dev
+    container_name: pytorch_app
     working_dir: /workspace
     volumes:
-      # Code - hot reload enabled
+      - ./dataset:/workspace/dataset
+      - ./models:/workspace/models
+      - ./inference:/workspace/inference
       - ./app:/workspace/app
       - ./requirements.txt:/workspace/requirements.txt
-      # Data (read-only for safety)
-      - ./dataset:/workspace/dataset:ro
-      - ./models:/workspace/models:ro
-      - ./models_1:/workspace/models_1:ro
-      # Output directories
-      - ./inference:/workspace/inference
+      - ./notebook_clean.ipynb:/workspace/notebook_clean.ipynb
+      - ./.env:/workspace/.env
       - ./logs:/workspace/logs
       - ./results:/workspace/results
-      # Notebooks
-      - ./notebook_clean.ipynb:/workspace/notebook_clean.ipynb
-      # Env
-      - ./.env:/workspace/.env:ro
-    shm_size: "16g"
-    environment:
-      - PYTHONUNBUFFERED=1
-    develop:
-      watch:
-        - action: rebuild
-          path: requirements.txt
     ports:
       - "8888:8888"
+    shm_size: "16g"
     devices:
       - nvidia.com/gpu=all
-    command: ["jupyter", "notebook", "--ip=0.0.0.0", "--port=8888", "--allow-root", "--no-browser", "--NotebookApp.token=''", "--NotebookApp.password=''"]
+    command: [ "jupyter", "notebook", "--ip=0.0.0.0", "--port=8888", "--allow-root", "--no-browser", "--NotebookApp.token=''", "--NotebookApp.password=''" ]
