@@ -12,9 +12,34 @@ import numpy as np
 import random
 import os
 import copy
+from collections import Counter
 
 config = dotenv_values(".env") # Non più necessario, veniva usato in precedenza quando i parametri venivano passati tramite file .env e non all'interno del notebook
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+
+def compute_class_weights(dataset, num_classes, device):
+    """Calcola i class weights basati sulla distribuzione delle classi nel dataset."""
+    # Conta le occorrenze di ogni classe
+    labels = [dataset[i][1] for i in range(len(dataset))]
+    class_counts = Counter(labels)
+
+    # Calcola i pesi usando la formula: weight[i] = total_samples / (num_classes * count[i])
+    total_samples = len(dataset)
+    weights = []
+    for i in range(num_classes):
+        count = class_counts.get(i, 1)  # Default a 1 se la classe non è presente
+        weight = total_samples / (num_classes * count)
+        weights.append(weight)
+
+    # Normalizza i pesi così che la media sia 1
+    weights = np.array(weights)
+    weights = weights / weights.mean()
+
+    logging.info(f'Class counts: {dict(sorted(class_counts.items()))}')
+    logging.info(f'Class weights: {weights}')
+
+    return torch.tensor(weights, dtype=torch.float32).to(device)
 
 
 def train_model(model, train_loader, val_loader, criterion, optimizer, scheduler, device, num_epochs, classSize, modelPath):
@@ -80,7 +105,7 @@ def validate_one_epoch(model, val_loader, criterion, device, classSize):
     return val_accuracy, f1_score, precision, recall, val_loss
 
 
-def loadAndTrain(device, classSize, processedDataTrainPath, processedDataValidationPath, batchSize, epoch, numWorker, learningRate, pretrained, modelPath, seed): 
+def loadAndTrain(device, classSize, processedDataTrainPath, processedDataValidationPath, batchSize, epoch, numWorker, learningRate, pretrained, modelPath, seed, use_class_weights=True):
     set_seed(seed)
     train_dataset = getDatasetFromFile(processedDataTrainPath)
     val_dataset = getDatasetFromFile(processedDataValidationPath)
@@ -99,7 +124,16 @@ def loadAndTrain(device, classSize, processedDataTrainPath, processedDataValidat
     model.fc = nn.Linear(model.fc.in_features, classSize)
     model = model.to(device)
     print(model)
-    criterion = torch.nn.CrossEntropyLoss().to(device)
+
+    # Calcola i class weights se richiesto
+    if use_class_weights:
+        class_weights = compute_class_weights(train_dataset, classSize, device)
+        criterion = torch.nn.CrossEntropyLoss(weight=class_weights).to(device)
+        logging.info('Using class weights in CrossEntropyLoss')
+    else:
+        criterion = torch.nn.CrossEntropyLoss().to(device)
+        logging.info('Using standard CrossEntropyLoss (no class weights)')
+
     optimizer = torch.optim.Adam(model.parameters(), lr=learningRate)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=3)
 

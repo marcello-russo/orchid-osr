@@ -12,6 +12,7 @@ services:
       - ./app:/workspace/app
       - ./requirements.txt:/workspace/requirements.txt
       - ./notebook_clean.ipynb:/workspace/notebook_clean.ipynb
+      - ./run_pipeline.py:/workspace/run_pipeline.py
       - ./.env:/workspace/.env
       - ./logs:/workspace/logs
       - ./results:/workspace/results
