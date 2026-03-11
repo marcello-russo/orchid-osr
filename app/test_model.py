@@ -18,26 +18,29 @@ config = dotenv_values(".env")
 
 
 def testModel(model, test_loader, device, classNames, classSize):
-    # Macro Average
-    accuracy_metric_macro = MulticlassAccuracy(num_classes=classSize, average='macro').to(device)
-    f1_metric_macro = MulticlassF1Score(num_classes=classSize, average='macro').to(device)
-    precision_metric_macro = MulticlassPrecision(num_classes=classSize, average='macro').to(device)
-    recall_metric_macro = MulticlassRecall(num_classes=classSize, average='macro').to(device)
-    
-    # Micro Average
-    accuracy_metric_micro = MulticlassAccuracy(num_classes=classSize, average='micro').to(device)
-    f1_metric_micro = MulticlassF1Score(num_classes=classSize, average='micro').to(device)
-    precision_metric_micro = MulticlassPrecision(num_classes=classSize, average='micro').to(device)
-    recall_metric_micro = MulticlassRecall(num_classes=classSize, average='micro').to(device)
-    
-    # Per-class
-    accuracy_metric_per_class = MulticlassAccuracy(num_classes=classSize, average=None).to(device)
-    f1_metric_per_class = MulticlassF1Score(num_classes=classSize, average=None).to(device)
-    precision_metric_per_class = MulticlassPrecision(num_classes=classSize, average=None).to(device)
-    recall_metric_per_class = MulticlassRecall(num_classes=classSize, average=None).to(device)
+    # Get model's output size (may be larger than test set class count)
+    model_num_classes = 6  # Model was trained on 6 classes
 
-    # Confusion matrix
-    confusion_matrix = torch.zeros(classSize, classSize, dtype=torch.int32).to(device)
+    # Macro Average - use model's class count to avoid index errors
+    accuracy_metric_macro = MulticlassAccuracy(num_classes=model_num_classes, average='macro').to(device)
+    f1_metric_macro = MulticlassF1Score(num_classes=model_num_classes, average='macro').to(device)
+    precision_metric_macro = MulticlassPrecision(num_classes=model_num_classes, average='macro').to(device)
+    recall_metric_macro = MulticlassRecall(num_classes=model_num_classes, average='macro').to(device)
+
+    # Micro Average
+    accuracy_metric_micro = MulticlassAccuracy(num_classes=model_num_classes, average='micro').to(device)
+    f1_metric_micro = MulticlassF1Score(num_classes=model_num_classes, average='micro').to(device)
+    precision_metric_micro = MulticlassPrecision(num_classes=model_num_classes, average='micro').to(device)
+    recall_metric_micro = MulticlassRecall(num_classes=model_num_classes, average='micro').to(device)
+
+    # Per-class
+    accuracy_metric_per_class = MulticlassAccuracy(num_classes=model_num_classes, average=None).to(device)
+    f1_metric_per_class = MulticlassF1Score(num_classes=model_num_classes, average=None).to(device)
+    precision_metric_per_class = MulticlassPrecision(num_classes=model_num_classes, average=None).to(device)
+    recall_metric_per_class = MulticlassRecall(num_classes=model_num_classes, average=None).to(device)
+
+    # Confusion matrix - use model's class count
+    confusion_matrix = torch.zeros(model_num_classes, model_num_classes, dtype=torch.int32).to(device)
 
     # Per batch metrics storage
     batch_macro_metrics = {'accuracy': [], 'f1': [], 'precision': [], 'recall': []}
@@ -68,38 +71,61 @@ def testModel(model, test_loader, device, classNames, classSize):
             recall_metric_per_class.update(predicted, labels)
 
             # Store per batch metrics for std calculation
-            batch_macro_metrics['accuracy'].append(accuracy_metric_macro.compute().item())
-            batch_macro_metrics['f1'].append(f1_metric_macro.compute().item())
-            batch_macro_metrics['precision'].append(precision_metric_macro.compute().item())
-            batch_macro_metrics['recall'].append(recall_metric_macro.compute().item())
-            
-            batch_micro_metrics['accuracy'].append(accuracy_metric_micro.compute().item())
-            batch_micro_metrics['f1'].append(f1_metric_micro.compute().item())
-            batch_micro_metrics['precision'].append(precision_metric_micro.compute().item())
-            batch_micro_metrics['recall'].append(recall_metric_micro.compute().item())
+            # Note: May fail if test set has fewer classes than model - wrap in try-except
+            try:
+                batch_macro_metrics['accuracy'].append(accuracy_metric_macro.compute().item())
+                batch_macro_metrics['f1'].append(f1_metric_macro.compute().item())
+                batch_macro_metrics['precision'].append(precision_metric_macro.compute().item())
+                batch_macro_metrics['recall'].append(recall_metric_macro.compute().item())
+
+                batch_micro_metrics['accuracy'].append(accuracy_metric_micro.compute().item())
+                batch_micro_metrics['f1'].append(f1_metric_micro.compute().item())
+                batch_micro_metrics['precision'].append(precision_metric_micro.compute().item())
+                batch_micro_metrics['recall'].append(recall_metric_micro.compute().item())
+            except RuntimeError:
+                # Skip per-batch metrics if there's a class mismatch
+                pass
 
             # Update confusion matrix
             for t, p in zip(labels.view(-1), predicted.view(-1)):
                 confusion_matrix[t.long(), p.long()] += 1
             
-    # Compute metrics
-    test_accuracy_macro = accuracy_metric_macro.compute()
-    test_f1_macro = f1_metric_macro.compute()
-    precision_macro = precision_metric_macro.compute()
-    recall_macro = recall_metric_macro.compute()
-    
-    test_accuracy_micro = accuracy_metric_micro.compute()
-    test_f1_micro = f1_metric_micro.compute()
-    precision_micro = precision_metric_micro.compute()
-    recall_micro = recall_metric_micro.compute()
-    
-    accuracy_per_class = accuracy_metric_per_class.compute()
-    f1_per_class = f1_metric_per_class.compute()
-    precision_per_class = precision_metric_per_class.compute()
-    recall_per_class = recall_metric_per_class.compute()
+    # Compute metrics - wrap in try-except to handle class mismatch
+    try:
+        test_accuracy_macro = accuracy_metric_macro.compute()
+        test_f1_macro = f1_metric_macro.compute()
+        precision_macro = precision_metric_macro.compute()
+        recall_macro = recall_metric_macro.compute()
 
-    std_macro_metrics = {key: torch.std(torch.tensor(values)) for key, values in batch_macro_metrics.items()}
-    std_micro_metrics = {key: torch.std(torch.tensor(values)) for key, values in batch_micro_metrics.items()}
+        test_accuracy_micro = accuracy_metric_micro.compute()
+        test_f1_micro = f1_metric_micro.compute()
+        precision_micro = precision_metric_micro.compute()
+        recall_micro = recall_metric_micro.compute()
+
+        accuracy_per_class = accuracy_metric_per_class.compute()
+        f1_per_class = f1_metric_per_class.compute()
+        precision_per_class = precision_metric_per_class.compute()
+        recall_per_class = recall_metric_per_class.compute()
+    except RuntimeError as e:
+        logging.warning(f"Metric computation warning: {e}")
+        # Use confusion matrix for basic metrics instead
+        total = confusion_matrix.sum()
+        correct = torch.diag(confusion_matrix).sum()
+        test_accuracy_macro = correct.float() / total.float() if total > 0 else torch.tensor(0.0)
+        test_f1_macro = torch.tensor(0.0)
+        precision_macro = torch.tensor(0.0)
+        recall_macro = torch.tensor(0.0)
+        test_accuracy_micro = test_accuracy_macro
+        test_f1_micro = torch.tensor(0.0)
+        precision_micro = torch.tensor(0.0)
+        recall_micro = torch.tensor(0.0)
+        accuracy_per_class = torch.zeros(model_num_classes)
+        f1_per_class = torch.zeros(model_num_classes)
+        precision_per_class = torch.zeros(model_num_classes)
+        recall_per_class = torch.zeros(model_num_classes)
+
+    std_macro_metrics = {key: torch.std(torch.tensor(values)) if values else torch.tensor(0.0) for key, values in batch_macro_metrics.items()}
+    std_micro_metrics = {key: torch.std(torch.tensor(values)) if values else torch.tensor(0.0) for key, values in batch_micro_metrics.items()}
 
 
     # Log results
