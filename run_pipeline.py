@@ -165,7 +165,7 @@ DEFAULT_CONFIG = {
     'epochs': 26,
     'learning_rate': 0.001,
     'pretrained': True,
-    'use_class_weights': True,
+    'use_class_weights': False,  # Disabilitato: usare augmentation bilanciata invece
     'force_cpu': False,
 
     # Testing
@@ -199,14 +199,40 @@ def setup_reproducibility(seed):
     set_seed(seed)
 
 
-def run_augmentation(config, metrics_logger=None):
-    """Phase 2.1: Augmentation, Splitting and Resize"""
+def run_augmentation(config, metrics_logger=None, force_clean=False):
     from app.preprocess_data import DynamicAugmentationWrapper
     from app.preprocessing_tools import rotation
 
+    logging.info(f"DEBUG: force_clean={force_clean}")
     logging.info("\n" + "="*50)
-    logging.info("PHASE: Augmentation")
+    logging.info("AUGMENTATION")
     logging.info("="*50)
+
+    augmented_path = config['augmented_data_path']
+    train_path = os.path.join(augmented_path, 'train')
+
+    # Check if augmentation already completed (all classes have ~280 images)
+    if os.path.exists(train_path) and not force_clean:
+        all_complete = True
+        for class_name in config['class_names']:
+            class_dir = os.path.join(train_path, class_name)
+            if os.path.exists(class_dir):
+                count = len([f for f in os.listdir(class_dir) if f.endswith(('.jpg', '.png', '.jpeg'))])
+                if count < 250:  # Allow some tolerance
+                    all_complete = False
+                    break
+            else:
+                all_complete = False
+                break
+
+        if all_complete:
+            logging.info('✓ Augmentation already completed, skipping')
+            return
+
+    # Clean output directory only if explicitly requested
+    if force_clean and os.path.exists(augmented_path):
+        shutil.rmtree(augmented_path)
+        logging.info(f'Cleaned directory: {augmented_path}')
 
     work_dir = 'work'
     augmentations = [
@@ -227,7 +253,8 @@ def run_augmentation(config, metrics_logger=None):
             config['width'],
             config['height'],
             False,  # dynamic_augmentation
-            augmentations
+            augmentations,
+            balanced=True  # Bilancia tutte le classi allo stesso numero
         )
 
         if os.path.exists(work_dir):
@@ -340,7 +367,7 @@ def run_preprocessing(config, mean, std, metrics_logger=None):
     logging.info('✓ Preprocessing completato')
 
 
-def run_training(config, metrics_logger=None):
+def run_training(config, metrics_logger=None, checkpoint_dir=None, start_epoch=0):
     """Phase 3: Train the model"""
     from app.train_model import loadAndTrain, saveModel
 
@@ -359,6 +386,9 @@ def run_training(config, metrics_logger=None):
     logging.info(f'Batch size: {config["batch_size_train"]}')
     logging.info(f'Learning rate: {config["learning_rate"]}')
 
+    if start_epoch > 0:
+        logging.info(f'Resuming from epoch {start_epoch}')
+
     with Timer('Training') as t:
         model = loadAndTrain(
             device,
@@ -372,7 +402,9 @@ def run_training(config, metrics_logger=None):
             config['pretrained'],
             config['model_path'],
             config['seed'],
-            config['use_class_weights']
+            config['use_class_weights'],
+            checkpoint_dir=checkpoint_dir,
+            start_epoch=start_epoch
         )
 
     saveModel(model, config['model_path'])
