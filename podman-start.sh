@@ -22,9 +22,12 @@ podman run -d \
   -v ./app:/workspace/app \
   -v ./requirements.txt:/workspace/requirements.txt \
   -v ./notebook_clean.ipynb:/workspace/notebook_clean.ipynb \
+  -v ./run_pipeline.py:/workspace/run_pipeline.py \
+  -v ./run_experiments.py:/workspace/run_experiments.py \
   -v ./.env:/workspace/.env \
   -v ./logs:/workspace/logs \
   -v ./results:/workspace/results \
+  -v ./experiments:/workspace/experiments \
   -p 8888:8888 \
   "$IMAGE_NAME" \
   jupyter notebook --ip=0.0.0.0 --port=8888 --allow-root --no-browser --NotebookApp.token='' --NotebookApp.password=''

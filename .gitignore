@@ -7,6 +7,7 @@ results*/
 logs*/
 experiments/
 analysis/
+archive/
 
 # Versioned outputs (_1, _2, etc.)
 *_1/
