@@ -42,23 +42,39 @@ def compute_class_weights(dataset, num_classes, device):
     return torch.tensor(weights, dtype=torch.float32).to(device)
 
 
-def train_model(model, train_loader, val_loader, criterion, optimizer, scheduler, device, num_epochs, classSize, modelPath):
+def train_model(model, train_loader, val_loader, criterion, optimizer, scheduler, device, num_epochs, classSize, modelPath, checkpoint_dir=None, start_epoch=0):
     lastF1Score = 0
     best_model_wts = copy.deepcopy(model.state_dict())
-    for epoch in range(num_epochs):
-        print(f'Epoch {epoch}/{num_epochs}')
+
+    for epoch in range(start_epoch, num_epochs):
+        print(f'Epoch {epoch+1}/{num_epochs}')
         running_loss = train_one_epoch(model, train_loader, criterion, optimizer, device)
         _, actualF1Score, _, _, val_loss = validate_one_epoch(model, val_loader, criterion, device, classSize)
+
         if actualF1Score >= lastF1Score or epoch < 5:
             lastF1Score = actualF1Score
             best_model_wts = copy.deepcopy(model.state_dict())
-            logging.info(f'Saving model with F1 Score: {actualF1Score}')
+            logging.info(f'Saving best model with F1 Score: {actualF1Score}')
+
         scheduler.step(val_loss)
-    
+
+        if checkpoint_dir and (epoch + 1) % 5 == 0:
+            os.makedirs(checkpoint_dir, exist_ok=True)
+            checkpoint_path = os.path.join(checkpoint_dir, f"checkpoint_epoch_{epoch+1}.pt")
+            torch.save({
+                'epoch': epoch + 1,
+                'model_state_dict': model.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                'scheduler_state_dict': scheduler.state_dict(),
+                'best_f1': lastF1Score,
+                'best_model_wts': best_model_wts,
+            }, checkpoint_path)
+            logging.info(f'Checkpoint saved at epoch {epoch+1}')
+
     saveModel(model, modelPath.replace('.pt', '_last.pt'))
     model.load_state_dict(best_model_wts)
     saveModel(model, modelPath)
-    
+
     return model
 
 def train_one_epoch(model, train_loader, criterion, optimizer, device):
@@ -105,7 +121,7 @@ def validate_one_epoch(model, val_loader, criterion, device, classSize):
     return val_accuracy, f1_score, precision, recall, val_loss
 
 
-def loadAndTrain(device, classSize, processedDataTrainPath, processedDataValidationPath, batchSize, epoch, numWorker, learningRate, pretrained, modelPath, seed, use_class_weights=True):
+def loadAndTrain(device, classSize, processedDataTrainPath, processedDataValidationPath, batchSize, epoch, numWorker, learningRate, pretrained, modelPath, seed, use_class_weights=False, checkpoint_dir=None, start_epoch=0):
     set_seed(seed)
     train_dataset = getDatasetFromFile(processedDataTrainPath)
     val_dataset = getDatasetFromFile(processedDataValidationPath)
@@ -137,7 +153,21 @@ def loadAndTrain(device, classSize, processedDataTrainPath, processedDataValidat
     optimizer = torch.optim.Adam(model.parameters(), lr=learningRate)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=3)
 
-    model = train_model(model, train_loader, val_loader, criterion, optimizer, scheduler, device, epoch, classSize, modelPath)
+    # Resume da checkpoint se necessario
+    if start_epoch > 0 and checkpoint_dir:
+        checkpoint_path = os.path.join(checkpoint_dir, f"checkpoint_epoch_{start_epoch}.pt")
+        if os.path.exists(checkpoint_path):
+            checkpoint = torch.load(checkpoint_path, map_location=device)
+            model.load_state_dict(checkpoint['model_state_dict'])
+            optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
+            best_model_wts = checkpoint.get('best_model_wts')
+            logging.info(f'Resumed from epoch {start_epoch}')
+        else:
+            logging.warning(f'Checkpoint not found: {checkpoint_path}, starting fresh')
+            start_epoch = 0
+
+    model = train_model(model, train_loader, val_loader, criterion, optimizer, scheduler, device, epoch, classSize, modelPath, checkpoint_dir, start_epoch)
 
     return model
 
