@@ -38,7 +38,10 @@ def show_image(image):
 # Questa funzione permette di applicare ulteriori trasformazioni alle immagini
 # In questo caso le immagini vengono convertite in tensori e normalizzate
 def getTransforms(width, height, shouldNormalize, mean, std):
-    transforms_list = [T.ToTensor()]
+    transforms_list = [
+        T.Resize((height, width)),  # Resize to target dimensions
+        T.ToTensor()
+    ]
     if shouldNormalize:
         mean = normalization.get_mean()
         std = normalization.get_std()
@@ -96,9 +99,18 @@ def fresh_normalization(rawDataPath, width, height, batchSize, numWorkers, seed)
     loader = DataLoader(dataset, batch_size=batchSize, shuffle=True, num_workers=numWorkers, pin_memory=True, worker_init_fn=seed_worker)
     return normalization.calculate_fresh_mean_std(loader)
 
-def DynamicAugmentationWrapper(RAW_DATA_PATH, WORK_PROCESSED_DATA_PATH_BALANCED, OUT_PROCESSED_DATA_PATH, CLASS_NAMES, TRAIN_SIZE, VALIDATION_SIZE, WIDTH, HEIGHT, DYNAMIC_AUGMENTATION, augmentation_functions):
+def DynamicAugmentationWrapper(RAW_DATA_PATH, WORK_PROCESSED_DATA_PATH_BALANCED, OUT_PROCESSED_DATA_PATH, CLASS_NAMES, TRAIN_SIZE, VALIDATION_SIZE, WIDTH, HEIGHT, DYNAMIC_AUGMENTATION, augmentation_functions, balanced=True):
+    """
+    Wrapper per l'augmentation con opzione di bilanciamento.
+
+    Args:
+        balanced: se True, tutte le classi vengono bilanciate allo stesso numero di immagini
+                  se False, ogni classe viene augmentata al suo massimo (comportamento precedente)
+    """
     minSize, maxSize = CalculateAugmentationSize(RAW_DATA_PATH, CLASS_NAMES, augmentation_functions)
-    size = minSize if DYNAMIC_AUGMENTATION else maxSize # se DYNAMIC_AUGMENTATION = True allora il dataset verrà bilanciato, la funzione DynamicAugmentation necessita di sapere il numero minimo di immagini. Se gli viene passato un numero alto, allora il dataset verrà augmentato totalmente
+    size = minSize if DYNAMIC_AUGMENTATION else maxSize
     print(f'Augmentation size: {size}')
-    DynamicAugmentation(size, RAW_DATA_PATH, WORK_PROCESSED_DATA_PATH_BALANCED, OUT_PROCESSED_DATA_PATH, CLASS_NAMES, TRAIN_SIZE, VALIDATION_SIZE, WIDTH, HEIGHT, augmentation_functions)
+    print(f'Balanced mode: {balanced}')
+    DynamicAugmentation(size, RAW_DATA_PATH, WORK_PROCESSED_DATA_PATH_BALANCED, OUT_PROCESSED_DATA_PATH,
+                        CLASS_NAMES, TRAIN_SIZE, VALIDATION_SIZE, WIDTH, HEIGHT, augmentation_functions, balanced=balanced)
 
