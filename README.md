@@ -331,17 +331,6 @@ Same configuration as original Di Pierro thesis:
 
 ---
 
-## Changelog
-
-| Date | Author | Description |
-|------|--------|-------------|
-| 2026-01-29 | Davide Di Pierro | Initial implementation and thesis defense |
-| 2026-02-23 | Marcello Russo | Repository setup, fixed timing system |
-| 2026-03-08 | Marcello Russo | Domain shift experiments (Exp1-4) with internet dataset |
-| 2026-03-11 | Marcello Russo | Added Exp5 (catastrophic forgetting test), updated reports |
-
----
-
 ## License
 
 See [LICENSE](LICENSE) for details.

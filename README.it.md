@@ -331,17 +331,6 @@ Stessa configurazione della tesi originale Di Pierro:
 
 ---
 
-## Changelog
-
-| Data | Autore | Descrizione |
-|------|--------|-------------|
-| 2026-01-29 | Davide Di Pierro | Implementazione iniziale e discussione tesi |
-| 2026-02-23 | Marcello Russo | Setup repository, fix sistema di timing |
-| 2026-03-08 | Marcello Russo | Esperimenti domain shift (Exp1-4) con dataset internet |
-| 2026-03-11 | Marcello Russo | Aggiunto Exp5 (test catastrophic forgetting), aggiornati report |
-
----
-
 ## Licenza
 
 Vedi [LICENSE](LICENSE) per i dettagli.
