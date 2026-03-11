@@ -129,8 +129,8 @@ def loadAndTrain(device, classSize, processedDataTrainPath, processedDataValidat
     print(f'Train dataset size: {len(train_dataset)}')
     print(f'Validation dataset size: {len(val_dataset)}')
 
-    train_loader = DataLoader(train_dataset, batchSize, shuffle=True, num_workers=numWorker, prefetch_factor=2, persistent_workers=True, worker_init_fn=seed_worker)
-    val_loader = DataLoader(val_dataset, batchSize, shuffle=False, num_workers=numWorker, prefetch_factor=2, persistent_workers=True, worker_init_fn=seed_worker)
+    train_loader = DataLoader(train_dataset, batchSize, shuffle=True, num_workers=numWorker, worker_init_fn=seed_worker)
+    val_loader = DataLoader(val_dataset, batchSize, shuffle=False, num_workers=numWorker, worker_init_fn=seed_worker)
 
     if pretrained:
         model = models.resnet18(weights=models.ResNet18_Weights.DEFAULT).to(device)

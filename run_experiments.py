@@ -314,12 +314,12 @@ def run_preprocessing():
         'width': 256,
         'height': 512,
         'batch_size_preprocess': 32,
-        'num_workers_preprocess': 4,
+        'num_workers_preprocess': 4,  # Ridotto per compatibilità MPS
         'should_normalize': True,
         'seed': 57,
         'epochs': 26,
         'batch_size_train': 8,
-        'num_workers_train': 4,
+        'num_workers_train': 2,  # Ridotto per compatibilità MPS
         'learning_rate': 0.001,
         'pretrained': True,
         'use_class_weights': False,
@@ -507,7 +507,7 @@ def run_experiment(num):
     model = modelLoader(model_path, len(ALL_CLASSES), device)
 
     dataset = getDatasetFromFile(test_path)
-    loader = DataLoader(dataset, 32, shuffle=True, num_workers=8)
+    loader = DataLoader(dataset, 32, shuffle=True, num_workers=2)  # Ridotto per MPS
 
     testModel(model, loader, device, exp["test_classes"], len(exp["test_classes"]))
     # Use ALL_CLASSES for visualization since model outputs all 6 classes

@@ -156,12 +156,12 @@ DEFAULT_CONFIG = {
     'train_size': 0.7,
     'validation_size': 0.1,
     'batch_size_preprocess': 32,
-    'num_workers_preprocess': 16,
+    'num_workers_preprocess': 4,  # Ridotto per compatibilità MPS
     'should_normalize': True,
 
     # Training
     'batch_size_train': 8,
-    'num_workers_train': 4,
+    'num_workers_train': 2,  # Ridotto per compatibilità MPS
     'epochs': 26,
     'learning_rate': 0.001,
     'pretrained': True,
@@ -170,7 +170,7 @@ DEFAULT_CONFIG = {
 
     # Testing
     'batch_size_test': 32,
-    'num_workers_test': 8,
+    'num_workers_test': 2,  # Ridotto per compatibilità MPS
     'sliding_window_size': 30,
     'sliding_window_stride': 15,
 
@@ -439,9 +439,7 @@ def run_testing(config, metrics_logger=None):
         testDataset,
         config['batch_size_test'],
         shuffle=True,
-        num_workers=config['num_workers_test'],
-        prefetch_factor=2,
-        persistent_workers=True
+        num_workers=config['num_workers_test']
     )
 
     with Timer('Testing') as t:

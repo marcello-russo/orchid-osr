@@ -193,7 +193,7 @@ def testModelWrapper(CLASS_NAMES, PROCESSED_DATA_TEST_PATH, MODEL_PATH, BATCH_SI
     model = model.to(device)
     model.eval()
     test_dataset = getDatasetFromFile(PROCESSED_DATA_TEST_PATH)
-    test_loader = DataLoader(test_dataset, BATCH_SIZE, shuffle=True, num_workers=NUM_WORKERS, prefetch_factor=2, persistent_workers=True)
+    test_loader = DataLoader(test_dataset, BATCH_SIZE, shuffle=True, num_workers=NUM_WORKERS)
     testModel(model, test_loader, device, CLASS_NAMES, CLASS_SIZE)
     if '--generate-results' in sys.argv:
         generateOutputImages(test_dataset, model, device, CLASS_NAMES, DESTINATION_PATH, SLIDING_WINDOW_SIZE, STRIDE)
