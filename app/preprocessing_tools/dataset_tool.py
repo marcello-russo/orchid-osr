@@ -5,6 +5,8 @@ from PIL import Image
 import app.preprocessing_tools.rotation as rotation, app.preprocessing_tools.resizing as resizing
 from dotenv import dotenv_values
 import shutil
+from concurrent.futures import ProcessPoolExecutor
+import multiprocessing
 
 from torch.utils.data import Dataset
 from torchvision.datasets import ImageFolder
@@ -14,7 +16,7 @@ import random
 
 config = dotenv_values(".env")
 
-# Viene utilizzato in fase di preprocessing per salvare i dati in un file salvando anche i nomi dei file
+# Used during preprocessing to save data to a file while preserving file names
 class TensorDatasetWithName(Dataset):
     def __init__(self, tensors, file_paths, classes=None):
         assert len(tensors[0]) == len(file_paths), "Mismatch between data and file paths length"
@@ -28,9 +30,9 @@ class TensorDatasetWithName(Dataset):
     def __len__(self):
         return len(self.tensors[0])
 
-# Serve a caricare le immagini da un percorso specifico
-# Estende ImageFolder per poter avere il nome del file
-# Le immagini devono essere in cartelle con la seguente struttura:
+# Loads images from a specific path
+# Extends ImageFolder to include file names
+# Images must be in folders with the following structure:
 # path
 # ├── class1
 # │   ├── img1.jpg
@@ -47,8 +49,8 @@ class ImageFolderWithName(ImageFolder):
         file_name = os.path.basename(path)
         return original_tuple[0], original_tuple[1], file_name
 
-# Il dataset viene caricato da una singola cartella
-# Le immagini devono essere direttamente nella cartella
+# Dataset loaded from a single folder
+# Images must be directly in the folder
 # path
 # ├── img1.jpg
 # ├── img2.jpg
@@ -83,42 +85,35 @@ def preprocessImage(image, width, height):
         image = resizing.resize_image(image, width, height)
     return image
 
-# Augmenta le immagini in data_path e le salva in output_path
-# max_images_per_class: numero massimo di immagini per classe, se raggiunto il ciclo si interrompe. In questo modo si bilanciano le classi
-# Le immagini non vengono normalizzate in questa fase
+
 def augmentDataPath(data_path, output_path, max_images_per_class, width, height, augmentation_functions):
+    """Augments images and saves them to output_path."""
     class_count = 0
     for function in augmentation_functions:
-        print(f'Processing {function.__name__}...')
         for idx, foto in enumerate(os.listdir(data_path)):
-            if class_count >= max_images_per_class and function != rotation.identity: # In questo modo l'identità viene sempre applicata
-                print(f'Processed {class_count} images')
-                return 
+            if class_count >= max_images_per_class and function != rotation.identity:
+                return
             img = Image.open(os.path.join(data_path, foto))
-            img = preprocessImage(img, width, height) # Ritaglia l'immagine
+            img = preprocessImage(img, width, height)
             original_name = os.path.splitext(foto)[0]
-            output_file_path = os.path.join(output_path, f'{function.__name__}_{original_name}_{idx}.jpg') # Al file viene aggiunto l'indice e il nome della funzione
+            output_file_path = os.path.join(output_path, f'{function.__name__}_{original_name}_{idx}.jpg')
             os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
-            img = function(img) # Applica la funzione di trasformazione
+            img = function(img)
             img.save(output_file_path)
             class_count += 1
-            if class_count % 10 == 0:
-                print(f'Processed {class_count} images')
-    print(f'Processed {class_count} images')
 
 
-# Divide le immagini in data_path in train, validation e test
-# train_size: percentuale di immagini da mettere nel training set
-# validation_size: percentuale di immagini da mettere nel validation set
-# Le immagini vengono copiate nelle cartelle corrispondenti
 def SplitData(data_path, output_path, class_name, train_size, validation_size):
+    """Splits images into train, validation and test sets."""
     train_path = os.path.join(output_path, 'train', class_name)
     validation_path = os.path.join(output_path, 'validation', class_name)
     test_path = os.path.join(output_path, 'test', class_name)
 
-    os.makedirs(train_path, exist_ok=True)
-    os.makedirs(validation_path, exist_ok=True)
-    os.makedirs(test_path, exist_ok=True)
+    # Clean existing directories to avoid accumulating old files
+    for path in [train_path, validation_path, test_path]:
+        if os.path.exists(path):
+            shutil.rmtree(path)
+        os.makedirs(path, exist_ok=True)
 
     images = os.listdir(os.path.join(data_path, class_name))
     random.shuffle(images)
@@ -134,7 +129,7 @@ def SplitData(data_path, output_path, class_name, train_size, validation_size):
     return train_path, validation_path, test_path
 
 
-# size: numero di immagini per classe
+# size: numero di immagini per classe (ignorato se balanced=True)
 # raw_data_path: percorso delle immagini originali
 # work_processed_data_path_balanced: percorso di lavoro per le immagini augmentate
 # out_processed_data_path: percorso di output per le immagini augmentate
@@ -144,27 +139,46 @@ def SplitData(data_path, output_path, class_name, train_size, validation_size):
 # width: larghezza delle immagini
 # height: altezza delle immagini
 # augmentation_functions: funzioni di trasformazione da applicare alle immagini
-def DynamicAugmentation(size, raw_data_path, work_processed_data_path_balanced, out_processed_data_path, class_names, train_size, validation_size, width, height, augmentation_functions):
+# balanced: se True, bilancia tutte le classi allo stesso numero di immagini
+def DynamicAugmentation(size, raw_data_path, work_processed_data_path_balanced, out_processed_data_path, class_names, train_size, validation_size, width, height, augmentation_functions, balanced=True):
+    """
+    If balanced=True: all classes are augmented to the same number of images.
+    If balanced=False: each class is augmented to its maximum.
+    """
+    # Clean work directory at start to avoid accumulating old files
+    if os.path.exists(work_processed_data_path_balanced):
+        shutil.rmtree(work_processed_data_path_balanced)
+
+    if balanced:
+        target_per_class, class_sizes = CalculateBalancedTargets(raw_data_path, class_names, augmentation_functions)
+        train_target = int(target_per_class * train_size)
+
     for class_name in class_names:
         print(f'Processing {class_name}...')
         train_path, validation_path, test_path = SplitData(raw_data_path, work_processed_data_path_balanced, class_name, train_size, validation_size)
 
-        os.makedirs(os.path.join(out_processed_data_path, 'train', class_name), exist_ok=True)
-        os.makedirs(os.path.join(out_processed_data_path, 'validation', class_name), exist_ok=True)
-        os.makedirs(os.path.join(out_processed_data_path, 'test', class_name), exist_ok=True)
+        # Clean and create output directories
+        for split in ['train', 'validation', 'test']:
+            out_dir = os.path.join(out_processed_data_path, split, class_name)
+            if os.path.exists(out_dir):
+                shutil.rmtree(out_dir)
+            os.makedirs(out_dir, exist_ok=True)
 
-        augmentDataPath(train_path, os.path.join(out_processed_data_path, 'train', class_name), size*train_size, width, height, augmentation_functions)
-        augmentDataPath(validation_path, os.path.join(out_processed_data_path, 'validation', class_name), size*0, width, height, augmentation_functions)
-        augmentDataPath(test_path, os.path.join(out_processed_data_path, 'test', class_name), size*0, width, height, augmentation_functions)
+        if balanced:
+            train_images = len([f for f in os.listdir(train_path) if f.lower().endswith(('.jpg', '.png', '.jpeg'))])
+            augmentDataPathBalanced(train_path, os.path.join(out_processed_data_path, 'train', class_name),
+                                   train_target, width, height, augmentation_functions, train_images)
+        else:
+            augmentDataPath(train_path, os.path.join(out_processed_data_path, 'train', class_name), size*train_size, width, height, augmentation_functions)
+
+        # Validation and test: identity only (no additional augmentation)
+        augmentDataPath(validation_path, os.path.join(out_processed_data_path, 'validation', class_name), size*0, width, height, [rotation.identity])
+        augmentDataPath(test_path, os.path.join(out_processed_data_path, 'test', class_name), size*0, width, height, [rotation.identity])
 
     return True
 
-# Calcola il numero di immagini minimo e massimo per classe
-# raw_data_path: percorso delle immagini originali
-# class_names: nomi delle classi
-# augmentation_functions: funzioni di trasformazione da applicare alle immagini
-# Restituisce il numero minimo e massimo di immagini 
 def CalculateAugmentationSize(raw_data_path, class_names, augmentation_functions):
+    """Calculates min and max images per class."""
     min_size = 1000000
     max_size = 0
     for class_name in class_names:
@@ -175,4 +189,98 @@ def CalculateAugmentationSize(raw_data_path, class_names, augmentation_functions
         if num_files > max_size:
             max_size = num_files
     return min_size * len(augmentation_functions), max_size * len(augmentation_functions)
+
+
+def CalculateBalancedTargets(raw_data_path, class_names, augmentation_functions):
+    """
+    Calculates balanced target images per class.
+    Target = min_class_size * num_augmentations (all classes reach the same number)
+    """
+    class_sizes = {}
+    for class_name in class_names:
+        class_path = os.path.join(raw_data_path, class_name)
+        if os.path.exists(class_path):
+            num_files = len([f for f in os.listdir(class_path) if f.lower().endswith(('.jpg', '.png', '.jpeg'))])
+            class_sizes[class_name] = num_files
+        else:
+            class_sizes[class_name] = 0
+
+    min_size = min(class_sizes.values()) if class_sizes else 0
+    target_per_class = min_size * len(augmentation_functions)
+
+    return target_per_class, class_sizes
+
+
+def _process_single_image(args):
+    """Processes a single image (for parallelization)."""
+    data_path, foto, output_path, func_name, idx, width, height = args
+    img = Image.open(os.path.join(data_path, foto))
+    img = preprocessImage(img, width, height)
+    original_name = os.path.splitext(foto)[0]
+    output_file_path = os.path.join(output_path, f'{func_name}_{original_name}_{idx}.jpg')
+
+    # Map function name -> function
+    func_map = {
+        'identity': rotation.identity,
+        'horizontal_flip': rotation.horizontal_flip,
+        'vertical_flip': rotation.vertical_flip,
+        'horizontal_and_vertical_flip': rotation.horizontal_and_vertical_flip
+    }
+    func = func_map.get(func_name, rotation.identity)
+    img = func(img)
+    img.save(output_file_path)
+    return True
+
+
+def augmentDataPathBalanced(data_path, output_path, target_images, width, height, augmentation_functions, current_count):
+    """
+    Augments images until target_images is reached.
+    Parallelized with ProcessPoolExecutor.
+    If originals > target: undersample to target.
+    If originals < target: oversample with augmentation.
+    """
+    # Clean output directory first to avoid mixing old and new images
+    if os.path.exists(output_path):
+        shutil.rmtree(output_path)
+    os.makedirs(output_path, exist_ok=True)
+
+    images = [f for f in os.listdir(data_path) if f.lower().endswith(('.jpg', '.png', '.jpeg'))]
+    num_workers = min(multiprocessing.cpu_count(), 4)  # Reduced for stability
+
+    # If we have more originals than target, undersample
+    if len(images) > target_images:
+        images = images[:target_images]
+
+    # Copy originals with identity (parallelized)
+    identity_args = [(data_path, foto, output_path, 'identity', idx, width, height)
+                     for idx, foto in enumerate(images)]
+
+    with ProcessPoolExecutor(max_workers=num_workers) as executor:
+        list(executor.map(_process_single_image, identity_args))
+
+    count = len(images)
+
+    # If more images needed, apply additional augmentations
+    needed = target_images - count
+    if needed <= 0:
+        return count
+
+    aug_idx = 1  # Skip identity (already applied)
+
+    while count < target_images and aug_idx < len(augmentation_functions):
+        func = augmentation_functions[aug_idx]
+        func_name = func.__name__
+
+        images_needed = min(needed, len(images))
+        aug_args = [(data_path, images[idx % len(images)], output_path, func_name, idx, width, height)
+                    for idx in range(count, count + images_needed)]
+
+        with ProcessPoolExecutor(max_workers=num_workers) as executor:
+            list(executor.map(_process_single_image, aug_args))
+
+        count += images_needed
+        needed = target_images - count
+        aug_idx += 1
+
+    return count
 
