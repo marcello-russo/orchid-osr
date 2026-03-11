@@ -61,8 +61,12 @@ def calculate_fresh_mean_std(loader):
     logging.info(f'Std RGB: {converto_to_rgb(std)}')
     logging.info(f'Total pixels: {total_pixels}')
 
-    set_key('.env', 'MEAN', ' '.join([str(x.item()) for x in mean]))
-    set_key('.env', 'STD', ' '.join([str(x.item()) for x in std]))
+    # Save to .env (may fail in container with mounted volumes)
+    try:
+        set_key('.env', 'MEAN', ' '.join([str(x.item()) for x in mean]))
+        set_key('.env', 'STD', ' '.join([str(x.item()) for x in std]))
+    except OSError:
+        logging.warning('Could not write to .env file (mounted volume issue)')
     
     mean = str(mean.tolist())
     std = str(std.tolist())
