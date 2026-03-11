@@ -1,8 +1,8 @@
 # Orchid Classification with ResNet18
 
-A deep learning pipeline for classifying orchid species of the genus *Ophrys* using transfer learning with ResNet18.
+Deep learning pipeline for classifying *Ophrys* orchid species using transfer learning with ResNet18.
 
-📄 **Related Paper:** [ScienceDirect - S2590005625001079](https://www.sciencedirect.com/science/article/pii/S2590005625001079)
+**Related Paper:** [ScienceDirect - S2590005625001079](https://www.sciencedirect.com/science/article/pii/S2590005625001079)
 
 ---
 
@@ -10,10 +10,10 @@ A deep learning pipeline for classifying orchid species of the genus *Ophrys* us
 
 | Role | Name |
 |------|------|
-| Original Research & Implementation | **Davide Di Pierro** (UNINA) |
-| Repository Maintainer | Marcello Russo |
+| Original research and implementation | **Davide Di Pierro** (UNINA) |
+| Repository maintainer | Marcello Russo |
 
-This project extends the original thesis work by Davide Di Pierro at Università degli Studi di Napoli Federico II.
+This project extends the original thesis work of Davide Di Pierro at the University of Naples Federico II.
 
 ---
 
@@ -68,20 +68,19 @@ Classification results with sliding window visualization:
 
 ---
 
-## Performance
+## Experiments
 
-### Original Implementation (Davide Di Pierro)
+### Original Experiment (Davide Di Pierro)
 
-| Phase | Duration |
-|-------|----------|
-| Augmentation | ~118 min |
-| Normalization | ~20 sec |
-| Preprocessing | ~77 sec |
-| Training (26 epochs) | ~30 min |
-| Testing | ~27 min |
-| **Total** | **~3 hours** |
+Classification on private dataset with 6 species. Results obtained with traditional augmentation (unbalanced classes).
 
-### Overall Metrics
+**Configuration:**
+- Epochs: 26
+- Batch size: 8
+- Learning rate: 0.001
+- Class weights: No
+
+**Results:**
 
 | Metric (Macro) | Score |
 |----------------|-------|
@@ -97,7 +96,7 @@ Classification results with sliding window visualization:
 | Precision | 91.16% |
 | Recall | 91.16% |
 
-### Per-Class Results
+### Per-Class Results (Original)
 
 | Class | Accuracy | F1 Score | Precision | Recall |
 |-------|----------|----------|-----------|--------|
@@ -108,7 +107,7 @@ Classification results with sliding window visualization:
 | O. sphegodes | 70.00% | 68.29% | 66.67% | 70.00% |
 | O. sphegodes_Palena | 94.23% | 97.03% | 100.00% | 94.23% |
 
-### Confusion Matrix
+### Confusion Matrix (Original)
 
 ```
 [[52,  0,  0,  0,  4,  0],
@@ -119,19 +118,87 @@ Classification results with sliding window visualization:
  [ 0,  0,  2,  1,  0, 49]]
 ```
 
-### Current Implementation
-
-*Results will be added after re-running the pipeline.*
-
 ---
 
-## Changelog
+### Domain Shift Experiments (Marcello Russo)
 
-| Date | Author | Description |
-|------|--------|-------------|
-| 2026-01-29 | Davide Di Pierro | Initial implementation and thesis defense |
-| 2026-02-23 | Marcello Russo | Repository setup, fixed timing system, added clean notebook |
-| | | |
+Five experiments to evaluate domain shift impact, data augmentation effectiveness, and catastrophic forgetting.
+
+**Configuration (same as original Di Pierro):**
+- Epochs: 26
+- Batch size: 8
+- Learning rate: 0.001
+- Class weights: No
+- Balanced augmentation: 280 images/class
+
+**Datasets Used:**
+
+| Dataset | Source | Classes | Images |
+|---------|--------|---------|--------|
+| Private | Personal collection | 6 | 1,252 |
+| Internet Raw | Web (uncropped) | 4 | 1,080 |
+| Internet Cropped | Web (cropped) | 4 | 1,080 |
+| Combined | Private + Internet Cropped | 6 | 2,332 |
+
+**Note:** The internet dataset contains only 4 classes (O. exaltata, O. garganica, O. incubacea, O. sphegodes), while the private dataset has all 6 classes.
+
+**Overall Results:**
+
+| Experiment | Train | Test | Accuracy | F1 Macro | Description |
+|------------|-------|------|----------|----------|-------------|
+| Exp1 | Private | Private | 94.78% | 93.72% | Baseline (6 classes) |
+| Exp2 | Private | Internet Raw | 35.09% | 37.57% | Strong domain shift |
+| Exp3 | Private | Internet Cropped | 48.15% | 50.43% | Cropping helps |
+| **Exp4** | **Combined** | **Internet Cropped** | **95.19%** | **95.37%** | **Best on internet** |
+| **Exp5** | **Combined** | **Private** | **96.79%** | **95.83%** | **No forgetting** |
+
+### Per-class Results
+
+**Exp4 - Combined Model on Internet Cropped (Best result on internet data):**
+
+| Class | Precision | Recall | F1 Score |
+|-------|-----------|--------|----------|
+| O. exaltata | 96.26% | 94.50% | 95.37% |
+| O. garganica | 95.62% | 95.92% | 95.77% |
+| O. incubacea | 95.75% | 96.67% | 96.21% |
+| O. sphegodes | 94.28% | 93.99% | 94.14% |
+
+**Exp5 - Combined Model on Private (Catastrophic forgetting test):**
+
+| Class | Precision | Recall | F1 Score |
+|-------|-----------|--------|----------|
+| O. exaltata | 100.00% | 98.21% | 99.10% |
+| O. garganica | 96.00% | 96.00% | 96.00% |
+| O. incubacea | 93.55% | 93.55% | 93.55% |
+| O. majellensis | 97.56% | 100.00% | 98.77% |
+| O. sphegodes | 94.44% | 85.00% | 89.47% |
+| O. sphegodes_Palena | 96.30% | 100.00% | 98.11% |
+
+### Key Findings
+
+1. **Domain shift significantly impacts performance**
+   - F1 drops from 93.72% (Exp1) to 37.57% (Exp2) when testing on internet images
+   - This demonstrates the challenge of generalizing to new data sources
+
+2. **Cropping improves results**
+   - Raw images: F1 = 37.57% (Exp2)
+   - Cropped images: F1 = 50.43% (Exp3)
+   - Improvement: +12.9%
+
+3. **Data augmentation is highly effective**
+   - Private-only model on internet: F1 = 50.43% (Exp3)
+   - Combined model on internet: F1 = 95.37% (Exp4)
+   - Improvement: +44.9%
+
+4. **No catastrophic forgetting**
+   - Exp1 (private model on private): F1 = 93.72%
+   - Exp5 (combined model on private): F1 = 95.83%
+   - The combined model actually performs **better** on the private dataset
+   - Adding internet data to training does not degrade performance on original classes
+
+5. **All classes benefit from combined training**
+   - Every class achieves >94% F1 on internet data (Exp4)
+   - Every class achieves >89% F1 on private data (Exp5)
 
 ---
 
@@ -146,8 +213,8 @@ Classification results with sliding window visualization:
 
 ```bash
 # Clone the repository
-git clone https://github.com/marcello-russo/OrchID.git
-cd OrchID
+git clone https://github.com/marcellorusso-x/orchid-classification.git
+cd orchid-classification/resnet18
 
 # Start the container
 podman compose up -d --build
@@ -156,47 +223,75 @@ podman compose up -d --build
 # http://localhost:8888
 ```
 
+### Running Experiments
+
+```bash
+# Run all experiments (inside container)
+python run_experiments.py --all
+
+# Or run individual phases
+python run_experiments.py --status     # Check status
+python run_experiments.py --setup     # Setup datasets
+python run_experiments.py --preprocess # Preprocess data
+python run_experiments.py --train     # Train models
+python run_experiments.py --test      # Run tests
+```
+
 ### Notebooks
 
 | File | Description |
 |------|-------------|
-| `notebook.ipynb` | Original notebook (fixed timing) |
-| `notebook_clean.ipynb` | Clean restructured version |
+| `notebook_dipierro.ipynb` | Original notebook by Di Pierro |
+| `notebook.ipynb` | Clean restructured version (replicates run_pipeline.py) |
 
 ---
 
 ## Pipeline
 
 ```
-Raw Images → Augmentation → Normalization → Preprocessing → Training → Testing
+Raw Images -> Augmentation -> Normalization -> Preprocessing -> Training -> Testing
 ```
 
-1. **Augmentation**: Balance classes with flips, rotations
+1. **Augmentation**: Balance classes with flips, rotations (target: 280 images/class in train)
 2. **Normalization**: Calculate mean/std for the dataset
-3. **Preprocessing**: Convert images to tensors
+3. **Preprocessing**: Convert images to PyTorch tensors
 4. **Training**: Fine-tune ResNet18 (pretrained on ImageNet)
-5. **Testing**: Evaluate on test set with confusion matrix
+5. **Testing**: Evaluate on test set with confusion matrix and explainability visualization
 
 ---
 
 ## Project Structure
 
 ```
-├── app/                    # Source code
-│   ├── preprocessing_tools/
-│   ├── explenability_tools/
-│   ├── train_model.py
-│   ├── test_model.py
-│   └── timing.py
+resnet18/
+├── app/                        # Source code
+│   ├── preprocessing_tools/    # Data preprocessing utilities
+│   ├── explenability_tools/    # Model explainability (Captum)
+│   ├── train_model.py          # Training loop
+│   ├── test_model.py           # Testing and evaluation
+│   └── timing.py               # Timing utilities
 ├── dataset/
-│   ├── raw/               # Original images by class
-│   ├── augmented/         # Augmented train/val/test
-│   └── processed/         # Saved tensors (.pt)
-├── models/                # Trained models
-├── logs/                  # Timing logs
-├── results/               # Test outputs
-├── notebook.ipynb         # Original notebook
-├── notebook_clean.ipynb   # Clean notebook
+│   ├── raw/                    # Private images by class
+│   ├── internet_raw/           # Internet images (uncropped)
+│   ├── internet_cropped/       # Internet images (cropped)
+│   ├── combined/               # Combined dataset (private + internet)
+│   └── *.pt                    # Preprocessed tensors
+├── models/                     # Trained models
+│   ├── train_privato/          # Private-only model
+│   └── train_combined/         # Combined model
+├── results/                    # Test outputs and visualization
+│   ├── exp1_privato_privato/   # Exp1 output images
+│   ├── exp2_privato_internet_raw/
+│   ├── exp3_privato_internet_cropped/
+│   ├── exp4_combined_internet_cropped/
+│   └── exp5_combined_privato/
+├── logs/                       # Timing logs
+├── docs/                       # Documentation and images
+├── run_experiments.py          # Run all experiments
+├── run_pipeline.py             # CLI for single pipeline
+├── generate_report_corrected.py # Generate final report
+├── notebook_dipierro.ipynb     # Original notebook
+├── notebook.ipynb              # Clean notebook
 ├── Dockerfile
 └── docker-compose.yaml
 ```
@@ -208,8 +303,42 @@ Raw Images → Augmentation → Normalization → Preprocessing → Training →
 - **PyTorch 2.1.0** - Deep learning framework
 - **ResNet18** - CNN architecture (pretrained on ImageNet)
 - **Captum** - Model explainability (Integrated Gradients, Occlusion)
+- **Torcheval** - Evaluation metrics
 - **Podman** - Container runtime with GPU support
 - **CUDA 11.8** - GPU acceleration
+
+---
+
+## Technical Notes
+
+### Class Mismatch Handling
+
+For Exp2-4, the test set has 4 classes while the model outputs 6. When ImageFolder loads the internet test set, it assigns labels alphabetically:
+- O. sphegodes in test set: index 3
+- O. sphegodes in model: index 4
+
+Metrics were recalculated with proper class index mapping.
+
+### Training Configuration
+
+Same configuration as original Di Pierro thesis:
+- ResNet18 pretrained on ImageNet
+- 26 epochs
+- Batch size: 8
+- Learning rate: 0.001
+- Class weights: No
+- Balanced augmentation: 280 images/class
+
+---
+
+## Changelog
+
+| Date | Author | Description |
+|------|--------|-------------|
+| 2026-01-29 | Davide Di Pierro | Initial implementation and thesis defense |
+| 2026-02-23 | Marcello Russo | Repository setup, fixed timing system |
+| 2026-03-08 | Marcello Russo | Domain shift experiments (Exp1-4) with internet dataset |
+| 2026-03-11 | Marcello Russo | Added Exp5 (catastrophic forgetting test), updated reports |
 
 ---
 
