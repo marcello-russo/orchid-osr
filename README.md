@@ -289,7 +289,7 @@ resnet18/
 ├── docs/                       # Documentation and images
 ├── run_experiments.py          # Run all experiments
 ├── run_pipeline.py             # CLI for single pipeline
-├── generate_report_corrected.py # Generate final report
+├── generate_report.py           # Generate final report
 ├── notebook_dipierro.ipynb     # Original notebook
 ├── notebook.ipynb              # Clean notebook
 ├── Dockerfile
