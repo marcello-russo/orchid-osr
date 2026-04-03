@@ -1,7 +1,7 @@
 import torch
 from torchvision import models
 import torch.nn as nn
-from app.preprocessing_tools.dataset_tool import augmentDataPath, SingleFolderDataset
+from app.preprocessing.dataset_tool import augmentDataPath, SingleFolderDataset
 from app.test_model import showAndTestImages, generateOutputImages
 from app.preprocess_data import getTransforms
     

@@ -1,0 +1,7 @@
+{
+  "experiment": 4,
+  "name": "exp4_combined_internet_cropped",
+  "train": "combined",
+  "test": "internet_cropped",
+  "timestamp": "2026-03-10T23:39:39.475497"
+}

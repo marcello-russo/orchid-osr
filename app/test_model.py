@@ -7,9 +7,9 @@ from torch.nn import functional as F
 from torch.utils.data import DataLoader
 from torchvision import models
 from torcheval.metrics import MulticlassAccuracy, MulticlassF1Score, MulticlassPrecision, MulticlassRecall
-from app.preprocessing_tools.dataset_tool import getDatasetFromFile
+from app.preprocessing.dataset_tool import getDatasetFromFile
 
-from app.explenability_tools.explainability import showAndTestImages, generateOutputImages
+from app.explainability.explainability import showAndTestImages, generateOutputImages
 
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

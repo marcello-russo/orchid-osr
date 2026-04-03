@@ -1,0 +1,7 @@
+{
+  "experiment": 3,
+  "name": "exp3_privato_internet_cropped",
+  "train": "privato",
+  "test": "internet_cropped",
+  "timestamp": "2026-03-10T22:10:10.526940"
+}

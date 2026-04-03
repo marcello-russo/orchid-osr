@@ -1,336 +1,173 @@
-# Classificazione Orchidee con ResNet18
+[🇬🇧 English](README.md)
 
-Pipeline di deep learning per la classificazione di specie di orchidee del genere *Ophrys* utilizzando transfer learning con ResNet18.
+# 🌸 OrchID — Representation Learning delle Orchidee
 
-**Paper correlato:** [ScienceDirect - S2590005625001079](https://www.sciencedirect.com/science/article/pii/S2590005625001079)
+> Costruire uno spazio vettoriale strutturato delle specie di orchidee *Ophrys* tramite apprendimento contrastivo e tecniche di metric embedding.
 
----
-
-## Crediti
-
-| Ruolo | Nome |
-|-------|------|
-| Ricerca e implementazione originale | **Davide Di Pierro** (UNINA) |
-| Manutentore repository | Marcello Russo |
-
-Questo progetto estende il lavoro di tesi originale di Davide Di Pierro presso l'Universita degli Studi di Napoli Federico II.
+**Paper:** [ScienceDirect](https://www.sciencedirect.com/science/article/pii/S2590005625001079) | **Crediti:** [Davide Di Pierro](https://github.com/davidedipierro) (UNINA, ricerca originale), [Marcello Russo](https://github.com/marcello-russo)
 
 ---
 
-## Specie Classificate
+## 🎯 Roadmap
 
-| Classe | Nome Scientifico |
-|--------|------------------|
-| O. exaltata | *Ophrys exaltata* |
-| O. garganica | *Ophrys garganica* |
-| O. incubacea | *Ophrys incubacea* |
-| O. majellensis | *Ophrys majellensis* |
-| O. sphegodes | *Ophrys sphegodes* |
-| O. sphegodes_Palena | *Ophrys sphegodes* (variante Palena) |
+| Fase | Obiettivo | Stato |
+|------|-----------|-------|
+| **F1 — Classificazione** | Baseline ResNet18/50, esperimenti domain shift, k-fold CV | ✅ Completata |
+| **F2 — Spazio Vettoriale** | Apprendimento contrastivo (SimCLR, Triplet Loss, SupCon) per costruire uno spazio vettoriale strutturato | 🔜 Prossima |
+| **F3 — Retrieval & Similarità** | Ricerca nearest-neighbor, clustering specie, detection classi sconosciute | 📋 Pianificata |
 
 ---
 
-## Galleria
+## 🌿 Specie
 
-### Immagini Raw
-
-| O. exaltata | O. garganica | O. incubacea |
-|:-----------:|:------------:|:------------:|
-| ![](docs/images/raw/O_exaltata.png) | ![](docs/images/raw/O_garganica.png) | ![](docs/images/raw/O_incubacea.png) |
-
-| O. majellensis | O. sphegodes | O. sphegodes_Palena |
-|:--------------:|:------------:|:-------------------:|
-| ![](docs/images/raw/O_majellensis.jpg) | ![](docs/images/raw/O_sphegodes.png) | ![](docs/images/raw/O_sphegodes_Palena.png) |
-
-### Immagini Augmentate
-
-Dopo augmentation (flip, rotazioni) per bilanciamento classi:
-
-| O. exaltata | O. garganica | O. incubacea |
-|:-----------:|:------------:|:------------:|
-| ![](docs/images/augmented/O_exaltata.jpg) | ![](docs/images/augmented/O_garganica.jpg) | ![](docs/images/augmented/O_incubacea.jpg) |
-
-| O. majellensis | O. sphegodes | O. sphegodes_Palena |
-|:--------------:|:------------:|:-------------------:|
-| ![](docs/images/augmented/O_majellensis.jpg) | ![](docs/images/augmented/O_sphegodes.jpg) | ![](docs/images/augmented/O_sphegodes_Palena.jpg) |
-
-### Output del Modello
-
-Risultati della classificazione con visualizzazione sliding window:
-
-| O. exaltata | O. garganica | O. incubacea |
-|:-----------:|:------------:|:------------:|
-| ![](docs/images/results/O_exaltata.png) | ![](docs/images/results/O_garganica.png) | ![](docs/images/results/O_incubacea.png) |
-
-| O. majellensis | O. sphegodes | O. sphegodes_Palena |
-|:--------------:|:------------:|:-------------------:|
-| ![](docs/images/results/O_majellensis.png) | ![](docs/images/results/O_sphegodes.png) | ![](docs/images/results/O_sphegodes_Palena.png) |
+| | Specie | |
+|---|--------|---|
+| 🌸 | *Ophrys exaltata* | Mediterranea |
+| 🌺 | *Ophrys garganica* | Endemica (Gargano) |
+| 🌻 | *Ophrys incubacea* | Sud Europa |
+| 🌼 | *Ophrys majellensis* | Endemica (Majella) |
+| 🌷 | *Ophrys sphegodes* | Diffusa |
+| 🌱 | *Ophrys sphegodes* (Palena) | Variante locale |
 
 ---
 
-## Esperimenti
+## 📸 Galleria
 
-### Esperimento Originale (Davide Di Pierro)
+### Raw → Augmentate → Classificate
 
-Classificazione sul dataset privato con 6 specie. Risultati ottenuti con augmentation tradizionale (classi sbilanciate).
+| Raw | Augmentata | Output |
+|:---:|:----------:|:------:|
+| ![](assets/images/raw/O_exaltata.png) | ![](assets/images/augmented/O_exaltata.jpg) | ![](assets/images/results/O_exaltata.png) |
+| ![](assets/images/raw/O_garganica.png) | ![](assets/images/augmented/O_garganica.jpg) | ![](assets/images/results/O_garganica.png) |
+| ![](assets/images/raw/O_incubacea.png) | ![](assets/images/augmented/O_incubacea.jpg) | ![](assets/images/results/O_incubacea.png) |
 
-**Configurazione:**
-- Epochs: 26
-- Batch size: 8
-- Learning rate: 0.001
-- Class weights: No
+<details>
+<summary>Vedi tutte le specie</summary>
 
-**Risultati:**
+| Raw | Augmentata | Output |
+|:---:|:----------:|:------:|
+| ![](assets/images/raw/O_majellensis.jpg) | ![](assets/images/augmented/O_majellensis.jpg) | ![](assets/images/results/O_majellensis.png) |
+| ![](assets/images/raw/O_sphegodes.png) | ![](assets/images/augmented/O_sphegodes.jpg) | ![](assets/images/results/O_sphegodes.png) |
+| ![](assets/images/raw/O_sphegodes_Palena.png) | ![](assets/images/augmented/O_sphegodes_Palena.jpg) | ![](assets/images/results/O_sphegodes_Palena.png) |
 
-| Metrica (Macro) | Valore |
-|-----------------|--------|
-| Accuracy | 89.19% |
-| F1 Score | 88.78% |
-| Precision | 88.52% |
-| Recall | 89.19% |
-
-| Metrica (Micro) | Valore |
-|-----------------|--------|
-| Accuracy | 91.16% |
-| F1 Score | 91.16% |
-| Precision | 91.16% |
-| Recall | 91.16% |
-
-### Risultati Per-Classe (Originale)
-
-| Classe | Accuracy | F1 Score | Precision | Recall |
-|--------|----------|----------|-----------|--------|
-| O. exaltata | 92.86% | 92.86% | 92.86% | 92.86% |
-| O. garganica | 92.00% | 92.93% | 93.88% | 92.00% |
-| O. incubacea | 93.55% | 87.88% | 82.86% | 93.55% |
-| O. majellensis | 92.50% | 93.67% | 94.87% | 92.50% |
-| O. sphegodes | 70.00% | 68.29% | 66.67% | 70.00% |
-| O. sphegodes_Palena | 94.23% | 97.03% | 100.00% | 94.23% |
-
-### Matrice di Confusione (Originale)
-
-```
-[[52,  0,  0,  0,  4,  0],
- [ 0, 46,  4,  0,  0,  0],
- [ 0,  2, 29,  0,  0,  0],
- [ 0,  0,  0, 37,  3,  0],
- [ 4,  1,  0,  1, 14,  0],
- [ 0,  0,  2,  1,  0, 49]]
-```
+</details>
 
 ---
 
-### Esperimenti di Domain Shift (Marcello Russo)
+## 📊 Risultati — Fase 1 (Classificazione)
 
-Cinque esperimenti per valutare l'impatto del domain shift, l'efficacia del data augmentation e il catastrophic forgetting.
+### K-Fold Cross-Validation (5-fold, dataset combinato)
 
-**Configurazione (stessa dell'originale Di Pierro):**
-- Epochs: 26
-- Batch size: 8
-- Learning rate: 0.001
-- Class weights: No
-- Augmentation bilanciata: 280 immagini/classe
+| Modello | Val Accuracy | Val F1 | Test Accuracy | Test F1 |
+|---------|-------------|--------|---------------|---------|
+| ResNet18 | 86.97% ± 1.43% | 84.85% ± 1.72% | 97.69% | 97.74% |
+| ResNet50 | 85.18% ± 1.89% | 84.85% ± 1.72% | 97.41% | 97.67% |
 
-**Dataset utilizzati:**
+<details>
+<summary>Esperimenti di domain shift</summary>
 
-| Dataset | Fonte | Classi | Immagini |
-|---------|-------|--------|----------|
-| Privato | Raccolta personale | 6 | 1.252 |
-| Internet Raw | Web (non ritagliate) | 4 | 1.080 |
-| Internet Cropped | Web (ritagliate) | 4 | 1.080 |
-| Combined | Privato + Internet Cropped | 6 | 2.332 |
-
-**Nota:** Il dataset internet contiene solo 4 classi (O. exaltata, O. garganica, O. incubacea, O. sphegodes), mentre il dataset privato ha tutte le 6 classi.
-
-**Risultati complessivi:**
-
-| Esperimento | Train | Test | Accuracy | F1 Macro | Descrizione |
-|-------------|-------|------|----------|----------|-------------|
+| Esperimento | Train | Test | Accuracy | F1 Macro | Note |
+|-------------|-------|------|----------|----------|------|
 | Exp1 | Privato | Privato | 94.78% | 93.72% | Baseline (6 classi) |
 | Exp2 | Privato | Internet Raw | 35.09% | 37.57% | Domain shift forte |
-| Exp3 | Privato | Internet Cropped | 48.15% | 50.43% | Cropping aiuta |
+| Exp3 | Privato | Internet Cropped | 48.15% | 50.43% | Il cropping aiuta |
 | **Exp4** | **Combined** | **Internet Cropped** | **95.19%** | **95.37%** | **Miglior su internet** |
 | **Exp5** | **Combined** | **Privato** | **96.79%** | **95.83%** | **Nessun forgetting** |
 
-### Risultati Per-Classe
+**Risultati chiave:**
+1. Il domain shift fa scendere F1 da 93.72% a 37.57%
+2. Il cropping recupera +12.9%
+3. Il training combined recupera +44.9% (F1 → 95.37%)
+4. Nessun catastrophic forgetting (F1 93.72% → 95.83%)
 
-**Exp4 - Modello Combined su Internet Cropped (Miglior risultato su dati internet):**
-
-| Classe | Precision | Recall | F1 Score |
-|--------|-----------|--------|----------|
-| O. exaltata | 96.26% | 94.50% | 95.37% |
-| O. garganica | 95.62% | 95.92% | 95.77% |
-| O. incubacea | 95.75% | 96.67% | 96.21% |
-| O. sphegodes | 94.28% | 93.99% | 94.14% |
-
-**Exp5 - Modello Combined su Privato (Test catastrophic forgetting):**
-
-| Classe | Precision | Recall | F1 Score |
-|--------|-----------|--------|----------|
-| O. exaltata | 100.00% | 98.21% | 99.10% |
-| O. garganica | 96.00% | 96.00% | 96.00% |
-| O. incubacea | 93.55% | 93.55% | 93.55% |
-| O. majellensis | 97.56% | 100.00% | 98.77% |
-| O. sphegodes | 94.44% | 85.00% | 89.47% |
-| O. sphegodes_Palena | 96.30% | 100.00% | 98.11% |
-
-### Conclusioni Principali
-
-1. **Il domain shift impatta significativamente le performance**
-   - F1 scende da 93.72% (Exp1) a 37.57% (Exp2) testando su immagini internet
-   - Dimostra la difficolta di generalizzare su nuove fonti dati
-
-2. **Il cropping migliora i risultati**
-   - Immagini raw: F1 = 37.57% (Exp2)
-   - Immagini croppate: F1 = 50.43% (Exp3)
-   - Miglioramento: +12.9%
-
-3. **Il data augmentation e molto efficace**
-   - Modello solo privato su internet: F1 = 50.43% (Exp3)
-   - Modello combined su internet: F1 = 95.37% (Exp4)
-   - Miglioramento: +44.9%
-
-4. **Nessun catastrophic forgetting**
-   - Exp1 (modello privato su privato): F1 = 93.72%
-   - Exp5 (modello combined su privato): F1 = 95.83%
-   - Il modello combined performa **meglio** sul dataset privato
-   - Aggiungere dati internet al training non degrada le performance sulle classi originali
-
-5. **Tutte le classi beneficiano del training combined**
-   - Tutte le classi raggiungono >94% F1 su dati internet (Exp4)
-   - Tutte le classi raggiungono >89% F1 su dati privati (Exp5)
+</details>
 
 ---
 
-## Avvio Rapido
+## 🚀 Avvio Rapido
 
 ### Prerequisiti
 - Linux (testato su Ubuntu/Pop!_OS)
-- Podman (o Docker)
-- GPU NVIDIA + Driver + Container Toolkit
+- Podman (o Docker) + NVIDIA GPU + Container Toolkit
 
 ### Esecuzione
 
 ```bash
-# Clona la repository
-git clone https://github.com/marcellorusso-x/orchid-classification.git
-cd orchid-classification/resnet18
+git clone https://github.com/squidslab/OrchID.git
+cd OrchID/resnet18
 
 # Avvia il container
 podman compose up -d --build
 
-# Apri Jupyter
-# http://localhost:8888
+# Jupyter: http://localhost:8888
 ```
 
-### Eseguire gli Esperimenti
+### CLI
 
 ```bash
-# Esegui tutti gli esperimenti (nel container)
-python run_experiments.py --all
+python cli.py --status                              # Verifica stato
+python cli.py --all                                  # Esegui tutti gli esperimenti
 
-# Oppure esegui fasi singole
-python run_experiments.py --status     # Verifica stato
-python run_experiments.py --setup     # Setup dataset
-python run_experiments.py --preprocess # Preprocessing dati
-python run_experiments.py --train     # Training modelli
-python run_experiments.py --test      # Esegui test
+# K-fold cross-validation
+python cli.py --cross-validate --exp 4 --model resnet50 --epochs 100 --patience 15
+
+# Fold singolo (per k-fold lunghi)
+python cli.py --cross-validate --exp 4 --model resnet50 --fold 1
+python cli.py --cross-validate --exp 4 --model resnet50 --aggregate-only
 ```
-
-### Notebook
-
-| File | Descrizione |
-|------|-------------|
-| `notebook_dipierro.ipynb` | Notebook originale di Di Pierro |
-| `notebook.ipynb` | Versione ristrutturata e pulita (replica run_pipeline.py) |
 
 ---
 
-## Pipeline
-
-```
-Immagini Raw -> Augmentation -> Normalizzazione -> Preprocessing -> Training -> Testing
-```
-
-1. **Augmentation**: Bilancia le classi con flip, rotazioni (target: 280 img/classe in train)
-2. **Normalizzazione**: Calcola mean/std per il dataset
-3. **Preprocessing**: Converti immagini in tensori PyTorch
-4. **Training**: Fine-tuning ResNet18 (pre-addestrata su ImageNet)
-5. **Testing**: Valuta sul test set con matrice di confusione e visualizzazione explainability
-
----
-
-## Struttura Progetto
+## 🏗️ Struttura Progetto
 
 ```
 resnet18/
-├── app/                        # Codice sorgente
-│   ├── preprocessing_tools/    # Utility preprocessing dati
-│   ├── explenability_tools/    # Explainability modello (Captum)
-│   ├── train_model.py          # Loop di training
-│   ├── test_model.py           # Testing e valutazione
-│   └── timing.py               # Utility di timing
-├── dataset/
-│   ├── raw/                    # Immagini private per classe
-│   ├── internet_raw/           # Immagini internet (non ritagliate)
-│   ├── internet_cropped/       # Immagini internet (ritagliate)
-│   ├── combined/               # Dataset combinato (privato + internet)
-│   └── *.pt                    # Tensori preprocessati
-├── models/                     # Modelli addestrati
-│   ├── train_privato/          # Modello solo privato
-│   └── train_combined/         # Modello combined
-├── results/                    # Output test e visualizzazione
-│   ├── exp1_privato_privato/   # Immagini output Exp1
-│   ├── exp2_privato_internet_raw/
-│   ├── exp3_privato_internet_cropped/
-│   ├── exp4_combined_internet_cropped/
-│   └── exp5_combined_privato/
-├── logs/                       # Log di timing
-├── docs/                       # Documentazione e immagini
-├── run_experiments.py          # Esegui tutti gli esperimenti
-├── run_pipeline.py             # CLI per pipeline singola
-├── generate_report.py           # Genera report finale
-├── notebook_dipierro.ipynb     # Notebook originale
-├── notebook.ipynb              # Notebook pulito
-├── Dockerfile
-└── docker-compose.yaml
+├── app/                          # Codice sorgente (modulare)
+│   ├── core/                     # Moduli ML core
+│   │   ├── models/               # Classificatore ResNet (pattern ABC)
+│   │   ├── training.py           # Loop di training
+│   │   ├── evaluation.py         # Metriche e valutazione
+│   │   └── kfold.py              # K-fold cross-validation
+│   ├── cli/                      # Interfaccia CLI
+│   ├── api/                      # Endpoint FastAPI
+│   ├── preprocessing/            # Preprocessing dati
+│   └── explainability/           # Captum explainability
+├── tests/                        # Test unitari (61 test)
+├── experiments/                  # Risultati esperimenti (una dir ciascuno)
+├── dataset/                      # Dataset (gitignored)
+├── models/                       # Modelli addestrati (gitignored)
+├── cli.py                        # Entry point CLI
+├── server.py                     # Entry point API server
+└── Dockerfile
 ```
 
 ---
 
-## Stack Tecnologico
+## 🔧 Stack Tecnologico
 
-- **PyTorch 2.1.0** - Framework deep learning
-- **ResNet18** - Architettura CNN (pre-addestrata su ImageNet)
-- **Captum** - Explainability del modello (Integrated Gradients, Occlusion)
-- **Torcheval** - Metriche di valutazione
-- **Podman** - Container runtime con supporto GPU
-- **CUDA 11.8** - Accelerazione GPU
-
----
-
-## Note Tecniche
-
-### Gestione Class Mismatch
-
-Per Exp2-4, il test set ha 4 classi mentre il modello ne output 6. Quando ImageFolder carica il test set internet, assegna le label in ordine alfabetico:
-- O. sphegodes nel test set: indice 3
-- O. sphegodes nel modello: indice 4
-
-Le metriche sono state ricalcolate con il mapping corretto degli indici.
-
-### Configurazione Training
-
-Stessa configurazione della tesi originale Di Pierro:
-- ResNet18 pre-addestrata su ImageNet
-- 26 epochs
-- Batch size: 8
-- Learning rate: 0.001
-- Class weights: No
-- Augmentation bilanciata: 280 immagini/classe
+| | Componente |
+|---|------------|
+| 🧠 | PyTorch 2.1.0 + CUDA 11.8 |
+| 🏛️ | ResNet18/50 (pre-addestrata ImageNet) |
+| 🔍 | Captum (explainability) |
+| 📦 | Podman + NVIDIA Container Toolkit |
 
 ---
 
-## Licenza
+## 📡 API
 
-Vedi [LICENSE](LICENSE) per i dettagli.
+```bash
+python server.py                    # Avvia API su porta 5000
+```
+
+| Endpoint | Metodo | Descrizione |
+|----------|--------|-------------|
+| `/health` | GET | Health check |
+| `/classify` | POST | Classifica immagine (base64) |
+| `/docs` | GET | Documentazione OpenAPI |
+
+---
+
+## 📄 Licenza
+
+Vedi [LICENSE](LICENSE).

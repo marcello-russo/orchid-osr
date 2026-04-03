@@ -2,7 +2,7 @@ import torch
 import torchvision.transforms as T
 import os
 from PIL import Image
-import app.preprocessing_tools.rotation as rotation, app.preprocessing_tools.resizing as resizing
+import app.preprocessing.rotation as rotation, app.preprocessing.resizing as resizing
 from dotenv import dotenv_values
 import shutil
 from concurrent.futures import ProcessPoolExecutor
