@@ -4,18 +4,18 @@ import torchvision.transforms as T
 from torch.utils.data import DataLoader, TensorDataset, Dataset
 from torchvision.datasets import ImageFolder
 from PIL import Image
-from app.preprocessing_tools.AugmentedDataset import AugmentedDataset
+from app.preprocessing.AugmentedDataset import AugmentedDataset
 from dotenv import dotenv_values
 import sys
 import os
 from sklearn.model_selection import train_test_split
 import numpy as np
 
-import app.preprocessing_tools.rotation as rotation
-import app.preprocessing_tools.normalization as normalization
-import app.preprocessing_tools.resizing as resizing
-from app.preprocessing_tools.dataset_tool import TensorDatasetWithName, ImageFolderWithName, DynamicAugmentation, CalculateAugmentationSize
-from app.preprocessing_tools.reproducibility import set_seed, seed_worker
+import app.preprocessing.rotation as rotation
+import app.preprocessing.normalization as normalization
+import app.preprocessing.resizing as resizing
+from app.preprocessing.dataset_tool import TensorDatasetWithName, ImageFolderWithName, DynamicAugmentation, CalculateAugmentationSize
+from app.preprocessing.reproducibility import set_seed, seed_worker
 
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

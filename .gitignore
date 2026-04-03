@@ -1,13 +1,13 @@
 
 # Data and Models
 dataset*/
-models*/
+/models*/
+!app/core/models/
 inference*/
-results*/
-logs*/
-experiments/
 analysis/
 archive/
+*.pt
+
 
 # Versioned outputs (_1, _2, etc.)
 *_1/
@@ -31,3 +31,17 @@ __pycache__/
 
 # System
 .DS_Store
+
+
+# Coverage
+.coverage
+htmlcov/
+.coverage.*
+
+# Test dataset (tiny dataset for integration tests)
+test_dataset/
+
+# K-fold temporary directories
+temp_kfold/
+
+superpowers/

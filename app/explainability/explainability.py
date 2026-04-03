@@ -10,8 +10,8 @@ from captum.attr import IntegratedGradients
 from captum.attr import visualization as viz
 from captum.attr._utils.visualization import _normalize_attr
 
-import app.preprocessing_tools.normalization as normalization
-from app.explenability_tools.occlusion import display_occlusion_for_save, display_occlusion
+import app.preprocessing.normalization as normalization
+from app.explainability.occlusion import display_occlusion_for_save, display_occlusion
 
 from collections import defaultdict
 

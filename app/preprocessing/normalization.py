@@ -1,10 +1,15 @@
+import logging
+from pathlib import Path
+
 import torch
 import torchvision.transforms as T
-import logging
 from dotenv import dotenv_values, set_key
 
-config = dotenv_values(".env")
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Hardcoded defaults (balanced dataset 256x512) — used when .env is missing
+_DEFAULT_MEAN = [0.5364, 0.5518, 0.3866]
+_DEFAULT_STD = [0.2045, 0.2296, 0.2025]
 
 # WIDTH = int(config['WIDTH'])
 # HEIGHT = int(config['HEIGHT'])
@@ -74,12 +79,26 @@ def calculate_fresh_mean_std(loader):
     return mean, std
 
 def get_mean():
-    config = dotenv_values(".env")
-    return [float(x) for x in config['MEAN'].split()]
+    """Get normalization mean from .env, falling back to defaults."""
+    try:
+        config = dotenv_values(".env")
+        val = config['MEAN']
+        if val is None:
+            return _DEFAULT_MEAN
+        return [float(x) for x in val.split()]
+    except (FileNotFoundError, KeyError):
+        return _DEFAULT_MEAN
 
 def get_std():
-    config = dotenv_values(".env")
-    return [float(x) for x in config['STD'].split()]
+    """Get normalization std from .env, falling back to defaults."""
+    try:
+        config = dotenv_values(".env")
+        val = config['STD']
+        if val is None:
+            return _DEFAULT_STD
+        return [float(x) for x in val.split()]
+    except (FileNotFoundError, KeyError):
+        return _DEFAULT_STD
 
 def converto_to_rgb(x):
     return (x * 255).int().tolist()

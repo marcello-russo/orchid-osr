@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from dotenv import dotenv_values
 from captum.attr import Occlusion
 from captum.attr._utils.visualization import _normalize_attr
-import app.preprocessing_tools.normalization as normalization
+import app.preprocessing.normalization as normalization
 
 
 config = dotenv_values(".env")
