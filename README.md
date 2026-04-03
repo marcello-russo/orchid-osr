@@ -33,22 +33,50 @@
 
 ## 📸 Gallery
 
-### Raw → Augmented → Classified
+### *Ophrys exaltata*
+<p float="left">
+<img src="assets/images/raw/O_exaltata.png" height="140">
+<img src="assets/images/augmented/O_exaltata.jpg" height="140">
+<img src="assets/images/results/O_exaltata.png" height="140">
+</p>
 
-| Raw | Augmented | Output |
-|:---:|:---------:|:------:|
-| ![](assets/images/raw/O_exaltata.png) | ![](assets/images/augmented/O_exaltata.jpg) | ![](assets/images/results/O_exaltata.png) |
-| ![](assets/images/raw/O_garganica.png) | ![](assets/images/augmented/O_garganica.jpg) | ![](assets/images/results/O_garganica.png) |
-| ![](assets/images/raw/O_incubacea.png) | ![](assets/images/augmented/O_incubacea.jpg) | ![](assets/images/results/O_incubacea.png) |
+### *Ophrys garganica*
+<p float="left">
+<img src="assets/images/raw/O_garganica.png" height="140">
+<img src="assets/images/augmented/O_garganica.jpg" height="140">
+<img src="assets/images/results/O_garganica.png" height="140">
+</p>
+
+### *Ophrys incubacea*
+<p float="left">
+<img src="assets/images/raw/O_incubacea.png" height="140">
+<img src="assets/images/augmented/O_incubacea.jpg" height="140">
+<img src="assets/images/results/O_incubacea.png" height="140">
+</p>
 
 <details>
 <summary>See all species</summary>
 
-| Raw | Augmented | Output |
-|:---:|:---------:|:------:|
-| ![](assets/images/raw/O_majellensis.jpg) | ![](assets/images/augmented/O_majellensis.jpg) | ![](assets/images/results/O_majellensis.png) |
-| ![](assets/images/raw/O_sphegodes.png) | ![](assets/images/augmented/O_sphegodes.jpg) | ![](assets/images/results/O_sphegodes.png) |
-| ![](assets/images/raw/O_sphegodes_Palena.png) | ![](assets/images/augmented/O_sphegodes_Palena.jpg) | ![](assets/images/results/O_sphegodes_Palena.png) |
+### *Ophrys majellensis*
+<p float="left">
+<img src="assets/images/raw/O_majellensis.jpg" height="140">
+<img src="assets/images/augmented/O_majellensis.jpg" height="140">
+<img src="assets/images/results/O_majellensis.png" height="140">
+</p>
+
+### *Ophrys sphegodes*
+<p float="left">
+<img src="assets/images/raw/O_sphegodes.png" height="140">
+<img src="assets/images/augmented/O_sphegodes.jpg" height="140">
+<img src="assets/images/results/O_sphegodes.png" height="140">
+</p>
+
+### *Ophrys sphegodes* (Palena)
+<p float="left">
+<img src="assets/images/raw/O_sphegodes_Palena.png" height="140">
+<img src="assets/images/augmented/O_sphegodes_Palena.jpg" height="140">
+<img src="assets/images/results/O_sphegodes_Palena.png" height="140">
+</p>
 
 </details>
 
