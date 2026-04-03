@@ -1,6 +1,5 @@
 #!/bin/bash
-# Avvia il container con GPU su Podman.
-# Su Docker usare: docker compose up --build -d
+# Avvia il container con GPU su Podman per test e sviluppo.
 
 CONTAINER_NAME="pytorch_app"
 IMAGE_NAME="resnet18-app"
@@ -15,21 +14,22 @@ echo "🚀 Avvio con GPU..."
 podman run -d \
   --name "$CONTAINER_NAME" \
   --device nvidia.com/gpu=all \
+  -e TZ=Europe/Rome \
   --shm-size 16g \
   -v ./dataset:/workspace/dataset \
   -v ./models:/workspace/models \
-  -v ./inference:/workspace/inference \
-  -v ./app:/workspace/app \
-  -v ./requirements.txt:/workspace/requirements.txt \
-  -v ./notebook_clean.ipynb:/workspace/notebook_clean.ipynb \
-  -v ./run_pipeline.py:/workspace/run_pipeline.py \
-  -v ./run_experiments.py:/workspace/run_experiments.py \
-  -v ./.env:/workspace/.env \
-  -v ./logs:/workspace/logs \
-  -v ./results:/workspace/results \
   -v ./experiments:/workspace/experiments \
-  -p 8888:8888 \
+  -v ./app:/workspace/app \
+  -v ./cli.py:/workspace/cli.py \
+  -v ./server.py:/workspace/server.py \
+  -v ./tests:/workspace/tests \
+  -v ./test_dataset:/workspace/test_dataset \
+  -v ./.env:/workspace/.env \
+  -p 5000:5000 \
   "$IMAGE_NAME" \
-  jupyter notebook --ip=0.0.0.0 --port=8888 --allow-root --no-browser --NotebookApp.token='' --NotebookApp.password=''
+  sleep infinity
 
-echo "✅ Jupyter su http://localhost:8888"
+echo "✅ Container avviato. Comandi utili:"
+echo "   podman exec pytorch_app python -m pytest tests/ -v"
+echo "   podman exec pytorch_app python cli.py --status"
+echo "   podman exec pytorch_app python server.py"

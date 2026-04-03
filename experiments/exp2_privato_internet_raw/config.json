@@ -1,0 +1,7 @@
+{
+  "experiment": 2,
+  "name": "exp2_privato_internet_raw",
+  "train": "privato",
+  "test": "internet_raw",
+  "timestamp": "2026-03-10T20:39:32.312211"
+}

@@ -6,8 +6,8 @@ import logging
 import sys
 from torcheval.metrics import MulticlassAccuracy, MulticlassF1Score, MulticlassPrecision, MulticlassRecall
 from dotenv import dotenv_values
-from app.preprocessing_tools.dataset_tool import getDatasetFromFile
-from app.preprocessing_tools.reproducibility import set_seed, seed_worker
+from app.preprocessing.dataset_tool import getDatasetFromFile
+from app.preprocessing.reproducibility import set_seed, seed_worker
 import numpy as np
 import random
 import os

@@ -1,5 +1,6 @@
 torcheval
 captum
+torchvision
 numpy
 matplotlib
 pandas
@@ -7,7 +8,17 @@ scikit-learn
 opencv-python
 pillow
 python-dotenv
-dotenv
 flask
+fastapi
+uvicorn
+httpx
 jupyter
 notebook
+
+# Testing
+pytest>=7.0.0
+pytest-cov>=4.0.0
+
+# Configuration
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
