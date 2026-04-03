@@ -4,8 +4,6 @@
 
 > Learning structured vector spaces of *Ophrys* orchid species through contrastive learning and metric embedding techniques.
 
-**Paper:** [ScienceDirect](https://www.sciencedirect.com/science/article/pii/S2590005625001079) | **Credits:** [Davide Di Pierro](https://github.com/davidedipierro) (UNINA, original research), [Marcello Russo](https://github.com/marcello-russo)
-
 ---
 
 ## 🎯 Roadmap
@@ -35,23 +33,23 @@
 
 ### *Ophrys exaltata*
 <p float="left">
-<img src="assets/images/raw/O_exaltata.png" height="200">
-<img src="assets/images/augmented/O_exaltata.jpg" height="200">
-<img src="assets/images/results/O_exaltata.png" height="200">
+<img src="assets/images/raw/O_exaltata.png" height="220">
+<img src="assets/images/augmented/O_exaltata.jpg" height="220">
+<img src="assets/images/results/O_exaltata.png" height="220">
 </p>
 
 ### *Ophrys garganica*
 <p float="left">
-<img src="assets/images/raw/O_garganica.png" height="200">
-<img src="assets/images/augmented/O_garganica.jpg" height="200">
-<img src="assets/images/results/O_garganica.png" height="200">
+<img src="assets/images/raw/O_garganica.png" height="220">
+<img src="assets/images/augmented/O_garganica.jpg" height="220">
+<img src="assets/images/results/O_garganica.png" height="220">
 </p>
 
 ### *Ophrys incubacea*
 <p float="left">
-<img src="assets/images/raw/O_incubacea.png" height="200">
-<img src="assets/images/augmented/O_incubacea.jpg" height="200">
-<img src="assets/images/results/O_incubacea.png" height="200">
+<img src="assets/images/raw/O_incubacea.png" height="220">
+<img src="assets/images/augmented/O_incubacea.jpg" height="220">
+<img src="assets/images/results/O_incubacea.png" height="220">
 </p>
 
 <details>
@@ -59,23 +57,23 @@
 
 ### *Ophrys majellensis*
 <p float="left">
-<img src="assets/images/raw/O_majellensis.jpg" height="200">
-<img src="assets/images/augmented/O_majellensis.jpg" height="200">
-<img src="assets/images/results/O_majellensis.png" height="200">
+<img src="assets/images/raw/O_majellensis.jpg" height="220">
+<img src="assets/images/augmented/O_majellensis.jpg" height="220">
+<img src="assets/images/results/O_majellensis.png" height="220">
 </p>
 
 ### *Ophrys sphegodes*
 <p float="left">
-<img src="assets/images/raw/O_sphegodes.png" height="200">
-<img src="assets/images/augmented/O_sphegodes.jpg" height="200">
-<img src="assets/images/results/O_sphegodes.png" height="200">
+<img src="assets/images/raw/O_sphegodes.png" height="220">
+<img src="assets/images/augmented/O_sphegodes.jpg" height="220">
+<img src="assets/images/results/O_sphegodes.png" height="220">
 </p>
 
 ### *Ophrys sphegodes* (Palena)
 <p float="left">
-<img src="assets/images/raw/O_sphegodes_Palena.png" height="200">
-<img src="assets/images/augmented/O_sphegodes_Palena.jpg" height="200">
-<img src="assets/images/results/O_sphegodes_Palena.png" height="200">
+<img src="assets/images/raw/O_sphegodes_Palena.png" height="220">
+<img src="assets/images/augmented/O_sphegodes_Palena.jpg" height="220">
+<img src="assets/images/results/O_sphegodes_Palena.png" height="220">
 </p>
 
 </details>
