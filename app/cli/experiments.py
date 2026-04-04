@@ -464,6 +464,66 @@ def run_experiment(
             )
             logging.info(f"Report saved to: {report_path}")
 
+        # --- PHASE: Explainability ---
+        if "explain" in phases:
+            logging.info("\n--- PHASE: Explainability ---")
+            try:
+                from app.explainability import generate_output_images
+                from app.preprocessing.dataset_tool import ImageFolderWithName
+                from app.preprocessing.normalization import get_mean, get_std
+                from torchvision import transforms as T
+                import json
+
+                from app.core.models.resnet import ResNetConfig, ResNetClassifier
+
+                # Determine model path based on experiment type
+                if exp_id == 4:
+                    # K-fold experiment: use best fold model
+                    kfold_exp_dir = str(results_dir) + f"_kfold_{model_variant}"
+                    kfold_results_path = os.path.join(kfold_exp_dir, "results.json")
+                    if not os.path.exists(kfold_results_path):
+                        logging.warning("--explain requires completed k-fold results. Run with --cross-validate first")
+                        return
+                    with open(kfold_results_path) as f:
+                        kfold_data = json.load(f)
+                    best_fold = kfold_data.get("best_fold", 0)
+                    best_model_path = os.path.join(kfold_exp_dir, f"best_fold_{best_fold}.pt")
+                else:
+                    # Standard experiment: use last trained model
+                    best_model_path = str(model_dir / "model.pt")
+
+                if not os.path.exists(best_model_path):
+                    logging.warning(f"Model not found: {best_model_path}")
+                    return
+
+                config = ResNetConfig(variant=model_variant, num_classes=exp["num_classes"], pretrained=True)
+                model = ResNetClassifier(config)
+                model.load_weights(best_model_path)
+                model = model.to(device)
+
+                transform = T.Compose([
+                    T.Resize((512, 256)),
+                    T.ToTensor(),
+                    T.Normalize(mean=get_mean(), std=get_std()),
+                ])
+                test_dataset = ImageFolderWithName(test_path, transform=transform)
+                explain_dir = str(exp_dir / "explainability")
+                os.makedirs(explain_dir, exist_ok=True)
+                generate_output_images(
+                    dataset=test_dataset,
+                    model=model,
+                    device=device,
+                    class_names=ALL_CLASSES,
+                    output_dir=str(explain_dir),
+                    sliding_window_size=8,
+                    stride=4,
+                )
+                logging.info(f"Explainability images saved to {explain_dir}")
+            except Exception as e:
+                logging.error(f"Explainability failed: {e}")
+                import traceback
+                traceback.print_exc()
+
         # Mark as completed
         done_file = exp_dir / f".exp_{exp_id}_done"
         done_file.write_text(f"Completed at {datetime.now().isoformat()}\nModel: {model_variant}\n")
@@ -498,6 +558,8 @@ Examples:
     parser.add_argument("--test", action="store_true", help="Run tests")
     parser.add_argument("--cross-validate", action="store_true", help="Run k-fold cross validation")
     parser.add_argument("--status", action="store_true", help="Check experiment status")
+    parser.add_argument("--explain", action="store_true",
+                        help="Generate explanation images (GradCAM, Occlusion, IG) after testing")
 
     # Model selection
     parser.add_argument("--model", type=str, default="resnet18",
