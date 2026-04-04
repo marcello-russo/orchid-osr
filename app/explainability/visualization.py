@@ -127,7 +127,6 @@ def display_occlusion_for_save(ax, image, model, label, sliding_window_size, str
         sliding_window_shapes=(3, sliding_window_size, sliding_window_size),
         strides=(3, stride, stride)
     )
-    print(label)
 
     attributions = attributions.squeeze(0).cpu().detach().numpy()
     attributions = np.transpose(attributions, (1, 2, 0))

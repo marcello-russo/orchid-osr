@@ -1,14 +1,12 @@
 """Interactive matplotlib viewer for explainability."""
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Button
-from captum.attr import IntegratedGradients
 
 from app.explainability.core import inference
 from app.explainability.visualization import (
     display_image,
     display_occlusion,
     display_confidence,
-    _display_filename,
 )
 
 
@@ -18,7 +16,6 @@ def show_and_test_images(dataset, model, device, class_names, sliding_window_siz
     fig, ax = plt.subplots(1, len(class_names) + 1, figsize=(18, 3))
     plt.subplots_adjust(bottom=0.2)
     model.to(device)
-    ig = IntegratedGradients(model)
 
     class InteractiveViewer:
         def __init__(self):

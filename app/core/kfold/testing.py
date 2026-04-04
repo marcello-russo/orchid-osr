@@ -245,7 +245,7 @@ def aggregate_and_test(
     logger.info(f"\nTest finale con modello fold {best_fold + 1} su {test_dataset_dir}")
     test_metrics = final_test(
         best_model_path, model_variant, num_classes, test_dataset_dir,
-        class_names, batch_size, device
+        class_names, effective_batch_size, device
     )
 
     logger.info(f"Test Accuracy: {test_metrics['accuracy']:.4f}")
