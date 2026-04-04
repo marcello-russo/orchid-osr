@@ -88,7 +88,6 @@ def display_occlusion(fig, ax, image, model, label, occlusion_text, sliding_wind
 
     global_attribution = occlusion.attribute(
         image.unsqueeze(0),
-        target=label,
         sliding_window_shapes=(3, sliding_window_size, sliding_window_size),
         strides=(3, stride, stride)
     )
@@ -160,6 +159,13 @@ def generate_output_images(dataset, model, device, class_names, output_dir, slid
     os.makedirs(output_dir, exist_ok=True)
     class_counters = defaultdict(int)
 
+    # Map dataset class indices to model class indices
+    model_class_to_idx = {name: idx for idx, name in enumerate(class_names)}
+    dataset_to_model = {}
+    for ds_idx, cls_name in enumerate(dataset.classes):
+        if cls_name in model_class_to_idx:
+            dataset_to_model[ds_idx] = model_class_to_idx[cls_name]
+
     for idx, data in enumerate(dataset):
         if isinstance(data, tuple):
             if len(data) == 3:
@@ -176,6 +182,10 @@ def generate_output_images(dataset, model, device, class_names, output_dir, slid
             label = label.item()
 
         image = image.to(device)
+
+        # Map dataset label to model class index
+        model_label = dataset_to_model.get(label) if label is not None else None
+
         label_dir = os.path.join(output_dir, f"{dataset.classes[label]}" if label is not None else "unlabeled")
         os.makedirs(label_dir, exist_ok=True)
 
@@ -190,16 +200,15 @@ def generate_output_images(dataset, model, device, class_names, output_dir, slid
 
         fig, ax = plt.subplots(1, 3, figsize=(12, 6))
         plt.subplots_adjust(bottom=0.2)
-        display_image(ax[0], image, predicted, label, class_names)
-        display_occlusion_for_save(ax[1], image, model, predicted if label is None else label, sliding_window_size, stride, class_names)
-        display_integrated_gradients(ax[2], image, ig, predicted if label is None else label, class_names)
+        display_image(ax[0], image, predicted, model_label, class_names)
+        display_occlusion_for_save(ax[1], image, model, predicted if model_label is None else model_label, sliding_window_size, stride, class_names)
+        display_integrated_gradients(ax[2], image, ig, predicted if model_label is None else model_label, class_names)
         display_confidence(fig.text(0.01, 0.1, '', ha='left', va='center', fontsize=9), prediction_values, class_names)
         _display_filename(fig.text(0.95, 0.02, '', ha='right', va='center', fontsize=9), filename)
 
-        bg_color = 'white' if label is not None and predicted == label else 'lightcoral'
+        bg_color = 'white' if model_label is not None and predicted == model_label else 'lightcoral'
         fig.patch.set_facecolor(bg_color)
 
-        label_name = class_names[predicted.item()] if label is None else class_names[label]
         output_path = os.path.join(label_dir, f"{class_index}_{filename[:-4]}.png")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         plt.savefig(output_path)
