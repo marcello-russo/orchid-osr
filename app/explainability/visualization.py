@@ -88,6 +88,7 @@ def display_occlusion(fig, ax, image, model, label, occlusion_text, sliding_wind
 
     global_attribution = occlusion.attribute(
         image.unsqueeze(0),
+        target=label,
         sliding_window_shapes=(3, sliding_window_size, sliding_window_size),
         strides=(3, stride, stride)
     )
