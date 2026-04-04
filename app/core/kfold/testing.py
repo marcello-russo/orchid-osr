@@ -108,8 +108,12 @@ def final_test(best_model_path, model_variant, num_classes, test_dataset_dir,
     all_predictions = np.array(all_predictions)
     all_labels_raw = np.array(all_labels)
 
-    # Remappa le label del test set sugli indici del modello
-    all_labels_mapped = np.array([test_to_model[l] for l in all_labels_raw])
+    # Filtra campioni con classe non mappata e remappa le label
+    valid_mask = np.isin(all_labels_raw, list(test_to_model.keys()))
+    all_labels_mapped = np.array([test_to_model[l] for l in all_labels_raw[valid_mask]])
+    all_predictions = all_predictions[valid_mask]
+    if valid_mask.sum() < len(all_labels_raw):
+        logger.warning(f"Filtrati {len(all_labels_raw) - valid_mask.sum()} campioni con classe non mappata")
 
     # Classi presenti nel test set (indici nel modello)
     present_indices = sorted(test_to_model.values())

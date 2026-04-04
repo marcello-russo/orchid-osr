@@ -7,6 +7,7 @@ from app.explainability.visualization import (
     display_image,
     display_occlusion,
     display_confidence,
+    _display_filename,
 )
 
 

@@ -560,7 +560,7 @@ Examples:
     parser.add_argument("--cross-validate", action="store_true", help="Run k-fold cross validation")
     parser.add_argument("--status", action="store_true", help="Check experiment status")
     parser.add_argument("--explain", action="store_true",
-                        help="Generate explanation images (GradCAM, Occlusion, IG) after testing")
+                        help="Generate explanation images (Occlusion, IntegratedGradients) after testing")
 
     # Model selection
     parser.add_argument("--model", type=str, default="resnet18",
