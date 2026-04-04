@@ -506,7 +506,8 @@ def run_experiment(
                     T.ToTensor(),
                     T.Normalize(mean=get_mean(), std=get_std()),
                 ])
-                test_dataset = ImageFolderWithName(test_path, transform=transform)
+                test_raw_dir = str(PROJECT_ROOT / DATASET_PATHS[exp["test_dataset"]]["raw"])
+                test_dataset = ImageFolderWithName(test_raw_dir, transform=transform)
                 explain_dir = str(exp_dir / "explainability")
                 os.makedirs(explain_dir, exist_ok=True)
                 generate_output_images(
@@ -601,8 +602,8 @@ def main():
         return 0
 
     # Validate arguments
-    if not any([args.all, args.train, args.test, args.cross_validate]):
-        print("Error: Specify an action (--all, --train, --test, --cross-validate, --status)")
+    if not any([args.all, args.train, args.test, args.cross_validate, args.explain]):
+        print("Error: Specify an action (--all, --train, --test, --cross-validate, --explain, --status)")
         return 1
 
     # Setup logging
@@ -619,6 +620,8 @@ def main():
             phases.append('test')
         if args.cross_validate:
             phases.append('cross-validate')
+        if args.explain:
+            phases.append('explain')
 
     # Determine which experiments to run
     if args.exp:
