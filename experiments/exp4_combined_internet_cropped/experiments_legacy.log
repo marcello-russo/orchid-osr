@@ -1,0 +1,601 @@
+2026-03-10 02:43:05 | Experiment 4: exp4_combined_internet_cropped
+2026-03-10 02:43:13 | WARNING | Metric computation warning: The size of tensor a (5) must match the size of tensor b (6) at non-singleton dimension 0
+2026-03-10 02:43:13 | INFO | Test Accuracy (Macro): 0.6638888716697693 ± 0.021852202713489532
+2026-03-10 02:43:13 | INFO | Test F1 Score (Macro): 0.0 ± 0.01220656093209982
+2026-03-10 02:43:13 | INFO | Test Precision (Macro): 0.0 ± 0.006457935087382793
+2026-03-10 02:43:13 | INFO | Test Recall (Macro): 0.0 ± 0.0
+2026-03-10 02:43:13 | INFO | Test Accuracy (Micro): 0.6638888716697693 ± 0.0
+2026-03-10 02:43:13 | INFO | Test F1 Score (Micro): 0.0 ± 0.0
+2026-03-10 02:43:13 | INFO | Test Precision (Micro): 0.0 ± 0.0
+2026-03-10 02:43:13 | INFO | Test Recall (Micro): 0.0 ± 0.0
+2026-03-10 02:43:13 | INFO | Class: O. exaltata
+2026-03-10 02:43:13 | INFO | Accuracy: 0.0
+2026-03-10 02:43:13 | INFO | F1 Score: 0.0
+2026-03-10 02:43:13 | INFO | Precision: 0.0
+2026-03-10 02:43:13 | INFO | Recall: 0.0
+2026-03-10 02:43:13 | INFO | Class: O. garganica
+2026-03-10 02:43:13 | INFO | Accuracy: 0.0
+2026-03-10 02:43:13 | INFO | F1 Score: 0.0
+2026-03-10 02:43:13 | INFO | Precision: 0.0
+2026-03-10 02:43:13 | INFO | Recall: 0.0
+2026-03-10 02:43:13 | INFO | Class: O. incubacea
+2026-03-10 02:43:13 | INFO | Accuracy: 0.0
+2026-03-10 02:43:13 | INFO | F1 Score: 0.0
+2026-03-10 02:43:13 | INFO | Precision: 0.0
+2026-03-10 02:43:13 | INFO | Recall: 0.0
+2026-03-10 02:43:13 | INFO | Class: O. sphegodes
+2026-03-10 02:43:13 | INFO | Accuracy: 0.0
+2026-03-10 02:43:13 | INFO | F1 Score: 0.0
+2026-03-10 02:43:13 | INFO | Precision: 0.0
+2026-03-10 02:43:13 | INFO | Recall: 0.0
+2026-03-10 02:43:13 | INFO | Confusion Matrix:
+tensor([[201,   3,   1,   0,  13,   0],
+        [  0, 313,   3,   0,   3,   0],
+        [  0,   2, 203,   0,   5,   0],
+        [  6,   8,   6,   0, 313,   0],
+        [  0,   0,   0,   0,   0,   0],
+        [  0,   0,   0,   0,   0,   0]], device='cuda:0', dtype=torch.int32)
+2026-03-10 04:12:01 | ⏱ END: exp_4 - 01:28:56
+2026-03-10 04:12:01 | ✓ exp_4
+2026-03-10 04:12:01 | Testing completed
+2026-03-10 19:13:42 | ============================================================
+2026-03-10 19:13:42 | TRAINING
+2026-03-10 19:13:42 | ============================================================
+2026-03-10 19:13:42 | ⏱ START: train_privato
+2026-03-10 19:13:42 | Training privato...
+2026-03-10 19:13:45 | DEBUG | Failed to initialize sox extension
+Traceback (most recent call last):
+  File "/opt/conda/lib/python3.10/site-packages/torchaudio/_extension/__init__.py", line 60, in <module>
+    _init_sox()
+  File "/opt/conda/lib/python3.10/site-packages/torchaudio/_extension/utils.py", line 70, in _init_sox
+    _load_lib("libtorchaudio_sox")
+  File "/opt/conda/lib/python3.10/site-packages/torchaudio/_extension/utils.py", line 64, in _load_lib
+    torch.ops.load_library(path)
+  File "/opt/conda/lib/python3.10/site-packages/torch/_ops.py", line 852, in load_library
+    ctypes.CDLL(path)
+  File "/opt/conda/lib/python3.10/ctypes/__init__.py", line 374, in __init__
+    self._handle = _dlopen(self._name, mode)
+OSError: libsox.so: cannot open shared object file: No such file or directory
+2026-03-10 19:13:45 | DEBUG | Attempting to load FFmpeg version 6.
+2026-03-10 19:13:45 | DEBUG | Failed to load FFmpeg 6 extension.
+Traceback (most recent call last):
+  File "/opt/conda/lib/python3.10/site-packages/torchaudio/_extension/utils.py", line 128, in _find_ffmpeg_extension
+    return _find_versionsed_ffmpeg_extension(ffmpeg_ver)
+  File "/opt/conda/lib/python3.10/site-packages/torchaudio/_extension/utils.py", line 113, in _find_versionsed_ffmpeg_extension
+    _try_access_avutil(ffmpeg_ver)
+  File "/opt/conda/lib/python3.10/site-packages/torchaudio/_extension/utils.py", line 89, in _try_access_avutil
+    torchaudio.lib._torchaudio.find_avutil(libavutil)
+RuntimeError: Error in dlopen: libavutil.so.58: cannot open shared object file: No such file or directory
+Exception raised from DynamicLibrary at /opt/conda/conda-bld/pytorch_1695392020201/work/aten/src/ATen/DynamicLibrary.cpp:38 (most recent call first):
+frame #0: c10::Error::Error(c10::SourceLocation, std::string) + 0x57 (0x7990034ac617 in /opt/conda/lib/python3.10/site-packages/torch/lib/libc10.so)
+frame #1: <unknown function> + 0xc669fc (0x7990513e09fc in /opt/conda/lib/python3.10/site-packages/torch/lib/libtorch_cpu.so)
+frame #2: torchaudio::find_avutil(char const*) + 0x1a (0x798fe3dca4ca in /opt/conda/lib/python3.10/site-packages/torchaudio/lib/libtorchaudio.so)
+frame #3: <unknown function> + 0x7f7e (0x798fe3d7af7e in /opt/conda/lib/python3.10/site-packages/torchaudio/lib/_torchaudio.so)
+frame #4: <unknown function> + 0x12247 (0x798fe3d85247 in /opt/conda/lib/python3.10/site-packages/torchaudio/lib/_torchaudio.so)
+frame #5: python() [0x4fc697]
+<omitting python frames>
+frame #16: python() [0x591d92]
+frame #18: python() [0x5991cd]
+frame #19: python() [0x4fccc4]
+frame #30: python() [0x4fc2a4]
+frame #33: python() [0x515994]
+frame #34: python() [0x4fc697]
+frame #40: python() [0x4fc2a4]
+frame #44: python() [0x591d92]
+frame #46: python() [0x5991cd]
+frame #47: python() [0x4fccc4]
+frame #58: python() [0x4fc2a4]
+frame #61: python() [0x515994]
+frame #62: python() [0x4fc697]
+
+2026-03-10 19:13:45 | DEBUG | Attempting to load FFmpeg version 5.
+2026-03-10 19:13:45 | DEBUG | Failed to load FFmpeg 5 extension.
+Traceback (most recent call last):
+  File "/opt/conda/lib/python3.10/site-packages/torchaudio/_extension/utils.py", line 128, in _find_ffmpeg_extension
+    return _find_versionsed_ffmpeg_extension(ffmpeg_ver)
+  File "/opt/conda/lib/python3.10/site-packages/torchaudio/_extension/utils.py", line 113, in _find_versionsed_ffmpeg_extension
+    _try_access_avutil(ffmpeg_ver)
+  File "/opt/conda/lib/python3.10/site-packages/torchaudio/_extension/utils.py", line 89, in _try_access_avutil
+    torchaudio.lib._torchaudio.find_avutil(libavutil)
+RuntimeError: Error in dlopen: libavutil.so.57: cannot open shared object file: No such file or directory
+Exception raised from DynamicLibrary at /opt/conda/conda-bld/pytorch_1695392020201/work/aten/src/ATen/DynamicLibrary.cpp:38 (most recent call first):
+frame #0: c10::Error::Error(c10::SourceLocation, std::string) + 0x57 (0x7990034ac617 in /opt/conda/lib/python3.10/site-packages/torch/lib/libc10.so)
+frame #1: <unknown function> + 0xc669fc (0x7990513e09fc in /opt/conda/lib/python3.10/site-packages/torch/lib/libtorch_cpu.so)
+frame #2: torchaudio::find_avutil(char const*) + 0x1a (0x798fe3dca4ca in /opt/conda/lib/python3.10/site-packages/torchaudio/lib/libtorchaudio.so)
+frame #3: <unknown function> + 0x7f7e (0x798fe3d7af7e in /opt/conda/lib/python3.10/site-packages/torchaudio/lib/_torchaudio.so)
+frame #4: <unknown function> + 0x12247 (0x798fe3d85247 in /opt/conda/lib/python3.10/site-packages/torchaudio/lib/_torchaudio.so)
+frame #5: python() [0x4fc697]
+<omitting python frames>
+frame #16: python() [0x591d92]
+frame #18: python() [0x5991cd]
+frame #19: python() [0x4fccc4]
+frame #30: python() [0x4fc2a4]
+frame #33: python() [0x515994]
+frame #34: python() [0x4fc697]
+frame #40: python() [0x4fc2a4]
+frame #44: python() [0x591d92]
+frame #46: python() [0x5991cd]
+frame #47: python() [0x4fccc4]
+frame #58: python() [0x4fc2a4]
+frame #61: python() [0x515994]
+frame #62: python() [0x4fc697]
+
+2026-03-10 19:13:45 | DEBUG | Attempting to load FFmpeg version 4.
+2026-03-10 19:13:45 | DEBUG | Found FFmpeg version 4.
+2026-03-10 19:13:45 | INFO | 
+==================================================
+2026-03-10 19:13:45 | INFO | PHASE: Training
+2026-03-10 19:13:45 | INFO | ==================================================
+2026-03-10 19:13:45 | WARNING | ⚠ WARNING: Running on CPU. Training will be slow.
+2026-03-10 19:13:45 | INFO | Device: cpu
+2026-03-10 19:13:45 | INFO | Class weights: False
+2026-03-10 19:13:45 | INFO | Epochs: 26
+2026-03-10 19:13:45 | INFO | Batch size: 8
+2026-03-10 19:13:45 | INFO | Learning rate: 0.001
+2026-03-10 19:13:48 | INFO | Using standard CrossEntropyLoss (no class weights)
+2026-03-10 19:18:23 | INFO | Validation Accuracy: 35.80036926269531%
+2026-03-10 19:18:23 | INFO | Validation F1 Score: 0.3004220128059387
+2026-03-10 19:18:23 | INFO | Validation Precision: 0.46289685368537903
+2026-03-10 19:18:23 | INFO | Validation Recall: 0.358003705739975
+2026-03-10 19:18:23 | INFO | Validation Loss: 2.8006965294480324
+2026-03-10 19:18:23 | INFO | Saving best model with F1 Score: 0.3004220128059387
+2026-03-10 19:22:54 | INFO | Validation Accuracy: 61.09280014038086%
+2026-03-10 19:22:54 | INFO | Validation F1 Score: 0.5125663876533508
+2026-03-10 19:22:54 | INFO | Validation Precision: 0.5231683850288391
+2026-03-10 19:22:54 | INFO | Validation Recall: 0.6109279990196228
+2026-03-10 19:22:54 | INFO | Validation Loss: 1.2950333841145039
+2026-03-10 19:22:54 | INFO | Saving best model with F1 Score: 0.5125663876533508
+2026-03-10 19:38:09 | ============================================================
+2026-03-10 19:38:09 | TRAINING
+2026-03-10 19:38:09 | ============================================================
+2026-03-10 19:38:09 | ⏱ START: train_privato
+2026-03-10 19:38:09 | Training privato...
+2026-03-10 19:38:12 | DEBUG | Failed to initialize sox extension
+Traceback (most recent call last):
+  File "/opt/conda/lib/python3.10/site-packages/torchaudio/_extension/__init__.py", line 60, in <module>
+    _init_sox()
+  File "/opt/conda/lib/python3.10/site-packages/torchaudio/_extension/utils.py", line 70, in _init_sox
+    _load_lib("libtorchaudio_sox")
+  File "/opt/conda/lib/python3.10/site-packages/torchaudio/_extension/utils.py", line 64, in _load_lib
+    torch.ops.load_library(path)
+  File "/opt/conda/lib/python3.10/site-packages/torch/_ops.py", line 852, in load_library
+    ctypes.CDLL(path)
+  File "/opt/conda/lib/python3.10/ctypes/__init__.py", line 374, in __init__
+    self._handle = _dlopen(self._name, mode)
+OSError: libsox.so: cannot open shared object file: No such file or directory
+2026-03-10 19:38:12 | DEBUG | Attempting to load FFmpeg version 6.
+2026-03-10 19:38:12 | DEBUG | Failed to load FFmpeg 6 extension.
+Traceback (most recent call last):
+  File "/opt/conda/lib/python3.10/site-packages/torchaudio/_extension/utils.py", line 128, in _find_ffmpeg_extension
+    return _find_versionsed_ffmpeg_extension(ffmpeg_ver)
+  File "/opt/conda/lib/python3.10/site-packages/torchaudio/_extension/utils.py", line 113, in _find_versionsed_ffmpeg_extension
+    _try_access_avutil(ffmpeg_ver)
+  File "/opt/conda/lib/python3.10/site-packages/torchaudio/_extension/utils.py", line 89, in _try_access_avutil
+    torchaudio.lib._torchaudio.find_avutil(libavutil)
+RuntimeError: Error in dlopen: libavutil.so.58: cannot open shared object file: No such file or directory
+Exception raised from DynamicLibrary at /opt/conda/conda-bld/pytorch_1695392020201/work/aten/src/ATen/DynamicLibrary.cpp:38 (most recent call first):
+frame #0: c10::Error::Error(c10::SourceLocation, std::string) + 0x57 (0x7dc07dc73617 in /opt/conda/lib/python3.10/site-packages/torch/lib/libc10.so)
+frame #1: <unknown function> + 0xc669fc (0x7dc0cbb2e9fc in /opt/conda/lib/python3.10/site-packages/torch/lib/libtorch_cpu.so)
+frame #2: torchaudio::find_avutil(char const*) + 0x1a (0x7dc05e5914ca in /opt/conda/lib/python3.10/site-packages/torchaudio/lib/libtorchaudio.so)
+frame #3: <unknown function> + 0x7f7e (0x7dc05e541f7e in /opt/conda/lib/python3.10/site-packages/torchaudio/lib/_torchaudio.so)
+frame #4: <unknown function> + 0x12247 (0x7dc05e54c247 in /opt/conda/lib/python3.10/site-packages/torchaudio/lib/_torchaudio.so)
+frame #5: python() [0x4fc697]
+<omitting python frames>
+frame #16: python() [0x591d92]
+frame #18: python() [0x5991cd]
+frame #19: python() [0x4fccc4]
+frame #30: python() [0x4fc2a4]
+frame #33: python() [0x515994]
+frame #34: python() [0x4fc697]
+frame #40: python() [0x4fc2a4]
+frame #44: python() [0x591d92]
+frame #46: python() [0x5991cd]
+frame #47: python() [0x4fccc4]
+frame #58: python() [0x4fc2a4]
+frame #61: python() [0x515994]
+frame #62: python() [0x4fc697]
+
+2026-03-10 19:38:12 | DEBUG | Attempting to load FFmpeg version 5.
+2026-03-10 19:38:12 | DEBUG | Failed to load FFmpeg 5 extension.
+Traceback (most recent call last):
+  File "/opt/conda/lib/python3.10/site-packages/torchaudio/_extension/utils.py", line 128, in _find_ffmpeg_extension
+    return _find_versionsed_ffmpeg_extension(ffmpeg_ver)
+  File "/opt/conda/lib/python3.10/site-packages/torchaudio/_extension/utils.py", line 113, in _find_versionsed_ffmpeg_extension
+    _try_access_avutil(ffmpeg_ver)
+  File "/opt/conda/lib/python3.10/site-packages/torchaudio/_extension/utils.py", line 89, in _try_access_avutil
+    torchaudio.lib._torchaudio.find_avutil(libavutil)
+RuntimeError: Error in dlopen: libavutil.so.57: cannot open shared object file: No such file or directory
+Exception raised from DynamicLibrary at /opt/conda/conda-bld/pytorch_1695392020201/work/aten/src/ATen/DynamicLibrary.cpp:38 (most recent call first):
+frame #0: c10::Error::Error(c10::SourceLocation, std::string) + 0x57 (0x7dc07dc73617 in /opt/conda/lib/python3.10/site-packages/torch/lib/libc10.so)
+frame #1: <unknown function> + 0xc669fc (0x7dc0cbb2e9fc in /opt/conda/lib/python3.10/site-packages/torch/lib/libtorch_cpu.so)
+frame #2: torchaudio::find_avutil(char const*) + 0x1a (0x7dc05e5914ca in /opt/conda/lib/python3.10/site-packages/torchaudio/lib/libtorchaudio.so)
+frame #3: <unknown function> + 0x7f7e (0x7dc05e541f7e in /opt/conda/lib/python3.10/site-packages/torchaudio/lib/_torchaudio.so)
+frame #4: <unknown function> + 0x12247 (0x7dc05e54c247 in /opt/conda/lib/python3.10/site-packages/torchaudio/lib/_torchaudio.so)
+frame #5: python() [0x4fc697]
+<omitting python frames>
+frame #16: python() [0x591d92]
+frame #18: python() [0x5991cd]
+frame #19: python() [0x4fccc4]
+frame #30: python() [0x4fc2a4]
+frame #33: python() [0x515994]
+frame #34: python() [0x4fc697]
+frame #40: python() [0x4fc2a4]
+frame #44: python() [0x591d92]
+frame #46: python() [0x5991cd]
+frame #47: python() [0x4fccc4]
+frame #58: python() [0x4fc2a4]
+frame #61: python() [0x515994]
+frame #62: python() [0x4fc697]
+
+2026-03-10 19:38:12 | DEBUG | Attempting to load FFmpeg version 4.
+2026-03-10 19:38:12 | DEBUG | Found FFmpeg version 4.
+2026-03-10 19:38:12 | INFO | 
+==================================================
+2026-03-10 19:38:12 | INFO | PHASE: Training
+2026-03-10 19:38:12 | INFO | ==================================================
+2026-03-10 19:38:12 | INFO | Device: cuda
+2026-03-10 19:38:12 | INFO | Class weights: False
+2026-03-10 19:38:12 | INFO | Epochs: 26
+2026-03-10 19:38:12 | INFO | Batch size: 8
+2026-03-10 19:38:12 | INFO | Learning rate: 0.001
+2026-03-10 19:38:18 | INFO | Using standard CrossEntropyLoss (no class weights)
+2026-03-10 19:38:48 | INFO | Validation Accuracy: 54.31746292114258%
+2026-03-10 19:38:48 | INFO | Validation F1 Score: 0.4468827247619629
+2026-03-10 19:38:48 | INFO | Validation Precision: 0.4879802167415619
+2026-03-10 19:38:48 | INFO | Validation Recall: 0.5431746244430542
+2026-03-10 19:38:48 | INFO | Validation Loss: 2.6626865565776825
+2026-03-10 19:38:48 | INFO | Saving best model with F1 Score: 0.4468827247619629
+2026-03-10 19:39:17 | INFO | Validation Accuracy: 45.761905670166016%
+2026-03-10 19:39:17 | INFO | Validation F1 Score: 0.3881000280380249
+2026-03-10 19:39:17 | INFO | Validation Precision: 0.5314189791679382
+2026-03-10 19:39:17 | INFO | Validation Recall: 0.4576190412044525
+2026-03-10 19:39:17 | INFO | Validation Loss: 4.247341006994247
+2026-03-10 19:39:17 | INFO | Saving best model with F1 Score: 0.3881000280380249
+2026-03-10 19:39:46 | INFO | Validation Accuracy: 71.8724136352539%
+2026-03-10 19:39:46 | INFO | Validation F1 Score: 0.704833984375
+2026-03-10 19:39:46 | INFO | Validation Precision: 0.7709401845932007
+2026-03-10 19:39:46 | INFO | Validation Recall: 0.7187241315841675
+2026-03-10 19:39:46 | INFO | Validation Loss: 0.7428739638999104
+2026-03-10 19:39:46 | INFO | Saving best model with F1 Score: 0.704833984375
+2026-03-10 19:40:14 | INFO | Validation Accuracy: 57.26313018798828%
+2026-03-10 19:40:14 | INFO | Validation F1 Score: 0.5516747236251831
+2026-03-10 19:40:14 | INFO | Validation Precision: 0.7554887533187866
+2026-03-10 19:40:14 | INFO | Validation Recall: 0.572631299495697
+2026-03-10 19:40:14 | INFO | Validation Loss: 1.4006825163960457
+2026-03-10 19:40:14 | INFO | Saving best model with F1 Score: 0.5516747236251831
+2026-03-10 19:40:43 | INFO | Validation Accuracy: 52.55189514160156%
+2026-03-10 19:40:43 | INFO | Validation F1 Score: 0.4650648534297943
+2026-03-10 19:40:43 | INFO | Validation Precision: 0.7209665179252625
+2026-03-10 19:40:43 | INFO | Validation Recall: 0.5255189538002014
+2026-03-10 19:40:43 | INFO | Validation Loss: 3.042009860277176
+2026-03-10 19:40:43 | INFO | Saving best model with F1 Score: 0.4650648534297943
+2026-03-10 19:40:43 | INFO | Checkpoint saved at epoch 5
+2026-03-10 19:41:12 | INFO | Validation Accuracy: 55.74542236328125%
+2026-03-10 19:41:12 | INFO | Validation F1 Score: 0.5161477327346802
+2026-03-10 19:41:12 | INFO | Validation Precision: 0.7635025978088379
+2026-03-10 19:41:12 | INFO | Validation Recall: 0.5574542284011841
+2026-03-10 19:41:12 | INFO | Validation Loss: 1.6911500729620457
+2026-03-10 19:41:12 | INFO | Saving best model with F1 Score: 0.5161477327346802
+2026-03-10 19:41:43 | INFO | Validation Accuracy: 86.26556396484375%
+2026-03-10 19:41:43 | INFO | Validation F1 Score: 0.8468429446220398
+2026-03-10 19:41:43 | INFO | Validation Precision: 0.8698412775993347
+2026-03-10 19:41:43 | INFO | Validation Recall: 0.8626556396484375
+2026-03-10 19:41:43 | INFO | Validation Loss: 0.4915639179525897
+2026-03-10 19:41:43 | INFO | Saving best model with F1 Score: 0.8468429446220398
+2026-03-10 19:42:15 | INFO | Validation Accuracy: 86.9261245727539%
+2026-03-10 19:42:15 | INFO | Validation F1 Score: 0.8650649785995483
+2026-03-10 19:42:15 | INFO | Validation Precision: 0.8668424487113953
+2026-03-10 19:42:15 | INFO | Validation Recall: 0.8692612648010254
+2026-03-10 19:42:15 | INFO | Validation Loss: 0.4269066686174483
+2026-03-10 19:42:15 | INFO | Saving best model with F1 Score: 0.8650649785995483
+2026-03-10 19:42:46 | INFO | Validation Accuracy: 80.3846206665039%
+2026-03-10 19:42:46 | INFO | Validation F1 Score: 0.7772331237792969
+2026-03-10 19:42:46 | INFO | Validation Precision: 0.8160386085510254
+2026-03-10 19:42:46 | INFO | Validation Recall: 0.8038462400436401
+2026-03-10 19:42:46 | INFO | Validation Loss: 0.8853342193178833
+2026-03-10 19:43:17 | INFO | Validation Accuracy: 71.58975219726562%
+2026-03-10 19:43:17 | INFO | Validation F1 Score: 0.7190226316452026
+2026-03-10 19:43:17 | INFO | Validation Precision: 0.855925977230072
+2026-03-10 19:43:17 | INFO | Validation Recall: 0.7158975005149841
+2026-03-10 19:43:17 | INFO | Validation Loss: 0.8691533408127725
+2026-03-10 19:43:17 | INFO | Checkpoint saved at epoch 10
+2026-03-10 19:43:46 | INFO | Validation Accuracy: 84.71978759765625%
+2026-03-10 19:43:46 | INFO | Validation F1 Score: 0.8351556658744812
+2026-03-10 19:43:46 | INFO | Validation Precision: 0.8383459448814392
+2026-03-10 19:43:46 | INFO | Validation Recall: 0.8471978902816772
+2026-03-10 19:43:46 | INFO | Validation Loss: 0.4968755611043889
+2026-03-10 19:44:15 | INFO | Validation Accuracy: 83.49327850341797%
+2026-03-10 19:44:15 | INFO | Validation F1 Score: 0.8394263982772827
+2026-03-10 19:44:15 | INFO | Validation Precision: 0.8511703014373779
+2026-03-10 19:44:15 | INFO | Validation Recall: 0.834932804107666
+2026-03-10 19:44:15 | INFO | Validation Loss: 0.9529539230279624
+2026-03-10 19:44:43 | INFO | Validation Accuracy: 89.19414520263672%
+2026-03-10 19:44:43 | INFO | Validation F1 Score: 0.8879634141921997
+2026-03-10 19:44:43 | INFO | Validation Precision: 0.8854818344116211
+2026-03-10 19:44:43 | INFO | Validation Recall: 0.8919414281845093
+2026-03-10 19:44:43 | INFO | Validation Loss: 0.5083853909163736
+2026-03-10 19:44:43 | INFO | Saving best model with F1 Score: 0.8879634141921997
+2026-03-10 19:45:13 | INFO | Validation Accuracy: 91.52748107910156%
+2026-03-10 19:45:13 | INFO | Validation F1 Score: 0.9064863920211792
+2026-03-10 19:45:13 | INFO | Validation Precision: 0.9009699821472168
+2026-03-10 19:45:13 | INFO | Validation Recall: 0.9152747988700867
+2026-03-10 19:45:13 | INFO | Validation Loss: 0.47680321642837953
+2026-03-10 19:45:13 | INFO | Saving best model with F1 Score: 0.9064863920211792
+2026-03-10 19:45:44 | INFO | Validation Accuracy: 90.30525207519531%
+2026-03-10 19:45:44 | INFO | Validation F1 Score: 0.8973113298416138
+2026-03-10 19:45:44 | INFO | Validation Precision: 0.8931077718734741
+2026-03-10 19:45:44 | INFO | Validation Recall: 0.9030525088310242
+2026-03-10 19:45:44 | INFO | Validation Loss: 0.4617134558575344
+2026-03-10 19:45:44 | INFO | Checkpoint saved at epoch 15
+2026-03-10 19:46:16 | INFO | Validation Accuracy: 89.86080932617188%
+2026-03-10 19:46:16 | INFO | Validation F1 Score: 0.894811749458313
+2026-03-10 19:46:16 | INFO | Validation Precision: 0.8922909498214722
+2026-03-10 19:46:16 | INFO | Validation Recall: 0.8986080884933472
+2026-03-10 19:46:16 | INFO | Validation Loss: 0.3891299243296089
+2026-03-10 19:46:47 | INFO | Validation Accuracy: 91.52748107910156%
+2026-03-10 19:46:47 | INFO | Validation F1 Score: 0.9013563394546509
+2026-03-10 19:46:47 | INFO | Validation Precision: 0.8936020135879517
+2026-03-10 19:46:47 | INFO | Validation Recall: 0.9152747988700867
+2026-03-10 19:46:47 | INFO | Validation Loss: 0.4533220673947653
+2026-03-10 19:47:18 | INFO | Validation Accuracy: 89.52747344970703%
+2026-03-10 19:47:18 | INFO | Validation F1 Score: 0.8946408033370972
+2026-03-10 19:47:18 | INFO | Validation Precision: 0.8971923589706421
+2026-03-10 19:47:18 | INFO | Validation Recall: 0.8952747583389282
+2026-03-10 19:47:18 | INFO | Validation Loss: 0.420705406126217
+2026-03-10 19:47:47 | INFO | Validation Accuracy: 93.30525207519531%
+2026-03-10 19:47:47 | INFO | Validation F1 Score: 0.9191341400146484
+2026-03-10 19:47:47 | INFO | Validation Precision: 0.9113798141479492
+2026-03-10 19:47:47 | INFO | Validation Recall: 0.9330525398254395
+2026-03-10 19:47:47 | INFO | Validation Loss: 0.3639216825758922
+2026-03-10 19:47:47 | INFO | Saving best model with F1 Score: 0.9191341400146484
+2026-03-10 19:48:16 | INFO | Validation Accuracy: 92.08302307128906%
+2026-03-10 19:48:16 | INFO | Validation F1 Score: 0.9079884886741638
+2026-03-10 19:48:16 | INFO | Validation Precision: 0.8998256921768188
+2026-03-10 19:48:16 | INFO | Validation Recall: 0.920830249786377
+2026-03-10 19:48:16 | INFO | Validation Loss: 0.3505077699192043
+2026-03-10 19:48:16 | INFO | Checkpoint saved at epoch 20
+2026-03-10 19:48:45 | INFO | Validation Accuracy: 92.08302307128906%
+2026-03-10 19:48:45 | INFO | Validation F1 Score: 0.9097747206687927
+2026-03-10 19:48:45 | INFO | Validation Precision: 0.9022312164306641
+2026-03-10 19:48:45 | INFO | Validation Recall: 0.920830249786377
+2026-03-10 19:48:45 | INFO | Validation Loss: 0.3503586497354263
+2026-03-10 19:49:14 | INFO | Validation Accuracy: 89.68986511230469%
+2026-03-10 19:49:14 | INFO | Validation F1 Score: 0.8859395980834961
+2026-03-10 19:49:14 | INFO | Validation Precision: 0.8801194429397583
+2026-03-10 19:49:14 | INFO | Validation Recall: 0.8968986868858337
+2026-03-10 19:49:14 | INFO | Validation Loss: 0.4174068659194745
+2026-03-10 19:49:46 | INFO | Validation Accuracy: 89.74969482421875%
+2026-03-10 19:49:46 | INFO | Validation F1 Score: 0.887617290019989
+2026-03-10 19:49:46 | INFO | Validation Precision: 0.8815297484397888
+2026-03-10 19:49:46 | INFO | Validation Recall: 0.8974969387054443
+2026-03-10 19:49:46 | INFO | Validation Loss: 0.406186133654046
+2026-03-10 19:50:17 | INFO | Validation Accuracy: 91.50732421875%
+2026-03-10 19:50:17 | INFO | Validation F1 Score: 0.9080724120140076
+2026-03-10 19:50:17 | INFO | Validation Precision: 0.9065790176391602
+2026-03-10 19:50:17 | INFO | Validation Recall: 0.9150732755661011
+2026-03-10 19:50:17 | INFO | Validation Loss: 0.3818651799210784
+2026-03-10 19:50:48 | INFO | Validation Accuracy: 91.30525207519531%
+2026-03-10 19:50:48 | INFO | Validation F1 Score: 0.9153182506561279
+2026-03-10 19:50:48 | INFO | Validation Precision: 0.9190020561218262
+2026-03-10 19:50:48 | INFO | Validation Recall: 0.913052499294281
+2026-03-10 19:50:48 | INFO | Validation Loss: 0.3281953602327121
+2026-03-10 19:50:48 | INFO | Checkpoint saved at epoch 25
+2026-03-10 19:51:19 | INFO | Validation Accuracy: 92.97191619873047%
+2026-03-10 19:51:19 | INFO | Validation F1 Score: 0.9272336959838867
+2026-03-10 19:51:19 | INFO | Validation Precision: 0.9264342188835144
+2026-03-10 19:51:19 | INFO | Validation Recall: 0.9297191500663757
+2026-03-10 19:51:19 | INFO | Validation Loss: 0.32777622793037153
+2026-03-10 19:51:19 | INFO | Saving best model with F1 Score: 0.9272336959838867
+2026-03-10 19:51:20 | INFO | ✓ Training completato
+2026-03-10 19:51:20 | ⏱ END: train_privato - 00:13:10
+2026-03-10 19:51:20 | ✓ train_privato
+2026-03-10 19:51:20 | ⏱ START: train_combined
+2026-03-10 19:51:20 | Training combined...
+2026-03-10 19:51:20 | INFO | 
+==================================================
+2026-03-10 19:51:20 | INFO | PHASE: Training
+2026-03-10 19:51:20 | INFO | ==================================================
+2026-03-10 19:51:20 | INFO | Device: cuda
+2026-03-10 19:51:20 | INFO | Class weights: False
+2026-03-10 19:51:20 | INFO | Epochs: 26
+2026-03-10 19:51:20 | INFO | Batch size: 8
+2026-03-10 19:51:20 | INFO | Learning rate: 0.001
+2026-03-10 19:51:28 | INFO | Using standard CrossEntropyLoss (no class weights)
+2026-03-10 19:52:27 | INFO | Validation Accuracy: 69.49252319335938%
+2026-03-10 19:52:27 | INFO | Validation F1 Score: 0.6988247632980347
+2026-03-10 19:52:27 | INFO | Validation Precision: 0.7577134966850281
+2026-03-10 19:52:27 | INFO | Validation Recall: 0.6949252486228943
+2026-03-10 19:52:27 | INFO | Validation Loss: 1.167581678464495
+2026-03-10 19:52:27 | INFO | Saving best model with F1 Score: 0.6988247632980347
+2026-03-10 19:53:24 | INFO | Validation Accuracy: 72.01465606689453%
+2026-03-10 19:53:24 | INFO | Validation F1 Score: 0.7005617618560791
+2026-03-10 19:53:24 | INFO | Validation Precision: 0.7190285921096802
+2026-03-10 19:53:24 | INFO | Validation Recall: 0.7201465964317322
+2026-03-10 19:53:24 | INFO | Validation Loss: 0.8746358987329335
+2026-03-10 19:53:24 | INFO | Saving best model with F1 Score: 0.7005617618560791
+2026-03-10 19:54:26 | INFO | Validation Accuracy: 58.96030807495117%
+2026-03-10 19:54:26 | INFO | Validation F1 Score: 0.5478161573410034
+2026-03-10 19:54:26 | INFO | Validation Precision: 0.7443826198577881
+2026-03-10 19:54:26 | INFO | Validation Recall: 0.589603066444397
+2026-03-10 19:54:26 | INFO | Validation Loss: 1.4918762388928184
+2026-03-10 19:54:26 | INFO | Saving best model with F1 Score: 0.5478161573410034
+2026-03-10 19:55:29 | INFO | Validation Accuracy: 72.05647277832031%
+2026-03-10 19:55:29 | INFO | Validation F1 Score: 0.6822036504745483
+2026-03-10 19:55:29 | INFO | Validation Precision: 0.7220527529716492
+2026-03-10 19:55:29 | INFO | Validation Recall: 0.7205647230148315
+2026-03-10 19:55:29 | INFO | Validation Loss: 0.8523377529506025
+2026-03-10 19:55:29 | INFO | Saving best model with F1 Score: 0.6822036504745483
+2026-03-10 19:56:29 | INFO | Validation Accuracy: 84.71293640136719%
+2026-03-10 19:56:29 | INFO | Validation F1 Score: 0.8259128928184509
+2026-03-10 19:56:29 | INFO | Validation Precision: 0.8197731375694275
+2026-03-10 19:56:29 | INFO | Validation Recall: 0.8471293449401855
+2026-03-10 19:56:29 | INFO | Validation Loss: 0.5398062497120479
+2026-03-10 19:56:29 | INFO | Saving best model with F1 Score: 0.8259128928184509
+2026-03-10 19:56:30 | INFO | Checkpoint saved at epoch 5
+2026-03-10 19:57:27 | INFO | Validation Accuracy: 77.6537094116211%
+2026-03-10 19:57:27 | INFO | Validation F1 Score: 0.7853569984436035
+2026-03-10 19:57:27 | INFO | Validation Precision: 0.8110169172286987
+2026-03-10 19:57:27 | INFO | Validation Recall: 0.7765370607376099
+2026-03-10 19:57:27 | INFO | Validation Loss: 0.6467390070701468
+2026-03-10 19:58:30 | INFO | Validation Accuracy: 81.07742309570312%
+2026-03-10 19:58:30 | INFO | Validation F1 Score: 0.8270003795623779
+2026-03-10 19:58:30 | INFO | Validation Precision: 0.8588885068893433
+2026-03-10 19:58:30 | INFO | Validation Recall: 0.8107742071151733
+2026-03-10 19:58:30 | INFO | Validation Loss: 0.5891066580240069
+2026-03-10 19:58:30 | INFO | Saving best model with F1 Score: 0.8270003795623779
+2026-03-10 19:59:32 | INFO | Validation Accuracy: 74.13105773925781%
+2026-03-10 19:59:32 | INFO | Validation F1 Score: 0.7141999006271362
+2026-03-10 19:59:32 | INFO | Validation Precision: 0.7731531858444214
+2026-03-10 19:59:32 | INFO | Validation Recall: 0.7413105964660645
+2026-03-10 19:59:32 | INFO | Validation Loss: 0.8593283223694769
+2026-03-10 20:00:32 | INFO | Validation Accuracy: 79.96148681640625%
+2026-03-10 20:00:32 | INFO | Validation F1 Score: 0.8096197843551636
+2026-03-10 20:00:32 | INFO | Validation Precision: 0.8293102979660034
+2026-03-10 20:00:32 | INFO | Validation Recall: 0.7996149063110352
+2026-03-10 20:00:32 | INFO | Validation Loss: 0.7421498891801156
+2026-03-10 20:01:30 | INFO | Validation Accuracy: 85.80686950683594%
+2026-03-10 20:01:30 | INFO | Validation F1 Score: 0.8488807082176208
+2026-03-10 20:01:30 | INFO | Validation Precision: 0.8428969383239746
+2026-03-10 20:01:30 | INFO | Validation Recall: 0.8580687046051025
+2026-03-10 20:01:30 | INFO | Validation Loss: 0.5273959276523312
+2026-03-10 20:01:30 | INFO | Saving best model with F1 Score: 0.8488807082176208
+2026-03-10 20:01:30 | INFO | Checkpoint saved at epoch 10
+2026-03-10 20:02:32 | INFO | Validation Accuracy: 85.28706359863281%
+2026-03-10 20:02:32 | INFO | Validation F1 Score: 0.8488441705703735
+2026-03-10 20:02:32 | INFO | Validation Precision: 0.8455223441123962
+2026-03-10 20:02:32 | INFO | Validation Recall: 0.8528706431388855
+2026-03-10 20:02:32 | INFO | Validation Loss: 0.505447723292585
+2026-03-10 20:03:35 | INFO | Validation Accuracy: 86.40238952636719%
+2026-03-10 20:03:35 | INFO | Validation F1 Score: 0.8623028993606567
+2026-03-10 20:03:35 | INFO | Validation Precision: 0.8619817495346069
+2026-03-10 20:03:35 | INFO | Validation Recall: 0.8640238642692566
+2026-03-10 20:03:35 | INFO | Validation Loss: 0.5040759073474027
+2026-03-10 20:03:35 | INFO | Saving best model with F1 Score: 0.8623028993606567
+2026-03-10 20:04:35 | INFO | Validation Accuracy: 86.88518524169922%
+2026-03-10 20:04:35 | INFO | Validation F1 Score: 0.8691540956497192
+2026-03-10 20:04:35 | INFO | Validation Precision: 0.8696070909500122
+2026-03-10 20:04:35 | INFO | Validation Recall: 0.8688518404960632
+2026-03-10 20:04:35 | INFO | Validation Loss: 0.49092175926338755
+2026-03-10 20:04:35 | INFO | Saving best model with F1 Score: 0.8691540956497192
+2026-03-10 20:05:33 | INFO | Validation Accuracy: 85.77665710449219%
+2026-03-10 20:05:33 | INFO | Validation F1 Score: 0.8568681478500366
+2026-03-10 20:05:33 | INFO | Validation Precision: 0.8575531840324402
+2026-03-10 20:05:33 | INFO | Validation Recall: 0.8577665686607361
+2026-03-10 20:05:33 | INFO | Validation Loss: 0.5287480619495156
+2026-03-10 20:06:35 | INFO | Validation Accuracy: 85.0603256225586%
+2026-03-10 20:06:35 | INFO | Validation F1 Score: 0.8402754068374634
+2026-03-10 20:06:35 | INFO | Validation Precision: 0.8348128199577332
+2026-03-10 20:06:35 | INFO | Validation Recall: 0.8506032824516296
+2026-03-10 20:06:35 | INFO | Validation Loss: 0.5405478141720181
+2026-03-10 20:06:35 | INFO | Checkpoint saved at epoch 15
+2026-03-10 20:07:37 | INFO | Validation Accuracy: 86.04695892333984%
+2026-03-10 20:07:37 | INFO | Validation F1 Score: 0.8598810434341431
+2026-03-10 20:07:37 | INFO | Validation Precision: 0.8598016500473022
+2026-03-10 20:07:37 | INFO | Validation Recall: 0.8604695796966553
+2026-03-10 20:07:37 | INFO | Validation Loss: 0.5409159807986098
+2026-03-10 20:08:38 | INFO | Validation Accuracy: 85.65552520751953%
+2026-03-10 20:08:38 | INFO | Validation F1 Score: 0.8513785600662231
+2026-03-10 20:08:38 | INFO | Validation Precision: 0.8482605814933777
+2026-03-10 20:08:38 | INFO | Validation Recall: 0.8565552234649658
+2026-03-10 20:08:38 | INFO | Validation Loss: 0.5703699025325477
+2026-03-10 20:09:36 | INFO | Validation Accuracy: 85.78514862060547%
+2026-03-10 20:09:36 | INFO | Validation F1 Score: 0.8536603450775146
+2026-03-10 20:09:36 | INFO | Validation Precision: 0.8514766693115234
+2026-03-10 20:09:36 | INFO | Validation Recall: 0.857851505279541
+2026-03-10 20:09:36 | INFO | Validation Loss: 0.5572792506648292
+2026-03-10 20:10:37 | INFO | Validation Accuracy: 86.03661346435547%
+2026-03-10 20:10:37 | INFO | Validation F1 Score: 0.8559430837631226
+2026-03-10 20:10:37 | INFO | Validation Precision: 0.8540598750114441
+2026-03-10 20:10:37 | INFO | Validation Recall: 0.8603661060333252
+2026-03-10 20:10:37 | INFO | Validation Loss: 0.5468930944093856
+2026-03-10 20:11:40 | INFO | Validation Accuracy: 89.06714630126953%
+2026-03-10 20:11:40 | INFO | Validation F1 Score: 0.8850199580192566
+2026-03-10 20:11:40 | INFO | Validation Precision: 0.8815144300460815
+2026-03-10 20:11:40 | INFO | Validation Recall: 0.89067143201828
+2026-03-10 20:11:40 | INFO | Validation Loss: 0.5458929321230871
+2026-03-10 20:11:40 | INFO | Saving best model with F1 Score: 0.8850199580192566
+2026-03-10 20:11:40 | INFO | Checkpoint saved at epoch 20
+2026-03-10 20:12:42 | INFO | Validation Accuracy: 85.61458587646484%
+2026-03-10 20:12:42 | INFO | Validation F1 Score: 0.8505467772483826
+2026-03-10 20:12:42 | INFO | Validation Precision: 0.847032904624939
+2026-03-10 20:12:42 | INFO | Validation Recall: 0.8561458587646484
+2026-03-10 20:12:42 | INFO | Validation Loss: 0.5227424154571932
+2026-03-10 20:13:40 | INFO | Validation Accuracy: 86.41088104248047%
+2026-03-10 20:13:40 | INFO | Validation F1 Score: 0.8594152331352234
+2026-03-10 20:13:40 | INFO | Validation Precision: 0.8556212186813354
+2026-03-10 20:13:40 | INFO | Validation Recall: 0.8641088008880615
+2026-03-10 20:13:40 | INFO | Validation Loss: 0.5094390588106009
+2026-03-10 20:14:40 | INFO | Validation Accuracy: 86.28125%
+2026-03-10 20:14:40 | INFO | Validation F1 Score: 0.8578004837036133
+2026-03-10 20:14:40 | INFO | Validation Precision: 0.8541461229324341
+2026-03-10 20:14:40 | INFO | Validation Recall: 0.8628125190734863
+2026-03-10 20:14:40 | INFO | Validation Loss: 0.5445763665163119
+2026-03-10 20:15:43 | INFO | Validation Accuracy: 87.24421691894531%
+2026-03-10 20:15:43 | INFO | Validation F1 Score: 0.865078330039978
+2026-03-10 20:15:43 | INFO | Validation Precision: 0.8589997291564941
+2026-03-10 20:15:43 | INFO | Validation Recall: 0.8724421858787537
+2026-03-10 20:15:43 | INFO | Validation Loss: 0.547170738970604
+2026-03-10 20:16:46 | INFO | Validation Accuracy: 85.11848449707031%
+2026-03-10 20:16:46 | INFO | Validation F1 Score: 0.8463897705078125
+2026-03-10 20:16:46 | INFO | Validation Precision: 0.8450697660446167
+2026-03-10 20:16:46 | INFO | Validation Recall: 0.8511848449707031
+2026-03-10 20:16:46 | INFO | Validation Loss: 0.5427459346307121
+2026-03-10 20:16:46 | INFO | Checkpoint saved at epoch 25
+2026-03-10 20:17:44 | INFO | Validation Accuracy: 86.41088104248047%
+2026-03-10 20:17:44 | INFO | Validation F1 Score: 0.8594152331352234
+2026-03-10 20:17:44 | INFO | Validation Precision: 0.8556212186813354
+2026-03-10 20:17:44 | INFO | Validation Recall: 0.8641088008880615
+2026-03-10 20:17:44 | INFO | Validation Loss: 0.5282020728537363
+2026-03-10 20:17:45 | INFO | ✓ Training completato
+2026-03-10 20:17:45 | ⏱ END: train_combined - 00:26:24
+2026-03-10 20:17:45 | ✓ train_combined
+2026-03-10 20:17:45 | Training completed
+2026-03-10 20:18:29 | ============================================================
+2026-03-10 20:18:29 | TESTING
+2026-03-10 20:18:29 | ============================================================
+2026-03-10 20:18:29 | ⏱ START: exp_1
+2026-03-10 23:39:39 | Experiment 4: exp4_combined_internet_cropped
+2026-03-10 23:39:47 | WARNING | tensor([[3]], device='cuda:0') classes have zero instances in both the predictions and the ground truth labels. Precision is still logged as zero.
+2026-03-10 23:39:47 | INFO | Test Accuracy (Macro): 0.7177171111106873 ± 0.0036403576377779245
+2026-03-10 23:39:47 | INFO | Test F1 Score (Macro): 0.478922575712204 ± 0.04626503586769104
+2026-03-10 23:39:47 | INFO | Test Precision (Macro): 0.4794023633003235 ± 0.04681999236345291
+2026-03-10 23:39:47 | INFO | Test Recall (Macro): 0.4784780740737915 ± 0.001453694887459278
+2026-03-10 23:39:47 | INFO | Test Accuracy (Micro): 0.6620370149612427 ± 0.00791957788169384
+2026-03-10 23:39:47 | INFO | Test F1 Score (Micro): 0.6620370149612427 ± 0.00791957788169384
+2026-03-10 23:39:47 | INFO | Test Precision (Micro): 0.6620370149612427 ± 0.00791957788169384
+2026-03-10 23:39:47 | INFO | Test Recall (Micro): 0.6620370149612427 ± 0.00791957788169384
+2026-03-10 23:39:47 | INFO | Class: O. exaltata
+2026-03-10 23:39:47 | INFO | Accuracy: 0.9449541568756104
+2026-03-10 23:39:47 | INFO | F1 Score: 0.9537037014961243
+2026-03-10 23:39:47 | INFO | Precision: 0.9626168012619019
+2026-03-10 23:39:47 | INFO | Recall: 0.9449541568756104
+2026-03-10 23:39:47 | INFO | Class: O. garganica
+2026-03-10 23:39:47 | INFO | Accuracy: 0.9592476487159729
+2026-03-10 23:39:47 | INFO | F1 Score: 0.9577464461326599
+2026-03-10 23:39:47 | INFO | Precision: 0.956250011920929
+2026-03-10 23:39:47 | INFO | Recall: 0.9592476487159729
+2026-03-10 23:39:47 | INFO | Class: O. incubacea
+2026-03-10 23:39:47 | INFO | Accuracy: 0.9666666388511658
+2026-03-10 23:39:47 | INFO | F1 Score: 0.9620852470397949
+2026-03-10 23:39:47 | INFO | Precision: 0.9575471878051758
+2026-03-10 23:39:47 | INFO | Recall: 0.9666666388511658
+2026-03-10 23:39:47 | INFO | Class: O. sphegodes
+2026-03-10 23:39:47 | INFO | Accuracy: 0.0
+2026-03-10 23:39:47 | INFO | F1 Score: 0.0
+2026-03-10 23:39:47 | INFO | Precision: 0.0
+2026-03-10 23:39:47 | INFO | Recall: 0.0
+2026-03-10 23:39:47 | INFO | Confusion Matrix:
+tensor([[206,   1,   0,   0,  10,   1],
+        [  2, 306,   4,   0,   7,   0],
+        [  1,   4, 203,   0,   2,   0],
+        [  5,   9,   5,   0, 313,   1],
+        [  0,   0,   0,   0,   0,   0],
+        [  0,   0,   0,   0,   0,   0]], device='cuda:0', dtype=torch.int32)
+2026-03-11 01:09:15 | ⏱ END: exp_4 - 01:29:35
+2026-03-11 01:09:15 | ✓ exp_4
+2026-03-11 01:09:15 | Testing completed
+2026-03-11 08:53:27 | ⏱ START: exp_5
+2026-03-11 08:54:44 | ============================================================
+2026-03-11 08:54:44 | TESTING
+2026-03-11 08:54:44 | ============================================================
+2026-03-11 08:54:44 | ⏱ START: exp_5

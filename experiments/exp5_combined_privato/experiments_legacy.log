@@ -1,0 +1,135 @@
+2026-03-11 08:54:44 | Experiment 5: exp5_combined_privato
+2026-03-11 08:54:46 | DEBUG | Failed to initialize sox extension
+Traceback (most recent call last):
+  File "/opt/conda/lib/python3.10/site-packages/torchaudio/_extension/__init__.py", line 60, in <module>
+    _init_sox()
+  File "/opt/conda/lib/python3.10/site-packages/torchaudio/_extension/utils.py", line 70, in _init_sox
+    _load_lib("libtorchaudio_sox")
+  File "/opt/conda/lib/python3.10/site-packages/torchaudio/_extension/utils.py", line 64, in _load_lib
+    torch.ops.load_library(path)
+  File "/opt/conda/lib/python3.10/site-packages/torch/_ops.py", line 852, in load_library
+    ctypes.CDLL(path)
+  File "/opt/conda/lib/python3.10/ctypes/__init__.py", line 374, in __init__
+    self._handle = _dlopen(self._name, mode)
+OSError: libsox.so: cannot open shared object file: No such file or directory
+2026-03-11 08:54:46 | DEBUG | Attempting to load FFmpeg version 6.
+2026-03-11 08:54:46 | DEBUG | Failed to load FFmpeg 6 extension.
+Traceback (most recent call last):
+  File "/opt/conda/lib/python3.10/site-packages/torchaudio/_extension/utils.py", line 128, in _find_ffmpeg_extension
+    return _find_versionsed_ffmpeg_extension(ffmpeg_ver)
+  File "/opt/conda/lib/python3.10/site-packages/torchaudio/_extension/utils.py", line 113, in _find_versionsed_ffmpeg_extension
+    _try_access_avutil(ffmpeg_ver)
+  File "/opt/conda/lib/python3.10/site-packages/torchaudio/_extension/utils.py", line 89, in _try_access_avutil
+    torchaudio.lib._torchaudio.find_avutil(libavutil)
+RuntimeError: Error in dlopen: libavutil.so.58: cannot open shared object file: No such file or directory
+Exception raised from DynamicLibrary at /opt/conda/conda-bld/pytorch_1695392020201/work/aten/src/ATen/DynamicLibrary.cpp:38 (most recent call first):
+frame #0: c10::Error::Error(c10::SourceLocation, std::string) + 0x57 (0x79ba53c73617 in /opt/conda/lib/python3.10/site-packages/torch/lib/libc10.so)
+frame #1: <unknown function> + 0xc669fc (0x79baa1b2e9fc in /opt/conda/lib/python3.10/site-packages/torch/lib/libtorch_cpu.so)
+frame #2: torchaudio::find_avutil(char const*) + 0x1a (0x79ba345b04ca in /opt/conda/lib/python3.10/site-packages/torchaudio/lib/libtorchaudio.so)
+frame #3: <unknown function> + 0x7f7e (0x79ba34560f7e in /opt/conda/lib/python3.10/site-packages/torchaudio/lib/_torchaudio.so)
+frame #4: <unknown function> + 0x12247 (0x79ba3456b247 in /opt/conda/lib/python3.10/site-packages/torchaudio/lib/_torchaudio.so)
+frame #5: python() [0x4fc697]
+<omitting python frames>
+frame #16: python() [0x591d92]
+frame #18: python() [0x5991cd]
+frame #19: python() [0x4fccc4]
+frame #30: python() [0x4fc2a4]
+frame #33: python() [0x515994]
+frame #34: python() [0x4fc697]
+frame #40: python() [0x4fc2a4]
+frame #44: python() [0x591d92]
+frame #46: python() [0x5991cd]
+frame #47: python() [0x4fccc4]
+frame #58: python() [0x4fc2a4]
+frame #61: python() [0x515994]
+frame #62: python() [0x4fc697]
+
+2026-03-11 08:54:46 | DEBUG | Attempting to load FFmpeg version 5.
+2026-03-11 08:54:46 | DEBUG | Failed to load FFmpeg 5 extension.
+Traceback (most recent call last):
+  File "/opt/conda/lib/python3.10/site-packages/torchaudio/_extension/utils.py", line 128, in _find_ffmpeg_extension
+    return _find_versionsed_ffmpeg_extension(ffmpeg_ver)
+  File "/opt/conda/lib/python3.10/site-packages/torchaudio/_extension/utils.py", line 113, in _find_versionsed_ffmpeg_extension
+    _try_access_avutil(ffmpeg_ver)
+  File "/opt/conda/lib/python3.10/site-packages/torchaudio/_extension/utils.py", line 89, in _try_access_avutil
+    torchaudio.lib._torchaudio.find_avutil(libavutil)
+RuntimeError: Error in dlopen: libavutil.so.57: cannot open shared object file: No such file or directory
+Exception raised from DynamicLibrary at /opt/conda/conda-bld/pytorch_1695392020201/work/aten/src/ATen/DynamicLibrary.cpp:38 (most recent call first):
+frame #0: c10::Error::Error(c10::SourceLocation, std::string) + 0x57 (0x79ba53c73617 in /opt/conda/lib/python3.10/site-packages/torch/lib/libc10.so)
+frame #1: <unknown function> + 0xc669fc (0x79baa1b2e9fc in /opt/conda/lib/python3.10/site-packages/torch/lib/libtorch_cpu.so)
+frame #2: torchaudio::find_avutil(char const*) + 0x1a (0x79ba345b04ca in /opt/conda/lib/python3.10/site-packages/torchaudio/lib/libtorchaudio.so)
+frame #3: <unknown function> + 0x7f7e (0x79ba34560f7e in /opt/conda/lib/python3.10/site-packages/torchaudio/lib/_torchaudio.so)
+frame #4: <unknown function> + 0x12247 (0x79ba3456b247 in /opt/conda/lib/python3.10/site-packages/torchaudio/lib/_torchaudio.so)
+frame #5: python() [0x4fc697]
+<omitting python frames>
+frame #16: python() [0x591d92]
+frame #18: python() [0x5991cd]
+frame #19: python() [0x4fccc4]
+frame #30: python() [0x4fc2a4]
+frame #33: python() [0x515994]
+frame #34: python() [0x4fc697]
+frame #40: python() [0x4fc2a4]
+frame #44: python() [0x591d92]
+frame #46: python() [0x5991cd]
+frame #47: python() [0x4fccc4]
+frame #58: python() [0x4fc2a4]
+frame #61: python() [0x515994]
+frame #62: python() [0x4fc697]
+
+2026-03-11 08:54:46 | DEBUG | Attempting to load FFmpeg version 4.
+2026-03-11 08:54:46 | DEBUG | Found FFmpeg version 4.
+2026-03-11 08:54:46 | DEBUG | matplotlib data path: /opt/conda/lib/python3.10/site-packages/matplotlib/mpl-data
+2026-03-11 08:54:46 | DEBUG | CONFIGDIR=/root/.config/matplotlib
+2026-03-11 08:54:46 | DEBUG | interactive is False
+2026-03-11 08:54:46 | DEBUG | platform is linux
+2026-03-11 08:54:47 | DEBUG | CACHEDIR=/root/.cache/matplotlib
+2026-03-11 08:54:47 | DEBUG | Using fontManager instance from /root/.cache/matplotlib/fontlist-v390.json
+2026-03-11 08:54:50 | INFO | Test Accuracy (Macro): 0.9546045064926147 ± 0.017444999888539314
+2026-03-11 08:54:50 | INFO | Test F1 Score (Macro): 0.9583330154418945 ± 0.016255944967269897
+2026-03-11 08:54:50 | INFO | Test Precision (Macro): 0.9630835056304932 ± 0.015145540237426758
+2026-03-11 08:54:50 | INFO | Test Recall (Macro): 0.9546045064926147 ± 0.017444999888539314
+2026-03-11 08:54:50 | INFO | Test Accuracy (Micro): 0.9678714871406555 ± 0.012344563379883766
+2026-03-11 08:54:50 | INFO | Test F1 Score (Micro): 0.9678714871406555 ± 0.012344563379883766
+2026-03-11 08:54:50 | INFO | Test Precision (Micro): 0.9678714871406555 ± 0.012344563379883766
+2026-03-11 08:54:50 | INFO | Test Recall (Micro): 0.9678714871406555 ± 0.012344563379883766
+2026-03-11 08:54:50 | INFO | Class: O. exaltata
+2026-03-11 08:54:50 | INFO | Accuracy: 0.9821428656578064
+2026-03-11 08:54:50 | INFO | F1 Score: 0.990990936756134
+2026-03-11 08:54:50 | INFO | Precision: 1.0
+2026-03-11 08:54:50 | INFO | Recall: 0.9821428656578064
+2026-03-11 08:54:50 | INFO | Class: O. garganica
+2026-03-11 08:54:50 | INFO | Accuracy: 0.9599999785423279
+2026-03-11 08:54:50 | INFO | F1 Score: 0.9599999785423279
+2026-03-11 08:54:50 | INFO | Precision: 0.9599999785423279
+2026-03-11 08:54:50 | INFO | Recall: 0.9599999785423279
+2026-03-11 08:54:50 | INFO | Class: O. incubacea
+2026-03-11 08:54:50 | INFO | Accuracy: 0.9354838728904724
+2026-03-11 08:54:50 | INFO | F1 Score: 0.9354838728904724
+2026-03-11 08:54:50 | INFO | Precision: 0.9354838728904724
+2026-03-11 08:54:50 | INFO | Recall: 0.9354838728904724
+2026-03-11 08:54:50 | INFO | Class: O. majellensis
+2026-03-11 08:54:50 | INFO | Accuracy: 1.0
+2026-03-11 08:54:50 | INFO | F1 Score: 0.9876543283462524
+2026-03-11 08:54:50 | INFO | Precision: 0.9756097793579102
+2026-03-11 08:54:50 | INFO | Recall: 1.0
+2026-03-11 08:54:50 | INFO | Class: O. sphegodes
+2026-03-11 08:54:50 | INFO | Accuracy: 0.8500000238418579
+2026-03-11 08:54:50 | INFO | F1 Score: 0.8947368264198303
+2026-03-11 08:54:50 | INFO | Precision: 0.9444444179534912
+2026-03-11 08:54:50 | INFO | Recall: 0.8500000238418579
+2026-03-11 08:54:50 | INFO | Class: O. sphegodes_Palena
+2026-03-11 08:54:50 | INFO | Accuracy: 1.0
+2026-03-11 08:54:50 | INFO | F1 Score: 0.9811320900917053
+2026-03-11 08:54:50 | INFO | Precision: 0.9629629850387573
+2026-03-11 08:54:50 | INFO | Recall: 1.0
+2026-03-11 08:54:50 | INFO | Confusion Matrix:
+tensor([[55,  0,  0,  0,  1,  0],
+        [ 0, 48,  1,  0,  0,  1],
+        [ 0,  2, 29,  0,  0,  0],
+        [ 0,  0,  0, 40,  0,  0],
+        [ 0,  0,  1,  1, 17,  1],
+        [ 0,  0,  0,  0,  0, 52]], device='cuda:0', dtype=torch.int32)
+2026-03-11 08:54:50 | DEBUG | Loaded backend agg version v2.2.
+2026-03-11 09:27:23 | ⏱ END: exp_5 - 00:32:39
+2026-03-11 09:27:23 | ✓ exp_5
+2026-03-11 09:27:23 | Testing completed

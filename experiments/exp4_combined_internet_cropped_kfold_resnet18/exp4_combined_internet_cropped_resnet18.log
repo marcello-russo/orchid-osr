@@ -1,0 +1,851 @@
+2026-03-29 21:29:03,015 | INFO | ======================================================================
+2026-03-29 21:29:03,016 | INFO | EXPERIMENT 4: exp4_combined_internet_cropped
+2026-03-29 21:29:03,016 | INFO | Model: RESNET18
+2026-03-29 21:29:03,016 | INFO | Description: Best on internet: train on combined, test on internet cropped
+2026-03-29 21:29:03,016 | INFO | Log: logs/exp4_combined_internet_cropped_resnet18.log
+2026-03-29 21:29:03,017 | INFO | ======================================================================
+2026-03-29 21:29:03,017 | INFO | Train: dataset/train_combined.pt
+2026-03-29 21:29:03,017 | INFO | Val: dataset/val_combined.pt
+2026-03-29 21:29:03,018 | INFO | Test: dataset/test_internet_cropped.pt
+2026-03-29 21:29:03,018 | INFO | 
+--- PHASE: K-Fold Cross Validation ---
+2026-03-29 21:29:03,018 | INFO | Folds: 5
+2026-03-29 21:29:03,022 | INFO | ======================================================================
+2026-03-29 21:29:03,023 | INFO | K-FOLD CROSS VALIDATION - RESNET18
+2026-03-29 21:29:03,023 | INFO | Dataset: /workspace/dataset/combined
+2026-03-29 21:29:03,023 | INFO | Test: /workspace/dataset/internet_cropped
+2026-03-29 21:29:03,023 | INFO | Folds: 5, Epochs: 26
+2026-03-29 21:29:03,023 | INFO | MODALITA: fold singolo 1/5
+2026-03-29 21:29:03,024 | INFO | Device: cuda
+2026-03-29 21:29:03,024 | INFO | ======================================================================
+2026-03-29 21:29:03,047 | INFO | Dataset: 2332 immagini, 6 classi
+2026-03-29 21:29:03,047 | INFO |   O. exaltata: 501 immagini
+2026-03-29 21:29:03,048 | INFO |   O. garganica: 570 immagini
+2026-03-29 21:29:03,048 | INFO |   O. incubacea: 366 immagini
+2026-03-29 21:29:03,048 | INFO |   O. majellensis: 202 immagini
+2026-03-29 21:29:03,049 | INFO |   O. sphegodes: 433 immagini
+2026-03-29 21:29:03,049 | INFO |   O. sphegodes_Palena: 260 immagini
+2026-03-29 21:29:03,049 | INFO | 
+==================================================
+2026-03-29 21:29:03,049 | INFO | FOLD 1/5
+2026-03-29 21:29:03,049 | INFO | Train: 1865 immagini, Val: 467 immagini
+2026-03-29 21:29:03,050 | INFO | ==================================================
+2026-03-29 21:29:24,328 | INFO |   Augmentation target: 648 immagini/classe (min_class=162, 4 augmentation)
+2026-03-29 21:48:36,625 | INFO |   Train: 3888 immagini (6 classi)
+2026-03-29 21:48:36,627 | INFO |   Val: 467 immagini (6 classi)
+2026-03-29 21:48:37,792 | INFO | AMP mixed precision enabled, cudnn.benchmark=True
+2026-03-29 21:48:37,844 | INFO | Epoch 1/26
+2026-03-29 21:54:57,594 | INFO | ======================================================================
+2026-03-29 21:54:57,594 | INFO | EXPERIMENT 4: exp4_combined_internet_cropped
+2026-03-29 21:54:57,595 | INFO | Model: RESNET18
+2026-03-29 21:54:57,595 | INFO | Description: Best on internet: train on combined, test on internet cropped
+2026-03-29 21:54:57,595 | INFO | Log: logs/exp4_combined_internet_cropped_resnet18.log
+2026-03-29 21:54:57,595 | INFO | ======================================================================
+2026-03-29 21:54:57,596 | INFO | Train: dataset/train_combined.pt
+2026-03-29 21:54:57,596 | INFO | Val: dataset/val_combined.pt
+2026-03-29 21:54:57,597 | INFO | Test: dataset/test_internet_cropped.pt
+2026-03-29 21:54:57,597 | INFO | 
+--- PHASE: K-Fold Cross Validation ---
+2026-03-29 21:54:57,597 | INFO | Folds: 5
+2026-03-29 21:54:57,622 | INFO | ======================================================================
+2026-03-29 21:54:57,623 | INFO | K-FOLD CROSS VALIDATION - RESNET18
+2026-03-29 21:54:57,623 | INFO | Dataset: /workspace/dataset/combined
+2026-03-29 21:54:57,623 | INFO | Test: /workspace/dataset/internet_cropped
+2026-03-29 21:54:57,624 | INFO | Folds: 5, Epochs: 26
+2026-03-29 21:54:57,624 | INFO | MODALITA: fold singolo 1/5
+2026-03-29 21:54:57,624 | INFO | Device: cuda
+2026-03-29 21:54:57,624 | INFO | ======================================================================
+2026-03-29 21:54:57,647 | INFO | Dataset: 2332 immagini, 6 classi
+2026-03-29 21:54:57,647 | INFO |   O. exaltata: 501 immagini
+2026-03-29 21:54:57,648 | INFO |   O. garganica: 570 immagini
+2026-03-29 21:54:57,648 | INFO |   O. incubacea: 366 immagini
+2026-03-29 21:54:57,648 | INFO |   O. majellensis: 202 immagini
+2026-03-29 21:54:57,649 | INFO |   O. sphegodes: 433 immagini
+2026-03-29 21:54:57,649 | INFO |   O. sphegodes_Palena: 260 immagini
+2026-03-29 21:54:57,650 | INFO | 
+==================================================
+2026-03-29 21:54:57,650 | INFO | FOLD 1/5
+2026-03-29 21:54:57,650 | INFO | Train: 1865 immagini, Val: 467 immagini
+2026-03-29 21:54:57,651 | INFO | ==================================================
+2026-03-29 21:55:13,601 | INFO |   Augmentation target: 648 immagini/classe (min_class=162, 4 augmentation)
+2026-03-29 22:14:16,660 | INFO |   Train: 3888 immagini (6 classi)
+2026-03-29 22:14:16,661 | INFO |   Val: 467 immagini (6 classi)
+2026-03-29 22:14:17,789 | INFO | AMP mixed precision enabled, cudnn.benchmark=True
+2026-03-29 22:14:17,843 | INFO | Epoch 1/26
+2026-03-29 22:17:53,432 | INFO | Train Loss: 1.0153 | Val Loss: 0.9998 | Val Acc: 0.5772 | Val F1: 0.5554
+2026-03-29 22:17:53,440 | INFO | New best model with F1: 0.5554
+2026-03-29 22:17:53,440 | INFO | Epoch 2/26
+2026-03-29 22:22:37,538 | INFO | Train Loss: 0.6043 | Val Loss: 1.9392 | Val Acc: 0.5945 | Val F1: 0.5146
+2026-03-29 22:22:37,539 | INFO | Epoch 3/26
+2026-03-29 22:27:18,617 | INFO | Train Loss: 0.5154 | Val Loss: 0.7480 | Val Acc: 0.7143 | Val F1: 0.6988
+2026-03-29 22:27:18,675 | INFO | New best model with F1: 0.6988
+2026-03-29 22:27:18,675 | INFO | Epoch 4/26
+2026-03-29 22:31:59,123 | INFO | Train Loss: 0.3860 | Val Loss: 0.6886 | Val Acc: 0.7423 | Val F1: 0.7534
+2026-03-29 22:31:59,159 | INFO | New best model with F1: 0.7534
+2026-03-29 22:31:59,159 | INFO | Epoch 5/26
+2026-03-29 22:36:40,821 | INFO | Train Loss: 0.3241 | Val Loss: 1.1195 | Val Acc: 0.7052 | Val F1: 0.7053
+2026-03-29 22:36:40,822 | INFO | Epoch 6/26
+2026-03-29 22:41:22,729 | INFO | Train Loss: 0.2515 | Val Loss: 1.0305 | Val Acc: 0.6510 | Val F1: 0.6101
+2026-03-29 22:41:22,729 | INFO | Epoch 7/26
+2026-03-29 22:46:10,082 | INFO | Train Loss: 0.2525 | Val Loss: 0.9015 | Val Acc: 0.6989 | Val F1: 0.7001
+2026-03-29 22:46:10,082 | INFO | Epoch 8/26
+2026-03-29 22:47:37,721 | INFO | ======================================================================
+2026-03-29 22:47:37,721 | INFO | EXPERIMENT 4: exp4_combined_internet_cropped
+2026-03-29 22:47:37,721 | INFO | Model: RESNET18
+2026-03-29 22:47:37,722 | INFO | Description: Best on internet: train on combined, test on internet cropped
+2026-03-29 22:47:37,722 | INFO | Log: logs/exp4_combined_internet_cropped_resnet18.log
+2026-03-29 22:47:37,722 | INFO | ======================================================================
+2026-03-29 22:47:37,723 | INFO | Train: dataset/train_combined.pt
+2026-03-29 22:47:37,723 | INFO | Val: dataset/val_combined.pt
+2026-03-29 22:47:37,723 | INFO | Test: dataset/test_internet_cropped.pt
+2026-03-29 22:47:37,723 | INFO | 
+--- PHASE: K-Fold Cross Validation ---
+2026-03-29 22:47:37,724 | INFO | Folds: 5
+2026-03-29 22:47:37,728 | INFO | ======================================================================
+2026-03-29 22:47:37,728 | INFO | K-FOLD CROSS VALIDATION - RESNET18
+2026-03-29 22:47:37,728 | INFO | Dataset: /workspace/dataset/combined
+2026-03-29 22:47:37,728 | INFO | Test: /workspace/dataset/internet_cropped
+2026-03-29 22:47:37,728 | INFO | Folds: 5, Epochs: 26
+2026-03-29 22:47:37,729 | INFO | Device: cuda
+2026-03-29 22:47:37,729 | INFO | ======================================================================
+2026-03-29 22:47:37,752 | INFO | Dataset: 2332 immagini, 6 classi
+2026-03-29 22:47:37,753 | INFO |   O. exaltata: 501 immagini
+2026-03-29 22:47:37,753 | INFO |   O. garganica: 570 immagini
+2026-03-29 22:47:37,754 | INFO |   O. incubacea: 366 immagini
+2026-03-29 22:47:37,754 | INFO |   O. majellensis: 202 immagini
+2026-03-29 22:47:37,754 | INFO |   O. sphegodes: 433 immagini
+2026-03-29 22:47:37,755 | INFO |   O. sphegodes_Palena: 260 immagini
+2026-03-29 22:47:37,755 | INFO | 
+==================================================
+2026-03-29 22:47:37,755 | INFO | FOLD 1/5
+2026-03-29 22:47:37,755 | INFO | Train: 1865 immagini, Val: 467 immagini
+2026-03-29 22:47:37,756 | INFO | ==================================================
+2026-03-29 22:47:51,711 | INFO |   Augmentation target: 648 immagini/classe (min_class=162, 4 augmentation)
+2026-03-29 23:05:50,433 | INFO |   Train: 3888 immagini (6 classi)
+2026-03-29 23:05:50,434 | INFO |   Val: 467 immagini (6 classi)
+2026-03-29 23:05:51,524 | INFO | AMP mixed precision enabled, cudnn.benchmark=True
+2026-03-29 23:05:51,563 | INFO | Epoch 1/26
+2026-03-29 23:09:30,342 | INFO | Train Loss: 1.0090 | Val Loss: 0.8021 | Val Acc: 0.6305 | Val F1: 0.6400
+2026-03-29 23:09:30,351 | INFO | New best model with F1: 0.6400
+2026-03-29 23:09:30,351 | INFO | Epoch 2/26
+2026-03-29 23:14:12,079 | INFO | Train Loss: 0.6281 | Val Loss: 0.9921 | Val Acc: 0.5614 | Val F1: 0.5581
+2026-03-29 23:14:12,080 | INFO | Epoch 3/26
+2026-03-29 23:18:52,427 | INFO | Train Loss: 0.5094 | Val Loss: 0.9523 | Val Acc: 0.6363 | Val F1: 0.6264
+2026-03-29 23:18:52,428 | INFO | Epoch 4/26
+2026-03-29 23:23:33,301 | INFO | Train Loss: 0.4072 | Val Loss: 0.7107 | Val Acc: 0.7596 | Val F1: 0.7699
+2026-03-29 23:23:33,338 | INFO | New best model with F1: 0.7699
+2026-03-29 23:23:33,339 | INFO | Epoch 5/26
+2026-03-29 23:28:12,842 | INFO | Train Loss: 0.3277 | Val Loss: 0.6131 | Val Acc: 0.7362 | Val F1: 0.7515
+2026-03-29 23:28:12,843 | INFO | Epoch 6/26
+2026-03-29 23:32:54,264 | INFO | Train Loss: 0.2364 | Val Loss: 0.5940 | Val Acc: 0.7944 | Val F1: 0.7935
+2026-03-29 23:32:54,299 | INFO | New best model with F1: 0.7935
+2026-03-29 23:32:54,300 | INFO | Epoch 7/26
+2026-03-29 23:37:36,070 | INFO | Train Loss: 0.2458 | Val Loss: 0.5970 | Val Acc: 0.7792 | Val F1: 0.7872
+2026-03-29 23:37:36,071 | INFO | Epoch 8/26
+2026-03-29 23:42:16,772 | INFO | Train Loss: 0.1610 | Val Loss: 0.6739 | Val Acc: 0.7727 | Val F1: 0.7667
+2026-03-29 23:42:16,773 | INFO | Epoch 9/26
+2026-03-29 23:46:59,469 | INFO | Train Loss: 0.1504 | Val Loss: 0.9571 | Val Acc: 0.7620 | Val F1: 0.7452
+2026-03-29 23:46:59,471 | INFO | Epoch 10/26
+2026-03-29 23:51:35,817 | INFO | Train Loss: 0.1441 | Val Loss: 0.8234 | Val Acc: 0.7197 | Val F1: 0.7266
+2026-03-29 23:51:35,818 | INFO | Epoch 11/26
+2026-03-29 23:56:10,196 | INFO | Train Loss: 0.1471 | Val Loss: 0.9197 | Val Acc: 0.7258 | Val F1: 0.7294
+2026-03-29 23:56:10,197 | INFO | Epoch 12/26
+2026-03-30 00:00:44,622 | INFO | Train Loss: 0.1197 | Val Loss: 0.5864 | Val Acc: 0.8493 | Val F1: 0.8431
+2026-03-30 00:00:44,656 | INFO | New best model with F1: 0.8431
+2026-03-30 00:00:44,657 | INFO | Epoch 13/26
+2026-03-30 00:05:19,406 | INFO | Train Loss: 0.0770 | Val Loss: 1.2006 | Val Acc: 0.6899 | Val F1: 0.6836
+2026-03-30 00:05:19,406 | INFO | Epoch 14/26
+2026-03-30 00:09:54,992 | INFO | Train Loss: 0.1123 | Val Loss: 0.9291 | Val Acc: 0.7855 | Val F1: 0.7491
+2026-03-30 00:09:54,992 | INFO | Epoch 15/26
+2026-03-30 00:14:34,048 | INFO | Train Loss: 0.1137 | Val Loss: 0.8973 | Val Acc: 0.7416 | Val F1: 0.7449
+2026-03-30 00:14:34,049 | INFO | Epoch 16/26
+2026-03-30 00:19:10,249 | INFO | Train Loss: 0.0332 | Val Loss: 0.5878 | Val Acc: 0.8325 | Val F1: 0.8338
+2026-03-30 00:19:10,250 | INFO | Epoch 17/26
+2026-03-30 00:23:45,960 | INFO | Train Loss: 0.1031 | Val Loss: 0.7807 | Val Acc: 0.7588 | Val F1: 0.7479
+2026-03-30 00:23:45,960 | INFO | Epoch 18/26
+2026-03-30 00:28:20,548 | INFO | Train Loss: 0.0701 | Val Loss: 0.6264 | Val Acc: 0.8348 | Val F1: 0.8309
+2026-03-30 00:28:20,548 | INFO | Epoch 19/26
+2026-03-30 00:32:56,785 | INFO | Train Loss: 0.0227 | Val Loss: 0.5467 | Val Acc: 0.8507 | Val F1: 0.8496
+2026-03-30 00:32:56,821 | INFO | New best model with F1: 0.8496
+2026-03-30 00:32:56,821 | INFO | Epoch 20/26
+2026-03-30 00:37:32,693 | INFO | Train Loss: 0.0115 | Val Loss: 0.5323 | Val Acc: 0.8489 | Val F1: 0.8505
+2026-03-30 00:37:32,727 | INFO | New best model with F1: 0.8505
+2026-03-30 00:37:32,727 | INFO | Epoch 21/26
+2026-03-30 00:42:08,754 | INFO | Train Loss: 0.0167 | Val Loss: 0.5788 | Val Acc: 0.8482 | Val F1: 0.8488
+2026-03-30 00:42:08,755 | INFO | Epoch 22/26
+2026-03-30 00:46:46,750 | INFO | Train Loss: 0.0064 | Val Loss: 0.5595 | Val Acc: 0.8583 | Val F1: 0.8579
+2026-03-30 00:46:46,785 | INFO | New best model with F1: 0.8579
+2026-03-30 00:46:46,785 | INFO | Epoch 23/26
+2026-03-30 00:51:20,600 | INFO | Train Loss: 0.0103 | Val Loss: 0.5523 | Val Acc: 0.8514 | Val F1: 0.8537
+2026-03-30 00:51:20,601 | INFO | Epoch 24/26
+2026-03-30 00:55:55,623 | INFO | Train Loss: 0.0055 | Val Loss: 0.5529 | Val Acc: 0.8612 | Val F1: 0.8610
+2026-03-30 00:55:55,656 | INFO | New best model with F1: 0.8610
+2026-03-30 00:55:55,657 | INFO | Epoch 25/26
+2026-03-30 01:00:32,857 | INFO | Train Loss: 0.0052 | Val Loss: 0.5098 | Val Acc: 0.8701 | Val F1: 0.8704
+2026-03-30 01:00:32,892 | INFO | New best model with F1: 0.8704
+2026-03-30 01:00:32,892 | INFO | Epoch 26/26
+2026-03-30 01:05:08,647 | INFO | Train Loss: 0.0048 | Val Loss: 0.5027 | Val Acc: 0.8694 | Val F1: 0.8664
+2026-03-30 01:05:08,661 | INFO | Training complete. Best F1: 0.8704
+2026-03-30 01:05:08,842 | INFO |   Fold completato: F1=0.8704, Acc=0.8701, Best epoch=25
+2026-03-30 01:05:08,843 | INFO | Fold 1 salvato in: /workspace/results/exp4_combined_internet_cropped/exp4_kfold_resnet18/fold_0.json
+2026-03-30 01:05:10,385 | INFO | 
+==================================================
+2026-03-30 01:05:10,385 | INFO | FOLD 2/5
+2026-03-30 01:05:10,385 | INFO | Train: 1865 immagini, Val: 467 immagini
+2026-03-30 01:05:10,386 | INFO | ==================================================
+2026-03-30 01:05:23,671 | INFO |   Augmentation target: 648 immagini/classe (min_class=162, 4 augmentation)
+2026-03-30 01:23:11,415 | INFO |   Train: 3888 immagini (6 classi)
+2026-03-30 01:23:11,416 | INFO |   Val: 467 immagini (6 classi)
+2026-03-30 01:23:12,507 | INFO | AMP mixed precision enabled, cudnn.benchmark=True
+2026-03-30 01:23:12,543 | INFO | Epoch 1/26
+2026-03-30 01:27:47,897 | INFO | Train Loss: 1.0686 | Val Loss: 2.0936 | Val Acc: 0.4212 | Val F1: 0.4090
+2026-03-30 01:27:47,935 | INFO | New best model with F1: 0.4090
+2026-03-30 01:27:47,936 | INFO | Epoch 2/26
+2026-03-30 01:32:21,127 | INFO | Train Loss: 0.6407 | Val Loss: 0.7579 | Val Acc: 0.6979 | Val F1: 0.6925
+2026-03-30 01:32:21,161 | INFO | New best model with F1: 0.6925
+2026-03-30 01:32:21,161 | INFO | Epoch 3/26
+2026-03-30 01:36:53,550 | INFO | Train Loss: 0.5446 | Val Loss: 0.9594 | Val Acc: 0.6561 | Val F1: 0.6790
+2026-03-30 01:36:53,551 | INFO | Epoch 4/26
+2026-03-30 01:41:27,302 | INFO | Train Loss: 0.4071 | Val Loss: 0.5812 | Val Acc: 0.8162 | Val F1: 0.8170
+2026-03-30 01:41:27,339 | INFO | New best model with F1: 0.8170
+2026-03-30 01:41:27,340 | INFO | Epoch 5/26
+2026-03-30 01:46:00,386 | INFO | Train Loss: 0.3228 | Val Loss: 0.7173 | Val Acc: 0.7826 | Val F1: 0.7478
+2026-03-30 01:46:00,386 | INFO | Epoch 6/26
+2026-03-30 01:50:34,496 | INFO | Train Loss: 0.2724 | Val Loss: 0.5925 | Val Acc: 0.7874 | Val F1: 0.7865
+2026-03-30 01:50:34,497 | INFO | Epoch 7/26
+2026-03-30 01:55:05,856 | INFO | Train Loss: 0.2638 | Val Loss: 0.6731 | Val Acc: 0.7848 | Val F1: 0.7736
+2026-03-30 01:55:05,856 | INFO | Epoch 8/26
+2026-03-30 01:59:34,994 | INFO | Train Loss: 0.1947 | Val Loss: 0.6172 | Val Acc: 0.7711 | Val F1: 0.7859
+2026-03-30 01:59:34,994 | INFO | Epoch 9/26
+2026-03-30 02:04:02,055 | INFO | Train Loss: 0.1309 | Val Loss: 0.6803 | Val Acc: 0.8053 | Val F1: 0.8120
+2026-03-30 02:04:02,055 | INFO | Epoch 10/26
+2026-03-30 02:08:32,411 | INFO | Train Loss: 0.1910 | Val Loss: 0.8055 | Val Acc: 0.7469 | Val F1: 0.7582
+2026-03-30 02:08:32,411 | INFO | Epoch 11/26
+2026-03-30 02:13:02,059 | INFO | Train Loss: 0.0624 | Val Loss: 0.5098 | Val Acc: 0.8476 | Val F1: 0.8449
+2026-03-30 02:13:02,094 | INFO | New best model with F1: 0.8449
+2026-03-30 02:13:02,094 | INFO | Epoch 12/26
+2026-03-30 02:17:35,149 | INFO | Train Loss: 0.0274 | Val Loss: 0.5050 | Val Acc: 0.8480 | Val F1: 0.8496
+2026-03-30 02:17:35,186 | INFO | New best model with F1: 0.8496
+2026-03-30 02:17:35,186 | INFO | Epoch 13/26
+2026-03-30 02:22:06,891 | INFO | Train Loss: 0.0149 | Val Loss: 0.5304 | Val Acc: 0.8612 | Val F1: 0.8545
+2026-03-30 02:22:06,927 | INFO | New best model with F1: 0.8545
+2026-03-30 02:22:06,927 | INFO | Epoch 14/26
+2026-03-30 02:26:37,112 | INFO | Train Loss: 0.0149 | Val Loss: 0.5308 | Val Acc: 0.8504 | Val F1: 0.8453
+2026-03-30 02:26:37,113 | INFO | Epoch 15/26
+2026-03-30 02:31:06,557 | INFO | Train Loss: 0.0154 | Val Loss: 0.5186 | Val Acc: 0.8535 | Val F1: 0.8527
+2026-03-30 02:31:06,557 | INFO | Epoch 16/26
+2026-03-30 02:35:35,339 | INFO | Train Loss: 0.0100 | Val Loss: 0.5077 | Val Acc: 0.8552 | Val F1: 0.8520
+2026-03-30 02:35:35,339 | INFO | Epoch 17/26
+2026-03-30 02:40:05,259 | INFO | Train Loss: 0.0112 | Val Loss: 0.5267 | Val Acc: 0.8656 | Val F1: 0.8594
+2026-03-30 02:40:05,293 | INFO | New best model with F1: 0.8594
+2026-03-30 02:40:05,293 | INFO | Epoch 18/26
+2026-03-30 02:44:38,164 | INFO | Train Loss: 0.0089 | Val Loss: 0.5814 | Val Acc: 0.8247 | Val F1: 0.8184
+2026-03-30 02:44:38,164 | INFO | Epoch 19/26
+2026-03-30 02:49:10,274 | INFO | Train Loss: 0.0064 | Val Loss: 0.5969 | Val Acc: 0.8176 | Val F1: 0.8109
+2026-03-30 02:49:10,275 | INFO | Epoch 20/26
+2026-03-30 02:53:40,671 | INFO | Train Loss: 0.0082 | Val Loss: 0.5719 | Val Acc: 0.8296 | Val F1: 0.8230
+2026-03-30 02:53:40,672 | INFO | Epoch 21/26
+2026-03-30 02:58:07,626 | INFO | Train Loss: 0.0135 | Val Loss: 0.5563 | Val Acc: 0.8401 | Val F1: 0.8342
+2026-03-30 02:58:07,627 | INFO | Epoch 22/26
+2026-03-30 03:02:37,123 | INFO | Train Loss: 0.0057 | Val Loss: 0.5927 | Val Acc: 0.8378 | Val F1: 0.8316
+2026-03-30 03:02:37,124 | INFO | Epoch 23/26
+2026-03-30 03:07:06,886 | INFO | Train Loss: 0.0089 | Val Loss: 0.5414 | Val Acc: 0.8429 | Val F1: 0.8411
+2026-03-30 03:07:06,886 | INFO | Epoch 24/26
+2026-03-30 03:11:37,134 | INFO | Train Loss: 0.0073 | Val Loss: 0.5569 | Val Acc: 0.8444 | Val F1: 0.8399
+2026-03-30 03:11:37,135 | INFO | Epoch 25/26
+2026-03-30 03:16:07,473 | INFO | Train Loss: 0.0054 | Val Loss: 0.5112 | Val Acc: 0.8511 | Val F1: 0.8489
+2026-03-30 03:16:07,473 | INFO | Epoch 26/26
+2026-03-30 03:20:38,832 | INFO | Train Loss: 0.0043 | Val Loss: 0.5228 | Val Acc: 0.8466 | Val F1: 0.8440
+2026-03-30 03:20:38,847 | INFO | Training complete. Best F1: 0.8594
+2026-03-30 03:20:39,000 | INFO |   Fold completato: F1=0.8594, Acc=0.8656, Best epoch=17
+2026-03-30 03:20:39,006 | INFO | Fold 2 salvato in: /workspace/results/exp4_combined_internet_cropped/exp4_kfold_resnet18/fold_1.json
+2026-03-30 03:20:40,036 | INFO | 
+==================================================
+2026-03-30 03:20:40,037 | INFO | FOLD 3/5
+2026-03-30 03:20:40,037 | INFO | Train: 1866 immagini, Val: 466 immagini
+2026-03-30 03:20:40,037 | INFO | ==================================================
+2026-03-30 03:20:54,436 | INFO |   Augmentation target: 644 immagini/classe (min_class=161, 4 augmentation)
+2026-03-30 03:38:43,111 | INFO |   Train: 3864 immagini (6 classi)
+2026-03-30 03:38:43,111 | INFO |   Val: 466 immagini (6 classi)
+2026-03-30 03:38:44,186 | INFO | AMP mixed precision enabled, cudnn.benchmark=True
+2026-03-30 03:38:44,222 | INFO | Epoch 1/26
+2026-03-30 03:43:18,929 | INFO | Train Loss: 0.9697 | Val Loss: 1.4413 | Val Acc: 0.5392 | Val F1: 0.4939
+2026-03-30 03:43:18,990 | INFO | New best model with F1: 0.4939
+2026-03-30 03:43:18,991 | INFO | Epoch 2/26
+2026-03-30 03:47:51,447 | INFO | Train Loss: 0.6419 | Val Loss: 1.1436 | Val Acc: 0.6020 | Val F1: 0.5651
+2026-03-30 03:47:51,482 | INFO | New best model with F1: 0.5651
+2026-03-30 03:47:51,483 | INFO | Epoch 3/26
+2026-03-30 03:52:24,534 | INFO | Train Loss: 0.5317 | Val Loss: 1.0668 | Val Acc: 0.6185 | Val F1: 0.5494
+2026-03-30 03:52:24,535 | INFO | Epoch 4/26
+2026-03-30 03:56:57,158 | INFO | Train Loss: 0.4062 | Val Loss: 0.9027 | Val Acc: 0.6375 | Val F1: 0.6367
+2026-03-30 03:56:57,191 | INFO | New best model with F1: 0.6367
+2026-03-30 03:56:57,192 | INFO | Epoch 5/26
+2026-03-30 04:01:29,422 | INFO | Train Loss: 0.3162 | Val Loss: 1.9237 | Val Acc: 0.6435 | Val F1: 0.5682
+2026-03-30 04:01:29,423 | INFO | Epoch 6/26
+2026-03-30 04:05:59,519 | INFO | Train Loss: 0.2641 | Val Loss: 0.5235 | Val Acc: 0.8283 | Val F1: 0.8260
+2026-03-30 04:05:59,554 | INFO | New best model with F1: 0.8260
+2026-03-30 04:05:59,554 | INFO | Epoch 7/26
+2026-03-30 04:10:30,391 | INFO | Train Loss: 0.2260 | Val Loss: 1.9140 | Val Acc: 0.5617 | Val F1: 0.5295
+2026-03-30 04:10:30,391 | INFO | Epoch 8/26
+2026-03-30 04:15:00,715 | INFO | Train Loss: 0.1871 | Val Loss: 1.0863 | Val Acc: 0.7416 | Val F1: 0.7058
+2026-03-30 04:15:00,716 | INFO | Epoch 9/26
+2026-03-30 04:19:33,833 | INFO | Train Loss: 0.1372 | Val Loss: 1.5983 | Val Acc: 0.7049 | Val F1: 0.6467
+2026-03-30 04:19:33,833 | INFO | Epoch 10/26
+2026-03-30 04:24:06,356 | INFO | Train Loss: 0.1631 | Val Loss: 0.6958 | Val Acc: 0.7961 | Val F1: 0.7843
+2026-03-30 04:24:06,357 | INFO | Epoch 11/26
+2026-03-30 04:28:37,367 | INFO | Train Loss: 0.1283 | Val Loss: 0.6074 | Val Acc: 0.7756 | Val F1: 0.7793
+2026-03-30 04:28:37,367 | INFO | Epoch 12/26
+2026-03-30 04:33:06,741 | INFO | Train Loss: 0.1125 | Val Loss: 1.0266 | Val Acc: 0.7149 | Val F1: 0.6997
+2026-03-30 04:33:06,742 | INFO | Epoch 13/26
+2026-03-30 04:37:38,580 | INFO | Train Loss: 0.0572 | Val Loss: 0.6026 | Val Acc: 0.8319 | Val F1: 0.8253
+2026-03-30 04:37:38,581 | INFO | Epoch 14/26
+2026-03-30 04:42:10,302 | INFO | Train Loss: 0.0236 | Val Loss: 0.5447 | Val Acc: 0.8395 | Val F1: 0.8334
+2026-03-30 04:42:10,336 | INFO | New best model with F1: 0.8334
+2026-03-30 04:42:10,336 | INFO | Epoch 15/26
+2026-03-30 04:46:43,456 | INFO | Train Loss: 0.0224 | Val Loss: 0.4800 | Val Acc: 0.8588 | Val F1: 0.8521
+2026-03-30 04:46:43,490 | INFO | New best model with F1: 0.8521
+2026-03-30 04:46:43,491 | INFO | Epoch 16/26
+2026-03-30 04:51:15,734 | INFO | Train Loss: 0.0108 | Val Loss: 0.4943 | Val Acc: 0.8570 | Val F1: 0.8556
+2026-03-30 04:51:15,771 | INFO | New best model with F1: 0.8556
+2026-03-30 04:51:15,771 | INFO | Epoch 17/26
+2026-03-30 04:55:50,048 | INFO | Train Loss: 0.0114 | Val Loss: 0.4956 | Val Acc: 0.8437 | Val F1: 0.8403
+2026-03-30 04:55:50,048 | INFO | Epoch 18/26
+2026-03-30 05:00:15,793 | INFO | Train Loss: 0.0127 | Val Loss: 0.5682 | Val Acc: 0.8266 | Val F1: 0.8234
+2026-03-30 05:00:15,793 | INFO | Epoch 19/26
+2026-03-30 05:04:41,287 | INFO | Train Loss: 0.0100 | Val Loss: 0.5940 | Val Acc: 0.8221 | Val F1: 0.8170
+2026-03-30 05:04:41,288 | INFO | Epoch 20/26
+2026-03-30 05:09:07,677 | INFO | Train Loss: 0.0087 | Val Loss: 0.6113 | Val Acc: 0.8040 | Val F1: 0.7983
+2026-03-30 05:09:07,678 | INFO | Epoch 21/26
+2026-03-30 05:13:35,113 | INFO | Train Loss: 0.0061 | Val Loss: 0.5246 | Val Acc: 0.8456 | Val F1: 0.8410
+2026-03-30 05:13:35,113 | INFO | Epoch 22/26
+2026-03-30 05:18:05,840 | INFO | Train Loss: 0.0075 | Val Loss: 0.5021 | Val Acc: 0.8533 | Val F1: 0.8516
+2026-03-30 05:18:05,840 | INFO | Epoch 23/26
+2026-03-30 05:22:37,134 | INFO | Train Loss: 0.0061 | Val Loss: 0.5215 | Val Acc: 0.8503 | Val F1: 0.8463
+2026-03-30 05:22:37,134 | INFO | Epoch 24/26
+2026-03-30 05:27:05,638 | INFO | Train Loss: 0.0052 | Val Loss: 0.5832 | Val Acc: 0.8231 | Val F1: 0.8165
+2026-03-30 05:27:05,638 | INFO | Epoch 25/26
+2026-03-30 05:31:33,096 | INFO | Train Loss: 0.0054 | Val Loss: 0.5568 | Val Acc: 0.8312 | Val F1: 0.8276
+2026-03-30 05:31:33,097 | INFO | Epoch 26/26
+2026-03-30 05:36:00,012 | INFO | Train Loss: 0.0075 | Val Loss: 0.5280 | Val Acc: 0.8407 | Val F1: 0.8364
+2026-03-30 05:36:00,027 | INFO | Training complete. Best F1: 0.8556
+2026-03-30 05:36:00,178 | INFO |   Fold completato: F1=0.8556, Acc=0.8570, Best epoch=16
+2026-03-30 05:36:00,182 | INFO | Fold 3 salvato in: /workspace/results/exp4_combined_internet_cropped/exp4_kfold_resnet18/fold_2.json
+2026-03-30 05:36:01,117 | INFO | 
+==================================================
+2026-03-30 05:36:01,117 | INFO | FOLD 4/5
+2026-03-30 05:36:01,117 | INFO | Train: 1866 immagini, Val: 466 immagini
+2026-03-30 05:36:01,118 | INFO | ==================================================
+2026-03-30 05:36:16,515 | INFO |   Augmentation target: 644 immagini/classe (min_class=161, 4 augmentation)
+2026-03-30 05:53:45,442 | INFO |   Train: 3864 immagini (6 classi)
+2026-03-30 05:53:45,442 | INFO |   Val: 466 immagini (6 classi)
+2026-03-30 05:53:46,554 | INFO | AMP mixed precision enabled, cudnn.benchmark=True
+2026-03-30 05:53:46,593 | INFO | Epoch 1/26
+2026-03-30 05:58:15,677 | INFO | Train Loss: 1.1588 | Val Loss: 1.2402 | Val Acc: 0.5083 | Val F1: 0.5240
+2026-03-30 05:58:15,715 | INFO | New best model with F1: 0.5240
+2026-03-30 05:58:15,716 | INFO | Epoch 2/26
+2026-03-30 06:02:49,670 | INFO | Train Loss: 0.7523 | Val Loss: 1.3709 | Val Acc: 0.5446 | Val F1: 0.5360
+2026-03-30 06:02:49,704 | INFO | New best model with F1: 0.5360
+2026-03-30 06:02:49,704 | INFO | Epoch 3/26
+2026-03-30 06:07:16,927 | INFO | Train Loss: 0.5771 | Val Loss: 0.9879 | Val Acc: 0.6056 | Val F1: 0.5982
+2026-03-30 06:07:16,962 | INFO | New best model with F1: 0.5982
+2026-03-30 06:07:16,963 | INFO | Epoch 4/26
+2026-03-30 06:11:50,628 | INFO | Train Loss: 0.4310 | Val Loss: 0.8974 | Val Acc: 0.6886 | Val F1: 0.6762
+2026-03-30 06:11:50,668 | INFO | New best model with F1: 0.6762
+2026-03-30 06:11:50,668 | INFO | Epoch 5/26
+2026-03-30 06:16:21,979 | INFO | Train Loss: 0.3711 | Val Loss: 1.2972 | Val Acc: 0.6120 | Val F1: 0.5471
+2026-03-30 06:16:21,979 | INFO | Epoch 6/26
+2026-03-30 06:20:49,423 | INFO | Train Loss: 0.2862 | Val Loss: 0.7783 | Val Acc: 0.7131 | Val F1: 0.6967
+2026-03-30 06:20:49,457 | INFO | New best model with F1: 0.6967
+2026-03-30 06:20:49,458 | INFO | Epoch 7/26
+2026-03-30 06:25:17,612 | INFO | Train Loss: 0.2681 | Val Loss: 1.5117 | Val Acc: 0.6179 | Val F1: 0.5401
+2026-03-30 06:25:17,612 | INFO | Epoch 8/26
+2026-03-30 06:29:46,629 | INFO | Train Loss: 0.1928 | Val Loss: 0.7349 | Val Acc: 0.7785 | Val F1: 0.7720
+2026-03-30 06:29:46,664 | INFO | New best model with F1: 0.7720
+2026-03-30 06:29:46,664 | INFO | Epoch 9/26
+2026-03-30 06:34:15,341 | INFO | Train Loss: 0.1787 | Val Loss: 0.7460 | Val Acc: 0.7864 | Val F1: 0.7589
+2026-03-30 06:34:15,342 | INFO | Epoch 10/26
+2026-03-30 06:38:45,720 | INFO | Train Loss: 0.1373 | Val Loss: 0.8789 | Val Acc: 0.7235 | Val F1: 0.7084
+2026-03-30 06:38:45,721 | INFO | Epoch 11/26
+2026-03-30 06:43:14,099 | INFO | Train Loss: 0.1193 | Val Loss: 0.6283 | Val Acc: 0.7985 | Val F1: 0.8040
+2026-03-30 06:43:14,135 | INFO | New best model with F1: 0.8040
+2026-03-30 06:43:14,136 | INFO | Epoch 12/26
+2026-03-30 06:47:45,026 | INFO | Train Loss: 0.0862 | Val Loss: 0.8540 | Val Acc: 0.7800 | Val F1: 0.7751
+2026-03-30 06:47:45,027 | INFO | Epoch 13/26
+2026-03-30 06:52:13,123 | INFO | Train Loss: 0.1417 | Val Loss: 1.2579 | Val Acc: 0.6623 | Val F1: 0.6377
+2026-03-30 06:52:13,123 | INFO | Epoch 14/26
+2026-03-30 08:09:51,568 | INFO | ======================================================================
+2026-03-30 08:09:51,569 | INFO | EXPERIMENT 4: exp4_combined_internet_cropped
+2026-03-30 08:09:51,569 | INFO | Model: RESNET18
+2026-03-30 08:09:51,569 | INFO | Description: Best on internet: train on combined, test on internet cropped
+2026-03-30 08:09:51,569 | INFO | Log: logs/exp4_combined_internet_cropped_resnet18.log
+2026-03-30 08:09:51,569 | INFO | ======================================================================
+2026-03-30 08:09:51,569 | INFO | Train: dataset/train_combined.pt
+2026-03-30 08:09:51,569 | INFO | Val: dataset/val_combined.pt
+2026-03-30 08:09:51,569 | INFO | Test: dataset/test_internet_cropped.pt
+2026-03-30 08:09:51,569 | INFO | 
+--- PHASE: K-Fold Cross Validation ---
+2026-03-30 08:09:51,569 | INFO | Folds: 5
+2026-03-30 08:09:51,574 | INFO | ======================================================================
+2026-03-30 08:09:51,574 | INFO | K-FOLD CROSS VALIDATION - RESNET18
+2026-03-30 08:09:51,574 | INFO | Dataset: /workspace/dataset/combined
+2026-03-30 08:09:51,574 | INFO | Test: /workspace/dataset/internet_cropped
+2026-03-30 08:09:51,575 | INFO | Folds: 5, Epochs: 26
+2026-03-30 08:09:51,575 | INFO | MODALITA: fold singolo 4/5
+2026-03-30 08:09:51,575 | INFO | Device: cuda
+2026-03-30 08:09:51,575 | INFO | ======================================================================
+2026-03-30 08:09:51,582 | INFO | Dataset: 2332 immagini, 6 classi
+2026-03-30 08:09:51,583 | INFO |   O. exaltata: 501 immagini
+2026-03-30 08:09:51,583 | INFO |   O. garganica: 570 immagini
+2026-03-30 08:09:51,583 | INFO |   O. incubacea: 366 immagini
+2026-03-30 08:09:51,583 | INFO |   O. majellensis: 202 immagini
+2026-03-30 08:09:51,583 | INFO |   O. sphegodes: 433 immagini
+2026-03-30 08:09:51,583 | INFO |   O. sphegodes_Palena: 260 immagini
+2026-03-30 08:09:51,583 | INFO | 
+==================================================
+2026-03-30 08:09:51,583 | INFO | FOLD 4/5
+2026-03-30 08:09:51,583 | INFO | Train: 1866 immagini, Val: 466 immagini
+2026-03-30 08:09:51,583 | INFO | ==================================================
+2026-03-30 08:10:03,479 | INFO |   Augmentation target: 644 immagini/classe (min_class=161, 4 augmentation)
+2026-03-30 08:12:14,722 | INFO | ======================================================================
+2026-03-30 08:12:14,722 | INFO | EXPERIMENT 4: exp4_combined_internet_cropped
+2026-03-30 08:12:14,723 | INFO | Model: RESNET18
+2026-03-30 08:12:14,723 | INFO | Description: Best on internet: train on combined, test on internet cropped
+2026-03-30 08:12:14,723 | INFO | Log: logs/exp4_combined_internet_cropped_resnet18.log
+2026-03-30 08:12:14,723 | INFO | ======================================================================
+2026-03-30 08:12:14,723 | INFO | Train: dataset/train_combined.pt
+2026-03-30 08:12:14,723 | INFO | Val: dataset/val_combined.pt
+2026-03-30 08:12:14,723 | INFO | Test: dataset/test_internet_cropped.pt
+2026-03-30 08:12:14,723 | INFO | 
+--- PHASE: K-Fold Cross Validation ---
+2026-03-30 08:12:14,723 | INFO | Folds: 5
+2026-03-30 08:12:14,726 | INFO | ======================================================================
+2026-03-30 08:12:14,726 | INFO | K-FOLD CROSS VALIDATION - RESNET18
+2026-03-30 08:12:14,727 | INFO | Dataset: /workspace/dataset/combined
+2026-03-30 08:12:14,727 | INFO | Test: /workspace/dataset/internet_cropped
+2026-03-30 08:12:14,727 | INFO | Folds: 5, Epochs: 26
+2026-03-30 08:12:14,727 | INFO | MODALITA: fold singolo 4/5
+2026-03-30 08:12:14,727 | INFO | Device: cuda
+2026-03-30 08:12:14,727 | INFO | ======================================================================
+2026-03-30 08:12:14,734 | INFO | Dataset: 2332 immagini, 6 classi
+2026-03-30 08:12:14,734 | INFO |   O. exaltata: 501 immagini
+2026-03-30 08:12:14,734 | INFO |   O. garganica: 570 immagini
+2026-03-30 08:12:14,734 | INFO |   O. incubacea: 366 immagini
+2026-03-30 08:12:14,735 | INFO |   O. majellensis: 202 immagini
+2026-03-30 08:12:14,735 | INFO |   O. sphegodes: 433 immagini
+2026-03-30 08:12:14,735 | INFO |   O. sphegodes_Palena: 260 immagini
+2026-03-30 08:12:14,735 | INFO | 
+==================================================
+2026-03-30 08:12:14,735 | INFO | FOLD 4/5
+2026-03-30 08:12:14,735 | INFO | Train: 1866 immagini, Val: 466 immagini
+2026-03-30 08:12:14,735 | INFO | ==================================================
+2026-03-30 08:12:25,096 | INFO |   Augmentation target: 644 immagini/classe (min_class=161, 4 augmentation)
+2026-03-30 08:13:47,464 | INFO | ======================================================================
+2026-03-30 08:13:47,464 | INFO | EXPERIMENT 4: exp4_combined_internet_cropped
+2026-03-30 08:13:47,464 | INFO | Model: RESNET18
+2026-03-30 08:13:47,464 | INFO | Description: Best on internet: train on combined, test on internet cropped
+2026-03-30 08:13:47,464 | INFO | Log: logs/exp4_combined_internet_cropped_resnet18.log
+2026-03-30 08:13:47,465 | INFO | ======================================================================
+2026-03-30 08:13:47,465 | INFO | Train: dataset/train_combined.pt
+2026-03-30 08:13:47,465 | INFO | Val: dataset/val_combined.pt
+2026-03-30 08:13:47,465 | INFO | Test: dataset/test_internet_cropped.pt
+2026-03-30 08:13:47,465 | INFO | 
+--- PHASE: K-Fold Cross Validation ---
+2026-03-30 08:13:47,465 | INFO | Folds: 5
+2026-03-30 08:13:47,467 | INFO | ======================================================================
+2026-03-30 08:13:47,467 | INFO | K-FOLD CROSS VALIDATION - RESNET18
+2026-03-30 08:13:47,468 | INFO | Dataset: /workspace/dataset/combined
+2026-03-30 08:13:47,468 | INFO | Test: /workspace/dataset/internet_cropped
+2026-03-30 08:13:47,468 | INFO | Folds: 5, Epochs: 26
+2026-03-30 08:13:47,468 | INFO | MODALITA: fold singolo 4/5
+2026-03-30 08:13:47,468 | INFO | Device: cuda
+2026-03-30 08:13:47,468 | INFO | ======================================================================
+2026-03-30 08:13:47,475 | INFO | Dataset: 2332 immagini, 6 classi
+2026-03-30 08:13:47,475 | INFO |   O. exaltata: 501 immagini
+2026-03-30 08:13:47,475 | INFO |   O. garganica: 570 immagini
+2026-03-30 08:13:47,475 | INFO |   O. incubacea: 366 immagini
+2026-03-30 08:13:47,476 | INFO |   O. majellensis: 202 immagini
+2026-03-30 08:13:47,476 | INFO |   O. sphegodes: 433 immagini
+2026-03-30 08:13:47,476 | INFO |   O. sphegodes_Palena: 260 immagini
+2026-03-30 08:13:47,476 | INFO | 
+==================================================
+2026-03-30 08:13:47,476 | INFO | FOLD 4/5
+2026-03-30 08:13:47,476 | INFO | Train: 1866 immagini, Val: 466 immagini
+2026-03-30 08:13:47,476 | INFO | ==================================================
+2026-03-30 08:14:06,278 | INFO | ======================================================================
+2026-03-30 08:14:06,278 | INFO | EXPERIMENT 4: exp4_combined_internet_cropped
+2026-03-30 08:14:06,278 | INFO | Model: RESNET18
+2026-03-30 08:14:06,278 | INFO | Description: Best on internet: train on combined, test on internet cropped
+2026-03-30 08:14:06,278 | INFO | Log: logs/exp4_combined_internet_cropped_resnet18.log
+2026-03-30 08:14:06,278 | INFO | ======================================================================
+2026-03-30 08:14:06,278 | INFO | Train: dataset/train_combined.pt
+2026-03-30 08:14:06,278 | INFO | Val: dataset/val_combined.pt
+2026-03-30 08:14:06,278 | INFO | Test: dataset/test_internet_cropped.pt
+2026-03-30 08:14:06,279 | INFO | 
+--- PHASE: K-Fold Cross Validation ---
+2026-03-30 08:14:06,279 | INFO | Folds: 5
+2026-03-30 08:14:06,280 | INFO | ======================================================================
+2026-03-30 08:14:06,280 | INFO | K-FOLD CROSS VALIDATION - RESNET18
+2026-03-30 08:14:06,280 | INFO | Dataset: /workspace/dataset/combined
+2026-03-30 08:14:06,280 | INFO | Test: /workspace/dataset/internet_cropped
+2026-03-30 08:14:06,280 | INFO | Folds: 5, Epochs: 26
+2026-03-30 08:14:06,280 | INFO | MODALITA: fold singolo 4/5
+2026-03-30 08:14:06,281 | INFO | Device: cuda
+2026-03-30 08:14:06,281 | INFO | ======================================================================
+2026-03-30 08:14:06,288 | INFO | Dataset: 2332 immagini, 6 classi
+2026-03-30 08:14:06,288 | INFO |   O. exaltata: 501 immagini
+2026-03-30 08:14:06,288 | INFO |   O. garganica: 570 immagini
+2026-03-30 08:14:06,288 | INFO |   O. incubacea: 366 immagini
+2026-03-30 08:14:06,288 | INFO |   O. majellensis: 202 immagini
+2026-03-30 08:14:06,288 | INFO |   O. sphegodes: 433 immagini
+2026-03-30 08:14:06,288 | INFO |   O. sphegodes_Palena: 260 immagini
+2026-03-30 08:14:06,288 | INFO | 
+==================================================
+2026-03-30 08:14:06,289 | INFO | FOLD 4/5
+2026-03-30 08:14:06,289 | INFO | Train: 1866 immagini, Val: 466 immagini
+2026-03-30 08:14:06,289 | INFO | ==================================================
+2026-03-30 08:14:13,248 | INFO |   Augmentation target: 644 immagini/classe (min_class=161, 4 augmentation)
+2026-03-30 08:14:28,613 | INFO | ======================================================================
+2026-03-30 08:14:28,613 | INFO | EXPERIMENT 4: exp4_combined_internet_cropped
+2026-03-30 08:14:28,613 | INFO | Model: RESNET18
+2026-03-30 08:14:28,613 | INFO | Description: Best on internet: train on combined, test on internet cropped
+2026-03-30 08:14:28,613 | INFO | Log: logs/exp4_combined_internet_cropped_resnet18.log
+2026-03-30 08:14:28,613 | INFO | ======================================================================
+2026-03-30 08:14:28,613 | INFO | Train: dataset/train_combined.pt
+2026-03-30 08:14:28,614 | INFO | Val: dataset/val_combined.pt
+2026-03-30 08:14:28,614 | INFO | Test: dataset/test_internet_cropped.pt
+2026-03-30 08:14:28,614 | INFO | 
+--- PHASE: K-Fold Cross Validation ---
+2026-03-30 08:14:28,614 | INFO | Folds: 5
+2026-03-30 08:14:28,617 | INFO | ======================================================================
+2026-03-30 08:14:28,617 | INFO | K-FOLD CROSS VALIDATION - RESNET18
+2026-03-30 08:14:28,617 | INFO | Dataset: /workspace/dataset/combined
+2026-03-30 08:14:28,617 | INFO | Test: /workspace/dataset/internet_cropped
+2026-03-30 08:14:28,617 | INFO | Folds: 5, Epochs: 26
+2026-03-30 08:14:28,617 | INFO | MODALITA: fold singolo 4/5
+2026-03-30 08:14:28,617 | INFO | Device: cuda
+2026-03-30 08:14:28,617 | INFO | = =====================================================================
+2026-03-30 08:14:28,626 | INFO | Dataset: 2332 immagini, 6 classi
+2026-03-30 08:14:28,626 | INFO |   O. exaltata: 501 immagini
+2026-03-30 08:14:28,626 | INFO |   O. garganica: 570 immagini
+2026-03-30 08:14:28,626 | INFO |   O. incubacea: 366 immagini
+2026-03-30 08:14:28,626 | INFO |   O. majellensis: 202 immagini
+2026-03-30 08:14:28,626 | INFO |   O. sphegodes: 433 immagini
+2026-03-30 08:14:28,626 | INFO |   O. sphegodes_Palena: 260 immagini
+2026-03-30 08:14:28,627 | INFO | 
+==================================================
+2026-03-30 08:14:28,627 | INFO | FOLD 4/5
+2026-03-30 08:14:28,627 | INFO | Train: 1866 immagini, Val: 466 immagini
+2026-03-30 08:14:28,627 | INFO | ==================================================
+2026-03-30 08:17:42,986 | INFO | ======================================================================
+2026-03-30 08:17:42,986 | INFO | EXPERIMENT 4: exp4_combined_internet_cropped
+2026-03-30 08:17:42,986 | INFO | Model: RESNET18
+2026-03-30 08:17:42,986 | INFO | Description: Best on internet: train on combined, test on internet cropped
+2026-03-30 08:17:42,986 | INFO | Log: logs/exp4_combined_internet_cropped_resnet18.log
+2026-03-30 08:17:42,986 | INFO | ======================================================================
+2026-03-30 08:17:42,987 | INFO | Train: dataset/train_combined.pt
+2026-03-30 08:17:42,987 | INFO | Val: dataset/val_combined.pt
+2026-03-30 08:17:42,987 | INFO | Test: dataset/test_internet_cropped.pt
+2026-03-30 08:17:42,987 | INFO | 
+--- PHASE: K-Fold Cross Validation ---
+2026-03-30 08:17:42,987 | INFO | Folds: 5
+2026-03-30 08:17:42,988 | INFO | ======================================================================
+2026-03-30 08:17:42,988 | INFO | K-FOLD CROSS VALIDATION - RESNET18
+2026-03-30 08:17:42,988 | INFO | Dataset: /workspace/dataset/combined
+2026-03-30 08:17:42,988 | INFO | Test: /workspace/dataset/internet_cropped
+2026-03-30 08:17:42,989 | INFO | Folds: 5, Epochs: 26
+2026-03-30 08:17:42,989 | INFO | MODALITA: fold singolo 4/5
+2026-03-30 08:17:42,989 | INFO | Device: cuda
+2026-03-30 08:17:42,989 | INFO | ======================================================================
+2026-03-30 08:17:42,996 | INFO | Dataset: 2332 immagini, 6 classi
+2026-03-30 08:17:42,996 | INFO |   O. exaltata: 501 immagini
+2026-03-30 08:17:42,996 | INFO |   O. garganica: 570 immagini
+2026-03-30 08:17:42,997 | INFO |   O. incubacea: 366 immagini
+2026-03-30 08:17:42,997 | INFO |   O. majellensis: 202 immagini
+2026-03-30 08:17:42,997 | INFO |   O. sphegodes: 433 immagini
+2026-03-30 08:17:42,997 | INFO |   O. sphegodes_Palena: 260 immagini
+2026-03-30 08:17:42,997 | INFO | 
+==================================================
+2026-03-30 08:17:42,997 | INFO | FOLD 4/5
+2026-03-30 08:17:42,997 | INFO | Train: 1866 immagini, Val: 466 immagini
+2026-03-30 08:17:42,997 | INFO | ==================================================
+2026-03-30 08:17:50,967 | INFO |   Augmentation target: 644 immagini/classe (min_class=161, 4 augmentation)
+2026-03-30 08:23:26,115 | INFO |   Train: 3864 immagini (6 classi)
+2026-03-30 08:23:26,116 | INFO |   Val: 466 immagini (6 classi)
+2026-03-30 08:23:26,627 | INFO | AMP mixed precision enabled, cudnn.benchmark=True
+2026-03-30 08:23:26,639 | INFO | Epoch 1/26
+2026-03-30 08:27:05,061 | INFO | Train Loss: 0.9658 | Val Loss: 0.9979 | Val Acc: 0.6647 | Val F1: 0.6163
+2026-03-30 08:27:05,073 | INFO | New best model with F1: 0.6163
+2026-03-30 08:27:05,073 | INFO | Epoch 2/26
+2026-03-30 08:30:40,544 | INFO | Train Loss: 0.6065 | Val Loss: 1.0987 | Val Acc: 0.5982 | Val F1: 0.5595
+2026-03-30 08:30:40,544 | INFO | Epoch 3/26
+2026-03-30 08:35:18,564 | INFO | Train Loss: 0.4884 | Val Loss: 1.6193 | Val Acc: 0.4608 | Val F1: 0.4647
+2026-03-30 08:35:18,564 | INFO | Epoch 4/26
+2026-03-30 08:39:47,964 | INFO | Train Loss: 0.3521 | Val Loss: 0.6860 | Val Acc: 0.7762 | Val F1: 0.7762
+2026-03-30 08:39:48,003 | INFO | New best model with F1: 0.7762
+2026-03-30 08:39:48,003 | INFO | Epoch 5/26
+2026-03-30 08:44:21,329 | INFO | Train Loss: 0.3219 | Val Loss: 0.9391 | Val Acc: 0.6949 | Val F1: 0.6754
+2026-03-30 08:44:21,330 | INFO | Epoch 6/26
+2026-03-30 08:48:53,748 | INFO | Train Loss: 0.2432 | Val Loss: 0.9723 | Val Acc: 0.7243 | Val F1: 0.7089
+2026-03-30 08:48:53,748 | INFO | Epoch 7/26
+2026-03-30 08:53:29,275 | INFO | Train Loss: 0.2353 | Val Loss: 1.0207 | Val Acc: 0.7571 | Val F1: 0.7263
+2026-03-30 08:53:29,275 | INFO | Epoch 8/26
+2026-03-30 08:58:05,693 | INFO | Train Loss: 0.1928 | Val Loss: 0.5312 | Val Acc: 0.8343 | Val F1: 0.8252
+2026-03-30 08:58:05,730 | INFO | New best model with F1: 0.8252
+2026-03-30 08:58:05,731 | INFO | Epoch 9/26
+2026-03-30 09:02:39,161 | INFO | Train Loss: 0.1405 | Val Loss: 1.2699 | Val Acc: 0.7338 | Val F1: 0.6976
+2026-03-30 09:02:39,161 | INFO | Epoch 10/26
+2026-03-30 09:07:14,727 | INFO | Train Loss: 0.1372 | Val Loss: 1.1941 | Val Acc: 0.7051 | Val F1: 0.6784
+2026-03-30 09:07:14,727 | INFO | Epoch 11/26
+2026-03-30 09:11:47,711 | INFO | Train Loss: 0.1228 | Val Loss: 1.0829 | Val Acc: 0.6989 | Val F1: 0.7115
+2026-03-30 09:11:47,712 | INFO | Epoch 12/26
+2026-03-30 09:16:17,348 | INFO | Train Loss: 0.1429 | Val Loss: 0.7507 | Val Acc: 0.8267 | Val F1: 0.8271
+2026-03-30 09:16:17,383 | INFO | New best model with F1: 0.8271
+2026-03-30 09:16:17,384 | INFO | Epoch 13/26
+2026-03-30 09:20:42,392 | INFO | Train Loss: 0.0887 | Val Loss: 1.2790 | Val Acc: 0.7062 | Val F1: 0.6830
+2026-03-30 09:20:42,393 | INFO | Epoch 14/26
+2026-03-30 09:25:10,498 | INFO | Train Loss: 0.0813 | Val Loss: 1.1022 | Val Acc: 0.7687 | Val F1: 0.7585
+2026-03-30 09:25:10,498 | INFO | Epoch 15/26
+2026-03-30 09:29:38,651 | INFO | Train Loss: 0.0255 | Val Loss: 0.5867 | Val Acc: 0.8504 | Val F1: 0.8502
+2026-03-30 09:29:38,689 | INFO | New best model with F1: 0.8502
+2026-03-30 09:29:38,690 | INFO | Epoch 16/26
+2026-03-30 09:34:16,192 | INFO | Train Loss: 0.0170 | Val Loss: 0.5457 | Val Acc: 0.8701 | Val F1: 0.8723
+2026-03-30 09:34:16,227 | INFO | New best model with F1: 0.8723
+2026-03-30 09:34:16,227 | INFO | Epoch 17/26
+2026-03-30 09:38:42,531 | INFO | Train Loss: 0.0096 | Val Loss: 0.5582 | Val Acc: 0.8791 | Val F1: 0.8803
+2026-03-30 09:38:42,566 | INFO | New best model with F1: 0.8803
+2026-03-30 09:38:42,567 | INFO | Epoch 18/26
+2026-03-30 09:43:14,852 | INFO | Train Loss: 0.0107 | Val Loss: 0.5229 | Val Acc: 0.8732 | Val F1: 0.8748
+2026-03-30 09:43:14,852 | INFO | Epoch 19/26
+2026-03-30 09:47:39,644 | INFO | Train Loss: 0.0106 | Val Loss: 0.5492 | Val Acc: 0.8544 | Val F1: 0.8530
+2026-03-30 09:47:39,644 | INFO | Epoch 20/26
+2026-03-30 09:52:15,519 | INFO | Train Loss: 0.0044 | Val Loss: 0.5381 | Val Acc: 0.8438 | Val F1: 0.8453
+2026-03-30 09:52:15,520 | INFO | Epoch 21/26
+2026-03-30 09:56:42,575 | INFO | Train Loss: 0.0046 | Val Loss: 0.4930 | Val Acc: 0.8891 | Val F1: 0.8871
+2026-03-30 09:56:42,610 | INFO | New best model with F1: 0.8871
+2026-03-30 09:56:42,611 | INFO | Epoch 22/26
+2026-03-30 10:01:17,008 | INFO | Train Loss: 0.0058 | Val Loss: 0.4704 | Val Acc: 0.8837 | Val F1: 0.8869
+2026-03-30 10:01:17,008 | INFO | Epoch 23/26
+2026-03-30 10:05:46,236 | INFO | Train Loss: 0.0037 | Val Loss: 0.4850 | Val Acc: 0.8967 | Val F1: 0.8958
+2026-03-30 10:05:46,287 | INFO | New best model with F1: 0.8958
+2026-03-30 10:05:46,288 | INFO | Epoch 24/26
+2026-03-30 10:10:22,008 | INFO | Train Loss: 0.0021 | Val Loss: 0.5177 | Val Acc: 0.8583 | Val F1: 0.8571
+2026-03-30 10:10:22,008 | INFO | Epoch 25/26
+2026-03-30 10:14:53,244 | INFO | Train Loss: 0.0032 | Val Loss: 0.5860 | Val Acc: 0.8722 | Val F1: 0.8700
+2026-03-30 10:14:53,245 | INFO | Epoch 26/26
+2026-03-30 10:19:26,931 | INFO | Train Loss: 0.0056 | Val Loss: 0.5356 | Val Acc: 0.8438 | Val F1: 0.8450
+2026-03-30 10:19:26,945 | INFO | Training complete. Best F1: 0.8958
+2026-03-30 10:19:27,124 | INFO |   Fold completato: F1=0.8958, Acc=0.8967, Best epoch=23
+2026-03-30 10:19:27,127 | INFO | Fold 4 salvato in: /workspace/results/exp4_combined_internet_cropped/exp4_kfold_resnet18/fold_3.json
+2026-03-30 10:19:28,623 | INFO | 
+Fold 4 completato.
+2026-03-30 10:19:28,624 | INFO | Per aggregare tutti i fold: --cross-validate --exp 4 --model resnet18 --aggregate-only
+2026-03-30 10:19:28,973 | INFO | 
+✓ EXPERIMENT 4 COMPLETED
+2026-03-30 10:43:43,854 | INFO | ======================================================================
+2026-03-30 10:43:43,854 | INFO | EXPERIMENT 4: exp4_combined_internet_cropped
+2026-03-30 10:43:43,854 | INFO | Model: RESNET18
+2026-03-30 10:43:43,854 | INFO | Description: Best on internet: train on combined, test on internet cropped
+2026-03-30 10:43:43,855 | INFO | Log: logs/exp4_combined_internet_cropped_resnet18.log
+2026-03-30 10:43:43,855 | INFO | ======================================================================
+2026-03-30 10:43:43,855 | INFO | Train: dataset/train_combined.pt
+2026-03-30 10:43:43,855 | INFO | Val: dataset/val_combined.pt
+2026-03-30 10:43:43,856 | INFO | Test: dataset/test_internet_cropped.pt
+2026-03-30 10:43:43,856 | INFO | 
+--- PHASE: K-Fold Cross Validation ---
+2026-03-30 10:43:43,856 | INFO | Folds: 5
+2026-03-30 10:43:43,862 | INFO | ======================================================================
+2026-03-30 10:43:43,862 | INFO | K-FOLD CROSS VALIDATION - RESNET18
+2026-03-30 10:43:43,863 | INFO | Dataset: /workspace/dataset/combined
+2026-03-30 10:43:43,863 | INFO | Test: /workspace/dataset/internet_cropped
+2026-03-30 10:43:43,863 | INFO | Folds: 5, Epochs: 26
+2026-03-30 10:43:43,863 | INFO | MODALITA: fold singolo 5/5
+2026-03-30 10:43:43,863 | INFO | Device: cuda
+2026-03-30 10:43:43,863 | INFO | ======================================================================
+2026-03-30 10:43:43,886 | INFO | Dataset: 2332 immagini, 6 classi
+2026-03-30 10:43:43,887 | INFO |   O. exaltata: 501 immagini
+2026-03-30 10:43:43,887 | INFO |   O. garganica: 570 immagini
+2026-03-30 10:43:43,887 | INFO |   O. incubacea: 366 immagini
+2026-03-30 10:43:43,887 | INFO |   O. majellensis: 202 immagini
+2026-03-30 10:43:43,888 | INFO |   O. sphegodes: 433 immagini
+2026-03-30 10:43:43,888 | INFO |   O. sphegodes_Palena: 260 immagini
+2026-03-30 10:43:43,888 | INFO | 
+==================================================
+2026-03-30 10:43:43,888 | INFO | FOLD 5/5
+2026-03-30 10:43:43,888 | INFO | Train: 1866 immagini, Val: 466 immagini
+2026-03-30 10:43:43,889 | INFO | ==================================================
+2026-03-30 10:44:01,655 | INFO |   Augmentation target: 648 immagini/classe (min_class=162, 4 augmentation)
+2026-03-30 11:02:54,143 | INFO |   Train: 3888 immagini (6 classi)
+2026-03-30 11:02:54,146 | INFO |   Val: 466 immagini (6 classi)
+2026-03-30 11:02:55,601 | INFO | AMP mixed precision enabled, cudnn.benchmark=True
+2026-03-30 11:02:55,657 | INFO | Epoch 1/26
+2026-03-30 11:07:36,444 | INFO | Train Loss: 1.0567 | Val Loss: 1.8367 | Val Acc: 0.4292 | Val F1: 0.3880
+2026-03-30 11:07:36,458 | INFO | New best model with F1: 0.3880
+2026-03-30 11:07:36,458 | INFO | Epoch 2/26
+2026-03-30 11:12:25,730 | INFO | Train Loss: 0.6308 | Val Loss: 0.9331 | Val Acc: 0.6728 | Val F1: 0.6525
+2026-03-30 11:12:25,773 | INFO | New best model with F1: 0.6525
+2026-03-30 11:12:25,774 | INFO | Epoch 3/26
+2026-03-30 11:17:15,445 | INFO | Train Loss: 0.5095 | Val Loss: 0.7812 | Val Acc: 0.7621 | Val F1: 0.7535
+2026-03-30 11:17:15,480 | INFO | New best model with F1: 0.7535
+2026-03-30 11:17:15,480 | INFO | Epoch 4/26
+2026-03-30 11:21:59,563 | INFO | Train Loss: 0.3972 | Val Loss: 1.2381 | Val Acc: 0.6627 | Val F1: 0.6389
+2026-03-30 11:21:59,564 | INFO | Epoch 5/26
+2026-03-30 11:27:17,982 | INFO | Train Loss: 0.3397 | Val Loss: 0.6403 | Val Acc: 0.8117 | Val F1: 0.8052
+2026-03-30 11:27:18,019 | INFO | New best model with F1: 0.8052
+2026-03-30 11:27:18,020 | INFO | Epoch 6/26
+2026-03-30 11:32:04,258 | INFO | Train Loss: 0.2459 | Val Loss: 0.9231 | Val Acc: 0.7995 | Val F1: 0.7819
+2026-03-30 11:32:04,258 | INFO | Epoch 7/26
+2026-03-30 11:36:49,807 | INFO | Train Loss: 0.2467 | Val Loss: 0.7648 | Val Acc: 0.7687 | Val F1: 0.7467
+2026-03-30 11:36:49,808 | INFO | Epoch 8/26
+2026-03-30 11:41:45,389 | INFO | Train Loss: 0.1732 | Val Loss: 0.7211 | Val Acc: 0.7661 | Val F1: 0.7610
+2026-03-30 11:41:45,390 | INFO | Epoch 9/26
+2026-03-30 11:46:31,697 | INFO | Train Loss: 0.1628 | Val Loss: 1.0702 | Val Acc: 0.7301 | Val F1: 0.7137
+2026-03-30 11:46:31,697 | INFO | Epoch 10/26
+2026-03-30 11:51:11,089 | INFO | Train Loss: 0.1739 | Val Loss: 0.9449 | Val Acc: 0.7668 | Val F1: 0.7650
+2026-03-30 11:51:11,089 | INFO | Epoch 11/26
+2026-03-30 11:55:48,351 | INFO | Train Loss: 0.1291 | Val Loss: 0.6606 | Val Acc: 0.8205 | Val F1: 0.8191
+2026-03-30 11:55:48,386 | INFO | New best model with F1: 0.8191
+2026-03-30 11:55:48,386 | INFO | Epoch 12/26
+2026-03-30 12:00:27,185 | INFO | Train Loss: 0.0338 | Val Loss: 0.7018 | Val Acc: 0.8333 | Val F1: 0.8271
+2026-03-30 12:00:27,220 | INFO | New best model with F1: 0.8271
+2026-03-30 12:00:27,221 | INFO | Epoch 13/26
+2026-03-30 12:05:05,228 | INFO | Train Loss: 0.0168 | Val Loss: 0.6525 | Val Acc: 0.8532 | Val F1: 0.8458
+2026-03-30 12:05:05,264 | INFO | New best model with F1: 0.8458
+2026-03-30 12:05:05,264 | INFO | Epoch 14/26
+2026-03-30 12:09:43,843 | INFO | Train Loss: 0.0137 | Val Loss: 0.7354 | Val Acc: 0.8383 | Val F1: 0.8282
+2026-03-30 12:09:43,844 | INFO | Epoch 15/26
+2026-03-30 12:14:26,417 | INFO | Train Loss: 0.0148 | Val Loss: 0.6991 | Val Acc: 0.8342 | Val F1: 0.8251
+2026-03-30 12:14:26,418 | INFO | Epoch 16/26
+2026-03-30 12:19:06,894 | INFO | Train Loss: 0.0091 | Val Loss: 0.7116 | Val Acc: 0.8318 | Val F1: 0.8226
+2026-03-30 12:19:06,895 | INFO | Epoch 17/26
+2026-03-30 12:23:46,483 | INFO | Train Loss: 0.0088 | Val Loss: 0.6467 | Val Acc: 0.8462 | Val F1: 0.8396
+2026-03-30 12:23:46,484 | INFO | Epoch 18/26
+2026-03-30 12:28:32,483 | INFO | Train Loss: 0.0069 | Val Loss: 0.6486 | Val Acc: 0.8447 | Val F1: 0.8386
+2026-03-30 12:28:32,483 | INFO | Epoch 19/26
+2026-03-30 12:33:18,557 | INFO | Train Loss: 0.0055 | Val Loss: 0.6620 | Val Acc: 0.8455 | Val F1: 0.8436
+2026-03-30 12:33:18,557 | INFO | Epoch 20/26
+2026-03-30 12:38:06,952 | INFO | Train Loss: 0.0087 | Val Loss: 0.6829 | Val Acc: 0.8412 | Val F1: 0.8365
+2026-03-30 12:38:06,952 | INFO | Epoch 21/26
+2026-03-30 12:42:58,214 | INFO | Train Loss: 0.0113 | Val Loss: 0.6293 | Val Acc: 0.8462 | Val F1: 0.8405
+2026-03-30 12:42:58,215 | INFO | Epoch 22/26
+2026-03-30 12:47:46,716 | INFO | Train Loss: 0.0045 | Val Loss: 0.6779 | Val Acc: 0.8431 | Val F1: 0.8401
+2026-03-30 12:47:46,716 | INFO | Epoch 23/26
+2026-03-30 12:52:44,663 | INFO | Train Loss: 0.0086 | Val Loss: 0.6470 | Val Acc: 0.8529 | Val F1: 0.8511
+2026-03-30 12:52:44,700 | INFO | New best model with F1: 0.8511
+2026-03-30 12:52:44,700 | INFO | Epoch 24/26
+2026-03-30 12:57:38,119 | INFO | Train Loss: 0.0112 | Val Loss: 0.6806 | Val Acc: 0.8437 | Val F1: 0.8396
+2026-03-30 12:57:38,120 | INFO | Epoch 25/26
+2026-03-30 13:02:35,061 | INFO | Train Loss: 0.0046 | Val Loss: 0.6136 | Val Acc: 0.8588 | Val F1: 0.8552
+2026-03-30 13:02:35,097 | INFO | New best model with F1: 0.8552
+2026-03-30 13:02:35,097 | INFO | Epoch 26/26
+2026-03-30 13:07:25,563 | INFO | Train Loss: 0.0039 | Val Loss: 0.6896 | Val Acc: 0.8309 | Val F1: 0.8260
+2026-03-30 13:07:25,577 | INFO | Training complete. Best F1: 0.8552
+2026-03-30 13:07:25,761 | INFO |   Fold completato: F1=0.8552, Acc=0.8588, Best epoch=25
+2026-03-30 13:07:25,765 | INFO | Fold 5 salvato in: /workspace/results/exp4_combined_internet_cropped/exp4_kfold_resnet18/fold_4.json
+2026-03-30 13:07:26,549 | INFO | 
+Fold 5 completato.
+2026-03-30 13:07:26,549 | INFO | Per aggregare tutti i fold: --cross-validate --exp 4 --model resnet18 --aggregate-only
+2026-03-30 13:07:26,933 | INFO | 
+✓ EXPERIMENT 4 COMPLETED
+2026-03-30 13:17:06,455 | INFO | ======================================================================
+2026-03-30 13:17:06,455 | INFO | EXPERIMENT 4: exp4_combined_internet_cropped
+2026-03-30 13:17:06,456 | INFO | Model: RESNET18
+2026-03-30 13:17:06,456 | INFO | Description: Best on internet: train on combined, test on internet cropped
+2026-03-30 13:17:06,457 | INFO | Log: logs/exp4_combined_internet_cropped_resnet18.log
+2026-03-30 13:17:06,457 | INFO | ======================================================================
+2026-03-30 13:17:06,458 | INFO | Train: dataset/train_combined.pt
+2026-03-30 13:17:06,459 | INFO | Val: dataset/val_combined.pt
+2026-03-30 13:17:06,459 | INFO | Test: dataset/test_internet_cropped.pt
+2026-03-30 13:17:06,459 | INFO | 
+--- PHASE: K-Fold Cross Validation ---
+2026-03-30 13:17:06,460 | INFO | Folds: 5
+2026-03-30 13:17:06,466 | INFO | Trovati 5/5 fold completati
+2026-03-30 13:17:06,468 | INFO | 
+==================================================
+2026-03-30 13:17:06,468 | INFO | RISULTATI K-FOLD (5 folds)
+2026-03-30 13:17:06,469 | INFO | ==================================================
+2026-03-30 13:17:06,469 | INFO | Accuracy: 0.8697 +/- 0.0143
+2026-03-30 13:17:06,469 | INFO | F1 Macro: 0.8673 +/- 0.0153
+2026-03-30 13:17:06,470 | INFO | 
+Test finale con modello fold 4 su /workspace/dataset/internet_cropped
+2026-03-30 13:17:08,019 | INFO | Test set: 1080 immagini, classi: ['O. exaltata', 'O. garganica', 'O. incubacea', 'O. sphegodes']
+2026-03-30 13:17:29,093 | INFO | Evaluation results: Accuracy=0.6750, F1 Macro=0.5873
+2026-03-30 13:17:29,094 | INFO | Test Accuracy: 0.6750
+2026-03-30 13:17:29,095 | INFO | Test F1 Macro: 0.5873
+2026-03-30 13:17:29,104 | INFO | Risultati salvati in: /workspace/results/exp4_combined_internet_cropped/exp4_kfold_resnet18.json
+2026-03-30 13:17:29,105 | INFO | Report salvato in: /workspace/results/exp4_combined_internet_cropped/REPORT_KFOLD_resnet18.txt
+2026-03-30 13:17:29,106 | INFO | 
+✓ EXPERIMENT 4 COMPLETED
+2026-03-30 13:43:58,919 | INFO | ======================================================================
+2026-03-30 13:43:58,919 | INFO | EXPERIMENT 4: exp4_combined_internet_cropped
+2026-03-30 13:43:58,920 | INFO | Model: RESNET18
+2026-03-30 13:43:58,920 | INFO | Description: Best on internet: train on combined, test on internet cropped
+2026-03-30 13:43:58,920 | INFO | Log: logs/exp4_combined_internet_cropped_resnet18.log
+2026-03-30 13:43:58,920 | INFO | ======================================================================
+2026-03-30 13:43:58,921 | INFO | Train: dataset/train_combined.pt
+2026-03-30 13:43:58,921 | INFO | Val: dataset/val_combined.pt
+2026-03-30 13:43:58,921 | INFO | Test: dataset/test_internet_cropped.pt
+2026-03-30 13:43:58,921 | INFO | 
+--- PHASE: K-Fold Cross Validation ---
+2026-03-30 13:43:58,922 | INFO | Folds: 5
+2026-03-30 13:43:58,944 | INFO | Trovati 5/5 fold completati
+2026-03-30 13:43:58,945 | INFO | 
+==================================================
+2026-03-30 13:43:58,945 | INFO | RISULTATI K-FOLD (5 folds)
+2026-03-30 13:43:58,945 | INFO | ==================================================
+2026-03-30 13:43:58,945 | INFO | Accuracy: 0.8697 +/- 0.0143
+2026-03-30 13:43:58,946 | INFO | F1 Macro: 0.8673 +/- 0.0153
+2026-03-30 13:43:58,946 | INFO | 
+Test finale con modello fold 4 su /workspace/dataset/internet_cropped
+2026-03-30 13:44:00,561 | INFO | Test set: 1080 immagini, classi: ['O. exaltata', 'O. garganica', 'O. incubacea', 'O. sphegodes']
+2026-03-30 13:44:00,561 | INFO | Modello: 6 classi, classi modello: ['O. exaltata', 'O. garganica', 'O. incubacea', 'O. majellensis', 'O. sphegodes', 'O. sphegodes_Palena']
+2026-03-30 13:44:00,562 | INFO | Mapping test->modello: {0: 0, 1: 1, 2: 2, 3: 4}
+2026-03-30 13:44:20,067 | INFO | Test Accuracy: 0.9769
+2026-03-30 13:44:20,067 | INFO | Test F1 Macro: 0.9774
+2026-03-30 13:44:20,068 | INFO |   O. exaltata: P=1.0000 R=0.9725 F1=0.9860
+2026-03-30 13:44:20,068 | INFO |   O. garganica: P=0.9780 R=0.9749 F1=0.9765
+2026-03-30 13:44:20,068 | INFO |   O. incubacea: P=0.9671 R=0.9810 F1=0.9740
+2026-03-30 13:44:20,068 | INFO |   O. sphegodes: P=0.9674 R=0.9790 F1=0.9731
+2026-03-30 13:44:20,070 | INFO | Test Accuracy: 0.9769
+2026-03-30 13:44:20,070 | INFO | Test F1 Macro: 0.9774
+2026-03-30 13:44:20,076 | INFO | Risultati salvati in: /workspace/results/exp4_combined_internet_cropped/exp4_kfold_resnet18.json
+2026-03-30 13:44:20,077 | INFO | Report salvato in: /workspace/results/exp4_combined_internet_cropped/REPORT_KFOLD_resnet18.txt
+2026-03-30 13:44:20,078 | INFO | 
+✓ EXPERIMENT 4 COMPLETED
+2026-03-30 14:06:10,530 | INFO | ======================================================================
+2026-03-30 14:06:10,530 | INFO | EXPERIMENT 4: exp4_combined_internet_cropped
+2026-03-30 14:06:10,531 | INFO | Model: RESNET18
+2026-03-30 14:06:10,531 | INFO | Description: Best on internet: train on combined, test on internet cropped
+2026-03-30 14:06:10,531 | INFO | Log: logs/exp4_combined_internet_cropped_resnet18.log
+2026-03-30 14:06:10,531 | INFO | ======================================================================
+2026-03-30 14:06:10,532 | INFO | Train: dataset/train_combined.pt
+2026-03-30 14:06:10,532 | INFO | Val: dataset/val_combined.pt
+2026-03-30 14:06:10,532 | INFO | Test: dataset/test_internet_cropped.pt
+2026-03-30 14:06:10,533 | INFO | 
+--- PHASE: K-Fold Cross Validation ---
+2026-03-30 14:06:10,533 | INFO | Folds: 5
+2026-03-30 14:06:10,558 | INFO | Trovati 5/5 fold completati
+2026-03-30 14:06:10,559 | INFO | 
+==================================================
+2026-03-30 14:06:10,559 | INFO | RISULTATI K-FOLD (5 folds)
+2026-03-30 14:06:10,559 | INFO | ==================================================
+2026-03-30 14:06:10,559 | INFO | Accuracy: 0.8697 +/- 0.0143
+2026-03-30 14:06:10,560 | INFO | F1 Macro: 0.8673 +/- 0.0153
+2026-03-30 14:06:10,560 | INFO | 
+Test finale con modello fold 4 su /workspace/dataset/internet_cropped
+2026-03-30 14:06:11,839 | INFO | Test set: 1080 immagini, classi: ['O. exaltata', 'O. garganica', 'O. incubacea', 'O. sphegodes']
+2026-03-30 14:06:11,840 | INFO | Modello: 6 classi, classi modello: ['O. exaltata', 'O. garganica', 'O. incubacea', 'O. majellensis', 'O. sphegodes', 'O. sphegodes_Palena']
+2026-03-30 14:06:11,840 | INFO | Mapping test->modello: {0: 0, 1: 1, 2: 2, 3: 4}
+2026-03-30 14:06:30,754 | INFO | Test Accuracy: 0.9769
+2026-03-30 14:06:30,754 | INFO | Test F1 Macro: 0.9774 (solo classi presenti nel test)
+2026-03-30 14:06:30,755 | INFO |   O. exaltata: P=1.0000 R=0.9725 F1=0.9860
+2026-03-30 14:06:30,755 | INFO |   O. garganica: P=0.9780 R=0.9749 F1=0.9765
+2026-03-30 14:06:30,755 | INFO |   O. incubacea: P=0.9671 R=0.9810 F1=0.9740
+2026-03-30 14:06:30,755 | INFO |   O. majellensis: P=0.0000 R=0.0000 F1=0.0000  (non nel test, 0 falsi positivi)
+2026-03-30 14:06:30,755 | INFO |   O. sphegodes: P=0.9674 R=0.9790 F1=0.9731
+2026-03-30 14:06:30,755 | INFO |   O. sphegodes_Palena: P=0.0000 R=0.0000 F1=0.0000  (non nel test, 0 falsi positivi)
+2026-03-30 14:06:30,756 | INFO | Test Accuracy: 0.9769
+2026-03-30 14:06:30,757 | INFO | Test F1 Macro: 0.9774
+2026-03-30 14:06:30,763 | INFO | Risultati salvati in: /workspace/results/exp4_combined_internet_cropped/exp4_kfold_resnet18.json
+2026-03-30 14:06:30,765 | INFO | Report salvato in: /workspace/results/exp4_combined_internet_cropped/REPORT_KFOLD_resnet18.txt
+2026-03-30 14:06:30,766 | INFO | 
+✓ EXPERIMENT 4 COMPLETED
