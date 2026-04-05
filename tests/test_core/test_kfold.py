@@ -12,6 +12,7 @@ from app.core.kfold import (
     _copy_fold_images,
     _aggregate_results,
 )
+from app.core.kfold.reporting import generate_report
 
 
 CLASS_NAMES = [
@@ -329,3 +330,191 @@ class TestFoldJsonBatchSize:
             effective_batch_size = fold_results[0]["batch_size"]
 
         assert effective_batch_size == 16
+
+
+class TestGenerateReport:
+    """Tests for generate_report()."""
+
+    @pytest.fixture
+    def sample_results(self):
+        return {
+            "mean_accuracy": 0.86,
+            "std_accuracy": 0.02,
+            "mean_f1": 0.84,
+            "std_f1": 0.03,
+            "best_fold": 1,
+            "model_variant": "resnet18",
+            "num_folds": 3,
+            "num_epochs": 26,
+            "batch_size": 8,
+            "learning_rate": 0.001,
+            "seed": 57,
+            "fold_results": [
+                {"fold": 0, "best_accuracy": 0.85, "best_f1": 0.83,
+                 "final_val_loss": 0.45, "best_epoch": 20},
+                {"fold": 1, "best_accuracy": 0.88, "best_f1": 0.87,
+                 "final_val_loss": 0.40, "best_epoch": 22},
+                {"fold": 2, "best_accuracy": 0.85, "best_f1": 0.82,
+                 "final_val_loss": 0.48, "best_epoch": 18},
+            ],
+            "test_metrics": {
+                "accuracy": 0.95,
+                "f1_macro": 0.94,
+                "precision_macro": 0.95,
+                "recall_macro": 0.93,
+                "per_class_metrics": {
+                    "O. exaltata": {"precision": 0.96, "recall": 0.95, "f1": 0.955,
+                                   "support": 20, "tp": 19, "fp": 1, "fn": 1},
+                    "O. garganica": {"precision": 0.94, "recall": 0.90, "f1": 0.92,
+                                    "support": 15, "tp": 14, "fp": 2, "fn": 1},
+                },
+                "confusion_matrix": [[19, 1], [2, 13]],
+                "confusion_matrix_labels": ["O. exaltata", "O. garganica"],
+            },
+        }
+
+    def test_report_contains_config_section(self, sample_results, tmp_path):
+        report = generate_report(sample_results, "resnet18", str(tmp_path))
+        assert "CONFIGURAZIONE" in report
+        assert "resnet18" in report
+        assert "3" in report  # num_folds
+
+    def test_report_contains_aggregate_results(self, sample_results, tmp_path):
+        report = generate_report(sample_results, "resnet18", str(tmp_path))
+        assert "RISULTATI AGGREGATI" in report
+        assert "0.8600" in report  # mean_accuracy
+        assert "0.8400" in report  # mean_f1
+
+    def test_report_contains_fold_breakdown(self, sample_results, tmp_path):
+        report = generate_report(sample_results, "resnet18", str(tmp_path))
+        assert "BREAKDOWN PER FOLD" in report
+        assert "0.8500" in report  # fold 0 accuracy
+
+    def test_report_contains_test_metrics(self, sample_results, tmp_path):
+        report = generate_report(sample_results, "resnet18", str(tmp_path))
+        assert "TEST FINALE" in report
+        assert "0.9500" in report  # test accuracy
+        assert "O. exaltata" in report
+
+    def test_report_contains_confusion_matrix(self, sample_results, tmp_path):
+        report = generate_report(sample_results, "resnet18", str(tmp_path))
+        assert "CONFUSION MATRIX" in report
+
+    def test_report_file_created(self, sample_results, tmp_path):
+        generate_report(sample_results, "resnet18", str(tmp_path))
+        report_path = tmp_path / "REPORT_KFOLD_resnet18.txt"
+        assert report_path.exists()
+
+    def test_report_without_test_metrics(self, tmp_path):
+        """Report should work even without test_metrics."""
+        results = {
+            "mean_accuracy": 0.85,
+            "std_accuracy": 0.02,
+            "mean_f1": 0.83,
+            "std_f1": 0.03,
+            "best_fold": 0,
+            "fold_results": [
+                {"fold": 0, "best_accuracy": 0.85, "best_f1": 0.83,
+                 "final_val_loss": 0.5, "best_epoch": 10},
+            ],
+        }
+        report = generate_report(results, "resnet18", str(tmp_path))
+        assert "RISULTATI AGGREGATI" in report
+        assert "FINE REPORT K-FOLD" in report
+
+
+class TestFinalTest:
+    """Tests for final_test() with class mapping."""
+
+    @pytest.fixture
+    def tiny_test_dataset(self, tmp_path):
+        """Create a minimal ImageFolder-compatible test directory."""
+        from PIL import Image
+
+        classes = ["O. exaltata", "O. garganica"]
+        for cls in classes:
+            cls_dir = tmp_path / cls
+            cls_dir.mkdir(parents=True)
+            for i in range(4):
+                img = Image.new("RGB", (64, 128), color=(i * 50, 100, 100))
+                img.save(cls_dir / f"img_{i}.jpg")
+        return str(tmp_path), classes
+
+    def test_final_test_with_saved_model(self, tiny_test_dataset, tmp_path, device):
+        """final_test() loads a model, runs evaluation, returns metrics."""
+        from app.core.kfold.testing import final_test
+        from app.core.models.resnet import ResNetConfig, ResNetClassifier
+        from app.preprocessing.reproducibility import set_seed
+
+        set_seed(42)
+        test_dir, test_classes = tiny_test_dataset
+
+        # Save a model
+        config = ResNetConfig(num_classes=2, pretrained=False)
+        model = ResNetClassifier(config).to(device)
+        model_path = str(tmp_path / "test_model.pt")
+        model.save_weights(model_path)
+
+        class_names = ["O. exaltata", "O. garganica"]
+
+        results = final_test(
+            best_model_path=model_path,
+            model_variant="resnet18",
+            num_classes=2,
+            test_dataset_dir=test_dir,
+            class_names=class_names,
+            batch_size=4,
+            device=device,
+        )
+
+        assert "accuracy" in results
+        assert "f1_macro" in results
+        assert "per_class_metrics" in results
+        assert 0.0 <= results["accuracy"] <= 1.0
+
+    def test_final_test_class_subset_mapping(self, tmp_path, device):
+        """final_test() correctly maps subset of model classes."""
+        from app.core.kfold.testing import final_test
+        from app.core.models.resnet import ResNetConfig, ResNetClassifier
+        from PIL import Image
+        from app.preprocessing.reproducibility import set_seed
+
+        set_seed(42)
+
+        # Create test dir with only 2 of 6 model classes
+        test_dir = tmp_path / "test_subset"
+        for cls in ["O. exaltata", "O. sphegodes"]:
+            cls_dir = test_dir / cls
+            cls_dir.mkdir(parents=True)
+            for i in range(3):
+                img = Image.new("RGB", (64, 128), color=(i * 50, 100, 100))
+                img.save(cls_dir / f"img_{i}.jpg")
+
+        all_classes = [
+            "O. exaltata", "O. garganica", "O. incubacea",
+            "O. majellensis", "O. sphegodes", "O. sphegodes_Palena",
+        ]
+
+        config = ResNetConfig(num_classes=6, pretrained=False)
+        model = ResNetClassifier(config).to(device)
+        model_path = str(tmp_path / "subset_model.pt")
+        model.save_weights(model_path)
+
+        results = final_test(
+            best_model_path=model_path,
+            model_variant="resnet18",
+            num_classes=6,
+            test_dataset_dir=str(test_dir),
+            class_names=all_classes,
+            batch_size=3,
+            device=device,
+        )
+
+        # Should have per_class_metrics for all 6 classes
+        assert len(results["per_class_metrics"]) == 6
+        # O. exaltata and O. sphegodes should have support > 0
+        assert results["per_class_metrics"]["O. exaltata"]["support"] > 0
+        assert results["per_class_metrics"]["O. sphegodes"]["support"] > 0
+        # Others should have support = 0
+        assert results["per_class_metrics"]["O. garganica"]["support"] == 0
+        assert results["per_class_metrics"]["O. incubacea"]["support"] == 0
