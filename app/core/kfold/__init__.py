@@ -74,6 +74,25 @@ def kfold_experiment(
             json.dump(config, f, indent=2)
         logger.info(f"Config salvato in: {config_path}")
 
+    # Resume: leggi parametri dal config salvato se diverso da CLI
+    if os.path.exists(config_path):
+        with open(config_path) as f:
+            saved = json.load(f)
+        resume_params = {
+            "num_epochs": num_epochs, "batch_size": batch_size,
+            "learning_rate": learning_rate, "seed": seed, "patience": patience,
+        }
+        for param, cli_val in resume_params.items():
+            if param in saved and saved[param] != cli_val:
+                logger.warning(
+                    f"Resume: {param} = {saved[param]} (da config.json, override di {cli_val} da CLI)"
+                )
+        num_epochs = saved.get("num_epochs", num_epochs)
+        batch_size = saved.get("batch_size", batch_size)
+        learning_rate = saved.get("learning_rate", learning_rate)
+        seed = saved.get("seed", seed)
+        patience = saved.get("patience", patience)
+
     if aggregate_only:
         return aggregate_and_test(
             output_dir=kfold_dir, model_variant=model_variant, num_folds=num_folds,

@@ -518,3 +518,81 @@ class TestFinalTest:
         # Others should have support = 0
         assert results["per_class_metrics"]["O. garganica"]["support"] == 0
         assert results["per_class_metrics"]["O. incubacea"]["support"] == 0
+
+
+class TestResumeFromConfig:
+    """Test che il resume legga i parametri dal config.json salvato."""
+
+    def test_resume_overrides_cli_defaults(self, tmp_path):
+        """Se config.json esiste, i parametri salvati sovrascrivono i default CLI."""
+        import json
+
+        kfold_dir = str(tmp_path / "kfold_out")
+        os.makedirs(kfold_dir)
+
+        # Simula un config salvato con parametri non-default
+        saved_config = {
+            "type": "kfold",
+            "model_variant": "resnet18",
+            "num_folds": 5,
+            "num_epochs": 100,
+            "batch_size": 16,
+            "learning_rate": 0.0005,
+            "seed": 99,
+            "patience": 15,
+        }
+        config_path = os.path.join(kfold_dir, "config.json")
+        with open(config_path, "w") as f:
+            json.dump(saved_config, f)
+
+        # Simula la logica di resume da kfold_experiment()
+        with open(config_path) as f:
+            saved = json.load(f)
+
+        # Parametri "da CLI" (defaults)
+        num_epochs = 26
+        batch_size = 8
+        learning_rate = 0.001
+        seed = 57
+        patience = 0
+
+        # Applica override dal config
+        num_epochs = saved.get("num_epochs", num_epochs)
+        batch_size = saved.get("batch_size", batch_size)
+        learning_rate = saved.get("learning_rate", learning_rate)
+        seed = saved.get("seed", seed)
+        patience = saved.get("patience", patience)
+
+        assert num_epochs == 100
+        assert batch_size == 16
+        assert learning_rate == 0.0005
+        assert seed == 99
+        assert patience == 15
+
+    def test_resume_does_not_change_matching_params(self, tmp_path):
+        """Se CLI e config coincidono, nessun override necessario."""
+        import json
+
+        kfold_dir = str(tmp_path / "kfold_out")
+        os.makedirs(kfold_dir)
+
+        saved_config = {
+            "num_epochs": 26,
+            "batch_size": 8,
+            "learning_rate": 0.001,
+            "seed": 57,
+            "patience": 0,
+        }
+        config_path = os.path.join(kfold_dir, "config.json")
+        with open(config_path, "w") as f:
+            json.dump(saved_config, f)
+
+        with open(config_path) as f:
+            saved = json.load(f)
+
+        # Stessi valori del config
+        num_epochs = saved.get("num_epochs", 26)
+        patience = saved.get("patience", 0)
+
+        assert num_epochs == 26
+        assert patience == 0
