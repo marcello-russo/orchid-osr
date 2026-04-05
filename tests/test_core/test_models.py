@@ -107,3 +107,14 @@ class TestResNetClassifier:
             model.named_parameters(), model2.named_parameters()
         ):
             assert torch.allclose(param1, param2), f"Parameters {name1} differ"
+
+    def test_resnet50_embedding_dimension(self, tiny_dataloader, device):
+        """ResNet50 should produce 2048-dim embeddings."""
+        config = ResNetConfig(variant="resnet50", num_classes=2, pretrained=False)
+        model = ResNetClassifier(config).to(device)
+
+        for x, _, _ in tiny_dataloader:
+            x = x.to(device)
+            embeddings = model.get_embeddings(x)
+            assert embeddings.shape[1] == 2048
+            break

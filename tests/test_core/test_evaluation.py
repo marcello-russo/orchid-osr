@@ -1,6 +1,7 @@
 # tests/test_core/test_evaluation.py
 import pytest
 import torch
+from unittest.mock import patch
 from app.core.models.resnet import ResNetConfig, ResNetClassifier
 from app.core.evaluation import evaluate
 from app.preprocessing.reproducibility import set_seed
@@ -18,13 +19,13 @@ class TestEvaluation:
 
         results = evaluate(model, tiny_dataloader, class_names_4, device)
 
-        assert "accuracy" in results
-        assert "f1_macro" in results
-        assert "precision_macro" in results
-        assert "recall_macro" in results
-        assert "f1_per_class" in results
-        assert "confusion_matrix" in results
-        assert "per_class_metrics" in results
+        expected_keys = [
+            "accuracy", "f1_macro", "f1_micro",
+            "precision_macro", "recall_macro",
+            "f1_per_class", "confusion_matrix", "per_class_metrics",
+        ]
+        for key in expected_keys:
+            assert key in results, f"Missing key: {key}"
 
     def test_evaluate_accuracy_range(self, tiny_dataloader, device, class_names_4):
         """Test that accuracy is in valid range."""
@@ -83,3 +84,44 @@ class TestEvaluation:
             assert "recall" in per_class[class_name]
             assert "f1" in per_class[class_name]
             assert "support" in per_class[class_name]
+
+    def test_confusion_matrix_sums_to_samples(self, tiny_dataloader, device, class_names_4):
+        """Confusion matrix entries should sum to total number of samples."""
+        set_seed(42)
+
+        config = ResNetConfig(num_classes=4, pretrained=False)
+        model = ResNetClassifier(config).to(device)
+
+        results = evaluate(model, tiny_dataloader, class_names_4, device)
+
+        cm = results["confusion_matrix"]
+        total = sum(sum(row) for row in cm)
+        assert total == len(tiny_dataloader.dataset)
+
+    def test_biased_model_confusion_matrix(self, tiny_dataset, device, class_names_2):
+        """Model always predicting class 0 → all predictions in column 0."""
+        set_seed(42)
+
+        config = ResNetConfig(num_classes=2, pretrained=False)
+        model = ResNetClassifier(config).to(device)
+
+        # Mock model to always predict class 0
+        def mock_forward(x):
+            batch_size = x.shape[0]
+            logits = torch.zeros(batch_size, 2, device=x.device)
+            logits[:, 0] = 10.0  # class 0 always wins
+            return logits
+
+        model.forward = mock_forward
+
+        from torch.utils.data import DataLoader
+        loader = DataLoader(tiny_dataset, batch_size=10, shuffle=False)
+        results = evaluate(model, loader, class_names_2, device)
+
+        cm = results["confusion_matrix"]
+        # Column 0 should have all predictions (sum of each row)
+        col_0_sum = sum(row[0] for row in cm)
+        assert col_0_sum == len(tiny_dataset)
+        # Column 1 should be all zeros
+        col_1_sum = sum(row[1] for row in cm)
+        assert col_1_sum == 0

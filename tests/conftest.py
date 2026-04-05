@@ -84,3 +84,12 @@ def class_names_4():
         "O. incubacea",
         "O. sphegodes"
     ]
+
+
+@pytest.fixture
+def class_names_2():
+    """Minimal 2-class names for fast tests."""
+    return [
+        "O. exaltata",
+        "O. garganica",
+    ]
