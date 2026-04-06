@@ -45,6 +45,7 @@ def kfold_experiment(
     num_classes=6,
     class_names=None,
     output_dir="experiments/",
+    kfold_dir=None,
     fold_index=None,
     aggregate_only=False,
     patience=0,
@@ -58,7 +59,8 @@ def kfold_experiment(
             "O. majellensis", "O. sphegodes", "O. sphegodes_Palena"
         ]
 
-    kfold_dir = output_dir.rstrip('/') + f"_kfold_{model_variant}"
+    if kfold_dir is None:
+        kfold_dir = output_dir.rstrip('/') + f"_kfold_{model_variant}"
     os.makedirs(kfold_dir, exist_ok=True)
 
     config_path = os.path.join(kfold_dir, "config.json")
