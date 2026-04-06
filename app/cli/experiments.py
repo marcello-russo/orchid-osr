@@ -287,7 +287,8 @@ def run_experiment(
     # Per-experiment log file (dentro experiments/)
     results_dir = PROJECT_ROOT / "experiments" / (f"{exp['name']}_{tag}" if tag else exp["name"])
     results_dir.mkdir(parents=True, exist_ok=True)
-    exp_log = str(results_dir / f'{exp["name"]}_{model_variant}.log')
+    exp_log_name = f"{exp['name']}_{tag}_{model_variant}.log" if tag else f"{exp['name']}_{model_variant}.log"
+    exp_log = str(results_dir / exp_log_name)
     exp_handler = logging.FileHandler(exp_log)
     exp_handler.setFormatter(logging.Formatter('%(asctime)s | %(levelname)s | %(message)s'))
     logging.getLogger().addHandler(exp_handler)
@@ -359,6 +360,7 @@ def run_experiment(
                     num_classes=exp["num_classes"],
                     class_names=ALL_CLASSES,
                     output_dir=str(results_dir),
+                    kfold_dir=str(results_dir),
                     fold_index=fold_index,
                     aggregate_only=aggregate_only,
                     patience=patience,
