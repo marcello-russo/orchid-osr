@@ -260,6 +260,7 @@ def run_experiment(
     fold_index: int = None,
     aggregate_only: bool = False,
     patience: int = 0,
+    tag: str = None,
 ):
     """
     Run a single experiment.
@@ -284,7 +285,7 @@ def run_experiment(
     device = get_device()
 
     # Per-experiment log file (dentro experiments/)
-    results_dir = PROJECT_ROOT / "experiments" / exp["name"]
+    results_dir = PROJECT_ROOT / "experiments" / (f"{exp['name']}_{tag}" if tag else exp["name"])
     results_dir.mkdir(parents=True, exist_ok=True)
     exp_log = str(results_dir / f'{exp["name"]}_{model_variant}.log')
     exp_handler = logging.FileHandler(exp_log)
@@ -588,6 +589,8 @@ Examples:
     # Experiment selection
     parser.add_argument("--exp", type=int, choices=[1, 2, 3, 4, 5],
                         help="Run specific experiment (1-5)")
+    parser.add_argument("--tag", type=str, default=None,
+                        help="Tag suffix for output directory (e.g. --tag 100ep creates exp4_..._100ep/)")
 
     return parser.parse_args()
 
@@ -663,6 +666,7 @@ def main():
                 fold_index=args.fold,
                 aggregate_only=args.aggregate_only,
                 patience=args.patience,
+                tag=args.tag,
             )
             success_count += 1
         except Exception as e:
