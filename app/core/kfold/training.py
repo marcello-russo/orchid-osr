@@ -157,10 +157,10 @@ def augment_fold_train(fold_train_dir, class_names, width, height, cache_dir=Non
         input_path = os.path.join(fold_train_dir, class_name)
         output_path = os.path.join(augmented_dir, class_name)
 
+        os.makedirs(output_path, exist_ok=True)
+
         if not os.path.exists(input_path) or class_sizes.get(class_name, 0) == 0:
             continue
-
-        os.makedirs(output_path, exist_ok=True)
 
         augmentDataPathBalanced(
             data_path=input_path,
