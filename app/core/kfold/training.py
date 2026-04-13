@@ -63,6 +63,10 @@ def copy_fold_images(all_paths, all_labels, class_names, train_idx, val_idx, fol
     train_dir = os.path.join(fold_dir, "train")
     val_dir = os.path.join(fold_dir, "val")
 
+    # Clean up any leftover files from a crashed previous run
+    if os.path.exists(fold_dir):
+        shutil.rmtree(fold_dir)
+
     # Crea directory per classe
     for class_name in class_names:
         os.makedirs(os.path.join(train_dir, class_name), exist_ok=True)
