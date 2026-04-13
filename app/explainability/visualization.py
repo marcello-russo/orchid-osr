@@ -37,7 +37,7 @@ def display_confidence(text, values, class_names):
 
 def _display_filename(text, filename):
     """Display filename in a text element."""
-    text.set_text(f'Filename: {filename}')
+    text.set_text(f'Filename: {filename}' if filename else '')
 
 
 def display_integrated_gradients(ax, image, ig, label, class_names):
