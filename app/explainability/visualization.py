@@ -8,6 +8,25 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 import torch
 from captum.attr import IntegratedGradients, Occlusion
+
+
+def _normalize_attr(attr, sign="all", outlier_perc=2, reduction_axis=None):
+    """Normalize attribution values for visualization."""
+    attr = np.asarray(attr)
+    if reduction_axis is not None:
+        attr = np.sum(attr, axis=reduction_axis)
+    if sign == "positive":
+        attr = np.clip(attr, 0, None)
+    elif sign == "negative":
+        attr = np.abs(np.clip(attr, None, 0))
+    elif sign == "absolute_value":
+        attr = np.abs(attr)
+    scale = np.percentile(np.abs(attr), max(0, min(100, 100 - outlier_perc)))
+    if scale == 0:
+        return np.zeros_like(attr, dtype=np.float32)
+    if sign == "all":
+        return np.clip(attr / scale, -1, 1).astype(np.float32)
+    return np.clip(attr / scale, 0, 1).astype(np.float32)
 from captum.attr._utils.visualization import _normalize_attr
 
 import app.preprocessing.normalization as normalization
