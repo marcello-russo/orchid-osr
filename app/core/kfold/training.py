@@ -1,5 +1,6 @@
 # app/core/kfold/training.py
 """Training functions for k-fold cross-validation."""
+import json
 import logging
 import os
 import shutil
@@ -109,17 +110,27 @@ def augment_fold_train(fold_train_dir, class_names, width, height, cache_dir=Non
 
     aug_functions = get_augmentation_functions()
 
-    # Se abbiamo una cache dir, usala come destinazione permanente
+    # Se abbiamo una cache dir, validiamo il manifest prima del riuso
     if cache_dir and os.path.exists(cache_dir):
-        total_files = sum(
-            len([f for f in os.listdir(os.path.join(cache_dir, cn))
-                 if f.lower().endswith(('.jpg', '.png', '.jpeg'))])
-            for cn in class_names
-            if os.path.exists(os.path.join(cache_dir, cn))
-        )
-        if total_files > 0:
-            logger.info(f"  Cache augmentation trovata: {cache_dir} ({total_files} immagini)")
-            return cache_dir
+        manifest_path = os.path.join(cache_dir, "_manifest.json")
+        if os.path.exists(manifest_path):
+            with open(manifest_path) as f:
+                manifest = json.load(f)
+            # Validate: same class names and same number of source images
+            current_sizes = {}
+            for cn in class_names:
+                cp = os.path.join(fold_train_dir, cn)
+                if os.path.exists(cp):
+                    current_sizes[cn] = len([f for f in os.listdir(cp) if f.lower().endswith(('.jpg', '.png', '.jpeg'))])
+                else:
+                    current_sizes[cn] = 0
+            if manifest.get("source_sizes") == current_sizes:
+                logger.info(f"  Cache augmentation valida: {cache_dir}")
+                return cache_dir
+            else:
+                logger.warning("  Cache augmentation stale (source_sizes changed), rigenero")
+        else:
+            logger.warning("  Cache senza manifest, rigenero")
 
     augmented_dir = cache_dir if cache_dir else fold_train_dir + "_augmented"
 
@@ -134,7 +145,8 @@ def augment_fold_train(fold_train_dir, class_names, width, height, cache_dir=Non
         else:
             class_sizes[class_name] = 0
 
-    min_size = min(class_sizes.values()) if class_sizes else 0
+    non_zero_sizes = [s for s in class_sizes.values() if s > 0]
+    min_size = min(non_zero_sizes) if non_zero_sizes else 0
     target_per_class = min_size * len(aug_functions)
 
     logger.info(f"  Augmentation target: {target_per_class} immagini/classe "
@@ -159,6 +171,12 @@ def augment_fold_train(fold_train_dir, class_names, width, height, cache_dir=Non
             augmentation_functions=aug_functions,
             current_count=class_sizes[class_name],
         )
+
+    # Salva manifest per validazione cache futura
+    if cache_dir:
+        manifest = {"source_sizes": class_sizes, "target_per_class": target_per_class}
+        with open(os.path.join(augmented_dir, "_manifest.json"), "w") as f:
+            json.dump(manifest, f)
 
     return augmented_dir
 
