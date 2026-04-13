@@ -1,7 +1,6 @@
 # tests/test_core/test_evaluation.py
 import pytest
 import torch
-from unittest.mock import patch
 from app.core.models.resnet import ResNetConfig, ResNetClassifier
 from app.core.evaluation import evaluate
 from app.preprocessing.reproducibility import set_seed
