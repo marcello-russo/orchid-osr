@@ -25,14 +25,20 @@ def aggregate_results(fold_results):
     all_f1 = [r["best_f1"] for r in fold_results]
     all_acc = [r["best_accuracy"] for r in fold_results]
 
-    best_fold_idx = int(np.argmax(all_f1))
+    best_list_idx = int(np.argmax(all_f1))
+    # Use the "fold" field (1-based) if present, otherwise fall back to list index (0-based)
+    best_result = fold_results[best_list_idx]
+    if "fold" in best_result:
+        best_fold = best_result["fold"] - 1  # fold field is 1-based, checkpoint files are 0-based
+    else:
+        best_fold = best_list_idx
 
     return {
         "mean_accuracy": float(np.mean(all_acc)),
         "std_accuracy": float(np.std(all_acc)),
         "mean_f1": float(np.mean(all_f1)),
         "std_f1": float(np.std(all_f1)),
-        "best_fold": best_fold_idx,
+        "best_fold": best_fold,
         "fold_results": fold_results,
     }
 
