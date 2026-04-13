@@ -57,7 +57,7 @@ class TestAugmentationEffect:
         assert torch.equal(flipped[:, 0, :], torch.zeros(3, 4))  # top row = 0
 
     def test_double_flip_returns_original(self):
-        """horizontal_and_vertical_flip then identity is not original (double flip)."""
+        """Double flip (h+v) restored by applying hflip+vflip returns original image."""
         img = torch.randn(3, 64, 64)
         double_flipped = rotation.horizontal_and_vertical_flip(img)
         # Double flip on a non-symmetric image is different from original
