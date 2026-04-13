@@ -154,11 +154,13 @@ def show_status():
 
     for exp_id, exp_config in EXPERIMENTS.items():
         exp_dir = experiments_dir / exp_config["name"]
+        # Cerca il done file nella directory base o in qualsiasi subdir con tag
         done_file = exp_dir / f".exp_{exp_id}_done"
+        tag_done_files = list(experiments_dir.glob(f"{exp_config['name']}_*/.exp_{exp_id}_done"))
 
-        if done_file.exists():
+        if done_file.exists() or tag_done_files:
             status = "✓ COMPLETED"
-        elif exp_dir.exists():
+        elif exp_dir.exists() or list(experiments_dir.glob(f"{exp_config['name']}_*")):
             status = "⏳ IN PROGRESS"
         else:
             status = "○ NOT STARTED"
@@ -529,7 +531,7 @@ def run_experiment(
                 traceback.print_exc()
 
         # Mark as completed
-        done_file = exp_dir / f".exp_{exp_id}_done"
+        done_file = results_dir / f".exp_{exp_id}_done"
         done_file.write_text(f"Completed at {datetime.now().isoformat()}\nModel: {model_variant}\n")
 
         logging.info(f"\n✓ EXPERIMENT {exp_id} COMPLETED")
