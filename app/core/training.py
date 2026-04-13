@@ -22,18 +22,9 @@ def train_one_epoch(
     criterion: nn.Module,
     optimizer: Optimizer,
     device: torch.device,
-    scaler: Optional["torch.cuda.amp.GradScaler"] = None,
 ) -> float:
     """
-    Train model for one epoch with optional AMP.
-
-    Args:
-        model: Model to train
-        train_loader: Training data loader
-        criterion: Loss function
-        optimizer: Optimizer
-        device: Device to use
-        scaler: GradScaler for mixed precision (None = no AMP)
+    Train model for one epoch.
 
     Returns:
         Average training loss for the epoch
@@ -41,25 +32,15 @@ def train_one_epoch(
     model.train()
     running_loss = 0.0
     num_batches = 0
-    use_amp = scaler is not None
 
     for inputs, labels, _ in train_loader:
         inputs, labels = inputs.to(device, non_blocking=True), labels.to(device, non_blocking=True)
 
         optimizer.zero_grad(set_to_none=True)
-
-        if use_amp:
-            with torch.amp.autocast('cuda'):
-                outputs = model(inputs)
-                loss = criterion(outputs, labels)
-            scaler.scale(loss).backward()
-            scaler.step(optimizer)
-            scaler.update()
-        else:
-            outputs = model(inputs)
-            loss = criterion(outputs, labels)
-            loss.backward()
-            optimizer.step()
+        outputs = model(inputs)
+        loss = criterion(outputs, labels)
+        loss.backward()
+        optimizer.step()
 
         running_loss += loss.item()
         num_batches += 1
@@ -148,13 +129,6 @@ def train(
     """
     model = model.to(device)
 
-    # AMP for CUDA
-    scaler = None
-    if device.type == "cuda":
-        scaler = torch.cuda.amp.GradScaler()
-        torch.backends.cudnn.benchmark = True
-        logger.info("AMP mixed precision enabled, cudnn.benchmark=True")
-
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     scheduler = ReduceLROnPlateau(optimizer, mode="min", factor=0.1, patience=5)
@@ -175,7 +149,7 @@ def train(
         logger.info(f"Epoch {epoch + 1}/{num_epochs}")
 
         # Train
-        train_loss = train_one_epoch(model, train_loader, criterion, optimizer, device, scaler)
+        train_loss = train_one_epoch(model, train_loader, criterion, optimizer, device)
         history["train_loss"].append(train_loss)
 
         # Validate
