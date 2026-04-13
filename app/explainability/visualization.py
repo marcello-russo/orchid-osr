@@ -1,4 +1,5 @@
 """Visualization functions for model explainability."""
+import logging
 import os
 from collections import defaultdict
 
@@ -224,6 +225,6 @@ def generate_output_images(dataset, model, device, class_names, output_dir, slid
         plt.savefig(output_path)
         plt.close(fig)
 
-        print(f"Immagine salvata: {output_path}")
+        logging.info(f"Immagine salvata: {output_path}")
 
-    print("Tutte le immagini sono state elaborate e salvate.")
+    logging.info("Tutte le immagini sono state elaborate e salvate.")
