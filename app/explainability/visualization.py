@@ -218,7 +218,8 @@ def generate_output_images(dataset, model, device, class_names, output_dir, slid
         bg_color = 'white' if model_label is not None and predicted == model_label else 'lightcoral'
         fig.patch.set_facecolor(bg_color)
 
-        output_path = os.path.join(label_dir, f"{class_index}_{filename[:-4]}.png")
+        base_filename = os.path.splitext(filename)[0] if filename else "image"
+        output_path = os.path.join(label_dir, f"{class_index}_{base_filename}.png")
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         plt.savefig(output_path)
         plt.close(fig)
