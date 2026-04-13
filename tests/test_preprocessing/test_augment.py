@@ -29,9 +29,8 @@ class TestAugmentationEffect:
 
     def test_horizontal_flip_changes_image(self):
         """horizontal_flip should differ from identity for non-symmetric images."""
-        img = torch.randn(3, 64, 64)
+        img = torch.arange(64 * 64, dtype=torch.float).reshape(1, 64, 64).expand(3, -1, -1)
         flipped = rotation.horizontal_flip(img)
-        # A random image should not be symmetric
         assert not torch.equal(flipped, img)
 
     def test_horizontal_flip_is_left_right(self):
@@ -45,7 +44,7 @@ class TestAugmentationEffect:
 
     def test_vertical_flip_changes_image(self):
         """vertical_flip should differ from identity for non-symmetric images."""
-        img = torch.randn(3, 64, 64)
+        img = torch.arange(64 * 64, dtype=torch.float).reshape(1, 64, 64).expand(3, -1, -1)
         flipped = rotation.vertical_flip(img)
         assert not torch.equal(flipped, img)
 
