@@ -8,6 +8,7 @@ from app.explainability.visualization import (
     display_occlusion,
     display_confidence,
     _display_filename,
+    compute_occlusion,
 )
 
 
@@ -44,10 +45,12 @@ def show_and_test_images(dataset, model, device, class_names, sliding_window_siz
                 self.current_filename = filename
 
                 prediction_values, predicted = inference(model, self.current_image.unsqueeze(0), device)
+                predicted = predicted.item()
 
                 display_image(ax[0], self.current_image, predicted, self.current_label, class_names)
+                global_attribution = compute_occlusion(model, self.current_image, sliding_window_size, stride)
                 for idx, _ in enumerate(class_names):
-                    display_occlusion(fig, ax[idx + 1], self.current_image, model, idx, self.occlusion_text, sliding_window_size, stride, class_names)
+                    display_occlusion(fig, ax[idx + 1], self.current_image, model, idx, self.occlusion_text, sliding_window_size, stride, class_names, global_attribution=global_attribution)
                 display_confidence(self.confidence_text, prediction_values, class_names)
                 _display_filename(fig.text(0.95, 0.02, '', ha='right', va='center', fontsize=9), self.current_filename)
 
