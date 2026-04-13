@@ -473,6 +473,8 @@ def run_experiment(
         if "explain" in phases:
             logging.info("\n--- PHASE: Explainability ---")
             try:
+                import matplotlib
+                matplotlib.use('Agg')
                 from app.explainability import generate_output_images
                 from app.preprocessing.dataset_tool import ImageFolderWithName
                 from app.preprocessing.normalization import get_mean, get_std
@@ -501,7 +503,7 @@ def run_experiment(
                     logging.warning(f"Model not found: {best_model_path}")
                     return
 
-                config = ResNetConfig(variant=model_variant, num_classes=exp["num_classes"], pretrained=True)
+                config = ResNetConfig(variant=model_variant, num_classes=exp["num_classes"], pretrained=False)
                 model = ResNetClassifier(config)
                 model.load_weights(best_model_path)
                 model = model.to(device)

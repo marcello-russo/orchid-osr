@@ -73,7 +73,7 @@ def final_test(best_model_path, model_variant, num_classes, test_dataset_dir,
     ])
 
     # Carica modello
-    config = ResNetConfig(variant=model_variant, num_classes=num_classes, pretrained=True)
+    config = ResNetConfig(variant=model_variant, num_classes=num_classes, pretrained=False)
     model = ResNetClassifier(config)
     model.load_weights(best_model_path)
     model = model.to(device)
@@ -270,7 +270,7 @@ def aggregate_and_test(
         "batch_size": effective_batch_size,
         "learning_rate": learning_rate,
         "seed": seed,
-        "best_model_path": best_model_path,
+        "best_model_path": os.path.basename(best_model_path),
         "test_metrics": test_metrics,
     }
 
