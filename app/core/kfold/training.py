@@ -129,8 +129,10 @@ def augment_fold_train(fold_train_dir, class_names, width, height, cache_dir=Non
                 return cache_dir
             else:
                 logger.warning("  Cache augmentation stale (source_sizes changed), rigenero")
+                shutil.rmtree(cache_dir)
         else:
             logger.warning("  Cache senza manifest, rigenero")
+            shutil.rmtree(cache_dir)
 
     augmented_dir = cache_dir if cache_dir else fold_train_dir + "_augmented"
 
