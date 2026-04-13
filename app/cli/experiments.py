@@ -513,7 +513,7 @@ def run_experiment(
                 ])
                 test_raw_dir = str(PROJECT_ROOT / DATASET_PATHS[exp["test_dataset"]]["raw"])
                 test_dataset = ImageFolderWithName(test_raw_dir, transform=transform)
-                explain_dir = str(exp_dir / "explainability")
+                explain_dir = str(results_dir / "explainability")
                 os.makedirs(explain_dir, exist_ok=True)
                 generate_output_images(
                     dataset=test_dataset,
