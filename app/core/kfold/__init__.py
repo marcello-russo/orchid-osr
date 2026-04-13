@@ -60,7 +60,7 @@ def kfold_experiment(
         ]
 
     if kfold_dir is None:
-        kfold_dir = output_dir.rstrip('/') + f"_kfold_{model_variant}"
+        kfold_dir = os.path.join(output_dir, f"kfold_{model_variant}")
     os.makedirs(kfold_dir, exist_ok=True)
 
     config_path = os.path.join(kfold_dir, "config.json")
