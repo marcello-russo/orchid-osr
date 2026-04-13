@@ -28,6 +28,7 @@ def show_and_test_images(dataset, model, device, class_names, sliding_window_siz
             self.confidence_text = fig.text(0.01, 0.1, '', ha='left', va='center', fontsize=8)
             self.occlusion_text_x, self.occlusion_text_y = ax[1].get_position().x0, ax[1].get_position().y0 - 0.1
             self.occlusion_text = fig.text(self.occlusion_text_x, self.occlusion_text_y, '', ha='left', va='center', fontsize=9)
+            self.filename_text = fig.text(0.95, 0.02, '', ha='right', va='center', fontsize=9)
 
         def display_next(self, event=None):
             try:
@@ -52,7 +53,7 @@ def show_and_test_images(dataset, model, device, class_names, sliding_window_siz
                 for idx, _ in enumerate(class_names):
                     display_occlusion(fig, ax[idx + 1], self.current_image, model, idx, self.occlusion_text, sliding_window_size, stride, class_names, global_attribution=global_attribution)
                 display_confidence(self.confidence_text, prediction_values, class_names)
-                _display_filename(fig.text(0.95, 0.02, '', ha='right', va='center', fontsize=9), self.current_filename)
+                _display_filename(self.filename_text, self.current_filename)
 
                 bg_color = 'white' if self.current_label is not None and predicted == self.current_label else 'lightcoral'
                 fig.patch.set_facecolor(bg_color)
