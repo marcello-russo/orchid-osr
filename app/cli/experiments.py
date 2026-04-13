@@ -472,6 +472,7 @@ def run_experiment(
         # --- PHASE: Explainability ---
         if "explain" in phases:
             logging.info("\n--- PHASE: Explainability ---")
+            skip_explain = False
             try:
                 import matplotlib
                 matplotlib.use('Agg')
@@ -484,49 +485,52 @@ def run_experiment(
                 from app.core.models.resnet import ResNetConfig, ResNetClassifier
 
                 # Determine model path based on experiment type
+                best_model_path = None
                 if exp_id == 4:
                     # K-fold experiment: use best fold model
                     kfold_exp_dir = str(results_dir)
                     kfold_results_path = os.path.join(kfold_exp_dir, "results.json")
                     if not os.path.exists(kfold_results_path):
                         logging.warning("--explain requires completed k-fold results. Run with --cross-validate first")
-                        return
-                    with open(kfold_results_path) as f:
-                        kfold_data = json.load(f)
-                    best_fold = kfold_data.get("best_fold", 0)
-                    best_model_path = os.path.join(kfold_exp_dir, f"best_fold_{best_fold}.pt")
+                        skip_explain = True
+                    else:
+                        with open(kfold_results_path) as f:
+                            kfold_data = json.load(f)
+                        best_fold = kfold_data.get("best_fold", 0)
+                        best_model_path = os.path.join(kfold_exp_dir, f"best_fold_{best_fold}.pt")
                 else:
                     # Standard experiment: use last trained model
                     best_model_path = str(model_dir / "model.pt")
 
-                if not os.path.exists(best_model_path):
+                if not skip_explain and not os.path.exists(best_model_path):
                     logging.warning(f"Model not found: {best_model_path}")
-                    return
+                    skip_explain = True
 
-                config = ResNetConfig(variant=model_variant, num_classes=exp["num_classes"], pretrained=False)
-                model = ResNetClassifier(config)
-                model.load_weights(best_model_path)
-                model = model.to(device)
+                if not skip_explain:
+                    config = ResNetConfig(variant=model_variant, num_classes=exp["num_classes"], pretrained=False)
+                    model = ResNetClassifier(config)
+                    model.load_weights(best_model_path)
+                    model = model.to(device)
 
-                transform = T.Compose([
-                    T.Resize((512, 256)),
-                    T.ToTensor(),
-                    T.Normalize(mean=get_mean(), std=get_std()),
-                ])
-                test_raw_dir = str(PROJECT_ROOT / DATASET_PATHS[exp["test_dataset"]]["raw"])
-                test_dataset = ImageFolderWithName(test_raw_dir, transform=transform)
-                explain_dir = str(results_dir / "explainability")
-                os.makedirs(explain_dir, exist_ok=True)
-                generate_output_images(
-                    dataset=test_dataset,
-                    model=model,
-                    device=device,
-                    class_names=ALL_CLASSES,
-                    output_dir=str(explain_dir),
-                    sliding_window_size=8,
-                    stride=4,
-                )
-                logging.info(f"Explainability images saved to {explain_dir}")
+                    transform = T.Compose([
+                        T.Resize((512, 256)),
+                        T.ToTensor(),
+                        T.Normalize(mean=get_mean(), std=get_std()),
+                    ])
+                    test_raw_dir = str(PROJECT_ROOT / DATASET_PATHS[exp["test_dataset"]]["raw"])
+                    test_dataset = ImageFolderWithName(test_raw_dir, transform=transform)
+                    explain_dir = str(results_dir / "explainability")
+                    os.makedirs(explain_dir, exist_ok=True)
+                    generate_output_images(
+                        dataset=test_dataset,
+                        model=model,
+                        device=device,
+                        class_names=ALL_CLASSES,
+                        output_dir=str(explain_dir),
+                        sliding_window_size=8,
+                        stride=4,
+                    )
+                    logging.info(f"Explainability images saved to {explain_dir}")
             except Exception as e:
                 logging.error(f"Explainability failed: {e}")
                 import traceback
