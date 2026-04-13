@@ -42,7 +42,7 @@ def show_and_test_images(dataset, model, device, class_names, sliding_window_siz
                     image, label, filename = data, None, None
 
                 self.current_image = image.to(device)
-                self.current_label = label.item() if label is not None else None
+                self.current_label = label.item() if label is not None and hasattr(label, "item") else label
                 self.current_filename = filename
 
                 prediction_values, predicted = inference(model, self.current_image.unsqueeze(0), device)
