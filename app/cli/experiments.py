@@ -476,7 +476,7 @@ def run_experiment(
             try:
                 import matplotlib
                 matplotlib.use('Agg')
-                from app.explainability import generate_output_images
+                from app.explainability.visualization import generate_output_images
                 from app.preprocessing.dataset_tool import ImageFolderWithName
                 from app.preprocessing.normalization import get_mean, get_std
                 from torchvision import transforms as T
