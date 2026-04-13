@@ -155,12 +155,16 @@ resnet18/
 │   │   ├── models/               # Classificatore ResNet (pattern ABC)
 │   │   ├── training.py           # Loop di training
 │   │   ├── evaluation.py         # Metriche e valutazione
-│   │   └── kfold.py              # K-fold cross-validation
+│   │   └── kfold/                # K-fold cross-validation
+│   │       ├── __init__.py       # Orchestrator
+│   │       ├── training.py       # Training fold
+│   │       ├── testing.py        # Aggregazione e test finale
+│   │       └── reporting.py      # Generazione report
 │   ├── cli/                      # Interfaccia CLI
 │   ├── api/                      # Endpoint FastAPI
 │   ├── preprocessing/            # Preprocessing dati
 │   └── explainability/           # Captum explainability
-├── tests/                        # Test unitari (61 test)
+├── tests/                        # Test unitari (97 test)
 ├── experiments/                  # Risultati esperimenti (una dir ciascuno)
 ├── dataset/                      # Dataset (gitignored)
 ├── models/                       # Modelli addestrati (gitignored)
