@@ -79,18 +79,26 @@ def _add_occlusion_hover_text(fig, ax, class_map, global_attribution, occlusion_
             x, y = int(event.xdata), int(event.ydata)
             update_occlusion_text(x, y)
 
-    fig.canvas.mpl_connect('motion_notify_event', on_hover)
+    previous_cid = getattr(fig.canvas, '_occlusion_hover_cid', None)
+    if previous_cid is not None:
+        fig.canvas.mpl_disconnect(previous_cid)
+    fig.canvas._occlusion_hover_cid = fig.canvas.mpl_connect('motion_notify_event', on_hover)
 
 
-def display_occlusion(fig, ax, image, model, label, occlusion_text, sliding_window_size, stride, class_names):
-    """Display occlusion attribution heatmap with interactive hover."""
+def compute_occlusion(model, image, sliding_window_size, stride):
+    """Compute occlusion attribution once per image (reused across classes)."""
     occlusion = Occlusion(model)
-
-    global_attribution = occlusion.attribute(
+    return occlusion.attribute(
         image.unsqueeze(0),
         sliding_window_shapes=(3, sliding_window_size, sliding_window_size),
         strides=(3, stride, stride)
     )
+
+
+def display_occlusion(fig, ax, image, model, label, occlusion_text, sliding_window_size, stride, class_names, global_attribution=None):
+    """Display occlusion attribution heatmap with interactive hover."""
+    if global_attribution is None:
+        global_attribution = compute_occlusion(model, image, sliding_window_size, stride)
 
     class_map = get_attribution_class_map(global_attribution)
     label_attributions = global_attribution[label, :, :, :]
@@ -197,6 +205,7 @@ def generate_output_images(dataset, model, device, class_names, output_dir, slid
             class_index = class_counters["unlabeled"]
 
         prediction_values, predicted = inference(model, image.unsqueeze(0), device)
+        predicted = predicted.item()
 
         fig, ax = plt.subplots(1, 3, figsize=(12, 6))
         plt.subplots_adjust(bottom=0.2)
