@@ -12,4 +12,4 @@ COPY cli.py .
 COPY server.py .
 
 EXPOSE 5000
-CMD ["sleep", "infinity"]
+CMD ["python", "server.py"]
