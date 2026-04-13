@@ -717,7 +717,7 @@
   "batch_size": 8,
   "learning_rate": 0.001,
   "seed": 57,
-  "best_model_path": "/workspace/experiments/exp4_combined_internet_cropped_100ep/best_fold_2.pt",
+  "best_model_path": "best_fold_2.pt",
   "test_metrics": {
     "accuracy": 0.9731481481481481,
     "f1_macro": 0.974727901540316,

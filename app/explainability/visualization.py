@@ -21,7 +21,7 @@ def display_image(ax, image, predicted, label, class_names):
     ax.clear()
     ax.imshow(image.permute(1, 2, 0).numpy())
     ax.axis('off')
-    predicted_text = f'Predicted: {class_names[predicted.item()]}'
+    predicted_text = f'Predicted: {class_names[predicted.item() if isinstance(predicted, torch.Tensor) else predicted]}'
     label_text = f'Label: {class_names[label]}' if label is not None else 'Label: Undefined'
     ax.set_title(f'{predicted_text}\n{label_text}', fontsize=12)
 
