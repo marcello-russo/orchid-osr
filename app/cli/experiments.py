@@ -484,7 +484,7 @@ def run_experiment(
                 # Determine model path based on experiment type
                 if exp_id == 4:
                     # K-fold experiment: use best fold model
-                    kfold_exp_dir = str(results_dir) + f"_kfold_{model_variant}"
+                    kfold_exp_dir = str(results_dir)
                     kfold_results_path = os.path.join(kfold_exp_dir, "results.json")
                     if not os.path.exists(kfold_results_path):
                         logging.warning("--explain requires completed k-fold results. Run with --cross-validate first")
