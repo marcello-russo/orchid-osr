@@ -18,14 +18,14 @@
 
 ## 🌿 Specie
 
-| | Specie | |
-|---|--------|---|
-| 🌸 | *Ophrys exaltata* | Mediterranea |
-| 🌺 | *Ophrys garganica* | Endemica (Gargano) |
-| 🌻 | *Ophrys incubacea* | Sud Europa |
-| 🌼 | *Ophrys majellensis* | Endemica (Majella) |
-| 🌷 | *Ophrys sphegodes* | Diffusa |
-| 🌱 | *Ophrys sphegodes* (Palena) | Variante locale |
+| | Specie |
+|---|--------|
+| 🌸 | *Ophrys exaltata* |
+| 🌺 | *Ophrys garganica* |
+| 🌻 | *Ophrys incubacea* |
+| 🌼 | *Ophrys majellensis* |
+| 🌷 | *Ophrys sphegodes* |
+| 🌱 | *Ophrys sphegodes* (Palena) |
 
 ---
 
