@@ -16,15 +16,15 @@ podman run -d \
   --device nvidia.com/gpu=all \
   -e TZ=Europe/Rome \
   --shm-size 16g \
-  -v ./dataset:/workspace/dataset \
-  -v ./models:/workspace/models \
-  -v ./experiments:/workspace/experiments \
-  -v ./app:/workspace/app \
-  -v ./cli.py:/workspace/cli.py \
-  -v ./server.py:/workspace/server.py \
-  -v ./tests:/workspace/tests \
-  -v ./test_dataset:/workspace/test_dataset \
-  -v ./.env:/workspace/.env \
+  -v ./backend/dataset:/workspace/backend/dataset \
+  -v ./backend/models:/workspace/backend/models \
+  -v ./backend/experiments:/workspace/backend/experiments \
+  -v ./backend/app:/workspace/backend/app \
+  -v ./backend/cli.py:/workspace/backend/cli.py \
+  -v ./backend/server.py:/workspace/backend/server.py \
+  -v ./backend/tests:/workspace/backend/tests \
+  -v ./backend/test_dataset:/workspace/backend/test_dataset \
+  -v ./.env:/workspace/backend/.env \
   -p 5000:5000 \
   "$IMAGE_NAME" \
   sleep infinity
