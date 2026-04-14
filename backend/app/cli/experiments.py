@@ -17,8 +17,8 @@ from pathlib import Path
 from datetime import datetime
 from typing import Literal
 
-# Project root
-PROJECT_ROOT = Path(__file__).parent.parent
+# Project root (backend/)
+PROJECT_ROOT = Path(__file__).parent.parent.parent
 
 # Dataset paths
 DATASET_PATHS = {
