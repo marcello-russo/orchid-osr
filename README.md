@@ -33,21 +33,21 @@
 
 ### *Ophrys exaltata*
 <p float="left">
-<img src="assets/images/raw/O_exaltata.png" height="220">
+<img src="assets/images/raw/O_exaltata.jpg" height="220">
 <img src="assets/images/augmented/O_exaltata.jpg" height="220">
 <img src="assets/images/results/O_exaltata.png" height="220">
 </p>
 
 ### *Ophrys garganica*
 <p float="left">
-<img src="assets/images/raw/O_garganica.png" height="220">
+<img src="assets/images/raw/O_garganica.jpg" height="220">
 <img src="assets/images/augmented/O_garganica.jpg" height="220">
 <img src="assets/images/results/O_garganica.png" height="220">
 </p>
 
 ### *Ophrys incubacea*
 <p float="left">
-<img src="assets/images/raw/O_incubacea.png" height="220">
+<img src="assets/images/raw/O_incubacea.jpg" height="220">
 <img src="assets/images/augmented/O_incubacea.jpg" height="220">
 <img src="assets/images/results/O_incubacea.png" height="220">
 </p>
@@ -64,14 +64,14 @@
 
 ### *Ophrys sphegodes*
 <p float="left">
-<img src="assets/images/raw/O_sphegodes.png" height="220">
+<img src="assets/images/raw/O_sphegodes.jpg" height="220">
 <img src="assets/images/augmented/O_sphegodes.jpg" height="220">
 <img src="assets/images/results/O_sphegodes.png" height="220">
 </p>
 
 ### *Ophrys sphegodes* (Palena)
 <p float="left">
-<img src="assets/images/raw/O_sphegodes_Palena.png" height="220">
+<img src="assets/images/raw/O_sphegodes_Palena.jpg" height="220">
 <img src="assets/images/augmented/O_sphegodes_Palena.jpg" height="220">
 <img src="assets/images/results/O_sphegodes_Palena.png" height="220">
 </p>
