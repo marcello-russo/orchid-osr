@@ -1,17 +1,26 @@
 
 # Data and Models
 dataset*/
-/models*/
+models*/
 !app/core/models/
+!backend/app/core/models/
 inference*/
 analysis/
 archive/
 *.pt
 
-
-# Versioned outputs (_1, _2, etc.)
+# Generated outputs
 *_1/
 *_2/
+
+# Backend data dirs
+backend/dataset*/
+backend/models*/
+!backend/app/core/models/
+backend/inference*/
+backend/test_dataset/
+backend/logs*/
+backend/temp_kfold/
 
 # Environment and Secrets
 .env
@@ -33,14 +42,10 @@ __pycache__/
 # System
 .DS_Store
 
-
 # Coverage
 .coverage
 htmlcov/
 .coverage.*
-
-# Test dataset (tiny dataset for integration tests)
-test_dataset/
 
 # K-fold temporary directories
 temp_kfold/

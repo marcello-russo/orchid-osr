@@ -8,6 +8,10 @@ results_1/
 logs/
 logs_1/
 logs_2/
+backend/dataset/
+backend/models/
+backend/experiments/
+backend/test_dataset/
 
 # Git
 .git/
@@ -35,10 +39,6 @@ env/
 
 # Docs
 docs/
-
-# Env files (needed in Dockerfile for now)
-# .env
-# .env.*
 
 # Docker
 .docker/
