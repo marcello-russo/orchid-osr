@@ -27,7 +27,6 @@ def _normalize_attr(attr, sign="all", outlier_perc=2, reduction_axis=None):
     if sign == "all":
         return np.clip(attr / scale, -1, 1).astype(np.float32)
     return np.clip(attr / scale, 0, 1).astype(np.float32)
-from captum.attr._utils.visualization import _normalize_attr
 
 import app.preprocessing.normalization as normalization
 from app.explainability.core import inference, get_percentages
