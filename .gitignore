@@ -46,3 +46,4 @@ test_dataset/
 temp_kfold/
 
 superpowers/
+!docs/superpowers/
