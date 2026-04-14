@@ -1,7 +1,10 @@
 import os
 import pytest
 from app.visualization.utils import load_experiment_data
-from app.visualization.plots import plot_loss_curves, plot_metric_curves
+from app.visualization.plots import (
+    plot_loss_curves, plot_metric_curves,
+    plot_fold_summary, plot_confusion_matrix, plot_overfitting_proxy,
+)
 from app.visualization.style import setup_style
 
 
@@ -28,6 +31,11 @@ def sample_data(tmp_path):
     (tmp_path / "results.json").write_text(json.dumps({
         "mean_accuracy": 0.855, "std_accuracy": 0.01,
         "mean_f1": 0.85, "std_f1": 0.01, "best_fold": 0,
+        "test_metrics": {
+            "accuracy": 0.97, "f1_macro": 0.97,
+            "confusion_matrix": [[10, 1], [2, 15]],
+            "confusion_matrix_labels": ["A", "B"],
+        },
         "fold_results": [],
     }))
     return load_experiment_data(str(tmp_path))
@@ -49,3 +57,30 @@ def test_plot_metric_curves_creates_file(sample_data, tmp_path):
     plot_metric_curves(sample_data, output_dir)
     assert os.path.exists(os.path.join(output_dir, "metric_curves.png"))
     assert os.path.getsize(os.path.join(output_dir, "metric_curves.png")) > 0
+
+
+def test_plot_fold_summary_creates_file(sample_data, tmp_path):
+    setup_style()
+    output_dir = str(tmp_path / "figures")
+    os.makedirs(output_dir, exist_ok=True)
+    plot_fold_summary(sample_data, output_dir)
+    assert os.path.exists(os.path.join(output_dir, "fold_summary.png"))
+    assert os.path.getsize(os.path.join(output_dir, "fold_summary.png")) > 0
+
+
+def test_plot_confusion_matrix_creates_file(sample_data, tmp_path):
+    setup_style()
+    output_dir = str(tmp_path / "figures")
+    os.makedirs(output_dir, exist_ok=True)
+    plot_confusion_matrix(sample_data, output_dir)
+    assert os.path.exists(os.path.join(output_dir, "confusion_matrix.png"))
+    assert os.path.getsize(os.path.join(output_dir, "confusion_matrix.png")) > 0
+
+
+def test_plot_overfitting_proxy_creates_file(sample_data, tmp_path):
+    setup_style()
+    output_dir = str(tmp_path / "figures")
+    os.makedirs(output_dir, exist_ok=True)
+    plot_overfitting_proxy(sample_data, output_dir)
+    assert os.path.exists(os.path.join(output_dir, "overfitting_proxy.png"))
+    assert os.path.getsize(os.path.join(output_dir, "overfitting_proxy.png")) > 0
