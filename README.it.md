@@ -133,6 +133,8 @@ podman compose up -d --build
 ### CLI
 
 ```bash
+cd backend
+
 python cli.py --status                              # Verifica stato
 python cli.py --all                                  # Esegui tutti gli esperimenti
 
@@ -154,28 +156,27 @@ python cli.py --plot all
 
 ```
 resnet18/
-├── app/                          # Codice sorgente (modulare)
-│   ├── core/                     # Moduli ML core
-│   │   ├── models/               # Classificatore ResNet (pattern ABC)
-│   │   ├── training.py           # Loop di training
-│   │   ├── evaluation.py         # Metriche e valutazione
-│   │   └── kfold/                # K-fold cross-validation
-│   │       ├── __init__.py       # Orchestrator
-│   │       ├── training.py       # Training fold
-│   │       ├── testing.py        # Aggregazione e test finale
-│   │       └── reporting.py      # Generazione report
-│   ├── cli/                      # Interfaccia CLI
-│   ├── api/                      # Endpoint FastAPI
-│   ├── preprocessing/            # Preprocessing dati
-│   ├── explainability/           # Captum explainability
-│   └── visualization/            # Generazione grafici (ggplot, 300 DPI)
-├── tests/                        # Test unitari (112 test)
-├── experiments/                  # Risultati esperimenti (una dir ciascuno)
-├── dataset/                      # Dataset (gitignored)
-├── models/                       # Modelli addestrati (gitignored)
-├── cli.py                        # Entry point CLI
-├── server.py                     # Entry point API server
-└── Dockerfile
+├── backend/                      # Codice applicazione
+│   ├── app/                      # Codice sorgente (modulare)
+│   │   ├── core/                 # Moduli ML core
+│   │   │   ├── models/           # Classificatore ResNet (pattern ABC)
+│   │   │   ├── training.py       # Loop di training
+│   │   │   ├── evaluation.py     # Metriche e valutazione
+│   │   │   └── kfold/            # K-fold cross-validation
+│   │   ├── cli/                  # Interfaccia CLI
+│   │   ├── api/                  # Endpoint FastAPI
+│   │   ├── preprocessing/        # Preprocessing dati
+│   │   ├── explainability/       # Captum explainability
+│   │   └── visualization/        # Generazione grafici (ggplot, 300 DPI)
+│   ├── tests/                    # Test unitari (112 test)
+│   ├── experiments/              # Risultati esperimenti
+│   ├── cli.py                    # Entry point CLI
+│   ├── server.py                 # Entry point API server
+│   └── requirements.txt
+├── Dockerfile
+├── podman-start.sh
+├── docs/
+└── assets/
 ```
 
 ---
@@ -194,6 +195,7 @@ resnet18/
 ## 📡 API
 
 ```bash
+cd backend
 python server.py                    # Avvia API su porta 5000
 ```
 
