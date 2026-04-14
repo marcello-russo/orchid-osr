@@ -137,6 +137,10 @@ python cli.py --all                                  # Run all experiments
 # K-fold cross-validation
 python cli.py --cross-validate --exp 4 --model resnet50 --epochs 100
 
+# Visualization
+python cli.py --plot experiments/exp4_combined_internet_cropped_100ep/
+python cli.py --plot all
+
 # Single fold (for long runs)
 python cli.py --cross-validate --exp 4 --model resnet50 --fold 1
 python cli.py --cross-validate --exp 4 --model resnet50 --aggregate-only
@@ -161,8 +165,9 @@ resnet18/
 │   ├── cli/                      # CLI interface
 │   ├── api/                      # FastAPI endpoints
 │   ├── preprocessing/            # Data preprocessing
-│   └── explainability/           # Captum explainability
-├── tests/                        # Unit tests (97 tests)
+│   ├── explainability/           # Captum explainability
+│   └── visualization/            # Plot generation (ggplot, 300 DPI)
+├── tests/                        # Unit tests (112 tests)
 ├── experiments/                  # Experiment results (one dir each)
 ├── dataset/                      # Datasets (gitignored)
 ├── models/                       # Trained models (gitignored)
