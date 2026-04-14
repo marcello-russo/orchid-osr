@@ -572,6 +572,8 @@ Examples:
     parser.add_argument("--status", action="store_true", help="Check experiment status")
     parser.add_argument("--explain", action="store_true",
                         help="Generate explanation images (Occlusion, IntegratedGradients) after testing")
+    parser.add_argument("--plot", type=str, metavar="PATH",
+                        help="Generate plots for experiment directory (path to exp dir, or 'all')")
 
     # Model selection
     parser.add_argument("--model", type=str, default="resnet18",
@@ -614,9 +616,24 @@ def main():
         show_status()
         return 0
 
+    # Plot mode
+    if args.plot:
+        from app.visualization import plot_experiment
+        if args.plot.lower() == "all":
+            from glob import glob
+            exp_base = os.path.join(os.path.dirname(__file__), "..", "..", "experiments")
+            exp_base = os.path.abspath(exp_base)
+            for fold_file in glob(os.path.join(exp_base, "*", "fold_*.json")):
+                exp_d = os.path.dirname(fold_file)
+                print(f"\n{'=' * 50}")
+                plot_experiment(exp_d)
+        else:
+            plot_experiment(args.plot)
+        return 0
+
     # Validate arguments
-    if not any([args.all, args.train, args.test, args.cross_validate, args.explain]):
-        print("Error: Specify an action (--all, --train, --test, --cross-validate, --explain, --status)")
+    if not any([args.all, args.train, args.test, args.cross_validate, args.explain, args.plot]):
+        print("Error: Specify an action (--all, --train, --test, --cross-validate, --explain, --plot, --status)")
         return 1
 
     # Setup logging
