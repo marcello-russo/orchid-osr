@@ -18,7 +18,7 @@ from datetime import datetime
 from typing import Literal
 
 # Project root
-PROJECT_ROOT = Path(__file__).parent.parent.parent
+PROJECT_ROOT = Path(__file__).parent.parent
 
 # Dataset paths
 DATASET_PATHS = {

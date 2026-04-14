@@ -21,7 +21,7 @@ import torchvision.transforms as T
 
 
 # Test dataset path (at project root)
-PROJECT_ROOT = Path(__file__).parent.parent.parent
+PROJECT_ROOT = Path(__file__).parent.parent
 TEST_DATASET_DIR = PROJECT_ROOT / "test_dataset"
 
 
