@@ -131,6 +131,8 @@ podman compose up -d --build
 ### CLI
 
 ```bash
+cd backend
+
 python cli.py --status                              # Check status
 python cli.py --all                                  # Run all experiments
 
@@ -152,28 +154,27 @@ python cli.py --cross-validate --exp 4 --model resnet50 --aggregate-only
 
 ```
 resnet18/
-├── app/                          # Source code (modular)
-│   ├── core/                     # ML core
-│   │   ├── models/               # ResNet classifier (ABC pattern)
-│   │   ├── training.py           # Training loop
-│   │   ├── evaluation.py         # Metrics & evaluation
-│   │   └── kfold/                # K-fold cross-validation
-│   │       ├── __init__.py       # Orchestrator
-│   │       ├── training.py       # Fold training
-│   │       ├── testing.py        # Aggregation & final test
-│   │       └── reporting.py      # Report generation
-│   ├── cli/                      # CLI interface
-│   ├── api/                      # FastAPI endpoints
-│   ├── preprocessing/            # Data preprocessing
-│   ├── explainability/           # Captum explainability
-│   └── visualization/            # Plot generation (ggplot, 300 DPI)
-├── tests/                        # Unit tests (112 tests)
-├── experiments/                  # Experiment results (one dir each)
-├── dataset/                      # Datasets (gitignored)
-├── models/                       # Trained models (gitignored)
-├── cli.py                        # CLI entrypoint
-├── server.py                     # API server entrypoint
-└── Dockerfile
+├── backend/                      # Application code
+│   ├── app/                      # Source code (modular)
+│   │   ├── core/                 # ML core
+│   │   │   ├── models/           # ResNet classifier (ABC pattern)
+│   │   │   ├── training.py       # Training loop
+│   │   │   ├── evaluation.py     # Metrics & evaluation
+│   │   │   └── kfold/            # K-fold cross-validation
+│   │   ├── cli/                  # CLI interface
+│   │   ├── api/                  # FastAPI endpoints
+│   │   ├── preprocessing/        # Data preprocessing
+│   │   ├── explainability/       # Captum explainability
+│   │   └── visualization/        # Plot generation (ggplot, 300 DPI)
+│   ├── tests/                    # Unit tests (112 tests)
+│   ├── experiments/              # Experiment results
+│   ├── cli.py                    # CLI entrypoint
+│   ├── server.py                 # API server entrypoint
+│   └── requirements.txt
+├── Dockerfile
+├── podman-start.sh
+├── docs/
+└── assets/
 ```
 
 ---
@@ -192,6 +193,7 @@ resnet18/
 ## 📡 API
 
 ```bash
+cd backend
 python server.py                    # Start API on port 5000
 ```
 
