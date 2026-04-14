@@ -27,11 +27,11 @@ def plot_loss_curves(data, output_dir):
         axes[1].plot(epochs, fold["history"]["val_loss"], color=color,
                      label=label)
 
-        # Best epoch marker
+        # Best epoch marker (best_epoch is 1-based, x-axis is 1-based)
         best_ep = fold["best_epoch"]
-        if best_ep < len(epochs):
-            axes[0].axvline(x=best_ep + 1, color=color, alpha=0.3, linestyle=":")
-            axes[1].axvline(x=best_ep + 1, color=color, alpha=0.3, linestyle=":")
+        if best_ep <= len(epochs):
+            axes[0].axvline(x=best_ep, color=color, alpha=0.3, linestyle=":")
+            axes[1].axvline(x=best_ep, color=color, alpha=0.3, linestyle=":")
 
     axes[0].set_title("Train Loss")
     axes[0].set_xlabel("Epoch")

@@ -623,8 +623,11 @@ def main():
             from glob import glob
             exp_base = os.path.join(os.path.dirname(__file__), "..", "..", "experiments")
             exp_base = os.path.abspath(exp_base)
-            for fold_file in glob(os.path.join(exp_base, "*", "fold_*.json")):
-                exp_d = os.path.dirname(fold_file)
+            experiment_dirs = {
+                os.path.dirname(fold_file)
+                for fold_file in glob(os.path.join(exp_base, "*", "fold_*.json"))
+            }
+            for exp_d in sorted(experiment_dirs):
                 print(f"\n{'=' * 50}")
                 plot_experiment(exp_d)
         else:

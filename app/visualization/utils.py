@@ -9,13 +9,16 @@ def load_experiment_data(exp_dir):
     Load all data for a k-fold experiment from its directory.
 
     Args:
-        exp_dir: path to directory containing config.json, fold_*.json, results.json
+        exp_dir: path to directory containing config.json, fold_*.json,
+            and optionally results.json
 
     Returns:
-        dict with keys: config, folds (list of fold dicts), results
+        dict with keys: config, folds (list of fold dicts), results.
+        The results value is None if results.json is not present.
 
     Raises:
-        FileNotFoundError: if exp_dir or required files don't exist
+        FileNotFoundError: if exp_dir does not exist, if config.json is
+        missing, or if no fold_*.json files are found
     """
     exp_dir = str(exp_dir)
     if not os.path.isdir(exp_dir):
