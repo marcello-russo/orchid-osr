@@ -37,7 +37,7 @@ export function Sidebar() {
             sidebarOpen ? "text-lg" : "text-xs"
           )}
         >
-          {sidebarOpen ? "OrchID" : "O"}
+          {sidebarOpen ? "🌸 OrchID" : "🌸"}
         </span>
       </div>
 
