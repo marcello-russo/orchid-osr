@@ -43,8 +43,13 @@ docs/
 # Docker
 .docker/
 
+# Frontend dev artifacts (not needed in build, dockerfile runs npm ci + build)
+frontend/node_modules/
+frontend/dist/
+
 # Misc
 *.log
 *.tmp
 .DS_Store
 README*.md
+superpowers/

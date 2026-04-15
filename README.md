@@ -11,6 +11,7 @@
 | Phase | Goal | Status |
 |-------|------|--------|
 | **P1 — Classification** | ResNet18/50 baseline, domain shift experiments, k-fold CV | ✅ Done |
+| **P1b — Experiment Explorer** | React SPA dashboard with interactive charts, dark/light theme | ✅ Done |
 | **P2 — Embedding Space** | Contrastive learning (SimCLR, Triplet Loss, SupCon) to build a structured orchid vector space | 🔜 Next |
 | **P3 — Retrieval & Similarity** | Nearest-neighbor search, species clustering, unknown class detection | 📋 Planned |
 
@@ -122,11 +123,24 @@
 git clone https://github.com/squidslab/OrchID.git
 cd OrchID/resnet18
 
-# Start container
-podman compose up -d --build
-
-# Jupyter at http://localhost:8888
+# Start container (backend + built frontend on port 5000)
+./podman-start.sh
 ```
+
+### Development (with hot-reload)
+
+```bash
+# Terminal 1 — Backend
+cd backend
+python server.py --reload
+
+# Terminal 2 — Frontend (Vite dev server on port 5173)
+cd frontend
+npm install
+npm run dev
+```
+
+Frontend at http://localhost:5173, API proxy → backend :5000.
 
 ### CLI
 
@@ -172,7 +186,15 @@ resnet18/
 │   ├── cli.py                    # CLI entrypoint
 │   ├── server.py                 # API server entrypoint
 │   └── requirements.txt
-├── Dockerfile
+├── frontend/                     # React SPA — Experiment Explorer
+│   ├── src/
+│   │   ├── components/           # Layout + Shadcn/ui components
+│   │   ├── features/explorer/    # Charts, hooks, types
+│   │   ├── pages/                # Dashboard, Experiments, Detail
+│   │   ├── stores/               # Zustand (theme, sidebar)
+│   │   └── lib/                  # API client, React Query, types
+│   └── package.json
+├── Dockerfile                    # Multi-stage (Node.js build + PyTorch)
 ├── podman-start.sh
 ├── docs/
 └── assets/
@@ -187,6 +209,8 @@ resnet18/
 | 🧠 | PyTorch 2.1.0 + CUDA 11.8 |
 | 🏛️ | ResNet18/50 (ImageNet pretrained) |
 | 🔍 | Captum (explainability) |
+| 🖥️ | React 19 + TypeScript + Vite + Tailwind v4 + Shadcn/ui |
+| 📊 | Recharts (interactive charts), React Query, Zustand |
 | 📦 | Podman + NVIDIA Container Toolkit |
 
 ---
@@ -202,6 +226,9 @@ python server.py                    # Start API on port 5000
 |----------|--------|-------------|
 | `/health` | GET | Health check |
 | `/classify` | POST | Classify image (base64) |
+| `/api/experiments` | GET | List all experiments |
+| `/api/experiments/{id}` | GET | Experiment detail with folds |
+| `/api/experiments/{id}/folds/{n}` | GET | Single fold data (1-based) |
 | `/docs` | GET | OpenAPI docs |
 
 ---

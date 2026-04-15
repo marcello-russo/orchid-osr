@@ -1,6 +1,6 @@
 # app/api/schemas.py
 from pydantic import BaseModel
-from typing import Dict, Literal
+from typing import Dict, Literal, Optional
 from datetime import datetime
 
 
@@ -38,3 +38,47 @@ class ExperimentInfo(BaseModel):
 class ExperimentListResponse(BaseModel):
     """List of experiments."""
     experiments: list[ExperimentInfo]
+
+
+class ExperimentSummary(BaseModel):
+    """Summary of an experiment for list view."""
+    id: str
+    name: str
+    model_variant: Optional[str] = None
+    type: str
+    status: str
+    num_folds: Optional[int] = None
+    test_accuracy: Optional[float] = None
+    mean_f1: Optional[float] = None
+    std_f1: Optional[float] = None
+    timestamp: Optional[str] = None
+
+
+class ExperimentDetailResponse(BaseModel):
+    """Full experiment detail."""
+    id: str
+    config: dict
+    folds: list[dict]
+    results: Optional[dict] = None
+    summary: dict
+
+
+class FoldHistory(BaseModel):
+    """Training history arrays for a fold."""
+    train_loss: list[float]
+    val_loss: list[float]
+    val_accuracy: list[float]
+    val_f1: list[float]
+
+
+class FoldDataResponse(BaseModel):
+    """Full fold detail with training history."""
+    fold: int
+    best_f1: float
+    best_accuracy: float
+    best_epoch: int
+    final_train_loss: float
+    final_val_loss: float
+    history: FoldHistory
+    train_size: int
+    val_size: int
