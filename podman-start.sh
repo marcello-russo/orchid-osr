@@ -24,6 +24,7 @@ podman run -d \
   -v ./backend/server.py:/workspace/backend/server.py \
   -v ./backend/tests:/workspace/backend/tests \
   -v ./backend/test_dataset:/workspace/backend/test_dataset \
+  -v ./backend/frontend/dist:/workspace/backend/frontend/dist \
   -v ./.env:/workspace/backend/.env \
   -p 5000:5000 \
   "$IMAGE_NAME" \
@@ -33,3 +34,6 @@ echo "✅ Container avviato. Comandi utili:"
 echo "   podman exec pytorch_app python -m pytest tests/ -v"
 echo "   podman exec pytorch_app python cli.py --status"
 echo "   podman exec pytorch_app python server.py"
+echo ""
+echo "   Per dev frontend (hot-reload su porta 5173):"
+echo "   cd frontend && npm run dev"
