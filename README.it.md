@@ -170,6 +170,7 @@ resnet18/
 │   │   └── visualization/        # Generazione grafici (ggplot, 300 DPI)
 │   ├── tests/                    # Test unitari (112 test)
 │   ├── experiments/              # Risultati esperimenti
+│   ├── notebooks/                # Jupyter notebook
 │   ├── cli.py                    # Entry point CLI
 │   ├── server.py                 # Entry point API server
 │   └── requirements.txt
