@@ -24,7 +24,7 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <h1 className="text-2xl font-semibold text-primary">Dashboard</h1>
+      <h1 className="text-2xl font-semibold text-primary">🌸 Dashboard</h1>
 
       {/* KPI Row */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
