@@ -12,6 +12,11 @@ function getSystemTheme(): Theme {
     : "light";
 }
 
+function getDefaultSidebarOpen(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia("(min-width: 768px)").matches;
+}
+
 function applyTheme(theme: Theme) {
   document.documentElement.classList.toggle("dark", theme === "dark");
 }
@@ -28,7 +33,7 @@ export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
       theme: getSystemTheme(),
-      sidebarOpen: true,
+      sidebarOpen: getDefaultSidebarOpen(),
 
       toggleTheme: () => {
         const next = get().theme === "dark" ? "light" : "dark";
