@@ -1,3 +1,12 @@
+---
+title: OrchID NCD
+emoji: 🌸
+colorFrom: pink
+colorTo: purple
+sdk: docker
+pinned: false
+---
+
 [🇮🇹 Italiano](README.it.md)
 
 # 🌸 OrchID — Orchid Representation Learning
