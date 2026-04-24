@@ -26,7 +26,7 @@ export function KpiCard({ title, value, subtitle, icon: Icon, className, delay =
         <Icon className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold font-mono">{value}</div>
+        <div className="text-xl sm:text-2xl font-bold font-mono">{value}</div>
         {subtitle && (
           <p className="text-xs text-muted-foreground">{subtitle}</p>
         )}
