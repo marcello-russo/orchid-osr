@@ -18,24 +18,25 @@ export function ConfusionMatrixChart({ matrix, labels }: ConfusionMatrixChartPro
   if (!matrix.length) return null;
 
   const maxVal = Math.max(...matrix.flat());
-  const n = matrix.length;
-  const cellSize = Math.min(60, Math.floor(480 / n));
+  const cellW = 150;
+  const cellH = 80;
+  const labelW = 200;
 
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-base">Confusion Matrix (Test Set)</CardTitle>
+        <CardTitle className="text-base">Confusion Matrix (Test Set — overall)</CardTitle>
       </CardHeader>
       <CardContent>
         <TooltipProvider>
           <div className="overflow-x-auto">
             {/* Column headers */}
-            <div className="flex" style={{ paddingLeft: cellSize + 8 }}>
+            <div className="flex" style={{ paddingLeft: labelW + 8 }}>
               {labels.map((label) => (
                 <div
                   key={label}
-                  className="text-xs text-muted-foreground text-center truncate"
-                  style={{ width: cellSize, minWidth: cellSize }}
+                  className="text-sm text-muted-foreground text-center"
+                  style={{ width: cellW, minWidth: cellW }}
                 >
                   {label.replace("O. ", "")}
                 </div>
@@ -47,8 +48,8 @@ export function ConfusionMatrixChart({ matrix, labels }: ConfusionMatrixChartPro
               <div key={i} className="flex items-center">
                 {/* Row label */}
                 <div
-                  className="text-xs text-muted-foreground text-right pr-2 truncate"
-                  style={{ width: cellSize, minWidth: cellSize }}
+                  className="text-sm text-muted-foreground text-right pr-2"
+                  style={{ width: labelW, minWidth: labelW }}
                 >
                   {labels[i].replace("O. ", "")}
                 </div>
@@ -62,9 +63,9 @@ export function ConfusionMatrixChart({ matrix, labels }: ConfusionMatrixChartPro
                     <Tooltip key={j}>
                       <TooltipTrigger>
                         <div
-                          style={{ width: cellSize, minWidth: cellSize, height: cellSize }}
+                          style={{ width: cellW, minWidth: cellW, height: cellH }}
                           className={cn(
-                            "flex items-center justify-center text-xs font-mono border border-border transition-colors duration-150 cursor-default",
+                            "flex items-center justify-center text-sm font-mono border border-border transition-colors duration-150 cursor-default",
                             isCorrect && intensity > 0.7
                               ? "bg-primary/30 text-primary font-bold"
                               : intensity > 0.1

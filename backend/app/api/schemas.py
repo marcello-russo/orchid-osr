@@ -82,3 +82,51 @@ class FoldDataResponse(BaseModel):
     history: FoldHistory
     train_size: int
     val_size: int
+
+
+class TopPrediction(BaseModel):
+    """A single species prediction with confidence."""
+    species: str
+    confidence: float
+
+
+class ClassifyUploadResponse(BaseModel):
+    """Response for file-upload classification."""
+    top_predictions: list[TopPrediction]
+    predicted_species: str
+    confidence: float
+
+
+class ExplainResponse(BaseModel):
+    """Response for explainability heatmap."""
+    heatmap_base64: str
+    predicted_species: str
+    confidence: float
+
+
+class SpeciesInfo(BaseModel):
+    """Info about a single species in the dataset."""
+    name: str
+    image_count: int
+
+
+class SpeciesListResponse(BaseModel):
+    """List of species with dataset statistics."""
+    species: list[SpeciesInfo]
+    total_images: int
+    total_species: int
+
+
+class ModelOption(BaseModel):
+    """A trained model available for classification."""
+    id: str
+    name: str
+    model_variant: str
+    mean_f1: float | None = None
+    test_accuracy: float | None = None
+    num_folds: int | None = None
+
+
+class ModelListResponse(BaseModel):
+    """List of available classification models."""
+    models: list[ModelOption]

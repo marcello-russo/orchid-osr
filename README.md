@@ -11,7 +11,7 @@
 | Phase | Goal | Status |
 |-------|------|--------|
 | **P1 — Classification** | ResNet18/50 baseline, domain shift experiments, k-fold CV | ✅ Done |
-| **P1b — Experiment Explorer** | React SPA dashboard with interactive charts, dark/light theme | ✅ Done |
+| **P1b — Experiment Explorer** | React SPA dashboard, classification upload, explainability heatmap, species stats, model selector | ✅ Done |
 | **P2 — Embedding Space** | Contrastive learning (SimCLR, Triplet Loss, SupCon) to build a structured orchid vector space | 🔜 Next |
 | **P3 — Retrieval & Similarity** | Nearest-neighbor search, species clustering, unknown class detection | 📋 Planned |
 
@@ -190,7 +190,8 @@ resnet18/
 │   ├── src/
 │   │   ├── components/           # Layout + Shadcn/ui components
 │   │   ├── features/explorer/    # Charts, hooks, types
-│   │   ├── pages/                # Dashboard, Experiments, Detail
+│   │   ├── features/classify/    # Classification hooks
+│   │   ├── pages/                # Dashboard, Experiments, Detail, Classify
 │   │   ├── stores/               # Zustand (theme, sidebar)
 │   │   └── lib/                  # API client, React Query, types
 │   └── package.json
@@ -226,10 +227,15 @@ python server.py                    # Start API on port 5000
 |----------|--------|-------------|
 | `/health` | GET | Health check |
 | `/classify` | POST | Classify image (base64) |
+| `/classify/upload` | POST | Classify uploaded image (multipart, optional `model_id`) |
+| `/classify/explain` | POST | Occlusion heatmap for uploaded image (multipart, optional `model_id`) |
+| `/classify/models` | GET | List available trained models with metrics |
 | `/api/experiments` | GET | List all experiments |
 | `/api/experiments/{id}` | GET | Experiment detail with folds |
 | `/api/experiments/{id}/folds/{n}` | GET | Single fold data (1-based) |
-| `/docs` | GET | OpenAPI docs |
+| `/api/species` | GET | Species list with image counts from dataset |
+| `/docs` | GET | Swagger UI |
+| `/redoc` | GET | ReDoc documentation |
 
 ---
 

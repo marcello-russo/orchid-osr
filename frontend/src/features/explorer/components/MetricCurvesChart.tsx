@@ -1,5 +1,6 @@
 // frontend/src/features/explorer/components/MetricCurvesChart.tsx
 
+import { useMemo, useRef, useState } from "react";
 import {
   LineChart,
   Line,
@@ -8,12 +9,13 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer,
   ReferenceLine,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { FoldData } from "@/lib/types";
 import { foldToEpochPoints, FOLD_COLORS } from "../types";
+import { useChartSize } from "../hooks/useChartSize";
+import { cn } from "@/lib/utils";
 
 interface MetricCurvesChartProps {
   folds: FoldData[];
@@ -21,85 +23,98 @@ interface MetricCurvesChartProps {
 }
 
 export function MetricCurvesChart({ folds, selectedFold }: MetricCurvesChartProps) {
-  const visibleFolds = selectedFold === null
-    ? folds
-    : folds.filter((f) => f.fold === selectedFold);
+  const ref = useRef<HTMLDivElement>(null);
+  const { width, height } = useChartSize(ref);
+  const [metric, setMetric] = useState<"f1" | "accuracy">("f1");
 
-  const allEpochs = visibleFolds.map((f) => ({
-    fold: f,
-    points: foldToEpochPoints(f),
-  }));
-  const maxLen = Math.max(...allEpochs.map((e) => e.points.length), 0);
+  const visibleFolds = useMemo(
+    () => selectedFold === null ? folds : folds.filter((f) => f.fold === selectedFold),
+    [folds, selectedFold]
+  );
 
-  const meanBestF1 =
-    visibleFolds.length > 0
-      ? visibleFolds.reduce((sum, f) => sum + f.best_f1, 0) / visibleFolds.length
-      : 0;
-
-  const merged = Array.from({ length: maxLen }, (_, i) => {
-    const row: Record<string, number> = { epoch: i + 1 };
-    allEpochs.forEach(({ fold: f, points }) => {
-      if (i < points.length) {
-        row[`f1_${f.fold}`] = points[i].val_f1!;
-        row[`acc_${f.fold}`] = points[i].val_accuracy!;
-      }
+  const { merged, meanBestF1 } = useMemo(() => {
+    const allEpochs = visibleFolds.map((f) => ({
+      fold: f,
+      points: foldToEpochPoints(f),
+    }));
+    const maxLen = Math.max(...allEpochs.map((e) => e.points.length), 0);
+    const data = Array.from({ length: maxLen }, (_, i) => {
+      const row: Record<string, number> = { epoch: i + 1 };
+      allEpochs.forEach(({ fold: f, points }) => {
+        if (i < points.length) {
+          row[`${f.fold}`] = metric === "f1" ? points[i].val_f1! : points[i].val_accuracy!;
+        }
+      });
+      return row;
     });
-    return row;
-  });
+    const mean = visibleFolds.length > 0
+      ? visibleFolds.reduce((s, f) => s + f.best_f1, 0) / visibleFolds.length
+      : 0;
+    return { merged: data, meanBestF1: mean };
+  }, [visibleFolds, metric]);
 
   return (
     <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base">Metric Curves</CardTitle>
+      <CardHeader className="pb-2 border-b border-border/50">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base">Metric Curves</CardTitle>
+          <div className="flex gap-1">
+            {(["f1", "accuracy"] as const).map((m) => (
+              <button
+                key={m}
+                onClick={() => setMetric(m)}
+                className={cn(
+                  "rounded-md px-2 py-0.5 text-xs font-medium transition-colors",
+                  metric === m
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground bg-muted/50 hover:bg-muted"
+                )}
+              >
+                {m === "f1" ? "F1" : "Accuracy"}
+              </button>
+            ))}
+          </div>
+        </div>
       </CardHeader>
-      <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={merged}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-            <XAxis dataKey="epoch" tick={{ fontSize: 12 }} />
-            <YAxis tick={{ fontSize: 12 }} domain={[0, 1]} />
+      <CardContent className="pt-4">
+        <div ref={ref} style={{ width: "100%", height }}>
+          <LineChart data={merged} width={width} height={height}>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} />
+            <XAxis dataKey="epoch" tick={{ fontSize: 14 }} />
+            <YAxis tick={{ fontSize: 14 }} domain={[0, 1]} />
             <Tooltip
-              contentStyle={{
-                backgroundColor: "hsl(var(--card))",
-                border: "1px solid hsl(var(--border))",
-                borderRadius: "6px",
-                fontSize: 12,
-              }}
-              formatter={(value) => (Number(value) * 100).toFixed(1) + "%"}
+              formatter={(value) => (Number(value) * 100).toFixed(2) + "%"}
+              labelFormatter={(l) => `Epoch ${l}`}
             />
-            <Legend />
-            {meanBestF1 > 0 && (
+            <Legend
+              wrapperStyle={{ fontSize: 13 }}
+              formatter={(value: string) => `Fold ${value}`}
+              align="right"
+            />
+            {metric === "f1" && meanBestF1 > 0 && (
               <ReferenceLine
                 y={meanBestF1}
                 stroke="#D97706"
                 strokeDasharray="4 4"
-                label={{ value: `Mean Best F1: ${(meanBestF1 * 100).toFixed(1)}%`, fontSize: 10, fill: "#D97706" }}
+                label={{ value: `Mean Best F1: ${(meanBestF1 * 100).toFixed(2)}%`, fontSize: 13, fill: "#D97706" }}
               />
             )}
-            {visibleFolds.map((f, i) => {
-              const color = FOLD_COLORS[i % FOLD_COLORS.length];
-              return [
-                <Line
-                  key={`f1_${f.fold}`}
-                  dataKey={`f1_${f.fold}`}
-                  name={`Fold ${f.fold} F1`}
-                  stroke={color}
-                  dot={false}
-                  strokeWidth={1.5}
-                />,
-                <Line
-                  key={`acc_${f.fold}`}
-                  dataKey={`acc_${f.fold}`}
-                  name={`Fold ${f.fold} Accuracy`}
-                  stroke={color}
-                  dot={false}
-                  strokeWidth={1.5}
-                  strokeDasharray="4 4"
-                />,
-              ];
-            })}
+            {visibleFolds.map((f) => (
+              <Line
+                key={`metric_${f.fold}`}
+                dataKey={`${f.fold}`}
+                name={`${f.fold}`}
+                stroke={FOLD_COLORS[(f.fold - 1) % FOLD_COLORS.length]}
+                dot={false}
+                strokeWidth={1.5}
+                isAnimationActive={false}
+              />
+            ))}
           </LineChart>
-        </ResponsiveContainer>
+        </div>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Selected metric per epoch for each fold. The dashed horizontal line shows the mean best F1.
+        </p>
       </CardContent>
     </Card>
   );

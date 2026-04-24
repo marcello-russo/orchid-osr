@@ -42,11 +42,11 @@ export function ExperimentCard({ experiment }: ExperimentCardProps) {
               </span>
             )}
             {experiment.mean_f1 !== null && (
-              <span>F1: {(experiment.mean_f1 * 100).toFixed(1)}%</span>
+              <span>F1: {(experiment.mean_f1 * 100).toFixed(2)}%</span>
             )}
             {experiment.test_accuracy !== null && (
               <span>
-                Test: {(experiment.test_accuracy * 100).toFixed(1)}%
+                Test: {(experiment.test_accuracy * 100).toFixed(2)}%
               </span>
             )}
             {experiment.num_folds !== null && (

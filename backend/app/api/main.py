@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from app.api.routes import health, classify, experiments
+from app.api.routes import health, classify, experiments, species
 
 app = FastAPI(
     title="Orchid Classification API",
@@ -26,6 +26,7 @@ app.add_middleware(
 app.include_router(health.router, tags=["health"])
 app.include_router(classify.router, tags=["classification"])
 app.include_router(experiments.router, tags=["experiments"])
+app.include_router(species.router, tags=["species"])
 
 # Serve frontend static files in production (when frontend/dist exists)
 _static_dir = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
@@ -35,7 +36,13 @@ if _static_dir.is_dir():
     @app.get("/{full_path:path}")
     async def serve_spa(full_path: str):
         """Serve the SPA — return index.html for all non-API, non-asset routes."""
+        if ".." in full_path:
+            return FileResponse(_static_dir / "index.html")
         file_path = _static_dir / full_path
+        try:
+            file_path.resolve().relative_to(_static_dir.resolve())
+        except ValueError:
+            return FileResponse(_static_dir / "index.html")
         if full_path and file_path.is_file():
             return FileResponse(file_path)
         return FileResponse(_static_dir / "index.html")

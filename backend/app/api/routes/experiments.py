@@ -12,6 +12,13 @@ def _get_experiments_dir() -> Path:
     return Path(settings.results_dir)
 
 
+def _validate_id(value: str) -> str:
+    """Sanitize path parameter to prevent path traversal."""
+    if ".." in value or "/" in value or "\\" in value:
+        raise HTTPException(status_code=400, detail="Invalid identifier")
+    return value
+
+
 def _load_json(path: Path) -> dict:
     with open(path) as f:
         return json.load(f)
@@ -28,16 +35,16 @@ async def list_experiments():
     for d in sorted(exp_dir.iterdir()):
         if not d.is_dir():
             continue
+
         config_path = d / "config.json"
-        if not config_path.exists():
+        results_path = d / "results.json"
+
+        # Need at least config.json or results.json
+        if not config_path.exists() and not results_path.exists():
             continue
 
-        config = _load_json(config_path)
-
-        results = None
-        results_path = d / "results.json"
-        if results_path.exists():
-            results = _load_json(results_path)
+        config = _load_json(config_path) if config_path.exists() else {}
+        results = _load_json(results_path) if results_path.exists() else None
 
         fold_files = sorted(d.glob("fold_*.json"))
         has_folds = len(fold_files) > 0
@@ -51,7 +58,7 @@ async def list_experiments():
             "status": "completed" if (results or exp_type == "baseline") else "partial",
             "num_folds": len(fold_files) if has_folds else None,
             "test_accuracy": results.get("test_metrics", {}).get("accuracy") if results else None,
-            "mean_f1": results.get("mean_f1") if results else None,
+            "mean_f1": (results.get("mean_f1") or results.get("test_metrics", {}).get("f1_macro")) if results else None,
             "std_f1": results.get("std_f1") if results else None,
             "timestamp": config.get("timestamp"),
         })
@@ -62,15 +69,18 @@ async def list_experiments():
 @router.get("/{experiment_id}", response_model=ExperimentDetailResponse)
 async def get_experiment(experiment_id: str):
     """Get full experiment detail with all folds."""
+    experiment_id = _validate_id(experiment_id)
     exp_dir = _get_experiments_dir() / experiment_id
     if not exp_dir.exists() or not exp_dir.is_dir():
         raise HTTPException(status_code=404, detail=f"Experiment '{experiment_id}' not found")
 
     config_path = exp_dir / "config.json"
-    if not config_path.exists():
-        raise HTTPException(status_code=404, detail="config.json not found")
+    results_path = exp_dir / "results.json"
 
-    config = _load_json(config_path)
+    if not config_path.exists() and not results_path.exists():
+        raise HTTPException(status_code=404, detail=f"No config.json or results.json in '{experiment_id}'")
+
+    config = _load_json(config_path) if config_path.exists() else {}
 
     folds = []
     for fold_file in sorted(exp_dir.glob("fold_*.json")):
@@ -91,7 +101,7 @@ async def get_experiment(experiment_id: str):
             "type": "kfold" if folds else "baseline",
             "num_folds": len(folds),
             "mean_accuracy": results.get("mean_accuracy") if results else None,
-            "mean_f1": results.get("mean_f1") if results else None,
+            "mean_f1": (results.get("mean_f1") or results.get("test_metrics", {}).get("f1_macro")) if results else None,
             "std_f1": results.get("std_f1") if results else None,
             "test_accuracy": results.get("test_metrics", {}).get("accuracy") if results else None,
             "test_f1": results.get("test_metrics", {}).get("f1_macro") if results else None,
@@ -106,6 +116,7 @@ async def get_fold(experiment_id: str, fold_number: int):
     fold_number is 1-based (matching the 'fold' field inside each JSON).
     Files are stored as fold_0.json, fold_1.json, ... so we subtract 1.
     """
+    experiment_id = _validate_id(experiment_id)
     exp_dir = _get_experiments_dir() / experiment_id
     if not exp_dir.exists():
         raise HTTPException(status_code=404, detail=f"Experiment '{experiment_id}' not found")

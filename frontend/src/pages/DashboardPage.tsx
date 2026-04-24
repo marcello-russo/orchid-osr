@@ -1,13 +1,34 @@
 // frontend/src/pages/DashboardPage.tsx
 
-import { Activity, FlaskConical, TrendingUp, BarChart3 } from "lucide-react";
+import { useState } from "react";
+import {
+  Activity,
+  FlaskConical,
+  TrendingUp,
+  BarChart3,
+  Database,
+  Flower2,
+  ChevronDown,
+  ChevronRight,
+} from "lucide-react";
 import { useExperiments } from "@/features/explorer/hooks/useExperiments";
+import { useSpecies } from "@/features/explorer/hooks/useSpecies";
 import { KpiCard } from "@/features/explorer/components/KpiCard";
 import { ExperimentCard } from "@/features/explorer/components/ExperimentCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export function DashboardPage() {
-  const { data: experiments, isLoading } = useExperiments();
+  const { data: experiments, isLoading: expLoading } = useExperiments();
+  const { data: speciesData, isLoading: speciesLoading } = useSpecies();
+  const [datasetOpen, setDatasetOpen] = useState(true);
 
   const kfoldExps = (experiments ?? []).filter((e) => e.type === "kfold");
   const completedCount = (experiments ?? []).filter(
@@ -27,7 +48,7 @@ export function DashboardPage() {
       <h1 className="text-2xl font-semibold text-primary">🌸 Dashboard</h1>
 
       {/* KPI Row */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <KpiCard
           title="Total Experiments"
           value={String(experiments?.length ?? 0)}
@@ -42,26 +63,94 @@ export function DashboardPage() {
         />
         <KpiCard
           title="Best Test Accuracy"
-          value={bestTestAcc > 0 ? `${(bestTestAcc * 100).toFixed(1)}%` : "—"}
+          value={bestTestAcc > 0 ? `${(bestTestAcc * 100).toFixed(2)}%` : "—"}
           icon={TrendingUp}
           delay={100}
         />
         <KpiCard
           title="Best Mean F1"
-          value={bestMeanF1 > 0 ? `${(bestMeanF1 * 100).toFixed(1)}%` : "—"}
+          value={bestMeanF1 > 0 ? `${(bestMeanF1 * 100).toFixed(2)}%` : "—"}
           icon={BarChart3}
           delay={150}
         />
+        <KpiCard
+          title="Species"
+          value={speciesData ? String(speciesData.total_species) : "—"}
+          subtitle="in dataset"
+          icon={Flower2}
+          delay={200}
+        />
+        <KpiCard
+          title="Total Images"
+          value={speciesData ? String(speciesData.total_images) : "—"}
+          subtitle="combined dataset"
+          icon={Database}
+          delay={250}
+        />
       </div>
+
+      {/* Dataset Overview */}
+      {speciesData && speciesData.species.length > 0 && (
+        <div>
+          <button
+            onClick={() => setDatasetOpen((o) => !o)}
+            className="mb-3 flex items-center gap-1 text-lg font-medium transition-colors hover:text-primary"
+          >
+            {datasetOpen ? (
+              <ChevronDown className="size-5" />
+            ) : (
+              <ChevronRight className="size-5" />
+            )}
+            🌿 Dataset Overview
+          </button>
+          {datasetOpen && (
+            <div className="rounded-lg border border-border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Species</TableHead>
+                    <TableHead className="text-right">Images</TableHead>
+                    <TableHead className="text-right">% of Dataset</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {speciesData.species.map((s) => (
+                    <TableRow key={s.name}>
+                      <TableCell className="font-medium">{s.name}</TableCell>
+                      <TableCell className="text-right font-mono">
+                        {s.image_count}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        {((s.image_count / speciesData.total_images) * 100).toFixed(2)}%
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </div>
+      )}
+      {speciesLoading && (
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-40" />
+          <Skeleton className="h-32 w-full rounded-lg" />
+        </div>
+      )}
 
       {/* Recent Experiments */}
       <div>
         <h2 className="mb-3 text-lg font-medium">Recent Experiments</h2>
-        {isLoading ? (
+        {expLoading ? (
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3].map((i) => (
               <Skeleton key={i} className="h-24 w-full rounded-lg" />
             ))}
+          </div>
+        ) : (experiments ?? []).length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+            <FlaskConical className="mb-3 size-10 opacity-30" />
+            <p className="text-sm">No experiments yet. Run training to see results here.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">

@@ -11,6 +11,7 @@ python-dotenv
 flask
 fastapi
 uvicorn
+python-multipart
 httpx
 jupyter
 notebook
