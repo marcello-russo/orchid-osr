@@ -27,6 +27,21 @@ export function ClassifyPage() {
   const { data: modelsData } = useModels();
   const models = modelsData?.models ?? [];
 
+  const isWorking = classify.isPending || explain.isPending;
+  const activeProgress = classify.isPending
+    ? classify.progress
+    : explain.isPending
+      ? explain.progress
+      : 0;
+  const uploadDone = isWorking && activeProgress >= 100;
+  const activeLabel = uploadDone
+    ? "Processing on server..."
+    : classify.isPending
+      ? "Uploading..."
+      : explain.isPending
+        ? "Uploading..."
+        : "";
+
   const handleFile = useCallback((f: File) => {
     if (!f.type.startsWith("image/")) return;
     setFile(f);
@@ -208,7 +223,7 @@ export function ClassifyPage() {
                 <div className="flex flex-wrap gap-3">
                   <Button
                     onClick={handleClassify}
-                    disabled={classify.isPending}
+                    disabled={isWorking}
                   >
                     {classify.isPending ? (
                       <Loader2 className="mr-2 size-4 animate-spin" />
@@ -221,7 +236,7 @@ export function ClassifyPage() {
                     <Button
                       variant="outline"
                       onClick={handleExplain}
-                      disabled={explain.isPending}
+                      disabled={isWorking}
                     >
                       {explain.isPending ? (
                         <Loader2 className="mr-2 size-4 animate-spin" />
@@ -234,6 +249,30 @@ export function ClassifyPage() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Progress bar */}
+            {isWorking && (
+              <Card>
+                <CardContent className="space-y-2 pt-4">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">{activeLabel}</span>
+                    <span className="font-mono text-xs text-muted-foreground">
+                      {uploadDone ? "please wait" : activeProgress > 0 ? `${activeProgress}%` : "Connecting..."}
+                    </span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-muted">
+                    {uploadDone ? (
+                      <div className="h-full w-full animate-pulse rounded-full bg-primary" />
+                    ) : (
+                      <div
+                        className="h-full rounded-full bg-primary transition-all duration-300"
+                        style={{ width: `${Math.max(activeProgress, 5)}%` }}
+                      />
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Classification results */}
             {classify.data && (

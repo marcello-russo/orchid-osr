@@ -158,6 +158,7 @@ async def classify_upload(file: UploadFile = File(...), model_id: str = Form(Non
 @router.post("/classify/explain", response_model=ExplainResponse)
 async def explain_image(file: UploadFile = File(...), model_id: str = Form(None)):
     """Generate an occlusion-based explainability heatmap for an uploaded image."""
+    import gc
     import numpy as np
     import matplotlib
     matplotlib.use("Agg")
@@ -168,6 +169,8 @@ async def explain_image(file: UploadFile = File(...), model_id: str = Form(None)
         _normalize_attr,
     )
     from app.preprocessing.normalization import denormalize_image, get_mean, get_std
+
+    plt.close("all")
 
     image_tensor, _ = _read_upload_image(file)
 
@@ -181,21 +184,25 @@ async def explain_image(file: UploadFile = File(...), model_id: str = Form(None)
         probabilities = torch.nn.functional.softmax(outputs, dim=1)
         predicted_idx = outputs.argmax(dim=1).item()
         confidence = probabilities[0, predicted_idx].item()
+    del outputs, probabilities
 
-    # Occlusion attribution
-    sliding_window_size = 15
-    stride = 8
+    # Occlusion attribution (coarse for CPU performance)
+    sliding_window_size = 30
+    stride = 20
     global_attribution = compute_occlusion(
         model, image_tensor.squeeze(0), sliding_window_size, stride
     )
 
     label_attributions = global_attribution[predicted_idx].squeeze(0).cpu().numpy()
+    del global_attribution
     label_attributions = np.transpose(label_attributions, (1, 2, 0))
     norm_attr = _normalize_attr(label_attributions, sign="all", outlier_perc=2, reduction_axis=2)
+    del label_attributions
 
     image_np = denormalize_image(
         image_tensor.squeeze(0), get_mean(), get_std()
     ).cpu().numpy().transpose(1, 2, 0)
+    del image_tensor
 
     from matplotlib.colors import LinearSegmentedColormap
     cmap = LinearSegmentedColormap.from_list("RdWhGn", ["red", "white", "green"])
@@ -203,13 +210,17 @@ async def explain_image(file: UploadFile = File(...), model_id: str = Form(None)
     fig, ax = plt.subplots(figsize=(5, 10))
     ax.imshow(np.mean(image_np, axis=2), cmap="gray")
     ax.imshow(norm_attr, cmap=cmap, vmin=-1, vmax=1, alpha=0.5)
+    del image_np, norm_attr
     ax.axis("off")
     fig.tight_layout(pad=0)
 
     buf = io.BytesIO()
-    fig.savefig(buf, format="png", bbox_inches="tight", pad_inches=0)
+    fig.savefig(buf, format="png", dpi=72, bbox_inches="tight", pad_inches=0)
     plt.close(fig)
     heatmap_b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
+    buf.close()
+
+    gc.collect()
 
     return ExplainResponse(
         heatmap_base64=heatmap_b64,

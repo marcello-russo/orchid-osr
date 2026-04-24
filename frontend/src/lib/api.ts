@@ -11,16 +11,41 @@ async function fetchApi<T>(path: string): Promise<T> {
   return res.json();
 }
 
-async function uploadApi<T>(path: string, formData: FormData): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    method: "POST",
-    body: formData,
+export type ProgressCallback = (progress: number) => void;
+
+function uploadXHR<T>(
+  path: string,
+  formData: FormData,
+  timeoutMs: number,
+  onProgress?: ProgressCallback
+): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `${API_BASE}${path}`);
+    xhr.timeout = timeoutMs;
+
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable && onProgress) {
+        onProgress(Math.round((e.loaded / e.total) * 100));
+      }
+    };
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          resolve(JSON.parse(xhr.responseText));
+        } catch {
+          reject(new Error("Invalid JSON response"));
+        }
+      } else {
+        reject(new Error(`API ${xhr.status}: ${xhr.responseText}`));
+      }
+    };
+
+    xhr.onerror = () => reject(new Error("Network error — try again"));
+    xhr.ontimeout = () => reject(new Error("Request timed out — the server may be busy"));
+    xhr.send(formData);
   });
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`API ${res.status}: ${body}`);
-  }
-  return res.json();
 }
 
 export async function fetchExperiments() {
@@ -37,23 +62,35 @@ export async function fetchFold(experimentId: string, foldNumber: number) {
   );
 }
 
-export async function classifyUpload(file: File, modelId?: string) {
+export async function classifyUpload(
+  file: File,
+  modelId?: string,
+  onProgress?: ProgressCallback
+) {
   const form = new FormData();
   form.append("file", file);
   if (modelId) form.append("model_id", modelId);
-  return uploadApi<import("./types").ClassifyUploadResponse>(
+  return uploadXHR<import("./types").ClassifyUploadResponse>(
     "/classify/upload",
-    form
+    form,
+    60_000,
+    onProgress
   );
 }
 
-export async function explainImage(file: File, modelId?: string) {
+export async function explainImage(
+  file: File,
+  modelId?: string,
+  onProgress?: ProgressCallback
+) {
   const form = new FormData();
   form.append("file", file);
   if (modelId) form.append("model_id", modelId);
-  return uploadApi<import("./types").ExplainResponse>(
+  return uploadXHR<import("./types").ExplainResponse>(
     "/classify/explain",
-    form
+    form,
+    300_000,
+    onProgress
   );
 }
 
