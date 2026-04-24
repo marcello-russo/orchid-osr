@@ -13,8 +13,9 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { FoldData } from "@/lib/types";
-import { foldToEpochPoints, FOLD_COLORS } from "../types";
+import { foldToEpochPoints } from "../types";
 import { useChartSize } from "../hooks/useChartSize";
+import { useChartColors } from "../hooks/useChartColors";
 
 interface OverfittingProxyChartProps {
   folds: FoldData[];
@@ -24,6 +25,7 @@ interface OverfittingProxyChartProps {
 export function OverfittingProxyChart({ folds, selectedFold }: OverfittingProxyChartProps) {
   const ref = useRef<HTMLDivElement>(null);
   const { width, height } = useChartSize(ref);
+  const chartColors = useChartColors();
 
   const visibleFolds = useMemo(
     () => selectedFold === null ? folds : folds.filter((f) => f.fold === selectedFold),
@@ -55,23 +57,23 @@ export function OverfittingProxyChart({ folds, selectedFold }: OverfittingProxyC
       <CardContent className="pt-4">
         <div ref={ref} style={{ width: "100%", height }}>
           <LineChart data={merged} width={width} height={height}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />
             <XAxis dataKey="epoch" tick={{ fontSize: 14 }} />
             <YAxis tick={{ fontSize: 14 }} />
             <Tooltip />
             <Legend wrapperStyle={{ fontSize: 13 }} align="right" />
             <ReferenceLine
               y={1}
-              stroke="#EF4444"
+              stroke={chartColors[4]}
               strokeDasharray="4 4"
-              label={{ value: "Overfitting threshold", fontSize: 13, fill: "#EF4444" }}
+              label={{ value: "Overfitting threshold", fontSize: 13, fill: chartColors[4] }}
             />
             {visibleFolds.map((f) => (
               <Line
                 key={`ratio_${f.fold}`}
                 dataKey={`ratio_${f.fold}`}
                 name={`Fold ${f.fold}`}
-                stroke={FOLD_COLORS[(f.fold - 1) % FOLD_COLORS.length]}
+                stroke={chartColors[(f.fold - 1) % chartColors.length]}
                 dot={false}
                 strokeWidth={1.5}
                 isAnimationActive={false}

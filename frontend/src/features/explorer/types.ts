@@ -37,12 +37,3 @@ export function foldToEpochPoints(fold: FoldData): EpochPoint[] {
   }
   return points;
 }
-
-/** Color palette for folds */
-export const FOLD_COLORS = [
-  "#3B82F6", // blue
-  "#D97706", // amber
-  "#10B981", // emerald
-  "#8B5CF6", // violet
-  "#EF4444", // red
-];

@@ -33,6 +33,7 @@ import {
 } from "recharts";
 import { useRef } from "react";
 import { useChartSize } from "@/features/explorer/hooks/useChartSize";
+import { useChartColors } from "@/features/explorer/hooks/useChartColors";
 
 export function ExperimentDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -228,18 +229,17 @@ interface TestMetrics {
   per_class?: { class: string; precision: number; recall: number; f1: number; support: number }[];
 }
 
-const FOLD_COLORS = ["#3B82F6", "#D97706", "#10B981", "#8B5CF6", "#EF4444", "#EC4899"];
-
 function BaselineResults({ metrics }: { metrics: TestMetrics }) {
   const chartRef = useRef<HTMLDivElement>(null);
   const { width, height } = useChartSize(chartRef);
+  const chartColors = useChartColors();
 
   const classData = (metrics.per_class ?? []).map((c, i) => ({
     name: c.class.replace("O. ", ""),
     F1: c.f1,
     Precision: c.precision,
     Recall: c.recall,
-    fill: FOLD_COLORS[i % FOLD_COLORS.length],
+    fill: chartColors[i % chartColors.length],
   }));
 
   return (
@@ -265,9 +265,9 @@ function BaselineResults({ metrics }: { metrics: TestMetrics }) {
                 <XAxis dataKey="name" tick={{ fontSize: 13 }} />
                 <YAxis type="number" domain={[0, 1]} tick={{ fontSize: 14 }} tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`} />
                 <Tooltip formatter={(value) => (Number(value) * 100).toFixed(2) + "%"} />
-                <Bar dataKey="F1" fill="#3B82F6" radius={[4, 4, 0, 0]} barSize={24} isAnimationActive={false} />
-                <Bar dataKey="Precision" fill="#D97706" radius={[4, 4, 0, 0]} barSize={24} isAnimationActive={false} />
-                <Bar dataKey="Recall" fill="#10B981" radius={[4, 4, 0, 0]} barSize={24} isAnimationActive={false} />
+                <Bar dataKey="F1" fill={chartColors[0]} radius={[4, 4, 0, 0]} barSize={24} isAnimationActive={false} />
+                <Bar dataKey="Precision" fill={chartColors[1]} radius={[4, 4, 0, 0]} barSize={24} isAnimationActive={false} />
+                <Bar dataKey="Recall" fill={chartColors[2]} radius={[4, 4, 0, 0]} barSize={24} isAnimationActive={false} />
               </BarChart>
             </div>
           </CardContent>

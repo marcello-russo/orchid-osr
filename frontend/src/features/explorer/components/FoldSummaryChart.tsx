@@ -13,6 +13,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { FoldData } from "@/lib/types";
 import { useChartSize } from "../hooks/useChartSize";
+import { useChartColors } from "../hooks/useChartColors";
 
 interface FoldSummaryChartProps {
   folds: FoldData[];
@@ -23,6 +24,7 @@ interface FoldSummaryChartProps {
 export function FoldSummaryChart({ folds, meanF1, stdF1 }: FoldSummaryChartProps) {
   const ref = useRef<HTMLDivElement>(null);
   const { width, height } = useChartSize(ref);
+  const chartColors = useChartColors();
 
   const data = useMemo(
     () => folds.map((f) => ({
@@ -48,15 +50,15 @@ export function FoldSummaryChart({ folds, meanF1, stdF1 }: FoldSummaryChartProps
       <CardContent className="pt-4">
         <div ref={ref} style={{ width: "100%", height }}>
           <BarChart data={data} layout="vertical" width={width} height={height}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />
             <XAxis type="number" domain={[0, 1]} tick={{ fontSize: 14 }} tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`} />
             <YAxis type="category" dataKey="name" tick={{ fontSize: 14 }} width={80} />
             <Tooltip
               formatter={(value) => (Number(value) * 100).toFixed(2) + "%"}
             />
             <Legend wrapperStyle={{ fontSize: 13 }} align="right" />
-            <Bar dataKey="F1" fill="#3B82F6" radius={[0, 4, 4, 0]} barSize={20} isAnimationActive={false} />
-            <Bar dataKey="Accuracy" fill="#D97706" radius={[0, 4, 4, 0]} barSize={20} isAnimationActive={false} />
+            <Bar dataKey="F1" fill={chartColors[0]} radius={[0, 4, 4, 0]} barSize={20} isAnimationActive={false} />
+            <Bar dataKey="Accuracy" fill={chartColors[1]} radius={[0, 4, 4, 0]} barSize={20} isAnimationActive={false} />
           </BarChart>
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
