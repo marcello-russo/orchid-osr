@@ -13,8 +13,9 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { FoldData } from "@/lib/types";
-import { foldToEpochPoints, FOLD_COLORS } from "../types";
+import { foldToEpochPoints } from "../types";
 import { useChartSize } from "../hooks/useChartSize";
+import { useChartColors } from "../hooks/useChartColors";
 import { cn } from "@/lib/utils";
 
 interface MetricCurvesChartProps {
@@ -25,6 +26,7 @@ interface MetricCurvesChartProps {
 export function MetricCurvesChart({ folds, selectedFold }: MetricCurvesChartProps) {
   const ref = useRef<HTMLDivElement>(null);
   const { width, height } = useChartSize(ref);
+  const chartColors = useChartColors();
   const [metric, setMetric] = useState<"f1" | "accuracy">("f1");
 
   const visibleFolds = useMemo(
@@ -79,7 +81,7 @@ export function MetricCurvesChart({ folds, selectedFold }: MetricCurvesChartProp
       <CardContent className="pt-4">
         <div ref={ref} style={{ width: "100%", height }}>
           <LineChart data={merged} width={width} height={height}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />
             <XAxis dataKey="epoch" tick={{ fontSize: 14 }} />
             <YAxis tick={{ fontSize: 14 }} domain={[0, 1]} />
             <Tooltip
@@ -94,9 +96,9 @@ export function MetricCurvesChart({ folds, selectedFold }: MetricCurvesChartProp
             {metric === "f1" && meanBestF1 > 0 && (
               <ReferenceLine
                 y={meanBestF1}
-                stroke="#D97706"
+                stroke={chartColors[1]}
                 strokeDasharray="4 4"
-                label={{ value: `Mean Best F1: ${(meanBestF1 * 100).toFixed(2)}%`, fontSize: 13, fill: "#D97706" }}
+                label={{ value: `Mean Best F1: ${(meanBestF1 * 100).toFixed(2)}%`, fontSize: 13, fill: chartColors[1] }}
               />
             )}
             {visibleFolds.map((f) => (
@@ -104,7 +106,7 @@ export function MetricCurvesChart({ folds, selectedFold }: MetricCurvesChartProp
                 key={`metric_${f.fold}`}
                 dataKey={`${f.fold}`}
                 name={`${f.fold}`}
-                stroke={FOLD_COLORS[(f.fold - 1) % FOLD_COLORS.length]}
+                stroke={chartColors[(f.fold - 1) % chartColors.length]}
                 dot={false}
                 strokeWidth={1.5}
                 isAnimationActive={false}

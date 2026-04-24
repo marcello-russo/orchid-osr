@@ -1,7 +1,7 @@
 // frontend/src/features/explorer/components/FoldSelector.tsx
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FOLD_COLORS } from "../types";
+import { useChartColors } from "../hooks/useChartColors";
 
 interface FoldSelectorProps {
   folds: { fold: number }[];
@@ -10,6 +10,8 @@ interface FoldSelectorProps {
 }
 
 export function FoldSelector({ folds, selectedFold, onSelect }: FoldSelectorProps) {
+  const chartColors = useChartColors();
+
   return (
     <Tabs
       value={selectedFold === null ? "all" : String(selectedFold)}
@@ -22,7 +24,7 @@ export function FoldSelector({ folds, selectedFold, onSelect }: FoldSelectorProp
             <TabsTrigger key={f.fold} value={String(f.fold)}>
               <span
                 className="mr-1.5 inline-block h-2.5 w-2.5 rounded-full shrink-0"
-                style={{ backgroundColor: FOLD_COLORS[i % FOLD_COLORS.length] }}
+                style={{ backgroundColor: chartColors[i % chartColors.length] }}
               />
               Fold {f.fold}
             </TabsTrigger>

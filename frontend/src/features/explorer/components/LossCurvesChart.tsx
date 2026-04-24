@@ -13,8 +13,9 @@ import {
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { FoldData } from "@/lib/types";
-import { foldToEpochPoints, FOLD_COLORS } from "../types";
+import { foldToEpochPoints } from "../types";
 import { useChartSize } from "../hooks/useChartSize";
+import { useChartColors } from "../hooks/useChartColors";
 import { cn } from "@/lib/utils";
 
 interface LossCurvesChartProps {
@@ -25,6 +26,7 @@ interface LossCurvesChartProps {
 export function LossCurvesChart({ folds, selectedFold }: LossCurvesChartProps) {
   const ref = useRef<HTMLDivElement>(null);
   const { width, height } = useChartSize(ref);
+  const chartColors = useChartColors();
   const [mode, setMode] = useState<"train" | "val">("val");
 
   const visibleFolds = useMemo(
@@ -77,7 +79,7 @@ export function LossCurvesChart({ folds, selectedFold }: LossCurvesChartProps) {
       <CardContent className="pt-4">
         <div ref={ref} style={{ width: "100%", height }}>
           <LineChart data={merged} width={width} height={height}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />
             <XAxis dataKey="epoch" tick={{ fontSize: 14 }} />
             <YAxis tick={{ fontSize: 14 }} />
             <Tooltip
@@ -90,7 +92,7 @@ export function LossCurvesChart({ folds, selectedFold }: LossCurvesChartProps) {
               align="right"
             />
             {visibleFolds.map((f) => {
-              const color = FOLD_COLORS[(f.fold - 1) % FOLD_COLORS.length];
+              const color = chartColors[(f.fold - 1) % chartColors.length];
               return (
                 <Line
                   key={`loss_${f.fold}`}
@@ -105,7 +107,7 @@ export function LossCurvesChart({ folds, selectedFold }: LossCurvesChartProps) {
             })}
             {visibleFolds.map((f) => {
               if (f.best_epoch <= 0 || f.best_epoch > maxLen) return null;
-              const color = FOLD_COLORS[(f.fold - 1) % FOLD_COLORS.length];
+              const color = chartColors[(f.fold - 1) % chartColors.length];
               return (
                 <ReferenceLine
                   key={`best_${f.fold}`}
