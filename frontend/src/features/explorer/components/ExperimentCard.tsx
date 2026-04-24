@@ -19,7 +19,7 @@ export function ExperimentCard({ experiment }: ExperimentCardProps) {
       <Card className="transition-colors duration-150 hover:border-primary/30">
         <CardHeader className="pb-2">
           <div className="flex items-start justify-between gap-2">
-            <CardTitle className="text-sm font-medium truncate">
+            <CardTitle className="text-sm font-medium break-all">
               {experiment.name}
             </CardTitle>
             <Badge
