@@ -27,6 +27,7 @@ backend/temp_kfold/
 
 # Docker artifacts
 ProjectDocker/
+Dockerfile.hf
 
 # Python
 __pycache__/
