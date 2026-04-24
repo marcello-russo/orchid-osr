@@ -46,15 +46,10 @@ DATASET_PATHS = {
     }
 }
 
-# Class definitions
-ALL_CLASSES = [
-    "O. exaltata",
-    "O. garganica",
-    "O. incubacea",
-    "O. majellensis",
-    "O. sphegodes",
-    "O. sphegodes_Palena"
-]
+# Class definitions (centralized in config)
+from app.config import settings as _settings
+ALL_CLASSES = _settings.class_names
+del _settings
 
 INTERNET_CLASSES = [
     "O. exaltata",

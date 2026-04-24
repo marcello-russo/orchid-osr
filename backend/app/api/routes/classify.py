@@ -15,11 +15,12 @@ from app.api.schemas import (
     TopPrediction,
 )
 from app.api.deps import get_model, get_device, get_model_options, CLASS_NAMES
+from app.config import settings
 from app.preprocessing.normalization import get_mean, get_std
 
 # Image dimensions (same as training pipeline)
-IMG_WIDTH = 256
-IMG_HEIGHT = 512
+IMG_WIDTH = settings.img_width
+IMG_HEIGHT = settings.img_height
 MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10 MB
 ALLOWED_MIME_TYPES = {"image/jpeg", "image/png", "image/webp", "image/bmp"}
 
