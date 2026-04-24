@@ -1,6 +1,6 @@
 // frontend/src/components/layout/Layout.tsx
 
-import { useEffect, useCallback } from "react";
+import { useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
@@ -49,13 +49,15 @@ function MobileOverlay() {
     }
   }, [sidebarOpen]);
 
-  // Close on Escape key
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
+  // Close on Escape key (global listener)
+  useEffect(() => {
+    if (!sidebarOpen) return;
+    const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") setSidebarOpen(false);
-    },
-    [setSidebarOpen]
-  );
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [sidebarOpen, setSidebarOpen]);
 
   return (
     <>
@@ -70,7 +72,6 @@ function MobileOverlay() {
         role="dialog"
         aria-modal="true"
         aria-label="Navigation"
-        onKeyDown={handleKeyDown}
         className={cn(
           "fixed left-0 top-0 z-50 h-full w-72 bg-card shadow-xl transition-transform duration-200 ease-out",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
