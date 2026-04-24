@@ -78,8 +78,8 @@ export function ExperimentDetailPage() {
           <ArrowLeft className="h-4 w-4" />
           Experiments
         </Link>
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-semibold text-primary">{id}</h1>
+        <div className="flex flex-wrap items-center gap-2">
+          <h1 className="text-lg sm:text-2xl font-bold text-primary break-all">{id}</h1>
           <Badge variant="secondary" className="text-xs">
             {summary.type}
           </Badge>
