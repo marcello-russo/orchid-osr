@@ -26,15 +26,15 @@ export function ExperimentsPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-primary">🧪 Experiments</h1>
-        <div className="flex gap-2">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-2xl font-bold text-primary">🧪 Experiments</h1>
+        <div className="flex flex-wrap gap-2">
           {(["all", "kfold", "baseline"] as const).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
               className={cn(
-                "rounded-md px-3 py-1 text-sm font-medium transition-colors duration-150",
+                "rounded-lg px-4 py-2 text-sm font-medium transition-colors duration-150",
                 filter === f
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground bg-muted/50 hover:bg-muted"
@@ -60,7 +60,7 @@ export function ExperimentsPage() {
           </p>
         </div>
       ) : (
-        <div className="rounded-lg border border-border">
+        <div className="overflow-x-auto rounded-lg border border-border">
           <Table>
             <TableHeader>
               <TableRow>
@@ -75,10 +75,10 @@ export function ExperimentsPage() {
             <TableBody>
               {filtered.map((exp) => (
                 <TableRow key={exp.id} className="transition-colors duration-150">
-                  <TableCell>
+                  <TableCell className="font-medium">
                     <Link
                       to={`/experiments/${exp.id}`}
-                      className="font-medium text-primary hover:underline"
+                      className="text-primary hover:underline"
                     >
                       {exp.name}
                     </Link>
