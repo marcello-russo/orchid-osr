@@ -19,16 +19,18 @@ const navItems = [
   { to: "/embeddings", icon: Box, label: "Embeddings" },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  isDesktop: boolean;
+}
+
+export function Sidebar({ isDesktop }: SidebarProps) {
   const { sidebarOpen, setSidebarOpen, toggleSidebar } = useAppStore();
-  const isDesktop =
-    typeof window !== "undefined" &&
-    window.matchMedia("(min-width: 768px)").matches;
 
   return (
     <aside
       className={cn(
         "flex h-full flex-col border-r border-border bg-card",
+        isDesktop && "fixed left-0 top-0 z-40 h-screen",
         isDesktop && (sidebarOpen ? "w-56" : "w-16"),
         isDesktop && "transition-all duration-300"
       )}

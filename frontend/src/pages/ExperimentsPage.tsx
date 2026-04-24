@@ -64,18 +64,18 @@ export function ExperimentsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="sticky left-0 bg-card z-10">Name</TableHead>
-                <TableHead className="hidden sm:table-cell">Model</TableHead>
+                <TableHead className="sticky left-0 bg-card z-10 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.08)]">Name</TableHead>
+                <TableHead className="whitespace-nowrap">Model</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead className="text-right">Mean F1</TableHead>
                 <TableHead className="text-right">Test Acc</TableHead>
-                <TableHead className="text-right hidden sm:table-cell">Folds</TableHead>
+                <TableHead className="text-right whitespace-nowrap">Folds</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.map((exp) => (
                 <TableRow key={exp.id} className="transition-colors duration-150">
-                  <TableCell className="sticky left-0 bg-card z-10">
+                  <TableCell className="sticky left-0 bg-card z-10 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.08)]">
                     <Link
                       to={`/experiments/${exp.id}`}
                       className="font-medium text-primary hover:underline"
@@ -83,7 +83,7 @@ export function ExperimentsPage() {
                       {exp.name}
                     </Link>
                   </TableCell>
-                  <TableCell className="font-mono text-sm hidden sm:table-cell">
+                  <TableCell className="font-mono text-sm whitespace-nowrap">
                     {exp.model_variant ?? "—"}
                   </TableCell>
                   <TableCell>
@@ -108,7 +108,7 @@ export function ExperimentsPage() {
                       ? `${(exp.test_accuracy * 100).toFixed(2)}%`
                       : "—"}
                   </TableCell>
-                  <TableCell className="text-right hidden sm:table-cell">
+                  <TableCell className="text-right whitespace-nowrap">
                     {exp.num_folds ?? "—"}
                   </TableCell>
                 </TableRow>
