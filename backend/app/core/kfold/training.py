@@ -14,9 +14,9 @@ import torch
 
 logger = logging.getLogger(__name__)
 
-# Dimensioni immagini (coerenti con pipeline originale)
-IMG_WIDTH = 256
-IMG_HEIGHT = 512
+from app.config import settings
+IMG_WIDTH = settings.img_width
+IMG_HEIGHT = settings.img_height
 
 
 def split_raw_images(raw_dataset_dir, class_names, num_folds, seed):

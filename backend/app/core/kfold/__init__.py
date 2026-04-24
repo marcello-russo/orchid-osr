@@ -29,8 +29,10 @@ _split_raw_images = split_raw_images
 _copy_fold_images = copy_fold_images
 _aggregate_results = aggregate_results
 
-IMG_WIDTH = 256
-IMG_HEIGHT = 512
+from app.config import settings as _settings
+IMG_WIDTH = _settings.img_width
+IMG_HEIGHT = _settings.img_height
+del _settings
 
 
 def kfold_experiment(
@@ -54,10 +56,8 @@ def kfold_experiment(
     from app.preprocessing.reproducibility import set_seed
 
     if class_names is None:
-        class_names = [
-            "O. exaltata", "O. garganica", "O. incubacea",
-            "O. majellensis", "O. sphegodes", "O. sphegodes_Palena"
-        ]
+        from app.config import settings as _s
+        class_names = _s.class_names
 
     if kfold_dir is None:
         kfold_dir = os.path.join(output_dir, f"kfold_{model_variant}")
