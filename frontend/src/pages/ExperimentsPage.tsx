@@ -27,14 +27,14 @@ export function ExperimentsPage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-primary">🧪 Experiments</h1>
+        <h1 className="text-2xl font-bold text-primary">🧪 Experiments</h1>
         <div className="flex gap-2">
           {(["all", "kfold", "baseline"] as const).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
               className={cn(
-                "rounded-md px-3 py-1 text-sm font-medium transition-colors duration-150",
+                "rounded-lg px-4 py-2 text-sm font-medium transition-colors duration-150 min-h-[44px]",
                 filter === f
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground bg-muted/50 hover:bg-muted"
@@ -64,18 +64,18 @@ export function ExperimentsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Model</TableHead>
+                <TableHead className="sticky left-0 bg-card z-10">Name</TableHead>
+                <TableHead className="hidden sm:table-cell">Model</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead className="text-right">Mean F1</TableHead>
                 <TableHead className="text-right">Test Acc</TableHead>
-                <TableHead className="text-right">Folds</TableHead>
+                <TableHead className="text-right hidden sm:table-cell">Folds</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.map((exp) => (
                 <TableRow key={exp.id} className="transition-colors duration-150">
-                  <TableCell>
+                  <TableCell className="sticky left-0 bg-card z-10">
                     <Link
                       to={`/experiments/${exp.id}`}
                       className="font-medium text-primary hover:underline"
@@ -83,7 +83,7 @@ export function ExperimentsPage() {
                       {exp.name}
                     </Link>
                   </TableCell>
-                  <TableCell className="font-mono text-sm">
+                  <TableCell className="font-mono text-sm hidden sm:table-cell">
                     {exp.model_variant ?? "—"}
                   </TableCell>
                   <TableCell>
@@ -108,7 +108,7 @@ export function ExperimentsPage() {
                       ? `${(exp.test_accuracy * 100).toFixed(2)}%`
                       : "—"}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right hidden sm:table-cell">
                     {exp.num_folds ?? "—"}
                   </TableCell>
                 </TableRow>
