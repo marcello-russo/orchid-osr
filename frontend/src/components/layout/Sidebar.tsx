@@ -53,7 +53,7 @@ export function Sidebar({ isDesktop }: SidebarProps) {
       {!isDesktop && (
         <div className="flex h-14 items-center border-b border-border px-4">
           <span className="font-mono font-bold text-primary text-lg">
-            Navigation
+            🌸 OrchID
           </span>
         </div>
       )}
