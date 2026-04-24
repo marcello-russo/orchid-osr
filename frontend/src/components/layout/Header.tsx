@@ -18,7 +18,9 @@ export function Header({ isDesktop }: HeaderProps) {
         <button
           onClick={toggleSidebar}
           className="flex items-center justify-center rounded-md p-2 text-muted-foreground hover:text-foreground transition-colors"
-          aria-label="Toggle navigation menu"
+          aria-label={sidebarOpen ? "Close navigation menu" : "Open navigation menu"}
+          aria-expanded={sidebarOpen}
+          aria-controls="mobile-sidebar"
         >
           <Menu className="size-5" />
         </button>

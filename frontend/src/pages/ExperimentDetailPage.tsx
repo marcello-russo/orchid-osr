@@ -284,21 +284,21 @@ function BaselineResults({ metrics }: { metrics: TestMetrics }) {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="sticky left-0 bg-card z-10">Class</TableHead>
+                  <TableHead className="sticky left-0 bg-card z-10 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.08)]">Class</TableHead>
                   <TableHead className="text-right">Precision</TableHead>
                   <TableHead className="text-right">Recall</TableHead>
                   <TableHead className="text-right">F1</TableHead>
-                  <TableHead className="text-right hidden sm:table-cell">Support</TableHead>
+                  <TableHead className="text-right whitespace-nowrap">Support</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {metrics.per_class!.map((c) => (
                   <TableRow key={c.class}>
-                    <TableCell className="font-medium sticky left-0 bg-card z-10">{c.class}</TableCell>
+                    <TableCell className="font-medium sticky left-0 bg-card z-10 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.08)]">{c.class}</TableCell>
                     <TableCell className="text-right font-mono">{(c.precision * 100).toFixed(2)}%</TableCell>
                     <TableCell className="text-right font-mono">{(c.recall * 100).toFixed(2)}%</TableCell>
                     <TableCell className="text-right font-mono">{(c.f1 * 100).toFixed(2)}%</TableCell>
-                    <TableCell className="text-right hidden sm:table-cell">{c.support}</TableCell>
+                    <TableCell className="text-right whitespace-nowrap">{c.support}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

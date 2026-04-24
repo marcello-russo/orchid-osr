@@ -1,5 +1,6 @@
 // frontend/src/components/layout/Layout.tsx
 
+import { useEffect, useCallback } from "react";
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
@@ -14,7 +15,7 @@ export function Layout() {
   return (
     <div className="min-h-screen bg-background">
       {isDesktop ? (
-        <Sidebar />
+        <Sidebar isDesktop />
       ) : (
         <MobileOverlay />
       )}
@@ -40,6 +41,22 @@ export function Layout() {
 function MobileOverlay() {
   const { sidebarOpen, setSidebarOpen } = useAppStore();
 
+  // Lock body scroll when drawer is open
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.style.overflow = "hidden";
+      return () => { document.body.style.overflow = ""; };
+    }
+  }, [sidebarOpen]);
+
+  // Close on Escape key
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "Escape") setSidebarOpen(false);
+    },
+    [setSidebarOpen]
+  );
+
   return (
     <>
       {sidebarOpen && (
@@ -49,12 +66,17 @@ function MobileOverlay() {
         />
       )}
       <div
+        id="mobile-sidebar"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Navigation"
+        onKeyDown={handleKeyDown}
         className={cn(
           "fixed left-0 top-0 z-50 h-full w-72 bg-card shadow-xl transition-transform duration-200 ease-out",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <Sidebar />
+        <Sidebar isDesktop={false} />
       </div>
     </>
   );
