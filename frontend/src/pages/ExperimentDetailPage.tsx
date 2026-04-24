@@ -44,7 +44,7 @@ export function ExperimentDetailPage() {
       <div className="space-y-4">
         <Skeleton className="h-8 w-64" />
         <Skeleton className="h-4 w-96" />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Skeleton className="h-[350px] rounded-lg" />
           <Skeleton className="h-[350px] rounded-lg" />
         </div>
@@ -169,13 +169,13 @@ function ChartCarousel({ folds, selectedFold, meanF1, stdF1, confusionMatrix }: 
   return (
     <div className="space-y-3">
       {/* Nav bar — chip buttons */}
-      <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex items-center gap-2 overflow-x-auto scrollbar-none">
         <Button
           variant="ghost"
           size="icon-sm"
           onClick={() => setActive((a) => clamp(a - 1))}
           disabled={active === 0}
-          className="shrink-0"
+          className="shrink-0 hidden sm:flex"
         >
           <ChevronLeft className="size-4" />
         </Button>
@@ -184,7 +184,7 @@ function ChartCarousel({ folds, selectedFold, meanF1, stdF1, confusionMatrix }: 
             key={i}
             onClick={() => setActive(i)}
             className={cn(
-              "rounded-full px-3 py-1 text-xs font-medium transition-colors whitespace-nowrap",
+              "shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap min-h-[44px]",
               i === active
                 ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground bg-muted/50 hover:bg-muted"
@@ -198,7 +198,7 @@ function ChartCarousel({ folds, selectedFold, meanF1, stdF1, confusionMatrix }: 
           size="icon-sm"
           onClick={() => setActive((a) => clamp(a + 1))}
           disabled={active >= total - 1}
-          className="shrink-0"
+          className="shrink-0 hidden sm:flex"
         >
           <ChevronRight className="size-4" />
         </Button>
@@ -284,21 +284,21 @@ function BaselineResults({ metrics }: { metrics: TestMetrics }) {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Class</TableHead>
+                  <TableHead className="sticky left-0 bg-card z-10">Class</TableHead>
                   <TableHead className="text-right">Precision</TableHead>
                   <TableHead className="text-right">Recall</TableHead>
                   <TableHead className="text-right">F1</TableHead>
-                  <TableHead className="text-right">Support</TableHead>
+                  <TableHead className="text-right hidden sm:table-cell">Support</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {metrics.per_class!.map((c) => (
                   <TableRow key={c.class}>
-                    <TableCell className="font-medium">{c.class}</TableCell>
+                    <TableCell className="font-medium sticky left-0 bg-card z-10">{c.class}</TableCell>
                     <TableCell className="text-right font-mono">{(c.precision * 100).toFixed(2)}%</TableCell>
                     <TableCell className="text-right font-mono">{(c.recall * 100).toFixed(2)}%</TableCell>
                     <TableCell className="text-right font-mono">{(c.f1 * 100).toFixed(2)}%</TableCell>
-                    <TableCell className="text-right">{c.support}</TableCell>
+                    <TableCell className="text-right hidden sm:table-cell">{c.support}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
