@@ -30,7 +30,7 @@ jobs:
           import os
           api = HfApi(token=os.environ['HF_TOKEN'])
           api.upload_folder(
-              folder_path='resnet18',
+              folder_path='.',
               repo_id='marcellorusso/orchid-ncd',
               repo_type='space',
               commit_message=f'Sync from GitHub: {os.environ.get(\"GITHUB_SHA\", \"manual\")[:7]}',
