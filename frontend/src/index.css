@@ -61,6 +61,17 @@
   }
 }
 
+/* Recharts tooltip — respects light/dark theme */
+.recharts-tooltip-wrapper .recharts-default-tooltip {
+  background-color: var(--popover) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 8px;
+  font-size: 13px;
+  padding: 8px 12px;
+  color: var(--foreground);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
 @layer base {
   :root {
     --background: oklch(1 0 0);

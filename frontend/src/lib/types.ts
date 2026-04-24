@@ -97,3 +97,46 @@ export interface ExperimentDetail {
     test_f1: number | null;
   };
 }
+
+// Classification types
+
+export interface TopPrediction {
+  species: string;
+  confidence: number;
+}
+
+export interface ClassifyUploadResponse {
+  top_predictions: TopPrediction[];
+  predicted_species: string;
+  confidence: number;
+}
+
+export interface ExplainResponse {
+  heatmap_base64: string;
+  predicted_species: string;
+  confidence: number;
+}
+
+// Species / Dataset types
+
+export interface SpeciesInfo {
+  name: string;
+  image_count: number;
+}
+
+export interface SpeciesListResponse {
+  species: SpeciesInfo[];
+  total_images: number;
+  total_species: number;
+}
+
+// Model selection
+
+export interface ModelOption {
+  id: string;
+  name: string;
+  model_variant: string;
+  mean_f1: number | null;
+  test_accuracy: number | null;
+  num_folds: number | null;
+}

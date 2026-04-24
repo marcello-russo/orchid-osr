@@ -3,5 +3,6 @@
   "name": "exp2_privato_internet_raw",
   "train": "privato",
   "test": "internet_raw",
+  "model_variant": "resnet18",
   "timestamp": "2026-03-10T20:39:32.312211"
 }

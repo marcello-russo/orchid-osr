@@ -1,14 +1,17 @@
 # app/api/deps.py
-from functools import lru_cache
+from collections import OrderedDict
 from pathlib import Path
+import json
 import logging
 import torch
 from app.config import settings
 from app.core.models.resnet import ResNetConfig, ResNetClassifier
+from app.api.schemas import ModelOption
 
 logger = logging.getLogger(__name__)
 
 VALID_MODEL_TYPES = ("resnet18", "resnet50")
+MAX_CACHED_MODELS = 5
 
 # Class names for prediction
 CLASS_NAMES = [
@@ -21,34 +24,102 @@ CLASS_NAMES = [
 ]
 
 
-@lru_cache()
-def get_device() -> torch.device:
+def _get_device() -> torch.device:
     """Get available device."""
     return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
+# Public alias for backward compatibility
+get_device = _get_device
+
+
+def _safe_json_load(path: Path) -> dict | None:
+    """Load JSON with error handling."""
+    try:
+        with open(path) as f:
+            return json.load(f)
+    except Exception:
+        return None
+
+
+def _get_mean_f1(results: dict) -> float | None:
+    """Get mean_f1 with fallback to test_metrics.f1_macro."""
+    return results.get("mean_f1") or results.get("test_metrics", {}).get("f1_macro")
+
+
+def _discover_models() -> list[ModelOption]:
+    """Discover all trained models with weights and metrics."""
+    experiments_dir = Path(settings.results_dir)
+    options: list[ModelOption] = []
+
+    for results_json in sorted(experiments_dir.rglob("results.json")):
+        results = _safe_json_load(results_json)
+        if results is None:
+            continue
+
+        parent = results_json.parent
+        best_fold = results.get("best_fold")
+        if best_fold is None:
+            continue
+        candidate = parent / f"best_fold_{best_fold - 1}.pt"
+        if not candidate.exists():
+            continue
+
+        exp_id = parent.name
+        mv = results.get("model_variant", "resnet18")
+        tm = results.get("test_metrics", {})
+
+        options.append(ModelOption(
+            id=exp_id,
+            name=exp_id.replace("_", " ").replace("exp4 ", ""),
+            model_variant=mv,
+            mean_f1=_get_mean_f1(results),
+            test_accuracy=tm.get("accuracy") if tm else None,
+            num_folds=results.get("num_folds"),
+        ))
+
+    options.sort(key=lambda m: m.mean_f1 or 0, reverse=True)
+    return options
+
+
+def get_model_options() -> list[ModelOption]:
+    """Get list of available models for classification."""
+    return _discover_models()
+
+
+def _validate_model_id(model_id: str) -> str:
+    """Sanitize model_id to prevent path traversal."""
+    if ".." in model_id or "/" in model_id or "\\" in model_id:
+        raise ValueError(f"Invalid model_id: {model_id}")
+    return model_id
+
+
 def _find_weights(model_type: str) -> Path | None:
     """Find best available trained weights for a model type."""
+    experiments_dir = Path(settings.results_dir)
     models_dir = Path(settings.models_dir)
 
-    # Prefer best fold weights from k-fold experiments
-    for exp_dir in sorted(models_dir.glob("*")):
-        if not exp_dir.is_dir():
+    best_score = -1.0
+    best_path: Path | None = None
+    for results_json in experiments_dir.rglob(f"*_kfold_{model_type}/results.json"):
+        results = _safe_json_load(results_json)
+        if results is None:
             continue
-        # Check k-fold results for best fold
-        for kfold_dir in sorted(exp_dir.glob(f"*kfold_{model_type}")):
-            results_json = kfold_dir / "results.json"
-            if results_json.exists():
-                import json
-                with open(results_json) as f:
-                    results = json.load(f)
-                if "best_model_path" in results:
-                    path = Path(results["best_model_path"])
-                    if path.exists():
-                        logger.info(f"Loading best k-fold weights: {path}")
-                        return path
 
-    # Fallback: standard trained model
+        parent = results_json.parent
+        best_fold = results.get("best_fold")
+        if best_fold is not None:
+            candidate = parent / f"best_fold_{best_fold - 1}.pt"
+            if candidate.exists():
+                score = _get_mean_f1(results) or 0
+                if score > best_score:
+                    best_score = score
+                    best_path = candidate
+
+    if best_path:
+        logger.info(f"Loading best k-fold weights: {best_path} (F1={best_score:.4f})")
+        return best_path
+
     for subdir in sorted(models_dir.glob(f"train_*_{model_type}")):
         model_path = subdir / "model.pt"
         if model_path.exists():
@@ -58,26 +129,60 @@ def _find_weights(model_type: str) -> Path | None:
     return None
 
 
-@lru_cache()
-def get_model(model_type: str = "resnet18") -> ResNetClassifier:
-    """
-    Load and cache model with trained weights if available.
+def _find_weights_by_id(model_id: str) -> tuple[Path, str] | None:
+    """Find weights for a specific experiment ID. Returns (path, model_variant)."""
+    model_id = _validate_model_id(model_id)
+    experiments_dir = Path(settings.results_dir)
+    results_json = experiments_dir / model_id / "results.json"
+    if not results_json.exists():
+        return None
 
-    Falls back to ImageNet pretrained weights if no trained model found.
-    """
-    if model_type not in VALID_MODEL_TYPES:
-        raise ValueError(f"Unknown model type: {model_type}. Valid: {VALID_MODEL_TYPES}")
+    results = _safe_json_load(results_json)
+    if results is None:
+        return None
+
+    best_fold = results.get("best_fold")
+    if best_fold is None:
+        return None
+
+    candidate = results_json.parent / f"best_fold_{best_fold - 1}.pt"
+    if not candidate.exists():
+        return None
+
+    return candidate, results.get("model_variant", "resnet18")
+
+
+# LRU-style cache for loaded models
+_model_cache: OrderedDict[str, ResNetClassifier] = OrderedDict()
+
+
+def get_model(model_type: str = "resnet18", model_id: str | None = None) -> ResNetClassifier:
+    """Load and cache model. If model_id given, load that specific experiment's weights."""
+    if model_id:
+        result = _find_weights_by_id(model_id)
+        if result is None:
+            raise ValueError(f"No weights found for experiment: {model_id}")
+        weights_path, variant = result
+        cache_key = f"{model_id}:{weights_path}"
+    else:
+        if model_type not in VALID_MODEL_TYPES:
+            raise ValueError(f"Unknown model type: {model_type}. Valid: {VALID_MODEL_TYPES}")
+        variant = model_type
+        weights_path = _find_weights(model_type)
+        cache_key = f"{model_type}:{weights_path}"
+
+    if cache_key in _model_cache:
+        _model_cache.move_to_end(cache_key)
+        return _model_cache[cache_key]
 
     config = ResNetConfig(
-        variant=model_type,
+        variant=variant,
         num_classes=settings.num_classes,
         pretrained=True
     )
 
     model = ResNetClassifier(config)
 
-    # Try loading trained weights
-    weights_path = _find_weights(model_type)
     if weights_path:
         model.load_weights(str(weights_path))
         logger.info(f"Loaded trained weights from {weights_path}")
@@ -85,8 +190,12 @@ def get_model(model_type: str = "resnet18") -> ResNetClassifier:
         logger.warning(f"No trained weights found for {model_type}, using ImageNet pretrained")
 
     model.eval()
-
-    device = get_device()
+    device = _get_device()
     model = model.to(device)
 
+    if len(_model_cache) >= MAX_CACHED_MODELS:
+        evicted_key, evicted = _model_cache.popitem(last=False)
+        logger.info(f"Evicted model from cache: {evicted_key}")
+
+    _model_cache[cache_key] = model
     return model

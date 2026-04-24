@@ -3,5 +3,6 @@
   "name": "exp1_privato_privato",
   "train": "privato",
   "test": "privato",
+  "model_variant": "resnet18",
   "timestamp": "2026-03-10T20:18:34.018114"
 }

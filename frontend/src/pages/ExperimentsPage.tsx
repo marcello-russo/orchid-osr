@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { FlaskConical } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -35,8 +36,8 @@ export function ExperimentsPage() {
               className={cn(
                 "rounded-md px-3 py-1 text-sm font-medium transition-colors duration-150",
                 filter === f
-                  ? "bg-primary text-white"
-                  : "text-muted-foreground hover:bg-muted"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground bg-muted/50 hover:bg-muted"
               )}
             >
               {f === "all" ? "All" : f === "kfold" ? "K-Fold" : "Baseline"}
@@ -50,6 +51,13 @@ export function ExperimentsPage() {
           {[1, 2, 3, 4].map((i) => (
             <Skeleton key={i} className="h-12 w-full rounded-lg" />
           ))}
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+          <FlaskConical className="mb-3 size-10 opacity-30" />
+          <p className="text-sm">
+            {filter !== "all" ? `No ${filter} experiments found.` : "No experiments found."}
+          </p>
         </div>
       ) : (
         <div className="rounded-lg border border-border">
@@ -92,12 +100,12 @@ export function ExperimentsPage() {
                   </TableCell>
                   <TableCell className="text-right font-mono">
                     {exp.mean_f1 !== null
-                      ? `${(exp.mean_f1 * 100).toFixed(1)}%`
+                      ? `${(exp.mean_f1 * 100).toFixed(2)}%`
                       : "—"}
                   </TableCell>
                   <TableCell className="text-right font-mono">
                     {exp.test_accuracy !== null
-                      ? `${(exp.test_accuracy * 100).toFixed(1)}%`
+                      ? `${(exp.test_accuracy * 100).toFixed(2)}%`
                       : "—"}
                   </TableCell>
                   <TableCell className="text-right">
