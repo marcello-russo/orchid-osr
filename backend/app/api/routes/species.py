@@ -12,7 +12,7 @@ router = APIRouter()
 _IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
 
 # Pre-computed species counts (shipped with the app)
-_COUNTS_FILE = Path(__file__).resolve().parent.parent / "data" / "species_counts.json"
+_COUNTS_FILE = Path(__file__).resolve().parent.parent.parent / "data" / "species_counts.json"
 
 
 def _get_dataset_dir() -> Path:
