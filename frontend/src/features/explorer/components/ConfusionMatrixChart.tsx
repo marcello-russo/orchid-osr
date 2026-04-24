@@ -1,5 +1,6 @@
 // frontend/src/features/explorer/components/ConfusionMatrixChart.tsx
 
+import { useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import {
@@ -8,6 +9,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useChartSize } from "@/features/explorer/hooks/useChartSize";
 
 interface ConfusionMatrixChartProps {
   matrix: number[][];
@@ -15,12 +17,19 @@ interface ConfusionMatrixChartProps {
 }
 
 export function ConfusionMatrixChart({ matrix, labels }: ConfusionMatrixChartProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { width } = useChartSize(containerRef);
+
   if (!matrix.length) return null;
 
   const maxVal = Math.max(...matrix.flat());
-  const cellW = 150;
-  const cellH = 80;
-  const labelW = 200;
+  const numCols = labels.length;
+
+  // Dynamic sizing based on container width
+  const labelW = width < 500 ? 100 : width < 700 ? 140 : 200;
+  const availableWidth = Math.max(width - labelW - 16, 200);
+  const cellW = Math.max(Math.floor(availableWidth / numCols), 40);
+  const cellH = width < 500 ? 50 : width < 700 ? 60 : 80;
 
   return (
     <Card>
@@ -29,13 +38,13 @@ export function ConfusionMatrixChart({ matrix, labels }: ConfusionMatrixChartPro
       </CardHeader>
       <CardContent>
         <TooltipProvider>
-          <div className="overflow-x-auto">
+          <div ref={containerRef} className="overflow-x-auto">
             {/* Column headers */}
             <div className="flex" style={{ paddingLeft: labelW + 8 }}>
               {labels.map((label) => (
                 <div
                   key={label}
-                  className="text-sm text-muted-foreground text-center"
+                  className="text-xs sm:text-sm text-muted-foreground text-center overflow-hidden"
                   style={{ width: cellW, minWidth: cellW }}
                 >
                   {label.replace("O. ", "")}
@@ -48,7 +57,7 @@ export function ConfusionMatrixChart({ matrix, labels }: ConfusionMatrixChartPro
               <div key={i} className="flex items-center">
                 {/* Row label */}
                 <div
-                  className="text-sm text-muted-foreground text-right pr-2"
+                  className="text-xs sm:text-sm text-muted-foreground text-right pr-2 overflow-hidden"
                   style={{ width: labelW, minWidth: labelW }}
                 >
                   {labels[i].replace("O. ", "")}
@@ -65,7 +74,7 @@ export function ConfusionMatrixChart({ matrix, labels }: ConfusionMatrixChartPro
                         <div
                           style={{ width: cellW, minWidth: cellW, height: cellH }}
                           className={cn(
-                            "flex items-center justify-center text-sm font-mono border border-border transition-colors duration-150 cursor-default",
+                            "flex items-center justify-center text-xs sm:text-sm font-mono border border-border transition-colors duration-150 cursor-default",
                             isCorrect && intensity > 0.7
                               ? "bg-primary/30 text-primary font-bold"
                               : intensity > 0.1
