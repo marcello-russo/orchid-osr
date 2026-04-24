@@ -45,7 +45,7 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <h1 className="text-2xl font-semibold text-primary">🌸 Dashboard</h1>
+      <h1 className="text-2xl font-bold text-primary">🌸 Dashboard</h1>
 
       {/* KPI Row */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -94,7 +94,7 @@ export function DashboardPage() {
         <div>
           <button
             onClick={() => setDatasetOpen((o) => !o)}
-            className="mb-3 flex items-center gap-1 text-lg font-medium transition-colors hover:text-primary"
+            className="mb-4 flex items-center gap-1 text-lg font-medium transition-colors hover:text-primary"
           >
             {datasetOpen ? (
               <ChevronDown className="size-5" />
@@ -140,7 +140,7 @@ export function DashboardPage() {
 
       {/* Recent Experiments */}
       <div>
-        <h2 className="mb-3 text-lg font-medium">Recent Experiments</h2>
+        <h2 className="mb-4 text-lg font-semibold">Recent Experiments</h2>
         {expLoading ? (
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3].map((i) => (
