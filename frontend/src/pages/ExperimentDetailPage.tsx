@@ -261,7 +261,7 @@ function BaselineResults({ metrics }: { metrics: TestMetrics }) {
           <CardContent className="pt-4">
             <div ref={chartRef} style={{ width: "100%", height }}>
               <BarChart data={classData} width={width} height={height}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />
                 <XAxis dataKey="name" tick={{ fontSize: 13 }} />
                 <YAxis type="number" domain={[0, 1]} tick={{ fontSize: 14 }} tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`} />
                 <Tooltip formatter={(value) => (Number(value) * 100).toFixed(2) + "%"} />
