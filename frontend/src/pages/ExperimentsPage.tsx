@@ -26,15 +26,15 @@ export function ExperimentsPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold text-primary">🧪 Experiments</h1>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {(["all", "kfold", "baseline"] as const).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
               className={cn(
-                "rounded-lg px-4 py-2 text-sm font-medium transition-colors duration-150 min-h-[44px]",
+                "rounded-lg px-4 py-2 text-sm font-medium transition-colors duration-150",
                 filter === f
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground bg-muted/50 hover:bg-muted"
@@ -60,30 +60,30 @@ export function ExperimentsPage() {
           </p>
         </div>
       ) : (
-        <div className="rounded-lg border border-border">
+        <div className="overflow-x-auto rounded-lg border border-border">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="sticky left-0 bg-card z-10 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.08)]">Name</TableHead>
-                <TableHead className="whitespace-nowrap">Model</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Model</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead className="text-right">Mean F1</TableHead>
                 <TableHead className="text-right">Test Acc</TableHead>
-                <TableHead className="text-right whitespace-nowrap">Folds</TableHead>
+                <TableHead className="text-right">Folds</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.map((exp) => (
                 <TableRow key={exp.id} className="transition-colors duration-150">
-                  <TableCell className="sticky left-0 bg-card z-10 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.08)]">
+                  <TableCell className="font-medium">
                     <Link
                       to={`/experiments/${exp.id}`}
-                      className="font-medium text-primary hover:underline"
+                      className="text-primary hover:underline"
                     >
                       {exp.name}
                     </Link>
                   </TableCell>
-                  <TableCell className="font-mono text-sm whitespace-nowrap">
+                  <TableCell className="font-mono text-sm">
                     {exp.model_variant ?? "—"}
                   </TableCell>
                   <TableCell>
@@ -108,7 +108,7 @@ export function ExperimentsPage() {
                       ? `${(exp.test_accuracy * 100).toFixed(2)}%`
                       : "—"}
                   </TableCell>
-                  <TableCell className="text-right whitespace-nowrap">
+                  <TableCell className="text-right">
                     {exp.num_folds ?? "—"}
                   </TableCell>
                 </TableRow>
