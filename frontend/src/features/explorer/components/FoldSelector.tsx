@@ -15,7 +15,7 @@ export function FoldSelector({ folds, selectedFold, onSelect }: FoldSelectorProp
       value={selectedFold === null ? "all" : String(selectedFold)}
       onValueChange={(v) => onSelect(v === "all" ? null : Number(v))}
     >
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto overflow-y-hidden">
         <TabsList className="w-max">
           <TabsTrigger value="all">All Folds</TabsTrigger>
           {folds.map((f, i) => (
