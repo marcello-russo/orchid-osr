@@ -21,6 +21,7 @@ interface AppState {
   sidebarOpen: boolean;
   toggleTheme: () => void;
   setSidebarOpen: (open: boolean) => void;
+  toggleSidebar: () => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -36,6 +37,8 @@ export const useAppStore = create<AppState>()(
       },
 
       setSidebarOpen: (open) => set({ sidebarOpen: open }),
+
+      toggleSidebar: () => set({ sidebarOpen: !get().sidebarOpen }),
     }),
     {
       name: "orchid-app-store",

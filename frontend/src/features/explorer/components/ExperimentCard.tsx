@@ -18,14 +18,14 @@ export function ExperimentCard({ experiment }: ExperimentCardProps) {
     <Link to={`/experiments/${experiment.id}`}>
       <Card className="transition-colors duration-150 hover:border-primary/30">
         <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-medium truncate">
+          <div className="flex items-start justify-between gap-2">
+            <CardTitle className="text-sm font-medium break-all">
               {experiment.name}
             </CardTitle>
             <Badge
               variant={isKfold ? "default" : "secondary"}
               className={cn(
-                "text-xs",
+                "text-xs shrink-0",
                 isKfold && "bg-primary/10 text-primary hover:bg-primary/20"
               )}
             >
@@ -34,7 +34,7 @@ export function ExperimentCard({ experiment }: ExperimentCardProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
             {experiment.model_variant && (
               <span className="flex items-center gap-1">
                 <FlaskConical className="h-3 w-3" />

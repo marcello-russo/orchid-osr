@@ -9,8 +9,9 @@ interface ChartSize {
 const DEFAULT: ChartSize = { width: 800, height: 600 };
 
 function computeHeight(width: number): number {
-  if (width < 640) return 400;
-  return 600;
+  if (width < 480) return 250;
+  if (width < 640) return 300;
+  return 450;
 }
 
 export function useChartSize(containerRef: RefObject<HTMLDivElement | null>): ChartSize {

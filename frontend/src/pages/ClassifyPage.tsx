@@ -112,7 +112,7 @@ export function ClassifyPage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-primary">
+        <h1 className="text-2xl font-bold text-primary">
           🔍 Classify
         </h1>
         {file && (
@@ -128,7 +128,7 @@ export function ClassifyPage() {
           onDrop={onDrop}
           onDragOver={onDragOver}
           onClick={() => inputRef.current?.click()}
-          className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-border py-20 transition-colors hover:border-primary/50 hover:bg-muted/30"
+          className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-border py-12 sm:py-20 transition-colors hover:border-primary/50 hover:bg-muted/30"
         >
           <Upload className="mb-3 size-12 text-muted-foreground" />
           <p className="text-lg font-medium text-muted-foreground">
@@ -203,7 +203,7 @@ export function ClassifyPage() {
                             setShowHeatmap(false);
                           }}
                           className={cn(
-                            "rounded-md px-2 py-1 text-xs font-medium transition-colors",
+                            "rounded-lg px-3 py-2 text-xs font-medium transition-colors min-h-[44px]",
                             selectedModelId === m.id
                               ? "bg-primary text-primary-foreground"
                               : "text-muted-foreground bg-muted/50 hover:bg-muted"
