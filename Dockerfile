@@ -23,7 +23,7 @@ RUN pip install --no-cache-dir huggingface_hub
 
 COPY backend/app/ app/
 COPY backend/server.py .
-COPY backend/experiments/ experiments/
+RUN mkdir -p experiments
 COPY entrypoint.sh .
 RUN chmod +x entrypoint.sh
 
