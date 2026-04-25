@@ -4,7 +4,6 @@ import io
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 import torch
 from PIL import Image
-from torchvision import transforms as T
 
 from app.api.schemas import (
     ClassifyRequest,
@@ -15,12 +14,8 @@ from app.api.schemas import (
     TopPrediction,
 )
 from app.api.deps import get_model, get_device, get_model_options, CLASS_NAMES
-from app.config import settings
-from app.preprocessing.normalization import get_mean, get_std
+from app.core.models import create_transform, available_models, get_registry_entry
 
-# Image dimensions (same as training pipeline)
-IMG_WIDTH = settings.img_width
-IMG_HEIGHT = settings.img_height
 MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10 MB
 ALLOWED_MIME_TYPES = {"image/jpeg", "image/png", "image/webp", "image/bmp"}
 
@@ -33,18 +28,7 @@ async def list_models():
     return ModelListResponse(models=get_model_options())
 
 
-def _get_preprocess():
-    """Build preprocessing pipeline matching training."""
-    mean = get_mean()
-    std = get_std()
-    return T.Compose([
-        T.Resize((IMG_HEIGHT, IMG_WIDTH)),
-        T.ToTensor(),
-        T.Normalize(mean=mean, std=std),
-    ])
-
-
-def _read_upload_image(file: UploadFile) -> tuple[torch.Tensor, Image.Image]:
+def _read_upload_image(file: UploadFile, model_type: str) -> tuple[torch.Tensor, Image.Image]:
     """Read an uploaded file into (preprocessed tensor, original PIL Image)."""
     if file.content_type and file.content_type not in ALLOWED_MIME_TYPES:
         raise HTTPException(status_code=400, detail=f"Unsupported file type: {file.content_type}")
@@ -54,7 +38,7 @@ def _read_upload_image(file: UploadFile) -> tuple[torch.Tensor, Image.Image]:
         if len(image_bytes) > MAX_UPLOAD_SIZE:
             raise HTTPException(status_code=400, detail=f"File too large (max {MAX_UPLOAD_SIZE // 1024 // 1024}MB)")
         pil_image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-        preprocess = _get_preprocess()
+        preprocess = create_transform(model_type)
         tensor = preprocess(pil_image).unsqueeze(0)
         return tensor, pil_image
     except HTTPException:
@@ -63,7 +47,7 @@ def _read_upload_image(file: UploadFile) -> tuple[torch.Tensor, Image.Image]:
         raise HTTPException(status_code=400, detail="Invalid image file")
 
 
-def decode_base64_image(image_base64: str) -> torch.Tensor:
+def decode_base64_image(image_base64: str, model_type: str) -> torch.Tensor:
     """Decode base64 image to tensor."""
     try:
         # Remove data URL prefix if present
@@ -75,7 +59,7 @@ def decode_base64_image(image_base64: str) -> torch.Tensor:
         image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
 
         # Preprocess
-        preprocess = _get_preprocess()
+        preprocess = create_transform(model_type)
         tensor = preprocess(image)
         return tensor.unsqueeze(0)  # Add batch dimension
 
@@ -95,11 +79,15 @@ async def classify_image(request: ClassifyRequest):
         ClassifyResponse with predicted class and probabilities
     """
     # Get model and device
-    model = get_model(request.model_type)
+    model_type = request.model_type
+    valid = available_models()
+    if model_type not in valid:
+        raise HTTPException(status_code=400, detail=f"Unknown model type: {model_type}. Available: {valid}")
+    model = get_model(model_type)
     device = get_device()
 
     # Decode and preprocess image
-    image_tensor = decode_base64_image(request.image_base64)
+    image_tensor = decode_base64_image(request.image_base64, model_type)
     image_tensor = image_tensor.to(device)
 
     # Run inference
@@ -127,9 +115,11 @@ async def classify_image(request: ClassifyRequest):
 @router.post("/classify/upload", response_model=ClassifyUploadResponse)
 async def classify_upload(file: UploadFile = File(...), model_id: str = Form(None)):
     """Classify an orchid image uploaded as multipart form data."""
-    image_tensor, _ = _read_upload_image(file)
-
+    # Load model first to determine model_type for correct transform
     model = get_model(model_id=model_id) if model_id else get_model("resnet18")
+    model_type = model.model_name
+
+    image_tensor, _ = _read_upload_image(file, model_type)
     device = get_device()
     image_tensor = image_tensor.to(device)
 
@@ -169,13 +159,15 @@ async def explain_image(file: UploadFile = File(...), model_id: str = Form(None)
         compute_occlusion,
         _normalize_attr,
     )
-    from app.preprocessing.normalization import denormalize_image, get_mean, get_std
+    from app.preprocessing.normalization import denormalize_image
 
     plt.close("all")
 
-    image_tensor, _ = _read_upload_image(file)
-
+    # Load model first to determine model_type for correct transform
     model = get_model(model_id=model_id) if model_id else get_model("resnet18")
+    model_type = model.model_name
+
+    image_tensor, _ = _read_upload_image(file, model_type)
     device = get_device()
     image_tensor = image_tensor.to(device)
     model.eval()
@@ -200,8 +192,9 @@ async def explain_image(file: UploadFile = File(...), model_id: str = Form(None)
     norm_attr = _normalize_attr(label_attributions, sign="all", outlier_perc=2, reduction_axis=2)
     del label_attributions
 
+    entry = get_registry_entry(model_type)
     image_np = denormalize_image(
-        image_tensor.squeeze(0), get_mean(), get_std()
+        image_tensor.squeeze(0), entry.norm_mean, entry.norm_std
     ).cpu().numpy().transpose(1, 2, 0)
     del image_tensor
 
