@@ -226,7 +226,7 @@ interface TestMetrics {
   f1_macro: number;
   precision_macro?: number;
   recall_macro?: number;
-  per_class?: { class: string; precision: number; recall: number; f1: number; support: number }[];
+  per_class_metrics?: Record<string, { precision: number; recall: number; f1: number; support: number }>;
 }
 
 function BaselineResults({ metrics }: { metrics: TestMetrics }) {
@@ -234,12 +234,11 @@ function BaselineResults({ metrics }: { metrics: TestMetrics }) {
   const { width, height } = useChartSize(chartRef);
   const chartColors = useChartColors();
 
-  const classData = (metrics.per_class ?? []).map((c, i) => ({
-    name: c.class.replace("O. ", ""),
+  const classData = Object.entries(metrics.per_class_metrics ?? {}).map(([className, c]) => ({
+    name: className.replace("O. ", ""),
     F1: c.f1,
     Precision: c.precision,
     Recall: c.recall,
-    fill: chartColors[i % chartColors.length],
   }));
 
   return (
@@ -292,9 +291,9 @@ function BaselineResults({ metrics }: { metrics: TestMetrics }) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {metrics.per_class!.map((c) => (
-                  <TableRow key={c.class}>
-                    <TableCell className="font-medium">{c.class}</TableCell>
+                {Object.entries(metrics.per_class_metrics!).map(([className, c]) => (
+                  <TableRow key={className}>
+                    <TableCell className="font-medium">{className}</TableCell>
                     <TableCell className="text-right font-mono">{(c.precision * 100).toFixed(2)}%</TableCell>
                     <TableCell className="text-right font-mono">{(c.recall * 100).toFixed(2)}%</TableCell>
                     <TableCell className="text-right font-mono">{(c.f1 * 100).toFixed(2)}%</TableCell>

@@ -3,37 +3,9 @@ from pathlib import Path
 
 import torch
 import torchvision.transforms as T
-from dotenv import dotenv_values, set_key
+from dotenv import set_key
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
-# Hardcoded defaults (balanced dataset 256x512) — used when .env is missing
-_DEFAULT_MEAN = [0.5364, 0.5518, 0.3866]
-_DEFAULT_STD = [0.2045, 0.2296, 0.2025]
-
-# WIDTH = int(config['WIDTH'])
-# HEIGHT = int(config['HEIGHT'])
-# MEAN = [float(x) for x in config['MEAN'].split()]
-# STD = [float(x) for x in config['STD'].split()]
-
-# STANDARD_STATS = {
-#     # '256x512': { # FULL DATASET
-#     #     'mean': [0.5363, 0.5478, 0.3813],  #rgb(137, 140, 97) HEX: #898C61
-#     #     'std': [0.2073, 0.2317, 0.2043]
-#     # },
-#     '256x512': { # BALANCED DATASET
-#         'mean': [0.5364, 0.5518, 0.3866],  #rgb(136, 140, 98) HEX: #888C62
-#         'std': [0.2045, 0.2296, 0.2025]
-#     },
-#     '128x256': {
-#         'mean': [0.5363, 0.5478, 0.3814],
-#         'std': [0.2060, 0.2303, 0.2028]
-#     },
-#     '64x128': {
-#         'mean': [0.5363, 0.5479, 0.3814],
-#         'std': [0.2037, 0.2281, 0.1999]
-#     }
-# }
 
 
 def calculate_fresh_mean_std(loader):
@@ -47,12 +19,11 @@ def calculate_fresh_mean_std(loader):
         num_pixels_in_batch = batch_size * height * width
 
         images = images.view(batch_size, channels, -1)
-        
+
         mean += images.sum([0, 2])
         squared_sum += (images ** 2).sum([0, 2])
         total_pixels += num_pixels_in_batch
 
-        # Calculate and log the progress
         progress = (batch_idx + 1) / total_batches * 100
         logging.info(f'Processing batch {batch_idx + 1}/{total_batches} ({progress:.2f}%)')
 
@@ -60,45 +31,32 @@ def calculate_fresh_mean_std(loader):
     std = torch.sqrt(squared_sum / total_pixels - mean ** 2)
 
     logging.info(f'Mean: {mean}')
-    converto_to_rgb = lambda x: (x * 255).int().tolist()
-    logging.info(f'Mean RGB: {converto_to_rgb(mean)}')
+    logging.info(f'Mean RGB: {(mean * 255).int().tolist()}')
     logging.info(f'Std: {std}')
-    logging.info(f'Std RGB: {converto_to_rgb(std)}')
+    logging.info(f'Std RGB: {(std * 255).int().tolist()}')
     logging.info(f'Total pixels: {total_pixels}')
 
     # Save to .env (may fail in container with mounted volumes)
     try:
-        set_key('.env', 'MEAN', ' '.join([str(x.item()) for x in mean]))
-        set_key('.env', 'STD', ' '.join([str(x.item()) for x in std]))
+        set_key('.env', 'NORM_MEAN', ' '.join([str(x.item()) for x in mean]))
+        set_key('.env', 'NORM_STD', ' '.join([str(x.item()) for x in std]))
     except OSError:
         logging.warning('Could not write to .env file (mounted volume issue)')
-    
+
     mean = str(mean.tolist())
     std = str(std.tolist())
 
     return mean, std
 
 def get_mean():
-    """Get normalization mean from .env, falling back to defaults."""
-    try:
-        config = dotenv_values(".env")
-        val = config['MEAN']
-        if val is None:
-            return _DEFAULT_MEAN
-        return [float(x) for x in val.split()]
-    except (FileNotFoundError, KeyError):
-        return _DEFAULT_MEAN
+    """Get normalization mean from settings."""
+    from app.config import settings
+    return settings.get_norm_mean()
 
 def get_std():
-    """Get normalization std from .env, falling back to defaults."""
-    try:
-        config = dotenv_values(".env")
-        val = config['STD']
-        if val is None:
-            return _DEFAULT_STD
-        return [float(x) for x in val.split()]
-    except (FileNotFoundError, KeyError):
-        return _DEFAULT_STD
+    """Get normalization std from settings."""
+    from app.config import settings
+    return settings.get_norm_std()
 
 def converto_to_rgb(x):
     return (x * 255).int().tolist()
