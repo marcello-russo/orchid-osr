@@ -13,15 +13,8 @@ logger = logging.getLogger(__name__)
 VALID_MODEL_TYPES = ("resnet18", "resnet50")
 MAX_CACHED_MODELS = 5
 
-# Class names for prediction
-CLASS_NAMES = [
-    "O. exaltata",
-    "O. garganica",
-    "O. incubacea",
-    "O. majellensis",
-    "O. sphegodes",
-    "O. sphegodes_Palena"
-]
+# Class names from centralized config
+CLASS_NAMES = settings.class_names
 
 
 def _get_device() -> torch.device:

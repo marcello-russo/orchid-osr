@@ -3,6 +3,7 @@
 import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { ExperimentsPage } from "@/pages/ExperimentsPage";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -35,15 +36,15 @@ function App() {
           <Route path="/experiments" element={<ExperimentsPage />} />
           <Route
             path="/experiments/:id"
-            element={<Suspense fallback={<PageFallback />}><ExperimentDetailPage /></Suspense>}
+            element={<ErrorBoundary><Suspense fallback={<PageFallback />}><ExperimentDetailPage /></Suspense></ErrorBoundary>}
           />
           <Route
             path="/classify"
-            element={<Suspense fallback={<PageFallback />}><ClassifyPage /></Suspense>}
+            element={<ErrorBoundary><Suspense fallback={<PageFallback />}><ClassifyPage /></Suspense></ErrorBoundary>}
           />
           <Route
             path="/embeddings"
-            element={<Suspense fallback={<PageFallback />}><EmbeddingsPage /></Suspense>}
+            element={<ErrorBoundary><Suspense fallback={<PageFallback />}><EmbeddingsPage /></Suspense></ErrorBoundary>}
           />
         </Route>
       </Routes>
