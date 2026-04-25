@@ -116,7 +116,7 @@ async def classify_image(request: ClassifyRequest):
 async def classify_upload(file: UploadFile = File(...), model_id: str = Form(None)):
     """Classify an orchid image uploaded as multipart form data."""
     # Load model first to determine model_type for correct transform
-    model = get_model(model_id=model_id) if model_id else get_model("resnet18")
+    model = get_model(model_id=model_id) if model_id else get_model(available_models()[0])
     model_type = model.model_name
 
     image_tensor, _ = _read_upload_image(file, model_type)
@@ -164,7 +164,7 @@ async def explain_image(file: UploadFile = File(...), model_id: str = Form(None)
     plt.close("all")
 
     # Load model first to determine model_type for correct transform
-    model = get_model(model_id=model_id) if model_id else get_model("resnet18")
+    model = get_model(model_id=model_id) if model_id else get_model(available_models()[0])
     model_type = model.model_name
 
     image_tensor, _ = _read_upload_image(file, model_type)

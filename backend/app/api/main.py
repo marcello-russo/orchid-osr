@@ -9,7 +9,7 @@ from app.api.routes import health, classify, experiments, species
 
 app = FastAPI(
     title="Orchid Classification API",
-    description="API per classificare specie di orchidee Ophrys con ResNet",
+    description="API per classificare specie di orchidee Ophrys con modelli multi-architettura",
     version="1.0.0",
 )
 

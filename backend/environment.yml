@@ -27,6 +27,12 @@ dependencies:
   - pip
   - pip:
     - torcheval
-    # 'dotenv' is often a mistake for 'python-dotenv' in requirements.txt. 
-    # Since python-dotenv provides the 'dotenv' module used in the code, 
-    # ensuring python-dotenv is installed (above) is usually sufficient.
+    - transformers>=4.40.0
+    - peft>=0.10.0
+    - fastapi
+    - uvicorn
+    - python-multipart
+    - httpx
+    - pydantic>=2.0.0
+    - pydantic-settings>=2.0.0
+    - pytest>=7.0.0
