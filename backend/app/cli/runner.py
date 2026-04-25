@@ -8,7 +8,6 @@ import logging
 import os
 import torch
 from datetime import datetime
-from typing import Literal
 
 from app.core.models import create_model, create_transform
 from app.cli.definitions import (
@@ -78,7 +77,7 @@ def show_status():
 def run_experiment(
     exp_id: int,
     phases: list,
-    model_variant: Literal["resnet18", "resnet50"] = "resnet18",
+    model_variant: str = "resnet18",
     epochs: int = 26,
     batch_size: int = 8,
     learning_rate: float = 0.001,
@@ -95,7 +94,7 @@ def run_experiment(
     Args:
         exp_id: Experiment ID (1-5)
         phases: List of phases to run ['train', 'test', 'cross-validate']
-        model_variant: Model variant ('resnet18' or 'resnet50')
+        model_variant: Model variant (e.g. 'resnet18', 'resnet50', 'convnext_tiny', 'dinov2_small')
         epochs: Number of epochs
         batch_size: Batch size
         learning_rate: Learning rate

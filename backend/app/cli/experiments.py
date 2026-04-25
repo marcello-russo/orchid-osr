@@ -25,11 +25,13 @@ def parse_args():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python cli.py --status                      # Check status
-  python cli.py --train --exp 4               # Train exp4 with ResNet18
-  python cli.py --train --exp 4 --model resnet50  # Train exp4 with ResNet50
-  python cli.py --cross-validate --exp 4 --folds 5  # 5-fold CV on exp4
-  python cli.py --all --model resnet50        # All exps with ResNet50
+  python cli.py --status                                    # Check status
+  python cli.py --train --exp 4                             # Train exp4 with ResNet18
+  python cli.py --train --exp 4 --model resnet50            # Train exp4 with ResNet50
+  python cli.py --train --exp 4 --model convnext_tiny       # Train exp4 with ConvNeXt-Tiny
+  python cli.py --train --exp 4 --model dinov2_small        # Train exp4 with DINOv2-Small + LoRA
+  python cli.py --cross-validate --exp 4 --folds 5          # 5-fold CV on exp4
+  python cli.py --all --model convnext_small                # All exps with ConvNeXt-Small
         """
     )
 
