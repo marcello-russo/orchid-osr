@@ -22,7 +22,7 @@ class ClassifierModel(ABC, nn.Module):
     """
     Abstract base class for all classifier models.
 
-    Any model (ResNet, Siamese, etc.) must implement this interface
+    Any model (ResNet, ConvNeXt, DINOv2, etc.) must implement this interface
     to be used with the training and evaluation pipeline.
     """
 

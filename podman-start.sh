@@ -2,7 +2,7 @@
 # Avvia il container con GPU su Podman per test e sviluppo.
 
 CONTAINER_NAME="pytorch_app"
-IMAGE_NAME="resnet18-app"
+IMAGE_NAME="orchid-ncd-app"
 
 podman stop "$CONTAINER_NAME" 2>/dev/null
 podman rm "$CONTAINER_NAME" 2>/dev/null

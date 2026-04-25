@@ -19,7 +19,7 @@ pinned: false
 
 | Phase | Goal | Status |
 |-------|------|--------|
-| **P1 — Classification** | ResNet18/50 baseline, domain shift experiments, k-fold CV | ✅ Done |
+| **P1 — Classification** | ResNet18/50, ConvNeXt-Tiny/Small, DINOv2+LoRA baselines, domain shift experiments, k-fold CV, model registry | ✅ Done |
 | **P1b — Experiment Explorer** | React SPA dashboard, classification upload, explainability heatmap, species stats, model selector | ✅ Done |
 | **P2 — Embedding Space** | Contrastive learning (SimCLR, Triplet Loss, SupCon) to build a structured orchid vector space | 🔜 Next |
 | **P3 — Retrieval & Similarity** | Nearest-neighbor search, species clustering, unknown class detection | 📋 Planned |
@@ -98,6 +98,10 @@ pinned: false
 |-------|-------------|--------|---------------|---------|
 | ResNet18 | 86.97% ± 1.43% | 84.85% ± 1.72% | 97.69% | 97.74% |
 | ResNet50 | 85.18% ± 1.89% | 84.85% ± 1.72% | 97.41% | 97.67% |
+| ConvNeXt-Tiny | — | — | — | — |
+| ConvNeXt-Small | — | — | — | — |
+| DINOv2-Small + LoRA | — | — | — | — |
+| DINOv2-Base + LoRA | — | — | — | — |
 
 <details>
 <summary>Domain shift experiments</summary>
@@ -156,11 +160,13 @@ Frontend at http://localhost:5173, API proxy → backend :5000.
 ```bash
 cd backend
 
-python cli.py --status                              # Check status
-python cli.py --all                                  # Run all experiments
+python cli.py --status                                          # Check status
+python cli.py --all                                              # Run all experiments
 
-# K-fold cross-validation
+# K-fold cross-validation (any model variant)
 python cli.py --cross-validate --exp 4 --model resnet50 --epochs 100
+python cli.py --cross-validate --exp 4 --model convnext_tiny --epochs 100
+python cli.py --cross-validate --exp 4 --model dinov2_small --epochs 100
 
 # Visualization
 python cli.py --plot experiments/exp4_combined_internet_cropped_100ep/
@@ -180,7 +186,7 @@ resnet18/
 ├── backend/                      # Application code
 │   ├── app/                      # Source code (modular)
 │   │   ├── core/                 # ML core
-│   │   │   ├── models/           # ResNet classifier (ABC pattern)
+│   │   │   ├── models/           # Multi-model registry + classifiers (ResNet, ConvNeXt, DINOv2)
 │   │   │   ├── training.py       # Training loop
 │   │   │   ├── evaluation.py     # Metrics & evaluation
 │   │   │   └── kfold/            # K-fold cross-validation
@@ -217,7 +223,7 @@ resnet18/
 | | Component |
 |---|-----------|
 | 🧠 | PyTorch 2.1.0 + CUDA 11.8 |
-| 🏛️ | ResNet18/50 (ImageNet pretrained) |
+| 🏛️ | ResNet18/50, ConvNeXt-Tiny/Small, DINOv2-Small/Base + LoRA (ImageNet pretrained) |
 | 🔍 | Captum (explainability) |
 | 🖥️ | React 19 + TypeScript + Vite + Tailwind v4 + Shadcn/ui |
 | 📊 | Recharts (interactive charts), React Query, Zustand |
