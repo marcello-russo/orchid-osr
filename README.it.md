@@ -10,7 +10,7 @@
 
 | Fase | Obiettivo | Stato |
 |------|-----------|-------|
-| **F1 — Classificazione** | Baseline ResNet18/50, esperimenti domain shift, k-fold CV | ✅ Completata |
+| **F1 — Classificazione** | Baseline ResNet18/50, ConvNeXt-Tiny/Small, DINOv2+LoRA, esperimenti domain shift, k-fold CV, model registry | ✅ Completata |
 | **F2 — Spazio Vettoriale** | Apprendimento contrastivo (SimCLR, Triplet Loss, SupCon) per costruire uno spazio vettoriale strutturato | 🔜 Prossima |
 | **F3 — Retrieval & Similarità** | Ricerca nearest-neighbor, clustering specie, detection classi sconosciute | 📋 Pianificata |
 
@@ -88,6 +88,10 @@
 |---------|-------------|--------|---------------|---------|
 | ResNet18 | 86.97% ± 1.43% | 84.85% ± 1.72% | 97.69% | 97.74% |
 | ResNet50 | 85.18% ± 1.89% | 84.85% ± 1.72% | 97.41% | 97.67% |
+| ConvNeXt-Tiny | — | — | — | — |
+| ConvNeXt-Small | — | — | — | — |
+| DINOv2-Small + LoRA | — | — | — | — |
+| DINOv2-Base + LoRA | — | — | — | — |
 
 <details>
 <summary>Esperimenti di domain shift</summary>
@@ -135,11 +139,13 @@ podman compose up -d --build
 ```bash
 cd backend
 
-python cli.py --status                              # Verifica stato
-python cli.py --all                                  # Esegui tutti gli esperimenti
+python cli.py --status                                          # Verifica stato
+python cli.py --all                                              # Esegui tutti gli esperimenti
 
-# K-fold cross-validation
+# K-fold cross-validation (qualsiasi variante)
 python cli.py --cross-validate --exp 4 --model resnet50 --epochs 100 --patience 15
+python cli.py --cross-validate --exp 4 --model convnext_tiny --epochs 100 --patience 15
+python cli.py --cross-validate --exp 4 --model dinov2_small --epochs 100 --patience 15
 
 # Fold singolo (per k-fold lunghi)
 python cli.py --cross-validate --exp 4 --model resnet50 --fold 1
@@ -159,7 +165,7 @@ resnet18/
 ├── backend/                      # Codice applicazione
 │   ├── app/                      # Codice sorgente (modulare)
 │   │   ├── core/                 # Moduli ML core
-│   │   │   ├── models/           # Classificatore ResNet (pattern ABC)
+│   │   │   ├── models/           # Multi-model registry + classificatori (ResNet, ConvNeXt, DINOv2)
 │   │   │   ├── training.py       # Loop di training
 │   │   │   ├── evaluation.py     # Metriche e valutazione
 │   │   │   └── kfold/            # K-fold cross-validation
@@ -187,7 +193,7 @@ resnet18/
 | | Componente |
 |---|------------|
 | 🧠 | PyTorch 2.1.0 + CUDA 11.8 |
-| 🏛️ | ResNet18/50 (pre-addestrata ImageNet) |
+| 🏛️ | ResNet18/50, ConvNeXt-Tiny/Small, DINOv2-Small/Base + LoRA (pre-addestrati ImageNet) |
 | 🔍 | Captum (explainability) |
 | 📦 | Podman + NVIDIA Container Toolkit |
 

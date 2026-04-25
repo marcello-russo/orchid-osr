@@ -29,10 +29,7 @@ _split_raw_images = split_raw_images
 _copy_fold_images = copy_fold_images
 _aggregate_results = aggregate_results
 
-from app.config import settings as _settings
-IMG_WIDTH = _settings.img_width
-IMG_HEIGHT = _settings.img_height
-del _settings
+
 
 
 def kfold_experiment(
@@ -130,6 +127,10 @@ def kfold_experiment(
 
     import shutil
     try:
+        from app.core.models import get_registry_entry
+        entry = get_registry_entry(model_variant)
+        h, w = entry.input_size
+
         for fold_idx in fold_indices:
             train_idx, val_idx = folds[fold_idx]
 
@@ -147,11 +148,11 @@ def kfold_experiment(
                     train_idx, val_idx, fold_dir
                 )
                 augmented_dir = augment_fold_train(
-                    train_dir, class_names, IMG_WIDTH, IMG_HEIGHT,
+                    train_dir, class_names, w, h,
                     cache_dir=aug_cache_dir
                 )
                 train_loader, val_loader = prepare_fold_data(
-                    augmented_dir, val_dir, batch_size, seed
+                    augmented_dir, val_dir, batch_size, seed, model_variant
                 )
                 checkpoint_path = os.path.join(kfold_dir, f"best_fold_{fold_idx}.pt")
                 model, fold_metrics = train_fold(

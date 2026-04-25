@@ -20,6 +20,10 @@ notebook
 pytest>=7.0.0
 pytest-cov>=4.0.0
 
+# Transformers / PEFT (DINOv2 + LoRA)
+transformers>=4.40.0
+peft>=0.10.0
+
 # Configuration
 pydantic>=2.0.0
 pydantic-settings>=2.0.0

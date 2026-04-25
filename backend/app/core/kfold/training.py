@@ -8,15 +8,12 @@ import shutil
 import numpy as np
 from sklearn.model_selection import StratifiedKFold
 from torch.utils.data import DataLoader
-from torchvision import transforms as T
 
 import torch
 
 logger = logging.getLogger(__name__)
 
-from app.config import settings
-IMG_WIDTH = settings.img_width
-IMG_HEIGHT = settings.img_height
+
 
 
 def split_raw_images(raw_dataset_dir, class_names, num_folds, seed):
@@ -183,26 +180,19 @@ def augment_fold_train(fold_train_dir, class_names, width, height, cache_dir=Non
     return augmented_dir
 
 
-def prepare_fold_data(augmented_train_dir, val_dir, batch_size, seed):
+def prepare_fold_data(augmented_train_dir, val_dir, batch_size, seed, model_variant):
     """
     Crea DataLoaders per un fold.
 
     Returns:
         tuple: (train_loader, val_loader)
     """
+    from app.core.models import create_transform
     from app.preprocessing.dataset_tool import ImageFolderWithName
-    from app.preprocessing.normalization import get_mean, get_std
     from app.preprocessing.reproducibility import seed_worker
     from torch.utils.data import DataLoader
 
-    mean = get_mean()
-    std = get_std()
-
-    transform = T.Compose([
-        T.Resize((IMG_HEIGHT, IMG_WIDTH)),
-        T.ToTensor(),
-        T.Normalize(mean=mean, std=std),
-    ])
+    transform = create_transform(model_variant)
 
     train_dataset = ImageFolderWithName(augmented_train_dir, transform=transform)
     val_dataset = ImageFolderWithName(val_dir, transform=transform)
@@ -246,15 +236,10 @@ def train_fold(model_variant, num_classes, train_loader, val_loader,
     Returns:
         tuple: (modello, fold_metrics_dict)
     """
-    from app.core.models.resnet import ResNetConfig, ResNetClassifier
+    from app.core.models import create_model
     from app.core.training import train
 
-    config = ResNetConfig(
-        variant=model_variant,
-        num_classes=num_classes,
-        pretrained=True,
-    )
-    model = ResNetClassifier(config)
+    model = create_model(model_variant, num_classes=num_classes, pretrained=True)
 
     model, history = train(
         model=model,
