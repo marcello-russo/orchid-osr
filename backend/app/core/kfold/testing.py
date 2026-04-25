@@ -6,13 +6,10 @@ import os
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
-from torchvision import transforms as T
 
 logger = logging.getLogger(__name__)
 
-from app.config import settings
-IMG_WIDTH = settings.img_width
-IMG_HEIGHT = settings.img_height
+
 
 
 def aggregate_results(fold_results):
@@ -55,26 +52,17 @@ def final_test(best_model_path, model_variant, num_classes, test_dataset_dir,
     Returns:
         dict con metriche complete
     """
-    from app.core.models.resnet import ResNetConfig, ResNetClassifier
+    from app.core.models import create_model, create_transform
     from app.preprocessing.dataset_tool import ImageFolderWithName
-    from app.preprocessing.normalization import get_mean, get_std
     from sklearn.metrics import (
         accuracy_score, f1_score, precision_score, recall_score,
         confusion_matrix as sk_confusion_matrix,
     )
 
-    mean = get_mean()
-    std = get_std()
-
-    transform = T.Compose([
-        T.Resize((IMG_HEIGHT, IMG_WIDTH)),
-        T.ToTensor(),
-        T.Normalize(mean=mean, std=std),
-    ])
+    transform = create_transform(model_variant)
 
     # Carica modello
-    config = ResNetConfig(variant=model_variant, num_classes=num_classes, pretrained=False)
-    model = ResNetClassifier(config)
+    model = create_model(model_variant, num_classes=num_classes, pretrained=False)
     model.load_weights(best_model_path)
     model = model.to(device)
 

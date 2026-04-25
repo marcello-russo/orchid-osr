@@ -1,13 +1,13 @@
 # app/api/schemas.py
 from pydantic import BaseModel
-from typing import Dict, Literal, Optional
+from typing import Dict, Optional
 from datetime import datetime
 
 
 class ClassifyRequest(BaseModel):
     """Request for image classification."""
     image_base64: str
-    model_type: Literal["resnet18", "resnet50"] = "resnet18"
+    model_type: str = "resnet18"
 
 
 class ClassifyResponse(BaseModel):

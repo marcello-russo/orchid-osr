@@ -9,6 +9,14 @@ class Settings(BaseSettings):
     # Model configuration
     model_type: str = "resnet18"
     num_classes: int = 6
+    class_names: list[str] = [
+        "O. exaltata",
+        "O. garganica",
+        "O. incubacea",
+        "O. majellensis",
+        "O. sphegodes",
+        "O. sphegodes_Palena",
+    ]
 
     # Image dimensions
     img_width: int = 256

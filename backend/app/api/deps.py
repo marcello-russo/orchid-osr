@@ -5,12 +5,11 @@ import json
 import logging
 import torch
 from app.config import settings
-from app.core.models.resnet import ResNetConfig, ResNetClassifier
+from app.core.models import create_model, available_models, ClassifierModel
 from app.api.schemas import ModelOption
 
 logger = logging.getLogger(__name__)
 
-VALID_MODEL_TYPES = ("resnet18", "resnet50")
 MAX_CACHED_MODELS = 5
 
 # Class names from centralized config
@@ -146,10 +145,10 @@ def _find_weights_by_id(model_id: str) -> tuple[Path, str] | None:
 
 
 # LRU-style cache for loaded models
-_model_cache: OrderedDict[str, ResNetClassifier] = OrderedDict()
+_model_cache: OrderedDict[str, ClassifierModel] = OrderedDict()
 
 
-def get_model(model_type: str = "resnet18", model_id: str | None = None) -> ResNetClassifier:
+def get_model(model_type: str = "resnet18", model_id: str | None = None) -> ClassifierModel:
     """Load and cache model. If model_id given, load that specific experiment's weights."""
     if model_id:
         result = _find_weights_by_id(model_id)
@@ -158,8 +157,9 @@ def get_model(model_type: str = "resnet18", model_id: str | None = None) -> ResN
         weights_path, variant = result
         cache_key = f"{model_id}:{weights_path}"
     else:
-        if model_type not in VALID_MODEL_TYPES:
-            raise ValueError(f"Unknown model type: {model_type}. Valid: {VALID_MODEL_TYPES}")
+        valid = available_models()
+        if model_type not in valid:
+            raise ValueError(f"Unknown model type: {model_type}. Valid: {valid}")
         variant = model_type
         weights_path = _find_weights(model_type)
         cache_key = f"{model_type}:{weights_path}"
@@ -168,13 +168,7 @@ def get_model(model_type: str = "resnet18", model_id: str | None = None) -> ResN
         _model_cache.move_to_end(cache_key)
         return _model_cache[cache_key]
 
-    config = ResNetConfig(
-        variant=variant,
-        num_classes=settings.num_classes,
-        pretrained=True
-    )
-
-    model = ResNetClassifier(config)
+    model = create_model(variant, num_classes=settings.num_classes, pretrained=True)
 
     if weights_path:
         model.load_weights(str(weights_path))

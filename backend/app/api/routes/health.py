@@ -2,7 +2,7 @@
 from fastapi import APIRouter
 from datetime import datetime
 from app.api.schemas import HealthResponse
-from app.api.deps import get_model
+from app.core.models import available_models
 
 router = APIRouter()
 
@@ -11,12 +11,12 @@ router = APIRouter()
 async def health_check():
     """Health check endpoint."""
     try:
-        model = get_model()
-        model_loaded = True
-        model_type = "resnet18"
-    except Exception as e:
+        models = available_models()
+        model_loaded = len(models) > 0
+        model_type = ", ".join(models) if models else "none"
+    except Exception:
         model_loaded = False
-        model_type = "resnet18"
+        model_type = "none"
 
     return HealthResponse(
         status="healthy" if model_loaded else "degraded",
