@@ -87,12 +87,14 @@ def run_experiment(
     aggregate_only: bool = False,
     patience: int = 0,
     tag: str = None,
+    gradient_accumulation_steps: int = 1,
+    overfit_threshold: float = 0,
 ):
     """
     Run a single experiment.
 
     Args:
-        exp_id: Experiment ID (1-5)
+        exp_id: Experiment ID (1-6)
         phases: List of phases to run ['train', 'test', 'cross-validate']
         model_variant: Model variant (e.g. 'resnet18', 'resnet50', 'convnext_tiny', 'dinov2_small')
         epochs: Number of epochs
@@ -110,9 +112,11 @@ def run_experiment(
     device = get_device()
 
     # Per-experiment log file (dentro experiments/)
-    results_dir = PROJECT_ROOT / "experiments" / (f"{exp['name']}_{tag}" if tag else exp["name"])
+    # Exp 6 uses model_variant as tag for directory naming (exp6_clean_split_resnet50)
+    effective_tag = tag or (model_variant if exp_id == 6 else None)
+    results_dir = PROJECT_ROOT / "experiments" / (f"{exp['name']}_{effective_tag}" if effective_tag else exp["name"])
     results_dir.mkdir(parents=True, exist_ok=True)
-    exp_log_name = f"{exp['name']}_{tag}_{model_variant}.log" if tag else f"{exp['name']}_{model_variant}.log"
+    exp_log_name = f"{exp['name']}_{effective_tag}_{model_variant}.log" if effective_tag else f"{exp['name']}_{model_variant}.log"
     exp_log = str(results_dir / exp_log_name)
     exp_handler = logging.FileHandler(exp_log)
     exp_handler.setFormatter(logging.Formatter('%(asctime)s | %(levelname)s | %(message)s'))
@@ -142,29 +146,26 @@ def run_experiment(
         # experiments_dir already created above for log file
 
         # Create experiment tracking directory
-        exp_dir = PROJECT_ROOT / "experiments" / exp["name"]
-        exp_dir.mkdir(parents=True, exist_ok=True)
-
-        # Load datasets
-        train_path = DATASET_PATHS[exp["train_dataset"]]["train"]
-        val_path = DATASET_PATHS[exp["train_dataset"]]["val"]
-        test_path = DATASET_PATHS[exp["test_dataset"]]["test"]
-
-        logging.info(f"Train: {train_path}")
-        logging.info(f"Val: {val_path}")
-        logging.info(f"Test: {test_path}")
+        if effective_tag:
+            exp_dir = results_dir
+        else:
+            exp_dir = PROJECT_ROOT / "experiments" / exp["name"]
+            exp_dir.mkdir(parents=True, exist_ok=True)
 
         # Run phases
         if "cross-validate" in phases:
             logging.info("\n--- PHASE: K-Fold Cross Validation ---")
             logging.info(f"Folds: {num_folds}")
 
-            if exp_id == 4:
-                # K-fold con augmentation bilanciata per fold (no data leakage)
+            if exp_id in (4, 6):
                 from app.core.kfold import kfold_experiment
 
-                raw_dir = str(PROJECT_ROOT / DATASET_PATHS["combined"]["raw"])
-                test_dir = str(PROJECT_ROOT / DATASET_PATHS["internet_cropped"]["raw"])
+                if exp_id == 4:
+                    raw_dir = str(PROJECT_ROOT / DATASET_PATHS["combined"]["raw"])
+                    test_dir = str(PROJECT_ROOT / DATASET_PATHS["internet_cropped"]["raw"])
+                else:
+                    raw_dir = str(PROJECT_ROOT / DATASET_PATHS["clean"]["train"])
+                    test_dir = str(PROJECT_ROOT / DATASET_PATHS["clean"]["test"])
 
                 kfold_experiment(
                     raw_dataset_dir=raw_dir,
@@ -182,11 +183,14 @@ def run_experiment(
                     fold_index=fold_index,
                     aggregate_only=aggregate_only,
                     patience=patience,
+                    gradient_accumulation_steps=gradient_accumulation_steps,
+                    overfit_threshold=overfit_threshold,
                 )
             else:
                 # Cross-validation originale su dataset pre-augmentato
                 from app.core.models import get_registry_entry
 
+                train_path = DATASET_PATHS[exp["train_dataset"]]["train"]
                 train_dataset = getDatasetFromFile(train_path)
 
                 config = get_registry_entry(model_variant).config_cls(
@@ -223,6 +227,8 @@ def run_experiment(
         if "train" in phases:
             logging.info("\n--- PHASE: Training ---")
 
+            train_path = DATASET_PATHS[exp["train_dataset"]]["train"]
+            val_path = DATASET_PATHS[exp["train_dataset"]]["val"]
             train_dataset = getDatasetFromFile(train_path)
             val_dataset = getDatasetFromFile(val_path)
 
@@ -257,6 +263,7 @@ def run_experiment(
             model = model.to(device)
 
             # Load test dataset
+            test_path = DATASET_PATHS[exp["test_dataset"]]["test"]
             test_dataset = getDatasetFromFile(test_path)
             test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
@@ -303,7 +310,7 @@ def run_experiment(
 
                 # Determine model path based on experiment type
                 best_model_path = None
-                if exp_id == 4:
+                if exp_id in (4, 6):
                     # K-fold experiment: use best fold model
                     kfold_exp_dir = str(results_dir)
                     kfold_results_path = os.path.join(kfold_exp_dir, "results.json")
@@ -329,7 +336,11 @@ def run_experiment(
                     model = model.to(device)
 
                     transform = create_transform(model_variant)
-                    test_raw_dir = str(PROJECT_ROOT / DATASET_PATHS[exp["test_dataset"]]["raw"])
+                    test_ds = exp["test_dataset"]
+                    if "raw" in DATASET_PATHS[test_ds]:
+                        test_raw_dir = str(PROJECT_ROOT / DATASET_PATHS[test_ds]["raw"])
+                    elif "test" in DATASET_PATHS[test_ds]:
+                        test_raw_dir = str(PROJECT_ROOT / DATASET_PATHS[test_ds]["test"])
                     test_dataset = ImageFolderWithName(test_raw_dir, transform=transform)
                     explain_dir = str(results_dir / "explainability")
                     os.makedirs(explain_dir, exist_ok=True)

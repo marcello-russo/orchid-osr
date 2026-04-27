@@ -8,6 +8,6 @@ export function useFold(experimentId: string, foldNumber: number) {
   return useQuery<FoldData>({
     queryKey: ["experiment", experimentId, "fold", foldNumber],
     queryFn: () => fetchFold(experimentId, foldNumber),
-    enabled: !!experimentId && foldNumber >= 1,
+    enabled: !!experimentId && foldNumber >= 0,
   });
 }

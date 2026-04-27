@@ -121,7 +121,7 @@ def augment_fold_train(fold_train_dir, class_names, width, height, cache_dir=Non
                     current_sizes[cn] = len([f for f in os.listdir(cp) if f.lower().endswith(('.jpg', '.png', '.jpeg'))])
                 else:
                     current_sizes[cn] = 0
-            if manifest.get("source_sizes") == current_sizes:
+            if manifest.get("source_sizes") == current_sizes and manifest.get("input_size") == [height, width]:
                 logger.info(f"  Cache augmentation valida: {cache_dir}")
                 return cache_dir
             else:
@@ -173,7 +173,7 @@ def augment_fold_train(fold_train_dir, class_names, width, height, cache_dir=Non
 
     # Salva manifest per validazione cache futura
     if cache_dir:
-        manifest = {"source_sizes": class_sizes, "target_per_class": target_per_class}
+        manifest = {"source_sizes": class_sizes, "target_per_class": target_per_class, "input_size": [height, width]}
         with open(os.path.join(augmented_dir, "_manifest.json"), "w") as f:
             json.dump(manifest, f)
 
@@ -204,7 +204,7 @@ def prepare_fold_data(augmented_train_dir, val_dir, batch_size, seed, model_vari
         train_dataset,
         batch_size=batch_size,
         shuffle=True,
-        num_workers=6,
+        num_workers=2,
         pin_memory=True,
         persistent_workers=True,
         prefetch_factor=2,
@@ -215,7 +215,7 @@ def prepare_fold_data(augmented_train_dir, val_dir, batch_size, seed, model_vari
         val_dataset,
         batch_size=batch_size,
         shuffle=False,
-        num_workers=6,
+        num_workers=2,
         pin_memory=True,
         persistent_workers=True,
         prefetch_factor=2,
@@ -229,17 +229,31 @@ def prepare_fold_data(augmented_train_dir, val_dir, batch_size, seed, model_vari
 
 
 def train_fold(model_variant, num_classes, train_loader, val_loader,
-               num_epochs, learning_rate, device, checkpoint_path, patience=0):
+               num_epochs, learning_rate, device, checkpoint_path, patience=0,
+               gradient_accumulation_steps=1, resume=False, overfit_threshold=0):
     """
     Train di un singolo fold. Riutilizza train() da app.core.training.
+
+    Supports intra-fold resume: if resume=True and a last_ckpt.pt exists in the
+    checkpoint directory, training continues from the saved epoch.
 
     Returns:
         tuple: (modello, fold_metrics_dict)
     """
     from app.core.models import create_model
-    from app.core.training import train
+    from app.core.training import train, cleanup_gpu
+
+    ckpt_dir = os.path.dirname(checkpoint_path)
+    os.makedirs(ckpt_dir, exist_ok=True)
 
     model = create_model(model_variant, num_classes=num_classes, pretrained=True)
+
+    resume_from = None
+    if resume:
+        candidate = os.path.join(ckpt_dir, "last_ckpt.pt")
+        if os.path.exists(candidate):
+            resume_from = candidate
+            logger.info(f"  Resuming fold from checkpoint: {candidate}")
 
     model, history = train(
         model=model,
@@ -249,11 +263,14 @@ def train_fold(model_variant, num_classes, train_loader, val_loader,
         learning_rate=learning_rate,
         device=device,
         num_classes=num_classes,
+        checkpoint_dir=ckpt_dir,
         patience=patience,
+        gradient_accumulation_steps=gradient_accumulation_steps,
+        resume_from=resume_from,
+        overfit_threshold=overfit_threshold,
     )
 
     # Salva pesi migliori
-    os.makedirs(os.path.dirname(checkpoint_path), exist_ok=True)
     model.save_weights(checkpoint_path)
 
     best_f1 = max(history["val_f1"])

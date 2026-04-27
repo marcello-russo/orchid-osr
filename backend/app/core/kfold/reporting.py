@@ -39,7 +39,7 @@ def generate_report(results, variant, output_dir):
     lines.append("")
     lines.append(f"Accuracy: {results['mean_accuracy']:.4f} +/- {results['std_accuracy']:.4f}")
     lines.append(f"F1 Macro: {results['mean_f1']:.4f} +/- {results['std_f1']:.4f}")
-    lines.append(f"Miglior fold: {results['best_fold'] + 1}")
+    lines.append(f"Miglior fold: {results['best_fold']}")
     lines.append("")
 
     # Breakdown per fold
@@ -65,7 +65,7 @@ def generate_report(results, variant, output_dir):
     if "test_metrics" in results and results["test_metrics"]:
         tm = results["test_metrics"]
         lines.append("=" * 80)
-        lines.append("TEST FINALE SU INTERNET CROPPED")
+        lines.append("TEST FINALE")
         lines.append("=" * 80)
         lines.append("")
         lines.append(f"Accuracy: {tm.get('accuracy', 0):.4f}")

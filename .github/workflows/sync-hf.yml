@@ -34,6 +34,13 @@ jobs:
               repo_id='marcellorusso/orchid-ncd',
               repo_type='space',
               commit_message=f'Sync from GitHub: {os.environ.get(\"GITHUB_SHA\", \"manual\")[:7]}',
+              ignore_patterns=[
+                  '.git/*',
+                  'backend/dataset/*',
+                  'backend/experiments/*',
+                  'backend/models/*',
+                  '*.pt',
+              ],
           )
           print('Sync complete')
           "
