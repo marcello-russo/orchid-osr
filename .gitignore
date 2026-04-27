@@ -8,6 +8,7 @@ inference*/
 analysis/
 archive/
 *.pt
+*_done
 
 # Generated outputs
 *_1/
@@ -27,7 +28,6 @@ backend/temp_kfold/
 
 # Docker artifacts
 ProjectDocker/
-Dockerfile.hf
 
 # Python
 __pycache__/

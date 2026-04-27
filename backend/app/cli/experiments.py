@@ -59,18 +59,22 @@ Examples:
                         help=f"Learning rate (default: {DEFAULT_CONFIG['learning_rate']})")
     parser.add_argument("--patience", type=int, default=0,
                         help="Early stopping patience on val_loss (0 = disabled, default: 0)")
+    parser.add_argument("--accumulation", type=int, default=1,
+                        help="Gradient accumulation steps (effective batch = batch_size × accumulation, default: 1)")
+    parser.add_argument("--overfit-threshold", type=float, default=0,
+                        help="Prechelt GL: stop when val_loss > threshold × best_val_loss (0 = disabled, default: 0)")
 
     # Cross-validation
     parser.add_argument("--folds", type=int, default=DEFAULT_CONFIG['num_folds'],
                         help=f"Number of folds for cross-validation (default: {DEFAULT_CONFIG['num_folds']})")
     parser.add_argument("--fold", type=int, metavar="N",
-                        help="Run only fold N (1-based). Saves results for later aggregation.")
+                        help="Run only fold N (0-based). Saves results for later aggregation.")
     parser.add_argument("--aggregate-only", action="store_true",
                         help="Aggregate completed folds and run final test (no training).")
 
     # Experiment selection
-    parser.add_argument("--exp", type=int, choices=[1, 2, 3, 4, 5],
-                        help="Run specific experiment (1-5)")
+    parser.add_argument("--exp", type=int, choices=[1, 2, 3, 4, 5, 6],
+                        help="Run specific experiment (1-6)")
     parser.add_argument("--tag", type=str, default=None,
                         help="Tag suffix for output directory (e.g. --tag 100ep creates exp4_..._100ep/)")
 
@@ -173,6 +177,8 @@ def main():
                 aggregate_only=args.aggregate_only,
                 patience=args.patience,
                 tag=args.tag,
+                gradient_accumulation_steps=args.accumulation,
+                overfit_threshold=args.overfit_threshold,
             )
             success_count += 1
         except Exception as e:

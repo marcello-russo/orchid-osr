@@ -27,7 +27,7 @@ def exp_dir(tmp_path):
                 "val_accuracy": [0.5, 0.7, 0.8, 0.85, 0.87],
                 "val_f1": [0.45, 0.65, 0.75, 0.82, 0.88],
             },
-            "fold": fold_idx + 1,
+            "fold": fold_idx,
             "batch_size": 8,
         }))
 

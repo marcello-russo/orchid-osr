@@ -113,18 +113,17 @@ async def get_experiment(experiment_id: str):
 async def get_fold(experiment_id: str, fold_number: int):
     """Get a single fold with full training history.
 
-    fold_number is 1-based (matching the 'fold' field inside each JSON).
-    Files are stored as fold_0.json, fold_1.json, ... so we subtract 1.
+    fold_number is 0-based (matching file names: fold_0.json, fold_1.json, ...).
     """
     experiment_id = _validate_id(experiment_id)
     exp_dir = _get_experiments_dir() / experiment_id
     if not exp_dir.exists():
         raise HTTPException(status_code=404, detail=f"Experiment '{experiment_id}' not found")
 
-    if fold_number < 1:
-        raise HTTPException(status_code=400, detail="fold_number must be >= 1")
+    if fold_number < 0:
+        raise HTTPException(status_code=400, detail="fold_number must be >= 0")
 
-    fold_file = exp_dir / f"fold_{fold_number - 1}.json"
+    fold_file = exp_dir / f"fold_{fold_number}.json"
     if not fold_file.exists():
         raise HTTPException(status_code=404, detail=f"Fold {fold_number} not found")
 

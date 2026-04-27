@@ -9,6 +9,49 @@ from torch.utils.data import DataLoader
 
 logger = logging.getLogger(__name__)
 
+HF_MODELS_REPO = "marcellorusso/orchid-ncd-models"
+
+
+def _upload_to_hf(output_dir, model_variant):
+    """Upload completed model results to HuggingFace if token is configured."""
+    try:
+        from huggingface_hub import HfApi
+    except ImportError:
+        return
+
+    api = HfApi()
+    try:
+        api.whoami()
+    except Exception:
+        logger.info("HF token not configured, skipping upload")
+        return
+
+    exp_name = os.path.basename(output_dir)
+    remote_dir = f"serie1_ce/{exp_name}"
+    logger.info(f"Uploading results to HF: {HF_MODELS_REPO}/{remote_dir}/")
+
+    try:
+        for fname in os.listdir(output_dir):
+            fpath = os.path.join(output_dir, fname)
+            if fname.endswith(".json") or (fname.endswith(".pt") and fname.startswith("best_fold")):
+                logger.info(f"  Uploading {fname}")
+                api.upload_file(
+                    repo_id=HF_MODELS_REPO,
+                    path_or_fileobj=fpath,
+                    path_in_repo=f"{remote_dir}/{fname}",
+                )
+            elif fname.endswith("_adapter") and os.path.isdir(fpath):
+                logger.info(f"  Uploading adapter directory {fname}")
+                api.upload_folder(
+                    repo_id=HF_MODELS_REPO,
+                    folder_path=fpath,
+                    path_in_repo=f"{remote_dir}/{fname}",
+                )
+
+        logger.info(f"Upload to HF complete: {HF_MODELS_REPO}/{remote_dir}/")
+    except Exception as e:
+        logger.warning(f"HF upload failed: {e}")
+
 
 
 
@@ -23,12 +66,8 @@ def aggregate_results(fold_results):
     all_acc = [r["best_accuracy"] for r in fold_results]
 
     best_list_idx = int(np.argmax(all_f1))
-    # Use the "fold" field (1-based) if present, otherwise fall back to list index (0-based)
     best_result = fold_results[best_list_idx]
-    if "fold" in best_result:
-        best_fold = best_result["fold"] - 1  # fold field is 1-based, checkpoint files are 0-based
-    else:
-        best_fold = best_list_idx
+    best_fold = best_result.get("fold", best_list_idx)
 
     return {
         "mean_accuracy": float(np.mean(all_acc)),
@@ -209,7 +248,7 @@ def aggregate_and_test(
             with open(fold_json, "r") as f:
                 fold_results.append(json.load(f))
         else:
-            logger.warning(f"Fold {fold_idx + 1} non trovato: {fold_json}")
+            logger.warning(f"Fold {fold_idx} non trovato: {fold_json}")
 
     if not fold_results:
         logger.error("Nessun fold completato trovato. Esegui prima i fold singoli.")
@@ -240,7 +279,7 @@ def aggregate_and_test(
     best_fold = aggregated["best_fold"]
     best_model_path = os.path.join(output_dir, f"best_fold_{best_fold}.pt")
 
-    logger.info(f"\nTest finale con modello fold {best_fold + 1} su {test_dataset_dir}")
+    logger.info(f"\nTest finale con modello fold {best_fold} su {test_dataset_dir}")
     test_metrics = final_test(
         best_model_path, model_variant, num_classes, test_dataset_dir,
         class_names, effective_batch_size, device
@@ -267,6 +306,9 @@ def aggregate_and_test(
     with open(json_path, "w") as f:
         json.dump(results, f, indent=2, default=str)
     logger.info(f"Risultati salvati in: {json_path}")
+
+    # Upload to HuggingFace if token is available
+    _upload_to_hf(output_dir, model_variant)
 
     # Genera report
     generate_report(results, model_variant, output_dir)

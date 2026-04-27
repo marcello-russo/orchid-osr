@@ -70,11 +70,24 @@ class DINOv2Classifier(ClassifierModel):
         return outputs.last_hidden_state[:, 0]
 
     def load_weights(self, path: str) -> None:
-        state_dict = torch.load(path, map_location="cpu")
-        self.load_state_dict(state_dict)
+        import os
+        adapter_dir = os.path.splitext(path)[0] + "_adapter"
+        if os.path.isdir(adapter_dir):
+            from peft import PeftModel
+            base_model_id = _DINOV2_MODEL_IDS[self._variant]
+            from transformers import Dinov2Model
+            base = Dinov2Model.from_pretrained(base_model_id)
+            self._backbone = PeftModel.from_pretrained(base, adapter_dir)
+            self._head.load_state_dict(torch.load(path, map_location="cpu"))
+        else:
+            state_dict = torch.load(path, map_location="cpu")
+            self.load_state_dict(state_dict)
 
     def save_weights(self, path: str) -> None:
-        torch.save(self.state_dict(), path)
+        import os
+        adapter_dir = os.path.splitext(path)[0] + "_adapter"
+        self._backbone.save_pretrained(adapter_dir)
+        torch.save(self._head.state_dict(), path)
 
     @property
     def model_name(self) -> str:

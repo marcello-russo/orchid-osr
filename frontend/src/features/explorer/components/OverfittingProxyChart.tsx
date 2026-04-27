@@ -73,7 +73,7 @@ export function OverfittingProxyChart({ folds, selectedFold }: OverfittingProxyC
                 key={`ratio_${f.fold}`}
                 dataKey={`ratio_${f.fold}`}
                 name={`Fold ${f.fold}`}
-                stroke={chartColors[(f.fold - 1) % chartColors.length]}
+                stroke={chartColors[f.fold % chartColors.length]}
                 dot={false}
                 strokeWidth={1.5}
                 isAnimationActive={false}

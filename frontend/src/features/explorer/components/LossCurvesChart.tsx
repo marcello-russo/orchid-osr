@@ -92,7 +92,7 @@ export function LossCurvesChart({ folds, selectedFold }: LossCurvesChartProps) {
               align="right"
             />
             {visibleFolds.map((f) => {
-              const color = chartColors[(f.fold - 1) % chartColors.length];
+              const color = chartColors[f.fold % chartColors.length];
               return (
                 <Line
                   key={`loss_${f.fold}`}
@@ -107,7 +107,7 @@ export function LossCurvesChart({ folds, selectedFold }: LossCurvesChartProps) {
             })}
             {visibleFolds.map((f) => {
               if (f.best_epoch <= 0 || f.best_epoch > maxLen) return null;
-              const color = chartColors[(f.fold - 1) % chartColors.length];
+              const color = chartColors[f.fold % chartColors.length];
               return (
                 <ReferenceLine
                   key={`best_${f.fold}`}

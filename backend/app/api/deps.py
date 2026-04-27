@@ -53,7 +53,7 @@ def _discover_models() -> list[ModelOption]:
         best_fold = results.get("best_fold")
         if best_fold is None:
             continue
-        candidate = parent / f"best_fold_{best_fold - 1}.pt"
+        candidate = parent / f"best_fold_{best_fold}.pt"
         if not candidate.exists():
             continue
 
@@ -101,7 +101,7 @@ def _find_weights(model_type: str) -> Path | None:
         parent = results_json.parent
         best_fold = results.get("best_fold")
         if best_fold is not None:
-            candidate = parent / f"best_fold_{best_fold - 1}.pt"
+            candidate = parent / f"best_fold_{best_fold}.pt"
             if candidate.exists():
                 score = _get_mean_f1(results) or 0
                 if score > best_score:
@@ -137,7 +137,7 @@ def _find_weights_by_id(model_id: str) -> tuple[Path, str] | None:
     if best_fold is None:
         return None
 
-    candidate = results_json.parent / f"best_fold_{best_fold - 1}.pt"
+    candidate = results_json.parent / f"best_fold_{best_fold}.pt"
     if not candidate.exists():
         return None
 

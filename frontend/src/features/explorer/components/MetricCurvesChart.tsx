@@ -106,7 +106,7 @@ export function MetricCurvesChart({ folds, selectedFold }: MetricCurvesChartProp
                 key={`metric_${f.fold}`}
                 dataKey={`${f.fold}`}
                 name={`${f.fold}`}
-                stroke={chartColors[(f.fold - 1) % chartColors.length]}
+                stroke={chartColors[f.fold % chartColors.length]}
                 dot={false}
                 strokeWidth={1.5}
                 isAnimationActive={false}

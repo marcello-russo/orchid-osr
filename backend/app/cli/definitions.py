@@ -32,7 +32,11 @@ DATASET_PATHS = {
         "train": "dataset/train_combined.pt",
         "val": "dataset/val_combined.pt",
         "test": "dataset/test_combined.pt",
-    }
+    },
+    "clean": {
+        "train": "dataset/train_clean/",
+        "test": "dataset/test_clean/",
+    },
 }
 
 # Class definitions
@@ -46,6 +50,10 @@ INTERNET_CLASSES = [
 ]
 
 # Experiment definitions
+# NOTE: Exp 1-5 have data leakage issues (confirmed for exp4 and exp5, likely for exp1-3).
+# Exp 4: combined contains internet_cropped images → test on internet_cropped = test on seen data.
+# Exp 5: combined contains all private images → test on privato = test on seen data.
+# Exp 6 uses a clean split with no leakage (50 test/class held out from training).
 EXPERIMENTS = {
     1: {
         "name": "exp1_privato_privato",
@@ -86,7 +94,15 @@ EXPERIMENTS = {
         "num_classes": 6,
         "test_classes": ALL_CLASSES,
         "description": "Catastrophic forgetting test: train on combined, test on private"
-    }
+    },
+    6: {
+        "name": "exp6_clean_split",
+        "train_dataset": "clean",
+        "test_dataset": "clean",
+        "num_classes": 6,
+        "test_classes": ALL_CLASSES,
+        "description": "Clean split: no data leakage, balanced test (50/class), all 6 classes"
+    },
 }
 
 # Default configuration

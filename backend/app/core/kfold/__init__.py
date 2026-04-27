@@ -48,6 +48,8 @@ def kfold_experiment(
     fold_index=None,
     aggregate_only=False,
     patience=0,
+    gradient_accumulation_steps=1,
+    overfit_threshold=0,
 ):
     """K-fold cross-validation con augmentation bilanciata per fold."""
     from app.preprocessing.reproducibility import set_seed
@@ -67,7 +69,10 @@ def kfold_experiment(
             "num_epochs": num_epochs, "batch_size": batch_size, "learning_rate": learning_rate,
             "seed": seed, "num_classes": num_classes, "class_names": class_names,
             "raw_dataset_dir": raw_dataset_dir, "test_dataset_dir": test_dataset_dir,
-            "patience": patience, "timestamp": datetime.now().isoformat(),
+            "patience": patience,
+            "gradient_accumulation_steps": gradient_accumulation_steps,
+            "overfit_threshold": overfit_threshold,
+            "timestamp": datetime.now().isoformat(),
         }
         with open(config_path, "w") as f:
             json.dump(config, f, indent=2)
@@ -80,6 +85,8 @@ def kfold_experiment(
         resume_params = {
             "num_epochs": num_epochs, "batch_size": batch_size,
             "learning_rate": learning_rate, "seed": seed, "patience": patience,
+            "gradient_accumulation_steps": gradient_accumulation_steps,
+            "overfit_threshold": overfit_threshold,
         }
         for param, cli_val in resume_params.items():
             if param in saved and saved[param] != cli_val:
@@ -91,6 +98,8 @@ def kfold_experiment(
         learning_rate = saved.get("learning_rate", learning_rate)
         seed = saved.get("seed", seed)
         patience = saved.get("patience", patience)
+        gradient_accumulation_steps = saved.get("gradient_accumulation_steps", gradient_accumulation_steps)
+        overfit_threshold = saved.get("overfit_threshold", overfit_threshold)
 
     if aggregate_only:
         return aggregate_and_test(
@@ -118,7 +127,7 @@ def kfold_experiment(
     )
 
     if fold_index is not None:
-        fold_indices = [fold_index - 1]
+        fold_indices = [fold_index]
     else:
         fold_indices = list(range(num_folds))
 
@@ -135,7 +144,7 @@ def kfold_experiment(
             train_idx, val_idx = folds[fold_idx]
 
             logger.info(f"\n{'=' * 50}")
-            logger.info(f"FOLD {fold_idx + 1}/{num_folds}")
+            logger.info(f"FOLD {fold_idx}/{num_folds}")
             logger.info(f"Train: {len(train_idx)} immagini, Val: {len(val_idx)} immagini")
             logger.info(f"{'=' * 50}")
 
@@ -159,17 +168,26 @@ def kfold_experiment(
                     model_variant, num_classes, train_loader, val_loader,
                     num_epochs, learning_rate, device, checkpoint_path,
                     patience=patience,
+                    gradient_accumulation_steps=gradient_accumulation_steps,
+                    resume=True,
+                    overfit_threshold=overfit_threshold,
                 )
 
-                fold_metrics["fold"] = fold_idx + 1
+                fold_metrics["fold"] = fold_idx
                 fold_metrics["batch_size"] = batch_size
                 fold_metrics["train_size"] = len(train_idx)
                 fold_metrics["val_size"] = len(val_idx)
 
+                # GC: free model and loaders between folds
+                del model
+                del train_loader, val_loader
+                from app.core.training import cleanup_gpu
+                cleanup_gpu()
+
                 fold_json_path = os.path.join(kfold_dir, f"fold_{fold_idx}.json")
                 with open(fold_json_path, "w") as f:
                     json.dump(fold_metrics, f, indent=2, default=str)
-                logger.info(f"Fold {fold_idx + 1} salvato in: {fold_json_path}")
+                logger.info(f"Fold {fold_idx} salvato in: {fold_json_path}")
 
             finally:
                 if os.path.exists(fold_dir):
@@ -181,7 +199,7 @@ def kfold_experiment(
 
     if fold_index is not None:
         logger.info(f"\nFold {fold_index} completato.")
-        logger.info(f"Per aggregare: --cross-validate --exp 4 --model {model_variant} --aggregate-only")
+        logger.info(f"Per aggregare: --cross-validate --exp 6 --model {model_variant} --aggregate-only")
         return {"fold_completed": fold_index, "fold_metrics": fold_metrics}
 
     return aggregate_and_test(

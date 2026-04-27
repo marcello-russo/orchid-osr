@@ -1,4 +1,4 @@
-# OrchID — Dockerfile (GitHub → HuggingFace Spaces)
+# OrchID NCD — Dockerfile (GPU training + HF Spaces deployment)
 # Paths are relative to repo root (resnet18/)
 
 # Stage 1: Build frontend
@@ -13,7 +13,7 @@ COPY frontend/ ./
 RUN npm run build
 
 # Stage 2: Backend + built frontend
-FROM docker.io/pytorch/pytorch:2.1.0-cuda11.8-cudnn8-devel
+FROM docker.io/pytorch/pytorch:2.6.0-cuda12.4-cudnn9-devel
 
 WORKDIR /workspace/backend
 
@@ -23,7 +23,9 @@ RUN pip install --no-cache-dir huggingface_hub
 
 COPY backend/app/ app/
 COPY backend/server.py .
-RUN mkdir -p experiments
+COPY backend/cli.py .
+COPY backend/scripts/ scripts/
+RUN mkdir -p experiments models dataset
 COPY entrypoint.sh .
 RUN chmod +x entrypoint.sh
 
