@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from app.api.routes import health, classify, experiments, species
+from app.api.routes import health, classify, experiments, species, dataset
 
 app = FastAPI(
     title="Orchid Classification API",
@@ -27,6 +27,7 @@ app.include_router(health.router, tags=["health"])
 app.include_router(classify.router, tags=["classification"])
 app.include_router(experiments.router, tags=["experiments"])
 app.include_router(species.router, tags=["species"])
+app.include_router(dataset.router, tags=["dataset"])
 
 # Serve frontend static files in production (when frontend/dist exists)
 _static_dir = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
