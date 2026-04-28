@@ -16,6 +16,9 @@ export interface ExperimentConfig {
   class_names?: string[];
   patience?: number;
   timestamp?: string;
+  optimizer?: string;
+  effective_learning_rate?: number;
+  weight_decay?: number;
 }
 
 export interface FoldData {
