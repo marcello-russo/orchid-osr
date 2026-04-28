@@ -6,6 +6,8 @@ import {
   FlaskConical,
   ScanSearch,
   Box,
+  Database,
+  Info,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -16,7 +18,9 @@ const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/experiments", icon: FlaskConical, label: "Experiments" },
   { to: "/classify", icon: ScanSearch, label: "Classify" },
+  { to: "/dataset", icon: Database, label: "Dataset" },
   { to: "/embeddings", icon: Box, label: "Embeddings" },
+  { to: "/about", icon: Info, label: "About" },
 ];
 
 interface SidebarProps {
