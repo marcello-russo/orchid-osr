@@ -1,4 +1,5 @@
 # backend/app/api/routes/dataset.py
+import mimetypes
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
@@ -11,6 +12,7 @@ router = APIRouter(prefix="/api/dataset", tags=["dataset"])
 
 _IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
 _VALID_SPLITS = {"train_clean", "test_clean"}
+_SPLIT_ALIASES = {"train": "train_clean", "test": "test_clean"}
 
 
 def _get_dataset_base() -> Path:
@@ -67,8 +69,9 @@ async def list_classes():
 async def list_class_images(class_name: str, split: str = "train", limit: int = 12, offset: int = 0):
     """List images for a class in a given split."""
     class_name = _validate_segment(class_name)
+    split = _SPLIT_ALIASES.get(split, split)
     if split not in _VALID_SPLITS:
-        raise HTTPException(status_code=400, detail=f"Invalid split. Use: {', '.join(sorted(_VALID_SPLITS))}")
+        raise HTTPException(status_code=400, detail=f"Invalid split. Use: train, test, train_clean, or test_clean")
 
     base = _get_dataset_base()
     class_dir = base / split / class_name
@@ -95,7 +98,7 @@ async def serve_image(split: str, class_name: str, filename: str):
     split = _validate_segment(split)
     class_name = _validate_segment(class_name)
     filename = _validate_segment(filename)
-
+    split = _SPLIT_ALIASES.get(split, split)
     if split not in _VALID_SPLITS:
         raise HTTPException(status_code=400, detail="Invalid split")
 
@@ -111,4 +114,8 @@ async def serve_image(split: str, class_name: str, filename: str):
     if not file_path.is_file():
         raise HTTPException(status_code=404, detail="Image not found")
 
-    return FileResponse(file_path, media_type="image/jpeg")
+    if file_path.suffix.lower() not in _IMAGE_EXTS:
+        raise HTTPException(status_code=400, detail="Not an image file")
+
+    media_type = mimetypes.guess_type(str(file_path))[0] or "image/jpeg"
+    return FileResponse(file_path, media_type=media_type)
