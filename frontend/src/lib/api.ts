@@ -101,3 +101,13 @@ export async function fetchModels() {
 export async function fetchSpecies() {
   return fetchApi<import("./types").SpeciesListResponse>("/api/species");
 }
+
+export async function fetchDatasetClasses() {
+  return fetchApi<import("./types").DatasetClassesResponse>("/api/dataset/classes");
+}
+
+export async function fetchClassImages(className: string, split: string = "train", limit: number = 12, offset: number = 0) {
+  return fetchApi<import("./types").ClassImagesResponse>(
+    `/api/dataset/classes/${encodeURIComponent(className)}/images?split=${split}&limit=${limit}&offset=${offset}`
+  );
+}
