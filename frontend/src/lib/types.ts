@@ -143,3 +143,30 @@ export interface ModelOption {
   test_accuracy: number | null;
   num_folds: number | null;
 }
+
+// Dataset types
+
+export interface DatasetClassInfo {
+  name: string;
+  train_count: number;
+  test_count: number;
+  total: number;
+}
+
+export interface DatasetClassesResponse {
+  classes: DatasetClassInfo[];
+  total_train: number;
+  total_test: number;
+}
+
+export interface DatasetImage {
+  filename: string;
+  url: string;
+}
+
+export interface ClassImagesResponse {
+  class_name: string;
+  split: string;
+  total: number;
+  images: DatasetImage[];
+}
