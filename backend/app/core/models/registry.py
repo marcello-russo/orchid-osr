@@ -17,6 +17,10 @@ class ModelRegistryEntry:
     norm_mean: list[float]
     norm_std: list[float]
     embedding_dim: int
+    # Architecture-specific training hyperparameters
+    optimizer: str = "adam"
+    weight_decay: float = 0.0
+    learning_rate: float | None = None  # None = use CLI default
 
 
 MODEL_REGISTRY: dict[str, ModelRegistryEntry] = {}

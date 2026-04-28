@@ -153,6 +153,8 @@ def train(
     gradient_accumulation_steps: int = 1,
     resume_from: Optional[str] = None,
     overfit_threshold: float = 0,
+    optimizer_type: str = "adam",
+    weight_decay: float = 0.0,
 ) -> tuple[ClassifierModel, dict]:
     """
     Train a classifier model.
@@ -171,6 +173,8 @@ def train(
         gradient_accumulation_steps: Accumulate gradients over N batches
         resume_from: Path to checkpoint file to resume from
         overfit_threshold: Prechelt GL — stop when val_loss > threshold * best_val_loss (0 = disabled)
+        optimizer_type: "adam" or "adamw"
+        weight_decay: Weight decay for the optimizer
 
     Returns:
         Tuple of (trained model, training history dict)
@@ -178,7 +182,10 @@ def train(
     model = model.to(device)
 
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    if optimizer_type == "adamw":
+        optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
+    else:
+        optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
     scheduler = ReduceLROnPlateau(optimizer, mode="min", factor=0.1, patience=5)
 
     best_f1 = 0.0

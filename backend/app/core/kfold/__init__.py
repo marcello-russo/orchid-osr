@@ -64,6 +64,8 @@ def kfold_experiment(
 
     config_path = os.path.join(kfold_dir, "config.json")
     if not os.path.exists(config_path):
+        from app.core.models import get_registry_entry as _get_entry
+        _entry = _get_entry(model_variant)
         config = {
             "type": "kfold", "model_variant": model_variant, "num_folds": num_folds,
             "num_epochs": num_epochs, "batch_size": batch_size, "learning_rate": learning_rate,
@@ -72,6 +74,8 @@ def kfold_experiment(
             "patience": patience,
             "gradient_accumulation_steps": gradient_accumulation_steps,
             "overfit_threshold": overfit_threshold,
+            "optimizer": _entry.optimizer, "weight_decay": _entry.weight_decay,
+            "effective_learning_rate": _entry.learning_rate or learning_rate,
             "timestamp": datetime.now().isoformat(),
         }
         with open(config_path, "w") as f:

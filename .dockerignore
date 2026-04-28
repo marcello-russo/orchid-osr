@@ -10,7 +10,8 @@ logs_1/
 logs_2/
 backend/dataset/
 backend/models/
-backend/experiments/
+backend/experiments/**/*.pt
+backend/experiments/**/figures/
 backend/test_dataset/
 
 # Git

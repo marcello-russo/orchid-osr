@@ -230,7 +230,8 @@ def prepare_fold_data(augmented_train_dir, val_dir, batch_size, seed, model_vari
 
 def train_fold(model_variant, num_classes, train_loader, val_loader,
                num_epochs, learning_rate, device, checkpoint_path, patience=0,
-               gradient_accumulation_steps=1, resume=False, overfit_threshold=0):
+               gradient_accumulation_steps=1, resume=False, overfit_threshold=0,
+               optimizer_type="adam", weight_decay=0.0):
     """
     Train di un singolo fold. Riutilizza train() da app.core.training.
 
@@ -240,13 +241,22 @@ def train_fold(model_variant, num_classes, train_loader, val_loader,
     Returns:
         tuple: (modello, fold_metrics_dict)
     """
-    from app.core.models import create_model
+    from app.core.models import create_model, get_registry_entry
     from app.core.training import train, cleanup_gpu
 
     ckpt_dir = os.path.dirname(checkpoint_path)
     os.makedirs(ckpt_dir, exist_ok=True)
 
     model = create_model(model_variant, num_classes=num_classes, pretrained=True)
+
+    # Use architecture-specific optimizer settings from registry
+    entry = get_registry_entry(model_variant)
+    opt_type = optimizer_type or entry.optimizer
+    wd = weight_decay if weight_decay > 0 else entry.weight_decay
+    lr = entry.learning_rate if entry.learning_rate else learning_rate
+
+    if lr != learning_rate:
+        logger.info(f"  Registry LR override: {learning_rate} -> {lr} ({model_variant})")
 
     resume_from = None
     if resume:
@@ -260,7 +270,7 @@ def train_fold(model_variant, num_classes, train_loader, val_loader,
         train_loader=train_loader,
         val_loader=val_loader,
         num_epochs=num_epochs,
-        learning_rate=learning_rate,
+        learning_rate=lr,
         device=device,
         num_classes=num_classes,
         checkpoint_dir=ckpt_dir,
@@ -268,6 +278,8 @@ def train_fold(model_variant, num_classes, train_loader, val_loader,
         gradient_accumulation_steps=gradient_accumulation_steps,
         resume_from=resume_from,
         overfit_threshold=overfit_threshold,
+        optimizer_type=opt_type,
+        weight_decay=wd,
     )
 
     # Salva pesi migliori
