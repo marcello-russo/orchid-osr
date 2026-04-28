@@ -116,7 +116,7 @@ def run_experiment(
     effective_tag = tag or (model_variant if exp_id == 6 else None)
     results_dir = PROJECT_ROOT / "experiments" / (f"{exp['name']}_{effective_tag}" if effective_tag else exp["name"])
     results_dir.mkdir(parents=True, exist_ok=True)
-    exp_log_name = f"{exp['name']}_{effective_tag}_{model_variant}.log" if effective_tag else f"{exp['name']}_{model_variant}.log"
+    exp_log_name = f"{exp['name']}_{model_variant}.log"
     exp_log = str(results_dir / exp_log_name)
     exp_handler = logging.FileHandler(exp_log)
     exp_handler.setFormatter(logging.Formatter('%(asctime)s | %(levelname)s | %(message)s'))
