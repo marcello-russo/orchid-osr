@@ -11,9 +11,10 @@ const PAGE_SIZE = 12;
 interface ClassGalleryProps {
   classInfo: DatasetClassInfo;
   split: "train_clean" | "test_clean";
+  totalImages: number;
 }
 
-export function ClassGallery({ classInfo, split }: ClassGalleryProps) {
+export function ClassGallery({ classInfo, split, totalImages }: ClassGalleryProps) {
   const [offset, setOffset] = useState(0);
   useEffect(() => { setOffset(0); }, [split]);
   const apiSplit = split === "train_clean" ? "train" : "test";
@@ -27,6 +28,17 @@ export function ClassGallery({ classInfo, split }: ClassGalleryProps) {
           <CardTitle className="text-base">{classInfo.name}</CardTitle>
           <span className="text-sm text-muted-foreground">
             {classInfo.total} images ({classInfo.train_count} train / {classInfo.test_count} test)
+          </span>
+        </div>
+        <div className="mt-1.5 flex items-center gap-2">
+          <div className="h-1.5 flex-1 rounded-full bg-muted overflow-hidden">
+            <div
+              className="h-full rounded-full bg-primary/60 transition-all"
+              style={{ width: `${(classInfo.total / totalImages) * 100}%` }}
+            />
+          </div>
+          <span className="text-xs text-muted-foreground tabular-nums">
+            {((classInfo.total / totalImages) * 100).toFixed(1)}%
           </span>
         </div>
       </CardHeader>

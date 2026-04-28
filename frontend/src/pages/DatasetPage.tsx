@@ -56,7 +56,7 @@ export function DatasetPage() {
       {/* Gallery per class */}
       <div className="space-y-4">
         {data.classes.map((cls) => (
-          <ClassGallery key={cls.name} classInfo={cls} split={split} />
+          <ClassGallery key={cls.name} classInfo={cls} split={split} totalImages={data.total_train + data.total_test} />
         ))}
       </div>
     </div>

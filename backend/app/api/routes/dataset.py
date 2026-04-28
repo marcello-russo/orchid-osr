@@ -13,6 +13,7 @@ router = APIRouter(prefix="/api/dataset", tags=["dataset"])
 _IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
 _VALID_SPLITS = {"train_clean", "test_clean"}
 _SPLIT_ALIASES = {"train": "train_clean", "test": "test_clean"}
+_VALID_CLASSES = set(settings.class_names)
 
 
 def _get_dataset_base() -> Path:
@@ -69,14 +70,14 @@ async def list_classes():
 async def list_class_images(class_name: str, split: str = "train", limit: int = 12, offset: int = 0):
     """List images for a class in a given split."""
     class_name = _validate_segment(class_name)
+    if class_name not in _VALID_CLASSES:
+        raise HTTPException(status_code=400, detail=f"Unknown class: {class_name}")
     split = _SPLIT_ALIASES.get(split, split)
     if split not in _VALID_SPLITS:
         raise HTTPException(status_code=400, detail=f"Invalid split. Use: train, test, train_clean, or test_clean")
 
     base = _get_dataset_base()
     class_dir = base / split / class_name
-    if not class_dir.is_dir():
-        raise HTTPException(status_code=404, detail=f"Class '{class_name}' not found in {split}")
 
     all_files = sorted(
         f.name for f in class_dir.iterdir()
@@ -98,6 +99,8 @@ async def serve_image(split: str, class_name: str, filename: str):
     split = _validate_segment(split)
     class_name = _validate_segment(class_name)
     filename = _validate_segment(filename)
+    if class_name not in _VALID_CLASSES:
+        raise HTTPException(status_code=400, detail=f"Unknown class: {class_name}")
     split = _SPLIT_ALIASES.get(split, split)
     if split not in _VALID_SPLITS:
         raise HTTPException(status_code=400, detail="Invalid split")

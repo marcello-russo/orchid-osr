@@ -1,20 +1,12 @@
 // frontend/src/features/explorer/components/ExperimentConfigCard.tsx
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
+import { TOOLTIPS } from "@/features/explorer/tooltipText";
 import type { ExperimentConfig } from "@/lib/types";
 
 interface ExperimentConfigCardProps {
   config: ExperimentConfig;
 }
-
-const TOOLTIPS = {
-  optimizer:
-    "Adam for ResNet (proven fine-tuning baseline). AdamW for ConvNeXt and DINOv2 — decoupled weight decay prevents overfitting on small datasets.",
-  learningRate:
-    "Fine-tuning LR from the model registry. ResNet: 0.001 (standard), ConvNeXt: 0.0001 (LayerNorm is sensitive to large gradients), DINOv2: 0.0002 (LoRA adapter).",
-  weightDecay:
-    "L2 regularization strength. 0 for ResNet (BatchNorm provides implicit regularization), 0.05 for ConvNeXt (ConvNeXt paper recipe), 0.01 for DINOv2 (light regularization on LoRA adapters).",
-};
 
 export function ExperimentConfigCard({ config }: ExperimentConfigCardProps) {
   const hasRecipe =
