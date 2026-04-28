@@ -27,10 +27,18 @@ Fair comparison of 6 architectures with standard cross-entropy loss. All models 
 | Epochs (max) | 100 |
 | Early stopping | Patience=15 on val_loss |
 | Batch size | 8 (effective 32 with gradient accumulation ×4) |
-| Optimizer | Adam, lr=0.001 |
+| Optimizer | Per-architecture (see below) |
 | Scheduler | ReduceLROnPlateau |
 | Validation | 5-fold StratifiedKFold (seed=57) |
 | Pretrained | ImageNet |
+
+**Per-architecture settings:**
+
+| Model | Optimizer | LR | Weight Decay |
+|-------|-----------|----|-------------|
+| ResNet18/50 | Adam | 0.001 | 0 |
+| ConvNeXt-Tiny/Small | AdamW | 0.0001 | 0.05 |
+| DINOv2-Small/Base | AdamW | 0.0002 | 0.01 |
 
 ### Models
 
