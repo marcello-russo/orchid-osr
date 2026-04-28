@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { ExperimentConfigCard } from "@/features/explorer/components/ExperimentConfigCard";
+import { TOOLTIPS } from "@/features/explorer/tooltipText";
 import {
   Table,
   TableBody,
@@ -98,37 +99,37 @@ export function ExperimentDetailPage() {
           {config.num_epochs && (
             <span>
               Epochs: {config.num_epochs}
-              <InfoTooltip text="Maximum training duration. Early stopping terminates earlier via patience." />
+              <InfoTooltip text={TOOLTIPS.epochs} />
             </span>
           )}
           {config.batch_size && (
             <span>
               Batch: {config.batch_size}
-              <InfoTooltip text="Physical batch=8 (fits 4GB VRAM). Effective batch=32 via gradient accumulation (4 steps). Mathematically identical to batch=32 for cross-entropy loss." />
+              <InfoTooltip text={TOOLTIPS.batchSize} />
             </span>
           )}
           {config.learning_rate && (
             <span>
               LR: {config.learning_rate}
-              <InfoTooltip text="Fine-tuning LR from the model registry. ResNet: 0.001, ConvNeXt: 0.0001, DINOv2: 0.0002." />
+              <InfoTooltip text={TOOLTIPS.learningRate} />
             </span>
           )}
           {config.patience !== undefined && (
             <span>
               Patience: {config.patience}
-              <InfoTooltip text="Stops training after 15 consecutive epochs without val_loss improvement. Catches convergence without premature stopping." />
+              <InfoTooltip text={TOOLTIPS.patience} />
             </span>
           )}
           {summary.test_accuracy !== null && (
             <span className="font-medium text-primary">
               Test Accuracy: {(summary.test_accuracy * 100).toFixed(2)}%
-              <InfoTooltip text="Overall fraction of correctly classified test images (300 total, 50 per class)." />
+              <InfoTooltip text={TOOLTIPS.testAccuracy} />
             </span>
           )}
           {summary.test_f1 !== null && (
             <span className="font-medium text-primary">
               Test F1: {(summary.test_f1 * 100).toFixed(2)}%
-              <InfoTooltip text="Harmonic mean of per-class F1 scores. Preferred over accuracy for imbalanced datasets." />
+              <InfoTooltip text={TOOLTIPS.f1macro} />
             </span>
           )}
         </div>
