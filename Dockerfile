@@ -25,7 +25,8 @@ COPY backend/app/ app/
 COPY backend/server.py .
 COPY backend/cli.py .
 COPY backend/scripts/ scripts/
-RUN mkdir -p experiments models dataset
+RUN mkdir -p models dataset
+COPY backend/experiments/ experiments/
 COPY entrypoint.sh .
 RUN chmod +x entrypoint.sh
 
