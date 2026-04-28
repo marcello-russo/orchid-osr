@@ -130,3 +130,32 @@ class ModelOption(BaseModel):
 class ModelListResponse(BaseModel):
     """List of available classification models."""
     models: list[ModelOption]
+
+
+class DatasetClassInfo(BaseModel):
+    """A single class in the dataset with train/test counts."""
+    name: str
+    train_count: int
+    test_count: int
+    total: int
+
+
+class DatasetClassesResponse(BaseModel):
+    """List of dataset classes with distribution stats."""
+    classes: list[DatasetClassInfo]
+    total_train: int
+    total_test: int
+
+
+class DatasetImage(BaseModel):
+    """A single image reference in the dataset."""
+    filename: str
+    url: str
+
+
+class ClassImagesResponse(BaseModel):
+    """Images for a specific class and split."""
+    class_name: str
+    split: str
+    total: int
+    images: list[DatasetImage]
