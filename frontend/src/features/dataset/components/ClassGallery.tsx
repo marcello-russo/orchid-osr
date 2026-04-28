@@ -1,5 +1,5 @@
 // frontend/src/features/dataset/components/ClassGallery.tsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,6 +15,7 @@ interface ClassGalleryProps {
 
 export function ClassGallery({ classInfo, split }: ClassGalleryProps) {
   const [offset, setOffset] = useState(0);
+  useEffect(() => { setOffset(0); }, [split]);
   const apiSplit = split === "train_clean" ? "train" : "test";
   const { data, isLoading } = useClassImages(classInfo.name, apiSplit, PAGE_SIZE, offset);
   const hasMore = data ? offset + PAGE_SIZE < data.total : false;
