@@ -19,9 +19,9 @@ pinned: false
 
 | Phase | Goal | Status |
 |-------|------|--------|
-| **P1 — Classification** | ResNet18/50, ConvNeXt-Tiny/Small, DINOv2+LoRA baselines, domain shift experiments, k-fold CV, model registry | ✅ Done |
-| **P1b — Experiment Explorer** | React SPA dashboard, classification upload, explainability heatmap, species stats, model selector | ✅ Done |
-| **P2 — Embedding Space** | Contrastive learning (SimCLR, Triplet Loss, SupCon) to build a structured orchid vector space | 🔜 Next |
+| **P1 — Classification** | ResNet18/50, ConvNeXt-Tiny/Small, DINOv2+LoRA baselines, k-fold CV on clean split, per-architecture recipes, model registry | ✅ Done |
+| **P1b — Experiment Explorer** | React SPA dashboard, classification upload, explainability heatmap, species stats, model selector, dataset explorer with live gallery, insight tooltips, about page | ✅ Done |
+| **P2 — Embedding Space** | Supervised Contrastive Learning (SupCon) to build a structured orchid vector space | 🔜 Next |
 | **P3 — Retrieval & Similarity** | Nearest-neighbor search, species clustering, unknown class detection | 📋 Planned |
 
 ---
@@ -39,86 +39,44 @@ pinned: false
 
 ---
 
-## 📸 Gallery
+## 📊 Results — Serie 1 (Clean Split, CE Loss)
 
-### *Ophrys exaltata*
-<p float="left">
-<img src="assets/images/raw/O_exaltata.jpg" height="220">
-<img src="assets/images/augmented/O_exaltata.jpg" height="220">
-<img src="assets/images/results/O_exaltata.png" height="220">
-</p>
+5-fold StratifiedKFold on exp6 clean split (seed=57). 2,017 train / 300 test (50/class, balanced). Zero data leakage verified via MD5.
 
-### *Ophrys garganica*
-<p float="left">
-<img src="assets/images/raw/O_garganica.jpg" height="220">
-<img src="assets/images/augmented/O_garganica.jpg" height="220">
-<img src="assets/images/results/O_garganica.png" height="220">
-</p>
-
-### *Ophrys incubacea*
-<p float="left">
-<img src="assets/images/raw/O_incubacea.jpg" height="220">
-<img src="assets/images/augmented/O_incubacea.jpg" height="220">
-<img src="assets/images/results/O_incubacea.png" height="220">
-</p>
+| Model | Val F1 Macro | Test Accuracy | Test F1 Macro | Status |
+|-------|-------------|---------------|---------------|--------|
+| ResNet18 | 0.868 ± 0.016 | 85.00% | 84.96% | ✅ |
+| ResNet50 | 0.905 ± 0.027 | 88.00% | 88.01% | ✅ |
+| ConvNeXt-Tiny | — | — | — | 🔜 Training |
+| ConvNeXt-Small | — | — | — | 📋 Pending |
+| DINOv2-Small + LoRA | — | — | — | 📋 Pending |
+| DINOv2-Base + LoRA | — | — | — | 📋 Pending |
 
 <details>
-<summary>See all species</summary>
+<summary>Per-architecture training recipes</summary>
 
-### *Ophrys majellensis*
-<p float="left">
-<img src="assets/images/raw/O_majellensis.jpg" height="220">
-<img src="assets/images/augmented/O_majellensis.jpg" height="220">
-<img src="assets/images/results/O_majellensis.png" height="220">
-</p>
+| Model | Optimizer | LR | Weight Decay | Rationale |
+|-------|-----------|----|-------------|-----------|
+| ResNet18/50 | Adam | 0.001 | 0 | Standard fine-tuning, BatchNorm provides implicit regularization |
+| ConvNeXt-Tiny/Small | AdamW | 0.0001 | 0.05 | ConvNeXt paper recipe — LayerNorm is sensitive to large gradients |
+| DINOv2-Small/Base | AdamW | 0.0002 | 0.01 | Light regularization on LoRA adapters (~0.5% trainable params) |
 
-### *Ophrys sphegodes*
-<p float="left">
-<img src="assets/images/raw/O_sphegodes.jpg" height="220">
-<img src="assets/images/augmented/O_sphegodes.jpg" height="220">
-<img src="assets/images/results/O_sphegodes.png" height="220">
-</p>
-
-### *Ophrys sphegodes* (Palena)
-<p float="left">
-<img src="assets/images/raw/O_sphegodes_Palena.jpg" height="220">
-<img src="assets/images/augmented/O_sphegodes_Palena.jpg" height="220">
-<img src="assets/images/results/O_sphegodes_Palena.png" height="220">
-</p>
+Shared: batch=8 (effective 32 via gradient accumulation ×4), patience=15, ReduceLROnPlateau, 100 epochs max.
 
 </details>
 
----
-
-## 📊 Results — Phase 1 (Classification)
-
-### K-Fold Cross-Validation (5-fold, combined dataset)
-
-| Model | Val Accuracy | Val F1 | Test Accuracy | Test F1 |
-|-------|-------------|--------|---------------|---------|
-| ResNet18 | 86.97% ± 1.43% | 84.85% ± 1.72% | 97.69% | 97.74% |
-| ResNet50 | 85.18% ± 1.89% | 84.85% ± 1.72% | 97.41% | 97.67% |
-| ConvNeXt-Tiny | — | — | — | — |
-| ConvNeXt-Small | — | — | — | — |
-| DINOv2-Small + LoRA | — | — | — | — |
-| DINOv2-Base + LoRA | — | — | — | — |
-
 <details>
-<summary>Domain shift experiments</summary>
+<summary>Legacy experiments (exp1-5, data leakage)</summary>
+
+These experiments used combined datasets with content overlap between train and test (verified via MD5). Results are inflated and not reliable.
 
 | Experiment | Train | Test | Accuracy | F1 Macro | Notes |
 |------------|-------|------|----------|----------|-------|
 | Exp1 | Private | Private | 94.78% | 93.72% | Baseline (6 classes) |
 | Exp2 | Private | Internet Raw | 35.09% | 37.57% | Strong domain shift |
 | Exp3 | Private | Internet Cropped | 48.15% | 50.43% | Cropping helps (+12.9%) |
-| **Exp4** | **Combined** | **Internet Cropped** | **95.19%** | **95.37%** | **Best on internet (+44.9%)** |
-| **Exp5** | **Combined** | **Private** | **96.79%** | **95.83%** | **No catastrophic forgetting** |
-
-**Key findings:**
-1. Domain shift drops F1 from 93.72% → 37.57%
-2. Cropping recovers +12.9%
-3. Combined training recovers +44.9% (F1 → 95.37%)
-4. No catastrophic forgetting (F1 93.72% → 95.83%)
+| Exp4 | Combined | Internet Cropped | 95.19% | 95.37% | Data leakage present |
+| Exp5 | Combined | Private | 96.79% | 95.83% | Data leakage present |
 
 </details>
 
@@ -161,20 +119,21 @@ Frontend at http://localhost:5173, API proxy → backend :5000.
 cd backend
 
 python cli.py --status                                          # Check status
-python cli.py --all                                              # Run all experiments
 
-# K-fold cross-validation (any model variant)
-python cli.py --cross-validate --exp 4 --model resnet50 --epochs 100
-python cli.py --cross-validate --exp 4 --model convnext_tiny --epochs 100
-python cli.py --cross-validate --exp 4 --model dinov2_small --epochs 100
+# K-fold cross-validation on clean split (exp6)
+python cli.py --cross-validate --exp 6 --model resnet18 \
+  --epochs 100 --patience 15 --overfit-threshold 0 --accumulation 4
 
-# Visualization
-python cli.py --plot experiments/exp4_combined_internet_cropped_100ep/
-python cli.py --plot all
+python cli.py --cross-validate --exp 6 --model convnext_tiny \
+  --epochs 100 --patience 15 --overfit-threshold 0 --accumulation 4
 
-# Single fold (for long runs)
-python cli.py --cross-validate --exp 4 --model resnet50 --fold 1
-python cli.py --cross-validate --exp 4 --model resnet50 --aggregate-only
+# Single fold (for resume)
+python cli.py --cross-validate --exp 6 --model resnet50 --fold 0 \
+  --epochs 100 --patience 15 --overfit-threshold 0 --accumulation 4
+
+# Aggregate completed folds
+python cli.py --cross-validate --exp 6 --model resnet50 \
+  --epochs 100 --patience 15 --overfit-threshold 0 --accumulation 4 --aggregate-only
 ```
 
 ---
@@ -192,26 +151,28 @@ resnet18/
 │   │   │   └── kfold/            # K-fold cross-validation
 │   │   ├── cli/                  # CLI interface
 │   │   ├── api/                  # FastAPI endpoints
+│   │   │   └── routes/           # experiments, classify, species, dataset
 │   │   ├── preprocessing/        # Data preprocessing
 │   │   ├── explainability/       # Captum explainability
-│   │   └── visualization/        # Plot generation (ggplot, 300 DPI)
-│   ├── tests/                    # Unit tests (112 tests)
+│   │   └── visualization/        # Plot generation
 │   ├── experiments/              # Experiment results
-│   ├── notebooks/                # Jupyter notebooks
 │   ├── cli.py                    # CLI entrypoint
 │   ├── server.py                 # API server entrypoint
 │   └── requirements.txt
-├── frontend/                     # React SPA — Experiment Explorer
+├── frontend/                     # React SPA
 │   ├── src/
 │   │   ├── components/           # Layout + Shadcn/ui components
-│   │   ├── features/explorer/    # Charts, hooks, types
-│   │   ├── features/classify/    # Classification hooks
-│   │   ├── pages/                # Dashboard, Experiments, Detail, Classify
+│   │   ├── features/
+│   │   │   ├── explorer/         # Charts, hooks, experiment config
+│   │   │   ├── classify/         # Classification hooks
+│   │   │   └── dataset/          # Dataset explorer gallery & charts
+│   │   ├── pages/                # Dashboard, Experiments, Detail, Classify, Dataset, About
 │   │   ├── stores/               # Zustand (theme, sidebar)
 │   │   └── lib/                  # API client, React Query, types
 │   └── package.json
 ├── Dockerfile                    # Multi-stage (Node.js build + PyTorch)
 ├── podman-start.sh
+├── entrypoint.sh
 ├── docs/
 └── assets/
 ```
@@ -222,7 +183,7 @@ resnet18/
 
 | | Component |
 |---|-----------|
-| 🧠 | PyTorch 2.1.0 + CUDA 11.8 |
+| 🧠 | PyTorch 2.6.0 + CUDA 12.4 |
 | 🏛️ | ResNet18/50, ConvNeXt-Tiny/Small, DINOv2-Small/Base + LoRA (ImageNet pretrained) |
 | 🔍 | Captum (explainability) |
 | 🖥️ | React 19 + TypeScript + Vite + Tailwind v4 + Shadcn/ui |
@@ -241,16 +202,17 @@ python server.py                    # Start API on port 5000
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/health` | GET | Health check |
-| `/classify` | POST | Classify image (base64) |
 | `/classify/upload` | POST | Classify uploaded image (multipart, optional `model_id`) |
-| `/classify/explain` | POST | Occlusion heatmap for uploaded image (multipart, optional `model_id`) |
+| `/classify/explain` | POST | Occlusion heatmap for uploaded image |
 | `/classify/models` | GET | List available trained models with metrics |
 | `/api/experiments` | GET | List all experiments |
 | `/api/experiments/{id}` | GET | Experiment detail with folds |
-| `/api/experiments/{id}/folds/{n}` | GET | Single fold data (1-based) |
-| `/api/species` | GET | Species list with image counts from dataset |
+| `/api/experiments/{id}/folds/{n}` | GET | Single fold data (0-based) |
+| `/api/species` | GET | Species list with image counts |
+| `/api/dataset/classes` | GET | Dataset classes with train/test counts |
+| `/api/dataset/classes/{name}/images` | GET | Paginated image list per class |
+| `/api/dataset/images/{split}/{class}/{file}` | GET | Serve dataset image |
 | `/docs` | GET | Swagger UI |
-| `/redoc` | GET | ReDoc documentation |
 
 ---
 
