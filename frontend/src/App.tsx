@@ -17,6 +17,12 @@ const ClassifyPage = lazy(() =>
 const EmbeddingsPage = lazy(() =>
   import("@/pages/EmbeddingsPage").then((m) => ({ default: m.EmbeddingsPage }))
 );
+const DatasetPage = lazy(() =>
+  import("@/pages/DatasetPage").then((m) => ({ default: m.DatasetPage }))
+);
+const AboutPage = lazy(() =>
+  import("@/pages/AboutPage").then((m) => ({ default: m.AboutPage }))
+);
 
 function PageFallback() {
   return (
@@ -45,6 +51,14 @@ function App() {
           <Route
             path="/embeddings"
             element={<ErrorBoundary><Suspense fallback={<PageFallback />}><EmbeddingsPage /></Suspense></ErrorBoundary>}
+          />
+          <Route
+            path="/dataset"
+            element={<ErrorBoundary><Suspense fallback={<PageFallback />}><DatasetPage /></Suspense></ErrorBoundary>}
+          />
+          <Route
+            path="/about"
+            element={<ErrorBoundary><Suspense fallback={<PageFallback />}><AboutPage /></Suspense></ErrorBoundary>}
           />
         </Route>
       </Routes>
