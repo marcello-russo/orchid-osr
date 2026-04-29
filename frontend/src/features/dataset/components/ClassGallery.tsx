@@ -83,7 +83,7 @@ export function ClassGallery({ classInfo, split, totalImages }: ClassGalleryProp
             {data.images.map((img) => (
               <div key={img.filename} className="group relative aspect-square overflow-hidden rounded-md bg-muted">
                 <ImageWithFade 
-                  src={img.url} 
+                  src={`${img.url}?size=300`} 
                   alt={img.filename} 
                 />
               </div>
