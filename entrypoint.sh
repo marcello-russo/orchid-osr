@@ -32,16 +32,17 @@ snapshot_download(
     allow_patterns=['serie1_ce/**/*.pt', 'serie1_ce/**/*.json', 'serie1_ce/**/*.safetensors'],
     token=os.environ.get('HF_TOKEN')
 )
+import shutil
 # Flatten: move serie1_ce/exp6_*/ to experiments/exp6_*/
 src = 'experiments/serie1_ce'
 if os.path.isdir(src):
     for d in os.listdir(src):
         s = os.path.join(src, d)
         t = os.path.join('experiments', d)
-        if os.path.isdir(s) and not os.path.exists(t):
-            os.rename(s, t)
-            print(f'Moved {d}')
-    os.rmdir(src)
+        if os.path.isdir(s):
+            shutil.copytree(s, t, dirs_exist_ok=True)
+            print(f'Merged {d}')
+    shutil.rmtree(src)
 open('experiments/.models_synced', 'w').close()
 print('Models synced')
 " || echo "Model download failed"
