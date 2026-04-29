@@ -13,6 +13,7 @@ import { useClassify } from "@/features/classify/hooks/useClassify";
 import { useExplain } from "@/features/classify/hooks/useExplain";
 import { useModels } from "@/features/classify/hooks/useModels";
 import { cn } from "@/lib/utils";
+import { InfoTooltip } from "@/components/ui/InfoTooltip";
 
 export function ClassifyPage() {
   const [file, setFile] = useState<File | null>(null);
@@ -190,7 +191,10 @@ export function ClassifyPage() {
               <CardContent className="space-y-3 pt-4">
                 {models.length > 0 && (
                   <div className="space-y-1.5">
-                    <p className="text-xs font-medium text-muted-foreground">Model</p>
+                    <p className="text-xs font-medium text-muted-foreground flex items-center">
+                      Model
+                      <InfoTooltip text="Only models from Experiment 6 (clean split, 6 classes) are available for classification." />
+                    </p>
                     <div className="flex flex-wrap gap-1.5">
                       {models.map((m) => (
                         <button
