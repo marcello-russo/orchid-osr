@@ -6,8 +6,8 @@ import {
   Cpu, 
   BarChart3, 
   Lightbulb, 
-  Microscope,
-  Info
+  Info,
+  GraduationCap
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -18,15 +18,15 @@ export function AboutPage() {
       <div className="relative overflow-hidden rounded-3xl bg-linear-to-br from-primary/10 via-primary/5 to-background p-8 md:p-12 border border-primary/10">
         <div className="relative z-10 max-w-3xl">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold mb-6 tracking-wider uppercase">
-            <Microscope className="size-3.5" /> Research Project
+            <GraduationCap className="size-3.5" /> Master's Thesis Project
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-primary tracking-tight mb-4">
             OrchID <span className="text-foreground/80">NCD</span>
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
-            Un'infrastruttura di Deep Learning per la classificazione tassonomica del genere 
-            <span className="italic font-medium text-foreground"> Ophrys</span> e lo studio della 
-            New Class Discovery (NCD) nel contesto della biodiversità mediterranea.
+            A Deep Learning infrastructure for the taxonomic classification of the 
+            <span className="italic font-medium text-foreground"> Ophrys</span> genus and the study of 
+            New Class Discovery (NCD) in the context of Mediterranean biodiversity.
           </p>
         </div>
         {/* Background decoration */}
@@ -39,13 +39,13 @@ export function AboutPage() {
           
           <Section 
             icon={<BookOpen className="size-5" />} 
-            title="Contesto Scientifico"
+            title="Scientific Context"
           >
             <p>
-              Il genere <strong>Ophrys</strong> rappresenta uno dei casi più complessi e affascinanti di evoluzione biologica guidata dagli impollinatori. Queste orchidee utilizzano il "mimetismo sessuale", emettendo feromoni e imitando la morfologia degli insetti per attirare i maschi di specifiche specie.
+              The <strong>Ophrys</strong> genus represents one of the most complex and fascinating cases of biological evolution driven by pollinators. These orchids utilize "sexual deception," emitting pheromones and mimicking the morphology of insects to attract males of specific species.
             </p>
             <p>
-              Questa estrema specializzazione porta a una variabilità morfologica incredibile e a fenomeni di ibridazione frequenti, rendendo l'identificazione sul campo estremamente ardua anche per esperti botanici. Il progetto <strong>OrchID</strong> nasce per fornire strumenti computazionali oggettivi in grado di supportare il monitoraggio della biodiversità.
+              This extreme specialization leads to incredible morphological variability and frequent hybridization, making field identification extremely difficult even for expert botanists. The <strong>OrchID</strong> project was born to provide objective computational tools capable of supporting biodiversity monitoring.
             </p>
           </Section>
 
@@ -54,50 +54,50 @@ export function AboutPage() {
             title="Dataset & Data Integrity"
           >
             <p>
-              Il dataset di riferimento (Exp 6) è stato curato per garantire l'assenza totale di <strong>data leakage</strong>. Attraverso un'analisi sistematica degli hash MD5, abbiamo identificato e rimosso duplicati cross-source che avrebbero inquinato le metriche di test.
+              The reference dataset (Exp 6) was curated to ensure total absence of <strong>data leakage</strong>. Through a systematic analysis of MD5 hashes, we identified and removed cross-source duplicates that would have contaminated the test metrics.
             </p>
             <div className="grid grid-cols-2 gap-4 my-4">
               <div className="p-4 rounded-xl bg-muted/50 border border-border">
                 <div className="text-2xl font-bold text-primary">2,317</div>
-                <div className="text-xs text-muted-foreground uppercase">Immagini Totali</div>
+                <div className="text-xs text-muted-foreground uppercase text-[10px]">Total Images</div>
               </div>
               <div className="p-4 rounded-xl bg-muted/50 border border-border">
                 <div className="text-2xl font-bold text-primary">6</div>
-                <div className="text-xs text-muted-foreground uppercase">Specie Target</div>
+                <div className="text-xs text-muted-foreground uppercase text-[10px]">Target Species</div>
               </div>
             </div>
             <p>
-              La suddivisione attuale prevede 2,017 immagini per il training e un test set bilanciato di 300 immagini (50 per classe), permettendo una valutazione imparziale su tutte le specie trattate.
+              The current split includes 2,017 images for training and a balanced test set of 300 images (50 per class), allowing for an unbiased evaluation across all treated species.
             </p>
             <Link to="/dataset" className="inline-flex items-center text-primary font-medium hover:gap-2 transition-all">
-              Esplora il dataset <span className="ml-1">→</span>
+              Explore the dataset <span className="ml-1">→</span>
             </Link>
           </Section>
 
           <Section 
             icon={<Cpu className="size-5" />} 
-            title="Architetture a Confronto"
+            title="Architecture Comparison"
           >
             <p>
-              Non ci siamo limitati a un singolo modello, ma abbiamo messo a confronto le tre filosofie dominanti della Computer Vision moderna:
+              We compared three dominant philosophies of modern Computer Vision:
             </p>
-            <ul className="space-y-4 mt-4">
+            <ul className="space-y-4 mt-4 text-sm">
               <li className="flex gap-3">
-                <div className="size-2 rounded-full bg-primary mt-1.5 shrink-0" />
+                <div className="size-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
                 <div>
-                  <span className="font-bold">ResNet (CNN Classiche):</span> Lo standard industriale basato su connessioni residue. Ottimo equilibrio tra velocità e precisione.
+                  <span className="font-bold">ResNet (Classic CNN):</span> The industry standard based on residual connections. Excellent balance between speed and accuracy.
                 </div>
               </li>
               <li className="flex gap-3">
-                <div className="size-2 rounded-full bg-primary mt-1.5 shrink-0" />
+                <div className="size-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
                 <div>
-                  <span className="font-bold">ConvNeXt (Modern CNN):</span> Un'evoluzione delle reti convoluzionali che adotta i miglioramenti strutturali dei Transformers (LayerNorm, Kernel più ampi) senza rinunciare all'efficienza spaziale.
+                  <span className="font-bold">ConvNeXt (Modern CNN):</span> An evolution of convolutional networks that adopts Transformer structural improvements (LayerNorm, larger kernels) without sacrificing spatial efficiency.
                 </div>
               </li>
               <li className="flex gap-3">
-                <div className="size-2 rounded-full bg-primary mt-1.5 shrink-0" />
+                <div className="size-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
                 <div>
-                  <span className="font-bold">DINOv2 (Vision Transformers):</span> Modelli pre-addestrati con apprendimento auto-supervisionato su 142 milioni di immagini. Utilizziamo adattatori <strong>LoRA</strong> (Low-Rank Adaptation) per il fine-tuning specifico sulle orchidee.
+                  <span className="font-bold">DINOv2 (Vision Transformers):</span> Models pre-trained with self-supervised learning on 142 million images. We use <strong>LoRA</strong> (Low-Rank Adaptation) adapters for specific fine-tuning on orchid species.
                 </div>
               </li>
             </ul>
@@ -105,16 +105,16 @@ export function AboutPage() {
 
           <Section 
             icon={<BarChart3 className="size-5" />} 
-            title="Metodologia di Validazione"
+            title="Validation Methodology"
           >
             <p>
-              La robustezza dei risultati è garantita da una <strong>5-Fold Stratified Cross-Validation</strong>. Questo approccio riduce la varianza legata alla scelta casuale dei campioni, producendo una metrica media accompagnata dalla deviazione standard (±).
+              Result robustness is guaranteed by a <strong>5-Fold Stratified Cross-Validation</strong>. This approach reduces the variance associated with random sample choice, producing a mean metric accompanied by its standard deviation (±).
             </p>
             <p>
-              Per l'addestramento utilizziamo una pipeline di <strong>Gradient Accumulation</strong> (Effective Batch Size: 32) che permette di mantenere un'alta precisione numerica anche su hardware con memoria limitata (GPU Quadro/Laptop).
+              For training, we utilize a <strong>Gradient Accumulation</strong> pipeline (Effective Batch Size: 32) that maintains high numerical precision even on hardware with limited memory (Quadro/Laptop GPUs).
             </p>
             <Link to="/experiments" className="inline-flex items-center text-primary font-medium hover:gap-2 transition-all">
-              Analizza gli esperimenti <span className="ml-1">→</span>
+              Analyze experiments <span className="ml-1">→</span>
             </Link>
           </Section>
         </div>
@@ -129,16 +129,16 @@ export function AboutPage() {
             </CardHeader>
             <CardContent className="text-xs space-y-4 text-muted-foreground">
               <div>
-                <div className="font-bold text-foreground mb-1">Serie 1: Benchmarking</div>
-                <p>Confronto delle prestazioni base su dati puliti (Stato attuale).</p>
+                <div className="font-bold text-foreground mb-1">Series 1: Benchmarking</div>
+                <p>Comparison of baseline performance on clean data (Current State).</p>
               </div>
               <div className="opacity-60">
-                <div className="font-bold text-foreground mb-1">Serie 2: Contrastive Learning</div>
-                <p>Implementazione di SupCon per migliorare la separazione nello spazio latente.</p>
+                <div className="font-bold text-foreground mb-1">Series 2: Contrastive Learning</div>
+                <p>Implementation of SupCon to improve latent space separation.</p>
               </div>
               <div className="opacity-60">
-                <div className="font-bold text-foreground mb-1">Serie 3: Explainability</div>
-                <p>Integrazione di mappe di calore Grad-CAM e Integrated Gradients per interpretare il focus dei modelli.</p>
+                <div className="font-bold text-foreground mb-1">Series 3: Explainability</div>
+                <p>Integration of Grad-CAM and Integrated Gradients to interpret model focus.</p>
               </div>
             </CardContent>
           </Card>
@@ -146,30 +146,23 @@ export function AboutPage() {
           <Card className="shadow-none bg-muted/30">
             <CardHeader>
               <CardTitle className="text-sm flex items-center gap-2">
-                <Info className="size-4" /> Glossario
+                <Info className="size-4" /> Glossary
               </CardTitle>
             </CardHeader>
             <CardContent className="text-xs space-y-3 font-mono">
-              <div>
-                <span className="text-primary">NCD:</span> New Class Discovery
-              </div>
-              <div>
-                <span className="text-primary">LoRA:</span> Low-Rank Adaptation
-              </div>
-              <div>
-                <span className="text-primary">F1-Score:</span> Media armonica tra Precision e Recall
-              </div>
-              <div>
-                <span className="text-primary">Stochastic:</span> Processo casuale controllato (seed=57)
-              </div>
+              <div><span className="text-primary">NCD:</span> New Class Discovery</div>
+              <div><span className="text-primary">LoRA:</span> Low-Rank Adaptation</div>
+              <div><span className="text-primary">F1-Score:</span> Harmonic mean of Precision & Recall</div>
+              <div><span className="text-primary">Stochastic:</span> Controlled random process (seed=57)</div>
             </CardContent>
           </Card>
 
-          <div className="px-4 py-6 rounded-2xl border border-border bg-muted/10 text-center">
-            <p className="text-xs text-muted-foreground mb-4">Progetto sviluppato nell'ambito del</p>
-            <div className="font-bold text-sm tracking-widest uppercase text-foreground">
-              National Center for Biodiversity
+          <div className="px-4 py-8 rounded-2xl border border-border bg-muted/10 text-center space-y-2">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Master's Thesis in Computer Science</p>
+            <div className="font-bold text-sm text-foreground leading-tight">
+              University of Naples Federico II
             </div>
+            <div className="text-[10px] text-primary/80 font-medium">Department of Electrical Engineering and Information Technology</div>
           </div>
         </div>
       </div>
@@ -194,7 +187,7 @@ function Section({
         </div>
         <h2 className="text-xl font-bold tracking-tight">{title}</h2>
       </div>
-      <div className="space-y-4 text-muted-foreground leading-relaxed">
+      <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
         {children}
       </div>
     </div>
