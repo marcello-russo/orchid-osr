@@ -31,7 +31,7 @@ RUN mkdir -p models dataset
 
 # Download dataset and models during build phase to speed up container startup
 RUN --mount=type=secret,id=HF_TOKEN,mode=0444,required=true \
-    python scripts/download_cache.py
+    python scripts/hf_tools/download_cache.py
 
 COPY backend/app/ app/
 COPY backend/server.py .
