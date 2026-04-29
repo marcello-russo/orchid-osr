@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useClassImages } from "@/features/dataset/hooks/useDataset";
+import { cn } from "@/lib/utils";
 import type { DatasetClassInfo } from "@/lib/types";
 
 const PAGE_SIZE = 12;
@@ -54,11 +55,9 @@ export function ClassGallery({ classInfo, split, totalImages }: ClassGalleryProp
             <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
               {data.images.map((img) => (
                 <div key={img.filename} className="group relative aspect-square overflow-hidden rounded-md bg-muted">
-                  <img
-                    src={img.url}
-                    alt={img.filename}
-                    loading="lazy"
-                    className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+                  <ImageWithFade 
+                    src={img.url} 
+                    alt={img.filename} 
                   />
                 </div>
               ))}
@@ -80,5 +79,25 @@ export function ClassGallery({ classInfo, split, totalImages }: ClassGalleryProp
         )}
       </CardContent>
     </Card>
+  );
+}
+
+function ImageWithFade({ src, alt }: { src: string; alt: string }) {
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  return (
+    <div className="h-full w-full">
+      {!isLoaded && <Skeleton className="absolute inset-0 h-full w-full" />}
+      <img
+        src={src}
+        alt={alt}
+        loading="lazy"
+        onLoad={() => setIsLoaded(true)}
+        className={cn(
+          "h-full w-full object-cover transition-all duration-500 group-hover:scale-105",
+          isLoaded ? "opacity-100 scale-100" : "opacity-0 scale-95"
+        )}
+      />
+    </div>
   );
 }
