@@ -6,6 +6,7 @@ import { QueryProvider } from "@/lib/queryClient";
 import { useAppStore } from "@/stores/useAppStore";
 import App from "./App";
 import "./index.css";
+import "./lib/i18n";
 
 // Apply theme immediately to prevent flash
 const initialTheme = useAppStore.getState().theme;

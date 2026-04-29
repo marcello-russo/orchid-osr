@@ -1,0 +1,44 @@
+{
+  "common": {
+    "loading": "Caricamento...",
+    "error": "Si è verificato un errore",
+    "back": "Indietro",
+    "home": "Home",
+    "dataset": "Dataset",
+    "classify": "Classifica",
+    "experiments": "Esperimenti",
+    "about": "Informazioni"
+  },
+  "about": {
+    "hero": {
+      "title": "OrchID",
+      "subtitle": "NCD",
+      "description": "Un ecosistema di ricerca end-to-end sviluppato presso l'Università degli Studi di Napoli Federico II, che unisce la botanica sul campo con la Computer Vision all'avanguardia.",
+      "tag": "Progetto di Tesi Magistrale"
+    },
+    "scientific": {
+      "title": "Contesto Scientifico",
+      "content1": "Il genere Ophrys rappresenta uno dei casi più complessi e affascinanti di evoluzione biologica guidata dagli impollinatori. Queste orchidee utilizzano l'inganno sessuale, emettendo feromoni e imitando la morfologia degli insetti per attirare i maschi di specie specifiche.",
+      "content2": "Questa estrema specializzazione porta a un'incredibile variabilità morfologica e frequenti ibridazioni, rendendo l'identificazione sul campo estremamente difficile anche per botanici esperti. Il progetto OrchID nasce per fornire strumenti computazionali oggettivi in grado di supportare il monitoraggio della biodiversità."
+    },
+    "objectives": {
+      "title": "Obiettivi Core",
+      "vectorSpace": {
+        "title": "Spazio di Embedding Latente",
+        "description": "Uno degli obiettivi primari di questa ricerca è la costruzione di uno spazio vettoriale ad alta dimensione dove le immagini delle orchidee sono mappate in base alle loro caratteristiche morfologiche. Questo funge da base per la ricerca per somiglianza e il rilevamento degli outlier."
+      },
+      "ncd": {
+        "title": "Novel Class Discovery (NCD)",
+        "description": "I classificatori tradizionali assumono un 'mondo chiuso'. La nostra ricerca si concentra sulla Novel Class Discovery, la capacità del modello di riconoscere specie mai viste durante l'addestramento, identificando entità 'nuove' in natura."
+      }
+    },
+    "experiment6": {
+      "title": "Analisi degli Esperimenti: Serie 6",
+      "description": "L'esperimento 6 è la pietra miliare dei nostri risultati attuali. Dopo aver identificato data leakage nelle serie precedenti, l'Exp 6 fornisce una valutazione realistica della generalizzazione del modello.",
+      "resnet": "Peak Performance ResNet50",
+      "resnetDesc": "Il nostro modello ResNet50 ha raggiunto un picco di Val F1-Score di 0.905, dimostrando che le architetture standard sono ancora altamente competitive.",
+      "vit": "Vision Transformers (DINOv2)",
+      "vitDesc": "DINOv2-Base è il nostro attuale campione, raggiungendo un Val F1-Score medio di 0.914 ± 0.012. Mostra un'eccezionale robustezza alle occlusioni e al rumore nelle foto sul campo."
+    }
+  }
+}

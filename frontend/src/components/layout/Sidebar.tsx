@@ -1,6 +1,7 @@
 // frontend/src/components/layout/Sidebar.tsx
 
 import { NavLink } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   LayoutDashboard,
   FlaskConical,
@@ -15,12 +16,12 @@ import { useAppStore } from "@/stores/useAppStore";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { to: "/", icon: LayoutDashboard, label: "Dashboard" },
-  { to: "/experiments", icon: FlaskConical, label: "Experiments" },
-  { to: "/classify", icon: ScanSearch, label: "Classify" },
-  { to: "/dataset", icon: Database, label: "Dataset" },
-  { to: "/embeddings", icon: Box, label: "Embeddings" },
-  { to: "/about", icon: Info, label: "About" },
+  { to: "/", icon: LayoutDashboard, key: "common.home" },
+  { to: "/experiments", icon: FlaskConical, key: "common.experiments" },
+  { to: "/classify", icon: ScanSearch, key: "common.classify" },
+  { to: "/dataset", icon: Database, key: "common.dataset" },
+  { to: "/embeddings", icon: Box, key: "common.embeddings" },
+  { to: "/about", icon: Info, key: "common.about" },
 ];
 
 interface SidebarProps {
@@ -29,6 +30,7 @@ interface SidebarProps {
 
 export function Sidebar({ isDesktop }: SidebarProps) {
   const { sidebarOpen, setSidebarOpen, toggleSidebar } = useAppStore();
+  const { t } = useTranslation();
 
   return (
     <aside
@@ -64,7 +66,7 @@ export function Sidebar({ isDesktop }: SidebarProps) {
 
       {/* Navigation */}
       <nav className="flex flex-col gap-1 p-2">
-        {navItems.map(({ to, icon: Icon, label }) => (
+        {navItems.map(({ to, icon: Icon, key }) => (
           <NavLink
             key={to}
             to={to}
@@ -82,7 +84,7 @@ export function Sidebar({ isDesktop }: SidebarProps) {
             }
           >
             <Icon className="size-5 shrink-0" />
-            {(isDesktop ? sidebarOpen : true) && <span>{label}</span>}
+            {(isDesktop ? sidebarOpen : true) && <span>{t(key)}</span>}
           </NavLink>
         ))}
       </nav>
