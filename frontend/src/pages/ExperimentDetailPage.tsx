@@ -96,30 +96,7 @@ export function ExperimentDetailPage() {
 
         {/* Config summary */}
         <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-          {config.num_epochs && (
-            <span>
-              Epochs: {config.num_epochs}
-              <InfoTooltip text={TOOLTIPS.epochs} />
-            </span>
-          )}
-          {config.batch_size && (
-            <span>
-              Batch: {config.batch_size}
-              <InfoTooltip text={TOOLTIPS.batchSize} />
-            </span>
-          )}
-          {config.learning_rate && (
-            <span>
-              LR: {config.learning_rate}
-              <InfoTooltip text={TOOLTIPS.learningRate} />
-            </span>
-          )}
-          {config.patience !== undefined && (
-            <span>
-              Patience: {config.patience}
-              <InfoTooltip text={TOOLTIPS.patience} />
-            </span>
-          )}
+
           {summary.test_accuracy !== null && (
             <span className="font-medium text-primary">
               Test Accuracy: {(summary.test_accuracy * 100).toFixed(2)}%
