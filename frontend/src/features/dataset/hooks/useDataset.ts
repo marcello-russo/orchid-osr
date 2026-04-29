@@ -14,12 +14,13 @@ export function useClassImages(
   className: string,
   split: string = "train",
   limit: number = 12,
-  offset: number = 0
+  offset: number = 0,
+  enabled: boolean = true
 ) {
   return useQuery<ClassImagesResponse>({
     queryKey: ["dataset", "classes", className, "images", split, limit, offset],
     queryFn: () => fetchClassImages(className, split, limit, offset),
-    enabled: !!className,
+    enabled: !!className && enabled,
     placeholderData: keepPreviousData,
   });
 }
