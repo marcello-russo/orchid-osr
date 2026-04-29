@@ -89,7 +89,12 @@
       "all": "All",
       "train": "Train",
       "test": "Test"
-    }
+    },
+    "classes": "classes",
+    "images": "images",
+    "train_label": "train",
+    "test_label": "test",
+    "no_images": "No images found."
   },
   "embeddings": {
     "title": "Latent Space Visualization",
@@ -99,32 +104,64 @@
     "hero": {
       "title": "OrchID",
       "subtitle": "NCD",
-      "description": "An end-to-end research ecosystem developed at University of Naples Federico II, merging field botany with cutting-edge Computer Vision.",
+      "description": "An end-to-end research framework developed at the University of Naples Federico II for fine-grained visual classification and representation learning of Ophrys orchids.",
       "tag": "Master Thesis Project"
     },
-    "scientific": {
-      "title": "Scientific Context",
-      "content1": "The genus Ophrys represents one of the most complex and fascinating cases of pollinator-driven biological evolution. These orchids utilize sexual deception, emitting pheromones and mimicking insect morphology to attract males of specific species.",
-      "content2": "This extreme specialization leads to incredible morphological variability and frequent hybridization, making field identification extremely difficult even for expert botanists. The OrchID project was born to provide objective computational tools to support biodiversity monitoring."
-    },
     "objectives": {
-      "title": "Core Objectives",
+      "title": "Research Objectives",
       "vectorSpace": {
-        "title": "Latent Embedding Space",
-        "description": "One of the primary goals of this research is constructing a high-dimensional vector space where orchid images are mapped based on their morphological features. This serves as a foundation for similarity search and outlier detection."
+        "title": "Structured Embedding Space",
+        "description": "We construct a high-dimensional vector space where morphologically similar orchid species cluster together via Supervised Contrastive Learning [8]. This latent representation enables similarity search, outlier detection, and provides the foundation for discovering previously unseen species."
       },
       "ncd": {
-        "title": "Novel Class Discovery (NCD)",
-        "description": "Traditional classifiers assume a 'closed world'. Our research focuses on Novel Class Discovery, the model's ability to recognize species never seen during training, identifying 'new' entities in the wild."
+        "title": "Novel Class Discovery",
+        "description": "Standard classifiers operate under a closed-world assumption. Our research tackles Novel Class Discovery [7]: can a model recognize that an unknown orchid does not belong to any known species, and group novel entities into meaningful clusters without supervision?"
+      }
+    },
+    "scientific": {
+      "title": "The Ophrys Problem",
+      "content1": "The genus Ophrys is one of the most taxonomically challenging orchid groups in the Mediterranean. These orchids use sexual deception to attract species-specific pollinators, producing flowers that mimic female insects through visual cues, scent, and tactile signals [1].",
+      "content2": "This extreme specialisation drives rapid morphological divergence and frequent hybridization, resulting in visually ambiguous specimens that challenge even expert botanists. The Ophrys sphegodes complex alone encompasses multiple cryptic taxa with overlapping phenotypic traits [2][3]."
+    },
+    "methodology": {
+      "title": "Methodology",
+      "model_selection": {
+        "title": "Architecture Comparison",
+        "description": "We benchmark three families of architectures to understand which inductive biases best capture subtle floral differences: ResNet (hierarchical local features via residual connections [4]), ConvNeXt (modernised CNN with large kernels and LayerNorm [5]), and DINOv2 (self-supervised Vision Transformer with global attention, trained on 142M images [6])."
+      },
+      "optimization": {
+        "title": "Per-Architecture Recipes",
+        "description": "Each architecture receives a tailored training recipe. DINOv2 is fine-tuned via LoRA adapters [9] on just 0.5% of its parameters, preserving the powerful self-supervised representations while adapting to our specialised domain. ResNet uses Adam [10], while ConvNeXt and DINOv2 use AdamW with decoupled weight decay [11]."
+      },
+      "rigor": {
+        "title": "Experimental Rigor",
+        "description": "All results are validated through 5-fold stratified cross-validation on a deduplicated clean split. MD5 hashing ensures zero content overlap between training and test sets, eliminating the data leakage that invalidated our preliminary experiments. Early stopping uses the Generalization Loss criterion [12]."
       }
     },
     "experiment6": {
-      "title": "Experiment Analysis: Series 6",
-      "description": "Experiment 6 is the milestone of our current results. After identifying data leakage in previous series, Exp 6 provides a realistic assessment of model generalization.",
-      "resnet": "ResNet50 Peak Performance",
-      "resnetDesc": "Our ResNet50 model reached a peak Val F1-Score of 0.905, proving that standard architectures are still highly competitive.",
-      "vit": "Vision Transformers (DINOv2)",
-      "vitDesc": "DINOv2-Base is our current champion, achieving an average Val F1-Score of 0.914 ± 0.012. It shows exceptional robustness to occlusions and noise in field photos."
+      "title": "Serie 1 Results",
+      "description": "After identifying data leakage in preliminary experiments, Serie 1 (Exp 6) establishes reliable baselines across six architectures on our clean split: 2,017 training images, 300 balanced test images (50 per class), 5-fold stratified cross-validation.",
+      "resnet": "ResNet50 — Best CNN",
+      "resnetDesc": "Reached Val F1 of 0.905 ± 0.027 with Test Accuracy of 88.00%. Standard hierarchical features prove highly competitive for this fine-grained task.",
+      "vit": "DINOv2-Base — Best Overall",
+      "vitDesc": "Achieved Val F1 of 0.914 ± 0.012 with Test Accuracy of 88.00%. Self-supervised pre-training on 142M images provides exceptional robustness to field-photo variability [6].",
+      "badge_model": "Best Model",
+      "badge_folds": "5-Fold CV Complete"
+    },
+    "future": {
+      "title": "Next Steps",
+      "phase2": "Serie 2 will apply Supervised Contrastive Learning (SupCon) [8] to reshape the latent space, pulling same-class embeddings together while pushing different-class ones apart. This structured representation is the prerequisite for Novel Class Discovery.",
+      "phase3": "Serie 3 will leverage the embedding space for nearest-neighbor retrieval, species clustering, and open-set recognition [7] — enabling the system to identify unknown orchid species in the wild."
+    },
+    "bibliography": {
+      "title": "References"
+    },
+    "footer": {
+      "university": "University of Naples Federico II",
+      "degree": "M.Sc. Computer Science",
+      "department": "DIETI Department",
+      "description": "This project is part of a Master's Thesis on the application of Self-Supervised Learning and Novel Class Discovery to biodiversity data.",
+      "author": "Author: Marcello Russo"
     }
   }
 }

@@ -39,7 +39,7 @@ export function DatasetPage() {
           {t("dataset.title")}
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          {data.total_train} {t("dataset.tabs.train")} / {data.total_test} {t("dataset.tabs.test")} / {data.classes.length} classes
+          {data.total_train} {t("dataset.tabs.train")} / {data.total_test} {t("dataset.tabs.test")} / {data.classes.length} {t("dataset.classes")}
         </p>
       </div>
 

@@ -1,5 +1,6 @@
 // frontend/src/features/dataset/components/ClassGallery.tsx
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -19,6 +20,7 @@ interface ClassGalleryProps {
 import { useInView } from "@/hooks/useInView";
 
 export function ClassGallery({ classInfo, split, totalImages }: ClassGalleryProps) {
+  const { t } = useTranslation();
   const [offset, setOffset] = useState(0);
   const { ref: cardRef, isInView } = useInView({ rootMargin: "200px" });
   
@@ -46,7 +48,7 @@ export function ClassGallery({ classInfo, split, totalImages }: ClassGalleryProp
           <CardTitle className="text-base">{classInfo.name}</CardTitle>
           <div className="flex items-center gap-4">
             <span className="text-xs text-muted-foreground whitespace-nowrap">
-              {classInfo.total} images ({classInfo.train_count} train / {classInfo.test_count} test)
+              {classInfo.total} {t("dataset.images")} ({classInfo.train_count} {t("dataset.train_label")} / {classInfo.test_count} {t("dataset.test_label")})
             </span>
             {totalPages > 1 && (
               <div className="flex items-center gap-1">
@@ -103,7 +105,7 @@ export function ClassGallery({ classInfo, split, totalImages }: ClassGalleryProp
             ))}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">No images found.</p>
+          <p className="text-sm text-muted-foreground">{t("dataset.no_images")}</p>
         )}
       </CardContent>
     </Card>

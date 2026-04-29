@@ -7,7 +7,10 @@ IMAGE_NAME="orchid-ncd-app"
 podman stop "$CONTAINER_NAME" 2>/dev/null
 podman rm "$CONTAINER_NAME" 2>/dev/null
 
-echo "Build..."
+echo "Build frontend..."
+cd frontend && npm run build && cd ..
+
+echo "Build image..."
 podman build -t "$IMAGE_NAME" -f Dockerfile .
 
 echo "Avvio con GPU..."
@@ -25,6 +28,7 @@ podman run -d \
   -v ./backend/tests:/workspace/backend/tests \
   -v ./backend/scripts:/workspace/backend/scripts \
   -v ./.env:/workspace/backend/.env \
+  -v ./frontend/dist:/workspace/backend/frontend/dist \
   -p 5000:7860 \
   "$IMAGE_NAME" \
   sleep infinity
