@@ -10,6 +10,7 @@ archive/
 *.pt
 *.safetensors
 *_done
+*_adapter/
 
 # Generated outputs
 *_1/
@@ -53,6 +54,3 @@ htmlcov/
 temp_kfold/
 
 superpowers/
-
-# HF adapter boilerplate
-*_adapter/README.md
