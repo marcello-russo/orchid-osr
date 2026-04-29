@@ -135,14 +135,14 @@ def kfold_experiment(
     else:
         fold_indices = list(range(num_folds))
 
-    base_temp_dir = os.path.join(os.path.dirname(raw_dataset_dir), "temp_kfold")
-    base_aug_cache = os.path.join(os.path.dirname(raw_dataset_dir), "kfold_augmented")
-
     import shutil
     try:
         from app.core.models import get_registry_entry
         entry = get_registry_entry(model_variant)
         h, w = entry.input_size
+
+        base_temp_dir = os.path.join(os.path.dirname(raw_dataset_dir), "temp_kfold")
+        base_aug_cache = os.path.join(os.path.dirname(raw_dataset_dir), f"kfold_augmented_{w}x{h}")
 
         for fold_idx in fold_indices:
             fold_json_path = os.path.join(kfold_dir, f"fold_{fold_idx}.json")
