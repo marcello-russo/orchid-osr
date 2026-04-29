@@ -126,13 +126,13 @@
     "journey": {
       "title": "Percorso Sperimentale",
       "baselines_title": "Baseline Preliminari (Exp 1–5)",
-      "baselines": "I primi cinque esperimenti hanno stabilito le baseline iniziali con ResNet18 e ResNet50 su split train/val/test standard, utilizzando un dataset combinato di foto in campo private e immagini da internet. L'esperimento 4 ha introdotto la 5-fold stratified cross-validation per ResNet18 e ResNet50, stabilendo il protocollo di valutazione rigoroso ancora in uso.",
+      "baselines": "I primi cinque esperimenti hanno esplorato solo ResNet18 (Exp 1–3) e ResNet50 (Exp 4–5) su split train/val/test standard, utilizzando un dataset combinato di foto in campo private e immagini da internet. L'esperimento 4 ha introdotto la 5-fold stratified cross-validation per entrambe le architetture, stabilendo il protocollo di valutazione rigoroso ancora in uso. ConvNeXt e DINOv2 non erano ancora stati testati.",
       "leakage_title": "Il Problema della Data Leakage",
       "leakage": "L'hashing MD5 del contenuto ha rivelato che i set di train e test condividevano immagini visivamente identiche sotto nomi diversi — una forma sottile di data leakage che ha gonfiato artificialmente le metriche e invalidato tutti i risultati di Exp 1–5. La stessa foto di orchidea, scaricata più volte con nomi diversi, era presente sia nel partition di training che in quello di test.",
       "preprocessing_title": "Il Problema del Preprocessing",
       "preprocessing": "La pipeline originale applicava un center-crop aggressivo a risoluzione fissa, distruggendo le informazioni sul rapporto d'aspetto. Poiché ResNet richiede input 512×256 mentre ConvNeXt e DINOv2 usano 224×224, lo stesso crop produceva input distorti e poveri di informazioni tra le architetture. Abbiamo sostituito con il letterbox resizing: le immagini vengono scalate per rientrare nelle dimensioni target preservando il rapporto d'aspetto, con bande nere di padding a riempire lo spazio rimanente.",
       "clean_title": "Exp 6 — Tabula Rasa",
-      "clean": "L'esperimento 6 è un riavvio completo su uno split deduplicato con zero sovrapposizioni verificate tramite MD5 tra training (2.017 immagini) e test (300 bilanciate, 50 per classe). Sei architetture vengono valutate con dimensioni di input per-architettura e 5-fold stratified cross-validation."
+      "clean": "L'esperimento 6 è un riavvio completo su uno split deduplicato con zero sovrapposizioni verificate tramite MD5 tra training (2.017 immagini) e test (300 bilanciate, 50 per classe). Per la prima volta, sei architetture — ResNet18, ResNet50, ConvNeXt-Tiny, ConvNeXt-Small, DINOv2-Small e DINOv2-Base — vengono valutate con dimensioni di input per-architettura e 5-fold stratified cross-validation."
     },
     "methodology": {
       "title": "Metodologia",
