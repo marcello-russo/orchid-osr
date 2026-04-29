@@ -12,7 +12,9 @@ tags:
 
 # OrchID NCD — Model Zoo
 
-Trained models for **Ophrys** orchid classification (6 species), part of the National Center for Biodiversity (NCD) research.
+Trained models for **Ophrys** orchid classification (6 species), part of the **Novel Class Discovery (NCD)** research.
+
+**Live Demo (Embed Version):** [https://marcellorusso-orchid-ncd.hf.space](https://marcellorusso-orchid-ncd.hf.space)
 
 All models trained on the [orchid-ncd-dataset](https://huggingface.co/datasets/marcellorusso/orchid-ncd-dataset) (exp6 clean split, zero data leakage).
 
