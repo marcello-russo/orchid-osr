@@ -1,9 +1,11 @@
-# backend/app/api/routes/dataset.py
+import io
 import mimetypes
 from pathlib import Path
+from PIL import Image
 
-from fastapi import APIRouter, HTTPException
-from fastapi.responses import FileResponse
+from fastapi import APIRouter, HTTPException, Query
+from fastapi.responses import FileResponse, Response
+from fastapi.concurrency import run_in_threadpool
 
 from app.api.schemas import DatasetClassesResponse, DatasetClassInfo, ClassImagesResponse, DatasetImage
 from app.config import settings
@@ -94,8 +96,8 @@ async def list_class_images(class_name: str, split: str = "train", limit: int = 
 
 
 @router.get("/images/{split}/{class_name}/{filename}")
-async def serve_image(split: str, class_name: str, filename: str):
-    """Serve a dataset image file."""
+async def serve_image(split: str, class_name: str, filename: str, size: int = Query(None, gt=0, le=1024)):
+    """Serve a dataset image file, optionally resized and converted to WebP."""
     split = _validate_segment(split)
     class_name = _validate_segment(class_name)
     filename = _validate_segment(filename)
@@ -117,8 +119,39 @@ async def serve_image(split: str, class_name: str, filename: str):
     if not file_path.is_file():
         raise HTTPException(status_code=404, detail="Image not found")
 
-    if file_path.suffix.lower() not in _IMAGE_EXTS:
-        raise HTTPException(status_code=400, detail="Not an image file")
+    # If no size specified, serve original file
+    if size is None:
+        media_type = mimetypes.guess_type(str(file_path))[0] or "image/jpeg"
+        return FileResponse(file_path, media_type=media_type)
 
+    # Dynamic Resizing + WebP conversion
+    cache_dir = base / ".thumbnails" / str(size) / split / class_name
+    cache_path = cache_dir / f"{file_path.stem}.webp"
+
+    if cache_path.is_file():
+        return FileResponse(cache_path, media_type="image/webp")
+
+    # Generate thumbnail
+    def _generate_thumbnail():
+        try:
+            cache_dir.mkdir(parents=True, exist_ok=True)
+            with Image.open(file_path) as img:
+                w, h = img.size
+                if w > size:
+                    new_h = int(h * (size / w))
+                    # BILINEAR is much faster than LANCZOS for thumbnails
+                    img = img.resize((size, new_h), Image.Resampling.BILINEAR)
+                img.save(cache_path, "WEBP", quality=80)
+            return True
+        except Exception as e:
+            print(f"Thumbnail generation failed: {e}")
+            return False
+
+    success = await run_in_threadpool(_generate_thumbnail)
+    
+    if success and cache_path.is_file():
+        return FileResponse(cache_path, media_type="image/webp")
+    
+    # Fallback to original
     media_type = mimetypes.guess_type(str(file_path))[0] or "image/jpeg"
     return FileResponse(file_path, media_type=media_type)
