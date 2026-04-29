@@ -36,7 +36,7 @@ export function Sidebar() {
             <span className="text-sm">🌸</span>
           </div>
           <span className="font-black text-lg tracking-tighter">
-            <span className="text-primary">Orch</span><span className="text-foreground">ID</span>
+            <span className="text-primary">Orch</span><span className="text-foreground">ID</span><span className="text-muted-foreground font-bold text-xs ml-0.5">NCD</span>
           </span>
         </div>
         <button

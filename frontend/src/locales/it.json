@@ -11,7 +11,7 @@
     "about": "Informazioni"
   },
   "dashboard": {
-    "title": "Dashboard OrchID",
+    "title": "Dashboard OrchID-NCD",
     "summary_title": "Riepilogo Sistema",
     "species_distribution": "Distribuzione Specie",
     "recent_experiments": "Esperimenti Recenti",
@@ -102,8 +102,7 @@
   },
   "about": {
     "hero": {
-      "title": "OrchID",
-      "subtitle": "NCD",
+      "title": "OrchID-NCD",
       "description": "Un framework di ricerca end-to-end sviluppato presso l'Università degli Studi di Napoli Federico II per la classificazione visiva ultra-fine-grained e il representation learning delle orchidee del genere Ophrys.",
       "tag": "Progetto di Tesi Magistrale"
     },

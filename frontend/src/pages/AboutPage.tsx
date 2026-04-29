@@ -122,8 +122,7 @@ export function AboutPage() {
             <GraduationCap className="size-4" /> {t("about.hero.tag")}
           </div>
           <h1 className="text-4xl md:text-7xl font-black text-primary tracking-tighter mb-4 md:mb-6 leading-none">
-            {t("about.hero.title")}{" "}
-            <span className="text-foreground/90">{t("about.hero.subtitle")}</span>
+            {t("about.hero.title")}
           </h1>
           <p className="text-base md:text-xl text-muted-foreground leading-relaxed font-light">
             {t("about.hero.description")}
