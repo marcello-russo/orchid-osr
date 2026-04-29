@@ -145,6 +145,11 @@ def kfold_experiment(
         h, w = entry.input_size
 
         for fold_idx in fold_indices:
+            fold_json_path = os.path.join(kfold_dir, f"fold_{fold_idx}.json")
+            if os.path.exists(fold_json_path):
+                logger.info(f"Fold {fold_idx} già completato (trovato {fold_json_path}). Salto...")
+                continue
+
             train_idx, val_idx = folds[fold_idx]
 
             logger.info(f"\n{'=' * 50}")
