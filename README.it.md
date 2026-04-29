@@ -38,10 +38,10 @@
 |---------|-------------|---------------|---------------|-------|
 | ResNet18 | 0.868 ± 0.016 | 85.00% | 84.96% | ✅ |
 | ResNet50 | 0.905 ± 0.027 | 88.00% | 88.01% | ✅ |
-| ConvNeXt-Tiny | — | — | — | 🔜 Training |
-| ConvNeXt-Small | — | — | — | 📋 In attesa |
-| DINOv2-Small + LoRA | — | — | — | 📋 In attesa |
+| ConvNeXt-Tiny | 0.862 ± 0.020 | 84.00% | 83.91% | ✅ |
+| DINOv2-Small + LoRA | — | — | — | 🔜 Training |
 | DINOv2-Base + LoRA | — | — | — | 📋 In attesa |
+| ConvNeXt-Small | — | — | — | 📋 In attesa |
 
 <details>
 <summary>Recipe di training per-architettura</summary>
