@@ -104,7 +104,7 @@
     "hero": {
       "title": "OrchID",
       "subtitle": "NCD",
-      "description": "Un framework di ricerca end-to-end sviluppato presso l'Università degli Studi di Napoli Federico II per la classificazione visiva fine-grained e il representation learning delle orchidee del genere Ophrys.",
+      "description": "Un framework di ricerca end-to-end sviluppato presso l'Università degli Studi di Napoli Federico II per la classificazione visiva ultra-fine-grained e il representation learning delle orchidee del genere Ophrys.",
       "tag": "Progetto di Tesi Magistrale"
     },
     "objectives": {
@@ -153,7 +153,7 @@
       "title": "Risultati Serie 1",
       "description": "Dopo aver identificato data leakage negli esperimenti preliminari, la Serie 1 (Exp 6) stabilisce baseline affidabili su sei architetture con il nostro clean split: 2.017 immagini di training, 300 di test bilanciate (50 per classe), 5-fold stratified cross-validation.",
       "resnet": "ResNet50 — Miglior CNN",
-      "resnetDesc": "Ha raggiunto un Val F1 di 0.905 ± 0.027 con Test Accuracy dell'88.00%. Le feature gerarchiche standard si dimostrano altamente competitive per questo task fine-grained.",
+      "resnetDesc": "Ha raggiunto un Val F1 di 0.905 ± 0.027 con Test Accuracy dell'88.00%. Le feature gerarchiche standard si dimostrano altamente competitive per questo task ultra-fine-grained.",
       "vit": "DINOv2-Base — Migliore in assoluto",
       "vitDesc": "Ha ottenuto un Val F1 di 0.914 ± 0.012 con Test Accuracy dell'88.00%. Il pre-training self-supervisionato su 142M di immagini conferisce una robustezza eccezionale alla variabilità delle foto in campo [6].",
       "badge_model": "Miglior Modello",
