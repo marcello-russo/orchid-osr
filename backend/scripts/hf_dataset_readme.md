@@ -13,7 +13,9 @@ size_categories:
 
 # OrchID NCD — Orchid Classification Dataset
 
-6-class image dataset for **Ophrys** (orchid) species classification, focused on taxa from the **National Center for Biodiversity (NCD)** research area in Italy.
+6-class image dataset for **Ophrys** (orchid) species classification, focused on taxa from the **Novel Class Discovery (NCD)** research project in Italy.
+
+**Live Demo (Embed Version):** [https://marcellorusso-orchid-ncd.hf.space](https://marcellorusso-orchid-ncd.hf.space)
 
 ## Classes
 
