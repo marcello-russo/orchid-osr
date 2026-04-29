@@ -5,7 +5,7 @@ models*/
 !app/core/models/
 !backend/app/core/models/
 inference*/
-analysis/
+# analysis/ (removed to allow assets/analysis documentation)
 archive/
 *.pt
 *.safetensors
