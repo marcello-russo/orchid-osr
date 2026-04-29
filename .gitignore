@@ -8,6 +8,7 @@ inference*/
 analysis/
 archive/
 *.pt
+*.safetensors
 *_done
 
 # Generated outputs
