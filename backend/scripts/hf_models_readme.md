@@ -46,17 +46,19 @@ Fair comparison of 6 architectures with standard cross-entropy loss. All models 
 |-------|-----------|------|--------|
 | ResNet18 | 11.7M | CNN | Complete |
 | ResNet50 | 25.6M | CNN | Complete |
-| ConvNeXt-Tiny | 28.6M | Modern CNN | Pending |
+| ConvNeXt-Tiny | 28.6M | Modern CNN | Complete |
 | ConvNeXt-Small | 50.2M | Modern CNN | Pending |
-| DINOv2-Small | 21M | ViT+LoRA | Pending |
+| DINOv2-Small | 21M | ViT+LoRA | Complete |
 | DINOv2-Base | 86M | ViT+LoRA | Pending |
 
 ### Results
 
 | Model | Val F1 Macro | Test Accuracy | Test F1 Macro |
 |-------|-------------|---------------|---------------|
-| ResNet18 | 0.8623 ± 0.023 | 0.8500 | 0.8496 |
+| ResNet18 | 0.8680 ± 0.016 | 0.8500 | 0.8496 |
 | ResNet50 | 0.9051 ± 0.027 | 0.8800 | 0.8801 |
+| ConvNeXt-Tiny | 0.8620 ± 0.020 | 0.8400 | 0.8391 |
+| DINOv2-Small | 0.8930 ± 0.006 | 0.8533 | 0.8550 |
 
 ### Structure
 
