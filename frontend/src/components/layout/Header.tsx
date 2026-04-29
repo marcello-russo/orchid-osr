@@ -2,6 +2,7 @@
 
 import { Menu } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
+import { LanguageToggle } from "./LanguageToggle";
 import { useAppStore } from "@/stores/useAppStore";
 import { cn } from "@/lib/utils";
 
@@ -27,7 +28,10 @@ export function Header({ isDesktop }: HeaderProps) {
         <span className="font-mono font-bold text-primary text-lg">
           🌸 OrchID
         </span>
-        <ThemeToggle />
+        <div className="flex items-center gap-1">
+          <LanguageToggle />
+          <ThemeToggle />
+        </div>
       </header>
     );
   }
@@ -35,10 +39,11 @@ export function Header({ isDesktop }: HeaderProps) {
   return (
     <header
       className={cn(
-        "fixed top-0 right-0 z-30 flex h-14 items-center justify-end border-b border-border bg-card px-6 transition-all duration-300",
+        "fixed top-0 right-0 z-30 flex h-14 items-center justify-end border-b border-border bg-card px-6 transition-all duration-300 gap-2",
         sidebarOpen ? "left-56" : "left-16"
       )}
     >
+      <LanguageToggle />
       <ThemeToggle />
     </header>
   );
