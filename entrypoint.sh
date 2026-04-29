@@ -5,12 +5,14 @@ set -e
 if [ ! -d "dataset/train_clean" ]; then
     echo "Downloading clean dataset from HuggingFace..."
     python3 -c "
+import os
 from huggingface_hub import snapshot_download
 snapshot_download(
     'marcellorusso/orchid-ncd-dataset',
     repo_type='dataset',
     local_dir='dataset',
     allow_patterns=['train_clean/*', 'test_clean/*', 'split_manifest.json'],
+    token=os.environ.get('HF_TOKEN')
 )
 print('Dataset downloaded')
 " || echo "Dataset download failed"
@@ -28,6 +30,7 @@ snapshot_download(
     repo_type='model',
     local_dir='experiments',
     allow_patterns=['serie1_ce/**/*.pt', 'serie1_ce/**/*.json', 'serie1_ce/**/*.safetensors'],
+    token=os.environ.get('HF_TOKEN')
 )
 # Flatten: move serie1_ce/exp6_*/ to experiments/exp6_*/
 src = 'experiments/serie1_ce'
