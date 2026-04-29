@@ -114,18 +114,18 @@ export function AboutPage() {
   const { t } = useTranslation();
 
   return (
-    <div className="space-y-20 animate-in fade-in duration-700 pb-32 max-w-7xl mx-auto px-6 md:px-12">
+    <div className="space-y-12 md:space-y-20 animate-in fade-in duration-700 pb-20 md:pb-32 max-w-7xl mx-auto px-4 md:px-12">
       {/* 1. Hero */}
-      <div className="relative overflow-hidden rounded-[2.5rem] bg-linear-to-br from-primary/20 via-primary/5 to-background p-10 md:p-16 border border-primary/10 shadow-2xl shadow-primary/5">
+      <div className="relative overflow-hidden rounded-2xl md:rounded-[2.5rem] bg-linear-to-br from-primary/20 via-primary/5 to-background p-6 md:p-16 border border-primary/10 shadow-2xl shadow-primary/5">
         <div className="relative z-10 max-w-4xl">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-bold mb-8 tracking-widest uppercase">
             <GraduationCap className="size-4" /> {t("about.hero.tag")}
           </div>
-          <h1 className="text-5xl md:text-7xl font-black text-primary tracking-tighter mb-6 leading-none">
+          <h1 className="text-4xl md:text-7xl font-black text-primary tracking-tighter mb-4 md:mb-6 leading-none">
             {t("about.hero.title")}{" "}
             <span className="text-foreground/90">{t("about.hero.subtitle")}</span>
           </h1>
-          <p className="text-lg md:text-xl text-muted-foreground leading-relaxed font-light">
+          <p className="text-base md:text-xl text-muted-foreground leading-relaxed font-light">
             {t("about.hero.description")}
           </p>
         </div>
@@ -133,12 +133,12 @@ export function AboutPage() {
       </div>
 
       {/* 2. Research Objectives */}
-      <section className="space-y-8">
-        <div className="flex items-center gap-4">
-          <div className="size-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500">
-            <Target className="size-6" />
+      <section className="space-y-6 md:space-y-8">
+        <div className="flex items-center gap-3 md:gap-4">
+          <div className="size-10 md:size-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500">
+            <Target className="size-5 md:size-6" />
           </div>
-          <h2 className="text-3xl font-bold tracking-tight">{t("about.objectives.title")}</h2>
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">{t("about.objectives.title")}</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 text-muted-foreground leading-relaxed text-base">
           <div className="space-y-4">
@@ -157,12 +157,12 @@ export function AboutPage() {
       </section>
 
       {/* 3. Scientific Context */}
-      <section className="space-y-6">
-        <div className="flex items-center gap-4">
-          <div className="size-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
-            <BookOpen className="size-6" />
+      <section className="space-y-4 md:space-y-6">
+        <div className="flex items-center gap-3 md:gap-4">
+          <div className="size-10 md:size-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+            <BookOpen className="size-5 md:size-6" />
           </div>
-          <h2 className="text-3xl font-bold tracking-tight">{t("about.scientific.title")}</h2>
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">{t("about.scientific.title")}</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 text-muted-foreground leading-relaxed text-base">
           <p>{renderCitations(t("about.scientific.content1"))}</p>
@@ -171,12 +171,12 @@ export function AboutPage() {
       </section>
 
       {/* 3.5 Experimental Journey */}
-      <section className="space-y-8">
-        <div className="flex items-center gap-4">
-          <div className="size-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500">
-            <Route className="size-6" />
+      <section className="space-y-6 md:space-y-8">
+        <div className="flex items-center gap-3 md:gap-4">
+          <div className="size-10 md:size-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500">
+            <Route className="size-5 md:size-6" />
           </div>
-          <h2 className="text-3xl font-bold tracking-tight">{t("about.journey.title")}</h2>
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">{t("about.journey.title")}</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 text-muted-foreground leading-relaxed text-base">
           <div className="space-y-4">
@@ -195,17 +195,17 @@ export function AboutPage() {
       </section>
 
       {/* 4. Methodology */}
-      <section className="space-y-8 p-10 md:p-14 rounded-[3rem] bg-muted/20 border border-border/50">
+      <section className="space-y-8 p-5 md:p-14 rounded-2xl md:rounded-[3rem] bg-muted/20 border border-border/50">
         <div className="space-y-4 max-w-3xl">
-          <div className="flex items-center gap-4">
-            <div className="size-12 rounded-2xl bg-purple-500/10 flex items-center justify-center text-purple-500">
-              <FlaskConical className="size-6" />
+          <div className="flex items-center gap-3 md:gap-4">
+            <div className="size-10 md:size-12 rounded-2xl bg-purple-500/10 flex items-center justify-center text-purple-500">
+              <FlaskConical className="size-5 md:size-6" />
             </div>
-            <h2 className="text-3xl font-bold tracking-tight">{t("about.methodology.title")}</h2>
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight">{t("about.methodology.title")}</h2>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
           <FeatureCard
             icon={<Cpu className="size-5" />}
             title={t("about.methodology.model_selection.title")}
@@ -225,22 +225,22 @@ export function AboutPage() {
       </section>
 
       {/* 5. Results */}
-      <section className="space-y-8 px-4 md:px-0">
+      <section className="space-y-6 md:space-y-8">
         <div className="flex items-center gap-4">
           <div className="size-12 rounded-2xl bg-green-500/10 flex items-center justify-center text-green-500">
             <BarChart3 className="size-6" />
           </div>
-          <h2 className="text-3xl font-bold tracking-tight">{t("about.experiment6.title")}</h2>
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">{t("about.experiment6.title")}</h2>
         </div>
-        <div className="bg-muted/30 border border-border rounded-[2.5rem] p-8 md:p-12 overflow-hidden relative">
-          <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-12">
+        <div className="bg-muted/30 border border-border rounded-2xl md:rounded-[2.5rem] p-5 md:p-12 overflow-hidden relative">
+          <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12">
             <div className="space-y-6">
               <p className="text-muted-foreground leading-relaxed text-base">
                 {t("about.experiment6.description")}
               </p>
-              <div className="space-y-4">
-                <div className="flex items-start gap-4 p-5 rounded-2xl bg-background/50 border border-border/50">
-                  <div className="text-primary font-bold text-2xl">0.91</div>
+              <div className="space-y-3 md:space-y-4">
+                <div className="flex items-start gap-3 p-4 md:p-5 rounded-xl md:rounded-2xl bg-background/50 border border-border/50">
+                  <div className="text-primary font-bold text-xl md:text-2xl">0.91</div>
                   <div className="text-sm text-muted-foreground">
                     <span className="text-foreground font-bold block mb-1 text-base">
                       {t("about.experiment6.vit")}
@@ -248,8 +248,8 @@ export function AboutPage() {
                     {renderCitations(t("about.experiment6.vitDesc"))}
                   </div>
                 </div>
-                <div className="flex items-start gap-4 p-5 rounded-2xl bg-background/50 border border-border/50">
-                  <div className="text-primary font-bold text-2xl">0.90</div>
+                <div className="flex items-start gap-3 p-4 md:p-5 rounded-xl md:rounded-2xl bg-background/50 border border-border/50">
+                  <div className="text-primary font-bold text-xl md:text-2xl">0.90</div>
                   <div className="text-sm text-muted-foreground">
                     <span className="text-foreground font-bold block mb-1 text-base">
                       {t("about.experiment6.resnet")}
@@ -259,7 +259,7 @@ export function AboutPage() {
                 </div>
               </div>
             </div>
-            <div className="flex items-center justify-center bg-background/40 rounded-3xl border border-border/50 p-8">
+            <div className="flex items-center justify-center bg-background/40 rounded-xl md:rounded-3xl border border-border/50 p-5 md:p-8">
               <div className="text-center space-y-3">
                 <div className="text-xs text-muted-foreground uppercase tracking-widest font-bold">
                   {t("about.experiment6.badge_model")}
@@ -275,26 +275,26 @@ export function AboutPage() {
       </section>
 
       {/* 6. Next Steps */}
-      <section className="space-y-8 px-4 md:px-0">
+      <section className="space-y-6 md:space-y-8">
         <div className="flex items-center gap-4">
           <div className="size-12 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-500">
             <ArrowRight className="size-6" />
           </div>
-          <h2 className="text-3xl font-bold tracking-tight">{t("about.future.title")}</h2>
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">{t("about.future.title")}</h2>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-muted-foreground text-base leading-relaxed">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 text-muted-foreground text-base leading-relaxed">
           <p>{renderCitations(t("about.future.phase2"))}</p>
           <p>{renderCitations(t("about.future.phase3"))}</p>
         </div>
       </section>
 
       {/* 7. Bibliography */}
-      <section className="space-y-6 px-4 md:px-0">
-        <div className="flex items-center gap-4">
-          <div className="size-12 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground">
-            <BookMarked className="size-6" />
+      <section className="space-y-6">
+        <div className="flex items-center gap-3 md:gap-4">
+          <div className="size-10 md:size-12 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground">
+            <BookMarked className="size-5 md:size-6" />
           </div>
-          <h2 className="text-3xl font-bold tracking-tight">{t("about.bibliography.title")}</h2>
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">{t("about.bibliography.title")}</h2>
         </div>
         <ol className="space-y-3 list-decimal list-inside text-sm text-muted-foreground leading-relaxed">
           {REFERENCES.map((ref) => (
@@ -313,7 +313,7 @@ export function AboutPage() {
       </section>
 
       {/* 8. Footer */}
-      <footer className="pt-20 border-t border-border text-center space-y-8 px-4">
+      <footer className="pt-12 md:pt-20 border-t border-border text-center space-y-6 md:space-y-8">
         <div className="flex flex-col md:flex-row justify-center gap-4">
           <div className="px-6 py-3 rounded-full bg-muted/50 border border-border text-xs font-bold uppercase tracking-wider">
             {t("about.footer.university")}
