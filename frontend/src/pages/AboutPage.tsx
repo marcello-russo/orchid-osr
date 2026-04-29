@@ -20,7 +20,7 @@ const REFERENCES = [
     id: 1,
     citation:
       "Paulus, H.F. & Gack, C. (1990). Pollinators as prepotinating mating factors in Ophrys. Israel Journal of Botany, 39, 43–79.",
-    url: "https://doi.org/10.1080/0021213X.1990.10677126",
+    url: "https://www.researchgate.net/publication/280605510_Paulus_Gack_1990_Pollinators_as_prepollinating_isolation_factors_Evolution_and_speciation_in_Ophrys_-_Israel_J_Bot_39_43-79",
   },
   {
     id: 2,
@@ -50,7 +50,7 @@ const REFERENCES = [
     id: 6,
     citation:
       "Oquab, M., Darcet, T., Moutakanni, T., Vo, H.V., Szafraniec, M., Khalidov, V., Fernandez, P., Haziza, D., Massa, F., El-Nouby, A., Assran, M., Ballas, N., Galuba, W., Howes, R., Huang, P.Y., Xu, S., Edunov, V., Jegou, H., Mairal, J., Labatut, P. & Joulin, A. (2024). DINOv2: Learning Robust Visual Features without Supervision. Transactions on Machine Learning Research.",
-    url: "https://openreview.net/forum?id=a68SUtJ8lD",
+    url: "https://arxiv.org/abs/2304.07193",
   },
   {
     id: 7,
@@ -74,7 +74,7 @@ const REFERENCES = [
     id: 10,
     citation:
       "Kingma, D.P. & Ba, J. (2015). Adam: A Method for Stochastic Optimization. In International Conference on Learning Representations (ICLR).",
-    url: "https://openreview.net/forum?id=8gm6Uq2MjG4",
+    url: "https://arxiv.org/abs/1412.6980",
   },
   {
     id: 11,
