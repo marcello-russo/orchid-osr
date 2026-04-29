@@ -1,5 +1,5 @@
-# OrchID NCD — Dockerfile (GPU training + HF Spaces deployment)
-# Paths are relative to repo root (resnet18/)
+# OrchID NCD — Dockerfile (CPU inference + HF Spaces deployment)
+# For GPU training, use podman-start.sh which overrides the base image.
 
 # Stage 1: Build frontend
 FROM docker.io/node:22-slim AS frontend-builder
@@ -12,10 +12,15 @@ RUN npm ci
 COPY frontend/ ./
 RUN npm run build
 
-# Stage 2: Backend + built frontend
-FROM docker.io/pytorch/pytorch:2.6.0-cuda12.4-cudnn9-devel
+# Stage 2: Backend + built frontend (CPU-only PyTorch)
+FROM docker.io/python:3.11-slim
 
 WORKDIR /workspace/backend
+
+# Install PyTorch CPU-only (much smaller than CUDA image)
+RUN pip install --no-cache-dir \
+    torch torchvision torcheval \
+    --index-url https://download.pytorch.org/whl/cpu
 
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir --default-timeout=1000 -r requirements.txt
@@ -35,6 +40,8 @@ COPY --from=frontend-builder /workspace/frontend/dist /workspace/backend/fronten
 
 # HF Spaces configuration
 ENV API_PORT=7860
+ARG HF_TOKEN
+ENV HF_TOKEN=${HF_TOKEN}
 EXPOSE 7860
 
 CMD ["./entrypoint.sh"]

@@ -30,15 +30,17 @@ export function DashboardPage() {
   const { data: speciesData, isLoading: speciesLoading } = useSpecies();
   const [datasetOpen, setDatasetOpen] = useState(true);
 
-  const kfoldExps = (experiments ?? []).filter((e) => e.type === "kfold");
+  const cleanSplitExps = (experiments ?? []).filter(
+    (e) => e.type === "kfold" && e.id.startsWith("exp6")
+  );
   const completedCount = (experiments ?? []).filter(
     (e) => e.status === "completed"
   ).length;
-  const bestTestAcc = kfoldExps.reduce(
+  const bestTestAcc = cleanSplitExps.reduce(
     (max, e) => Math.max(max, e.test_accuracy ?? 0),
     0
   );
-  const bestMeanF1 = kfoldExps.reduce(
+  const bestMeanF1 = cleanSplitExps.reduce(
     (max, e) => Math.max(max, e.mean_f1 ?? 0),
     0
   );
