@@ -7,7 +7,93 @@
     "dataset": "Dataset",
     "classify": "Classifica",
     "experiments": "Esperimenti",
+    "embeddings": "Embeddings",
     "about": "Informazioni"
+  },
+  "dashboard": {
+    "title": "Dashboard OrchID",
+    "summary_title": "Riepilogo Sistema",
+    "species_distribution": "Distribuzione Specie",
+    "recent_experiments": "Esperimenti Recenti",
+    "kpis": {
+      "total_images": "Immagini Totali",
+      "classes": "Classi",
+      "completed_models": "Modelli",
+      "best_f1": "Miglior F1"
+    },
+    "table": {
+      "species": "Specie",
+      "count": "Conteggio",
+      "percentage": "Percentuale"
+    }
+  },
+  "experiments": {
+    "title": "Esploratore Esperimenti",
+    "filters": {
+      "all": "Tutti",
+      "kfold": "K-Fold",
+      "baseline": "Baseline"
+    },
+    "table": {
+      "experiment": "Esperimento",
+      "model": "Modello",
+      "f1": "Mean F1",
+      "status": "Stato",
+      "date": "Data",
+      "actions": "Azioni"
+    }
+  },
+  "experiment_detail": {
+    "back_to_experiments": "Torna agli esperimenti",
+    "metrics": {
+      "accuracy": "Accuratezza Test",
+      "f1": "Test F1 Score",
+      "precision": "Precisione",
+      "recall": "Richiamo"
+    },
+    "charts": {
+      "loss": "Curve di Loss",
+      "metrics": "Curve delle Metriche",
+      "folds": "Sommario Fold",
+      "overfitting": "Proxy Overfitting",
+      "confusion": "Matrice di Confusione"
+    }
+  },
+  "classify": {
+    "title": "Identificazione Specie",
+    "upload": {
+      "title": "Carica Foto Orchidea",
+      "drop": "Rilascia l'immagine qui",
+      "browse": "Sfoglia i file",
+      "support": "Supporta JPG, PNG, WEBP"
+    },
+    "model_select": {
+      "label": "Seleziona Modello",
+      "description": "I modelli basati su Vision Transformer (DINOv2) sono consigliati per una maggiore precisione."
+    },
+    "results": {
+      "title": "Risultati Classificazione",
+      "confidence": "Confidenza",
+      "top_predictions": "Top 5 Predizioni",
+      "explainability": "Analisi Spiegabilità (Heatmap)"
+    }
+  },
+  "dataset": {
+    "title": "Dataset Explorer",
+    "stats": {
+      "train": "Immagini Training",
+      "test": "Immagini Test",
+      "total": "Totale"
+    },
+    "tabs": {
+      "all": "Tutti",
+      "train": "Train",
+      "test": "Test"
+    }
+  },
+  "embeddings": {
+    "title": "Visualizzazione Spazio Latente",
+    "description": "Questa sezione permetterà di esplorare le relazioni morfologiche tra le specie in uno spazio 3D interattivo (Fase 2)."
   },
   "about": {
     "hero": {
