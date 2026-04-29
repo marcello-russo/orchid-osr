@@ -49,7 +49,6 @@ def kfold_experiment(
     aggregate_only=False,
     patience=0,
     gradient_accumulation_steps=1,
-    overfit_threshold=0,
 ):
     """K-fold cross-validation con augmentation bilanciata per fold."""
     from app.preprocessing.reproducibility import set_seed
@@ -73,7 +72,6 @@ def kfold_experiment(
             "raw_dataset_dir": raw_dataset_dir, "test_dataset_dir": test_dataset_dir,
             "patience": patience,
             "gradient_accumulation_steps": gradient_accumulation_steps,
-            "overfit_threshold": overfit_threshold,
             "optimizer": _entry.optimizer, "weight_decay": _entry.weight_decay,
             "effective_learning_rate": _entry.learning_rate or learning_rate,
             "timestamp": datetime.now().isoformat(),
@@ -90,7 +88,6 @@ def kfold_experiment(
             "num_epochs": num_epochs, "batch_size": batch_size,
             "learning_rate": learning_rate, "seed": seed, "patience": patience,
             "gradient_accumulation_steps": gradient_accumulation_steps,
-            "overfit_threshold": overfit_threshold,
         }
         for param, cli_val in resume_params.items():
             if param in saved and saved[param] != cli_val:
@@ -103,7 +100,6 @@ def kfold_experiment(
         seed = saved.get("seed", seed)
         patience = saved.get("patience", patience)
         gradient_accumulation_steps = saved.get("gradient_accumulation_steps", gradient_accumulation_steps)
-        overfit_threshold = saved.get("overfit_threshold", overfit_threshold)
 
     if aggregate_only:
         return aggregate_and_test(
@@ -179,7 +175,6 @@ def kfold_experiment(
                     patience=patience,
                     gradient_accumulation_steps=gradient_accumulation_steps,
                     resume=True,
-                    overfit_threshold=overfit_threshold,
                 )
 
                 fold_metrics["fold"] = fold_idx

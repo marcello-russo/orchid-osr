@@ -61,8 +61,6 @@ Examples:
                         help="Early stopping patience on val_loss (0 = disabled, default: 0)")
     parser.add_argument("--accumulation", type=int, default=1,
                         help="Gradient accumulation steps (effective batch = batch_size × accumulation, default: 1)")
-    parser.add_argument("--overfit-threshold", type=float, default=0,
-                        help="Prechelt GL: stop when val_loss > threshold × best_val_loss (0 = disabled, default: 0)")
 
     # Cross-validation
     parser.add_argument("--folds", type=int, default=DEFAULT_CONFIG['num_folds'],
@@ -178,7 +176,6 @@ def main():
                 patience=args.patience,
                 tag=args.tag,
                 gradient_accumulation_steps=args.accumulation,
-                overfit_threshold=args.overfit_threshold,
             )
             success_count += 1
         except Exception as e:

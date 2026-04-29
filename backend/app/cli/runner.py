@@ -88,7 +88,6 @@ def run_experiment(
     patience: int = 0,
     tag: str = None,
     gradient_accumulation_steps: int = 1,
-    overfit_threshold: float = 0,
 ):
     """
     Run a single experiment.
@@ -184,7 +183,6 @@ def run_experiment(
                     aggregate_only=aggregate_only,
                     patience=patience,
                     gradient_accumulation_steps=gradient_accumulation_steps,
-                    overfit_threshold=overfit_threshold,
                 )
             else:
                 # Cross-validation originale su dataset pre-augmentato
