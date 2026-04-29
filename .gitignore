@@ -24,6 +24,7 @@ backend/inference*/
 backend/test_dataset/
 backend/logs*/
 backend/temp_kfold/
+backend/experiments/
 
 # Environment and Secrets
 .env

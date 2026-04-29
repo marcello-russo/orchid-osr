@@ -18,10 +18,10 @@
   "raw_dataset_dir": "/workspace/backend/dataset/train_clean",
   "test_dataset_dir": "/workspace/backend/dataset/test_clean",
   "patience": 15,
-  "gradient_accumulation_steps": 4,
-  "overfit_threshold": 0.0,
+  "gradient_accumulation_steps": 1,
+  "overfit_threshold": 0,
   "optimizer": "adamw",
   "weight_decay": 0.05,
   "effective_learning_rate": 0.0001,
-  "timestamp": "2026-04-29T12:26:17.012657"
+  "timestamp": "2026-04-29T15:01:35.140801"
 }
