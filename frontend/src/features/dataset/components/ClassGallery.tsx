@@ -16,11 +16,22 @@ interface ClassGalleryProps {
   totalImages: number;
 }
 
+import { useInView } from "@/hooks/useInView";
+
 export function ClassGallery({ classInfo, split, totalImages }: ClassGalleryProps) {
   const [offset, setOffset] = useState(0);
+  const { ref: cardRef, isInView } = useInView({ rootMargin: "200px" });
+  
   useEffect(() => { setOffset(0); }, [split]);
   const apiSplit = split === "train_clean" ? "train" : "test";
-  const { data, isLoading, isPlaceholderData } = useClassImages(classInfo.name, apiSplit, PAGE_SIZE, offset);
+  
+  const { data, isLoading, isPlaceholderData } = useClassImages(
+    classInfo.name, 
+    apiSplit, 
+    PAGE_SIZE, 
+    offset,
+    isInView // Pass isInView to enable the query
+  );
   
   const total = split === "train_clean" ? classInfo.train_count : classInfo.test_count;
   const totalPages = Math.ceil(total / PAGE_SIZE);
@@ -29,7 +40,7 @@ export function ClassGallery({ classInfo, split, totalImages }: ClassGalleryProp
   const isFetchingNext = isLoading || isPlaceholderData;
 
   return (
-    <Card>
+    <Card ref={cardRef}>
       <CardHeader className="pb-2 border-b border-border/50">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <CardTitle className="text-base">{classInfo.name}</CardTitle>
