@@ -21,7 +21,7 @@ register_model("resnet18", ModelRegistryEntry(
     norm_mean=[0.5364, 0.5518, 0.3866],
     norm_std=[0.2045, 0.2296, 0.2025],
     embedding_dim=512,
-    optimizer="adam", weight_decay=0.0, learning_rate=0.001,
+    optimizer="adam", weight_decay=0.0001, learning_rate=0.001,
 ))
 register_model("resnet50", ModelRegistryEntry(
     config_cls=_resnet_mod.ResNetConfig,
@@ -30,7 +30,7 @@ register_model("resnet50", ModelRegistryEntry(
     norm_mean=[0.5364, 0.5518, 0.3866],
     norm_std=[0.2045, 0.2296, 0.2025],
     embedding_dim=2048,
-    optimizer="adam", weight_decay=0.0, learning_rate=0.001,
+    optimizer="adam", weight_decay=0.0001, learning_rate=0.001,
 ))
 
 # Register ConvNeXt variants (AdamW + weight decay, lower LR)
