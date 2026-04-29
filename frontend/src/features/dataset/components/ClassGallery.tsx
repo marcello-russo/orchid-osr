@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useClassImages } from "@/features/dataset/hooks/useDataset";
 import { cn } from "@/lib/utils";
 import type { DatasetClassInfo } from "@/lib/types";
@@ -20,60 +21,74 @@ export function ClassGallery({ classInfo, split, totalImages }: ClassGalleryProp
   useEffect(() => { setOffset(0); }, [split]);
   const apiSplit = split === "train_clean" ? "train" : "test";
   const { data, isLoading } = useClassImages(classInfo.name, apiSplit, PAGE_SIZE, offset);
-  const hasMore = data ? offset + PAGE_SIZE < data.total : false;
+  const total = data?.total ?? 0;
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
+  const hasMore = offset + PAGE_SIZE < total;
 
   return (
     <Card>
       <CardHeader className="pb-2 border-b border-border/50">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <CardTitle className="text-base">{classInfo.name}</CardTitle>
-          <span className="text-sm text-muted-foreground">
-            {classInfo.total} images ({classInfo.train_count} train / {classInfo.test_count} test)
-          </span>
+          <div className="flex items-center gap-4">
+            <span className="text-xs text-muted-foreground whitespace-nowrap">
+              {classInfo.total} images ({classInfo.train_count} train / {classInfo.test_count} test)
+            </span>
+            {totalPages > 1 && (
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="size-7"
+                  disabled={offset === 0 || isLoading}
+                  onClick={() => setOffset((o) => Math.max(0, o - PAGE_SIZE))}
+                >
+                  <ChevronLeft className="size-4" />
+                </Button>
+                <span className="text-[10px] font-medium min-w-[3rem] text-center">
+                  {currentPage} / {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="size-7"
+                  disabled={!hasMore || isLoading}
+                  onClick={() => setOffset((o) => o + PAGE_SIZE)}
+                >
+                  <ChevronRight className="size-4" />
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
-        <div className="mt-1.5 flex items-center gap-2">
-          <div className="h-1.5 flex-1 rounded-full bg-muted overflow-hidden">
+        <div className="mt-2 flex items-center gap-2">
+          <div className="h-1 flex-1 rounded-full bg-muted overflow-hidden">
             <div
               className="h-full rounded-full bg-primary/60 transition-all"
               style={{ width: `${(classInfo.total / totalImages) * 100}%` }}
             />
           </div>
-          <span className="text-xs text-muted-foreground tabular-nums">
-            {((classInfo.total / totalImages) * 100).toFixed(1)}%
-          </span>
         </div>
       </CardHeader>
       <CardContent className="pt-4">
-        {isLoading && !data ? (
+        {isLoading ? (
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
             {Array.from({ length: PAGE_SIZE }).map((_, i) => (
               <Skeleton key={i} className="aspect-square rounded-md" />
             ))}
           </div>
         ) : data && data.images.length > 0 ? (
-          <>
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
-              {data.images.map((img) => (
-                <div key={img.filename} className="group relative aspect-square overflow-hidden rounded-md bg-muted">
-                  <ImageWithFade 
-                    src={img.url} 
-                    alt={img.filename} 
-                  />
-                </div>
-              ))}
-            </div>
-            {hasMore && (
-              <div className="mt-3 text-center">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setOffset((o) => o + PAGE_SIZE)}
-                >
-                  Show more ({data.total - offset - PAGE_SIZE} remaining)
-                </Button>
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6 animate-in fade-in zoom-in-95 duration-300">
+            {data.images.map((img) => (
+              <div key={img.filename} className="group relative aspect-square overflow-hidden rounded-md bg-muted">
+                <ImageWithFade 
+                  src={img.url} 
+                  alt={img.filename} 
+                />
               </div>
-            )}
-          </>
+            ))}
+          </div>
         ) : (
           <p className="text-sm text-muted-foreground">No images found.</p>
         )}
