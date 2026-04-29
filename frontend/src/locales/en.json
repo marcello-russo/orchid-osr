@@ -123,6 +123,17 @@
       "content1": "The genus Ophrys is one of the most taxonomically challenging orchid groups in the Mediterranean. These orchids use sexual deception to attract species-specific pollinators, producing flowers that mimic female insects through visual cues, scent, and tactile signals [1].",
       "content2": "This extreme specialisation drives rapid morphological divergence and frequent hybridization, resulting in visually ambiguous specimens that challenge even expert botanists. The Ophrys sphegodes complex alone encompasses multiple cryptic taxa with overlapping phenotypic traits [2][3]."
     },
+    "journey": {
+      "title": "Experimental Journey",
+      "baselines_title": "Preliminary Baselines (Exp 1–5)",
+      "baselines": "The first five experiments established initial baselines with ResNet18 and ResNet50 on standard train/val/test splits, using a combined dataset of private field photos and internet-sourced images. Experiment 4 introduced 5-fold stratified cross-validation for both ResNet18 and ResNet50, establishing the rigorous evaluation protocol still in use today.",
+      "leakage_title": "The Data Leakage Problem",
+      "leakage": "MD5 content hashing revealed that the train and test sets shared visually identical images under different filenames — a subtle form of data leakage that artificially inflated metrics and invalidated all results from Exp 1–5. The same orchid photograph, downloaded multiple times with different names, was present in both training and test partitions.",
+      "preprocessing_title": "The Preprocessing Problem",
+      "preprocessing": "The original pipeline applied aggressive center-cropping to a fixed resolution, destroying aspect ratio information. Since ResNet expects 512×256 inputs while ConvNeXt and DINOv2 use 224×224, the same crop produced distorted, information-poor inputs across architectures. We replaced this with letterbox resizing: images are scaled to fit within the target dimensions while preserving aspect ratio, with black padding bands filling the remaining space.",
+      "clean_title": "Exp 6 — Clean Slate",
+      "clean": "Experiment 6 is a complete restart on a deduplicated clean split with MD5-verified zero overlap between training (2,017 images) and test (300 balanced, 50 per class). Six architectures are evaluated with per-architecture input sizing and 5-fold stratified cross-validation."
+    },
     "methodology": {
       "title": "Methodology",
       "model_selection": {

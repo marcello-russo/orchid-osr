@@ -12,6 +12,7 @@ import {
   BookOpen,
   ArrowRight,
   BookMarked,
+  Route,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -166,6 +167,30 @@ export function AboutPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 text-muted-foreground leading-relaxed text-base">
           <p>{renderCitations(t("about.scientific.content1"))}</p>
           <p>{renderCitations(t("about.scientific.content2"))}</p>
+        </div>
+      </section>
+
+      {/* 3.5 Experimental Journey */}
+      <section className="space-y-8">
+        <div className="flex items-center gap-4">
+          <div className="size-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500">
+            <Route className="size-6" />
+          </div>
+          <h2 className="text-3xl font-bold tracking-tight">{t("about.journey.title")}</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 text-muted-foreground leading-relaxed text-base">
+          <div className="space-y-4">
+            <h3 className="text-foreground font-bold text-lg">{t("about.journey.baselines_title")}</h3>
+            <p>{t("about.journey.baselines")}</p>
+            <h3 className="text-foreground font-bold text-lg pt-2">{t("about.journey.leakage_title")}</h3>
+            <p>{t("about.journey.leakage")}</p>
+          </div>
+          <div className="space-y-4">
+            <h3 className="text-foreground font-bold text-lg">{t("about.journey.preprocessing_title")}</h3>
+            <p>{t("about.journey.preprocessing")}</p>
+            <h3 className="text-foreground font-bold text-lg pt-2">{t("about.journey.clean_title")}</h3>
+            <p>{t("about.journey.clean")}</p>
+          </div>
         </div>
       </section>
 
