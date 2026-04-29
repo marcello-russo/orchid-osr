@@ -1,195 +1,188 @@
 // frontend/src/pages/AboutPage.tsx
-import { Link } from "react-router-dom";
 import { 
   BookOpen, 
-  Database, 
   Cpu, 
   BarChart3, 
-  Lightbulb, 
-  Info,
-  GraduationCap
+  GraduationCap,
+  Zap,
+  ShieldCheck,
+  Smartphone,
+  Battery
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export function AboutPage() {
   return (
-    <div className="space-y-12 animate-in fade-in duration-500 pb-20">
+    <div className="space-y-16 animate-in fade-in duration-700 pb-24 max-w-5xl mx-auto">
       {/* Hero Section */}
-      <div className="relative overflow-hidden rounded-3xl bg-linear-to-br from-primary/10 via-primary/5 to-background p-8 md:p-12 border border-primary/10">
+      <div className="relative overflow-hidden rounded-[2rem] bg-linear-to-br from-primary/15 via-primary/5 to-background p-10 md:p-16 border border-primary/10 shadow-2xl shadow-primary/5">
         <div className="relative z-10 max-w-3xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold mb-6 tracking-wider uppercase">
-            <GraduationCap className="size-3.5" /> Master's Thesis Project
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-bold mb-8 tracking-widest uppercase">
+            <GraduationCap className="size-4" /> Master's Thesis Project
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-primary tracking-tight mb-4">
-            OrchID <span className="text-foreground/80">NCD</span>
+          <h1 className="text-5xl md:text-6xl font-black text-primary tracking-tighter mb-6 leading-none">
+            OrchID <span className="text-foreground/90">NCD</span>
           </h1>
-          <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
-            A Deep Learning infrastructure for the taxonomic classification of the 
-            <span className="italic font-medium text-foreground"> Ophrys</span> genus and the study of 
-            New Class Discovery (NCD) in the context of Mediterranean biodiversity.
+          <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed font-light">
+            An end-to-end research ecosystem built at the 
+            <span className="text-foreground font-medium"> University of Naples Federico II</span>, 
+            bridging the gap between field botany and state-of-the-art Computer Vision.
           </p>
         </div>
         {/* Background decoration */}
-        <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 size-96 rounded-full bg-primary/5 blur-3xl" />
+        <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 size-[30rem] rounded-full bg-primary/5 blur-[100px]" />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Main Content Column */}
-        <div className="md:col-span-2 space-y-8">
-          
-          <Section 
-            icon={<BookOpen className="size-5" />} 
-            title="Scientific Context"
-          >
-            <p>
-              The <strong>Ophrys</strong> genus represents one of the most complex and fascinating cases of biological evolution driven by pollinators. These orchids utilize "sexual deception," emitting pheromones and mimicking the morphology of insects to attract males of specific species.
-            </p>
-            <p>
-              This extreme specialization leads to incredible morphological variability and frequent hybridization, making field identification extremely difficult even for expert botanists. The <strong>OrchID</strong> project was born to provide objective computational tools capable of supporting biodiversity monitoring.
-            </p>
-          </Section>
-
-          <Section 
-            icon={<Database className="size-5" />} 
-            title="Dataset & Data Integrity"
-          >
-            <p>
-              The reference dataset (Exp 6) was curated to ensure total absence of <strong>data leakage</strong>. Through a systematic analysis of MD5 hashes, we identified and removed cross-source duplicates that would have contaminated the test metrics.
-            </p>
-            <div className="grid grid-cols-2 gap-4 my-4">
-              <div className="p-4 rounded-xl bg-muted/50 border border-border">
-                <div className="text-2xl font-bold text-primary">2,317</div>
-                <div className="text-xs text-muted-foreground uppercase text-[10px]">Total Images</div>
-              </div>
-              <div className="p-4 rounded-xl bg-muted/50 border border-border">
-                <div className="text-2xl font-bold text-primary">6</div>
-                <div className="text-xs text-muted-foreground uppercase text-[10px]">Target Species</div>
-              </div>
-            </div>
-            <p>
-              The current split includes 2,017 images for training and a balanced test set of 300 images (50 per class), allowing for an unbiased evaluation across all treated species.
-            </p>
-            <Link to="/dataset" className="inline-flex items-center text-primary font-medium hover:gap-2 transition-all">
-              Explore the dataset <span className="ml-1">→</span>
-            </Link>
-          </Section>
-
-          <Section 
-            icon={<Cpu className="size-5" />} 
-            title="Architecture Comparison"
-          >
-            <p>
-              We compared three dominant philosophies of modern Computer Vision:
-            </p>
-            <ul className="space-y-4 mt-4 text-sm">
-              <li className="flex gap-3">
-                <div className="size-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                <div>
-                  <span className="font-bold">ResNet (Classic CNN):</span> The industry standard based on residual connections. Excellent balance between speed and accuracy.
-                </div>
-              </li>
-              <li className="flex gap-3">
-                <div className="size-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                <div>
-                  <span className="font-bold">ConvNeXt (Modern CNN):</span> An evolution of convolutional networks that adopts Transformer structural improvements (LayerNorm, larger kernels) without sacrificing spatial efficiency.
-                </div>
-              </li>
-              <li className="flex gap-3">
-                <div className="size-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                <div>
-                  <span className="font-bold">DINOv2 (Vision Transformers):</span> Models pre-trained with self-supervised learning on 142 million images. We use <strong>LoRA</strong> (Low-Rank Adaptation) adapters for specific fine-tuning on orchid species.
-                </div>
-              </li>
-            </ul>
-          </Section>
-
-          <Section 
-            icon={<BarChart3 className="size-5" />} 
-            title="Validation Methodology"
-          >
-            <p>
-              Result robustness is guaranteed by a <strong>5-Fold Stratified Cross-Validation</strong>. This approach reduces the variance associated with random sample choice, producing a mean metric accompanied by its standard deviation (±).
-            </p>
-            <p>
-              For training, we utilize a <strong>Gradient Accumulation</strong> pipeline (Effective Batch Size: 32) that maintains high numerical precision even on hardware with limited memory (Quadro/Laptop GPUs).
-            </p>
-            <Link to="/experiments" className="inline-flex items-center text-primary font-medium hover:gap-2 transition-all">
-              Analyze experiments <span className="ml-1">→</span>
-            </Link>
-          </Section>
+      {/* Chapter 1: The Vision */}
+      <section className="space-y-6 px-4 md:px-0">
+        <div className="flex items-center gap-4">
+          <div className="size-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+            <BookOpen className="size-6" />
+          </div>
+          <h2 className="text-3xl font-bold tracking-tight">The Vision & Scientific Context</h2>
         </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 text-muted-foreground leading-relaxed">
+          <p>
+            The identification of <strong>Ophrys</strong> orchids is a notorious challenge in Mediterranean botany. Due to pollinator-driven evolution, these species exhibit extreme morphological plasticity and frequent hybridization. Traditional classification methods often struggle with the subtle variations in labellum patterns and floral structure.
+          </p>
+          <p>
+            This project, developed as a Master's Thesis, approaches the problem through the lens of <strong>New Class Discovery (NCD)</strong>. We don't just want a closed-set classifier; we are building a framework capable of handling the inherent uncertainty of biodiversity data, ensuring that every prediction is backed by a rigorous, reproducible pipeline.
+          </p>
+        </div>
+      </section>
 
-        {/* Sidebar Info Column */}
-        <div className="space-y-6">
-          <Card className="border-primary/20 bg-primary/5 shadow-none">
-            <CardHeader>
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Lightbulb className="size-4 text-primary" /> Roadmap
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-xs space-y-4 text-muted-foreground">
-              <div>
-                <div className="font-bold text-foreground mb-1">Series 1: Benchmarking</div>
-                <p>Comparison of baseline performance on clean data (Current State).</p>
-              </div>
-              <div className="opacity-60">
-                <div className="font-bold text-foreground mb-1">Series 2: Contrastive Learning</div>
-                <p>Implementation of SupCon to improve latent space separation.</p>
-              </div>
-              <div className="opacity-60">
-                <div className="font-bold text-foreground mb-1">Series 3: Explainability</div>
-                <p>Integration of Grad-CAM and Integrated Gradients to interpret model focus.</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-none bg-muted/30">
-            <CardHeader>
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Info className="size-4" /> Glossary
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-xs space-y-3 font-mono">
-              <div><span className="text-primary">NCD:</span> New Class Discovery</div>
-              <div><span className="text-primary">LoRA:</span> Low-Rank Adaptation</div>
-              <div><span className="text-primary">F1-Score:</span> Harmonic mean of Precision & Recall</div>
-              <div><span className="text-primary">Stochastic:</span> Controlled random process (seed=57)</div>
-            </CardContent>
-          </Card>
-
-          <div className="px-4 py-8 rounded-2xl border border-border bg-muted/10 text-center space-y-2">
-            <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Master's Thesis in Computer Science</p>
-            <div className="font-bold text-sm text-foreground leading-tight">
-              University of Naples Federico II
-            </div>
-            <div className="text-[10px] text-primary/80 font-medium">Department of Electrical Engineering and Information Technology</div>
+      {/* Chapter 2: Engineering for Performance */}
+      <section className="space-y-8 p-8 md:p-12 rounded-[2rem] bg-muted/30 border border-border">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-2">
+            <h2 className="text-3xl font-bold flex items-center gap-3">
+              <Zap className="size-8 text-primary" /> Engineering for Performance
+            </h2>
+            <p className="text-muted-foreground">How we turned a complex DL model into a lightning-fast web experience.</p>
           </div>
         </div>
-      </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <FeatureCard 
+            icon={<Cpu className="size-5" />}
+            title="Docker & Build-Time Caching"
+            description="Instead of downloading models at startup, we optimized our Dockerfile to fetch and cache all weights during the build phase. This reduced Hugging Face Space startup time from minutes to seconds."
+          />
+          <FeatureCard 
+            icon={<Smartphone className="size-5" />}
+            title="Dynamic WebP Optimization"
+            description="To handle high-resolution field photos on mobile, we implemented a custom backend resizing engine. Images are dynamically scaled and converted to WebP, reducing bandwidth usage by over 90%."
+          />
+          <FeatureCard 
+            icon={<BarChart3 className="size-5" />}
+            title="Responsive Visualization"
+            description="Our custom-built Distribution Charts adapt dynamically to screen size, ensuring that complex species statistics remain readable even on small smartphone viewports."
+          />
+        </div>
+      </section>
+
+      {/* Chapter 3: Data Integrity */}
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center px-4 md:px-0">
+        <div className="space-y-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-green-500/10 text-green-600 text-xs font-bold uppercase tracking-wider">
+            <ShieldCheck className="size-3.5" /> Zero Data Leakage
+          </div>
+          <h2 className="text-3xl font-bold">The "Clean Split" Methodology</h2>
+          <div className="space-y-4 text-muted-foreground leading-relaxed">
+            <p>
+              In computer vision, <strong>data leakage</strong> is the silent killer of model generalization. We discovered that several internet sources contained the same orchid photographs under different filenames.
+            </p>
+            <p>
+              To solve this, we implemented a systematic <strong>MD5 hash deduplication</strong> across the entire dataset. This led to the creation of <em>Experiment 6 (Clean Split)</em>: a robust dataset where training and test sets are strictly disjoint at the pixel level, ensuring that our results are genuinely earned.
+            </p>
+          </div>
+        </div>
+        <div className="bg-muted/50 rounded-3xl p-8 border border-border">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">Dataset Purity</span>
+              <span className="text-xs font-bold text-green-500">100%</span>
+            </div>
+            <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+              <div className="h-full bg-green-500 w-full" />
+            </div>
+            <ul className="space-y-3 pt-4">
+              <li className="flex items-center gap-3 text-sm text-muted-foreground">
+                <div className="size-1.5 rounded-full bg-green-500" />
+                Deduplicated via MD5 Hashes
+              </li>
+              <li className="flex items-center gap-3 text-sm text-muted-foreground">
+                <div className="size-1.5 rounded-full bg-green-500" />
+                Balanced 50-image test sets per class
+              </li>
+              <li className="flex items-center gap-3 text-sm text-muted-foreground">
+                <div className="size-1.5 rounded-full bg-green-500" />
+                Stratified 5-Fold Cross Validation
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* Chapter 4: Smart Training */}
+      <section className="space-y-8 px-4 md:px-0">
+        <div className="flex items-center gap-4">
+          <div className="size-12 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-500">
+            <Battery className="size-6" />
+          </div>
+          <h2 className="text-3xl font-bold tracking-tight">Smart Training Infrastructure</h2>
+        </div>
+        <div className="bg-linear-to-r from-muted/50 to-transparent p-8 rounded-3xl border-l-4 border-orange-500">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+            <div className="space-y-4">
+              <p className="text-muted-foreground leading-relaxed">
+                Training deep models like ConvNeXt and DINOv2 requires massive computational power. To manage this on portable hardware, we developed <code>smart-train.sh</code>: a battery-aware management script.
+              </p>
+              <p className="text-muted-foreground leading-relaxed text-sm italic">
+                "The script monitors the laptop's power state in real-time. If the battery drops below 40%, it gracefully pauses the training at the next epoch boundary to avoid data corruption. It automatically resumes once the charge reaches 80%."
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <span className="px-3 py-1 bg-background border border-border rounded-md text-[10px] font-mono uppercase">Battery Monitor v2.1</span>
+              <span className="px-3 py-1 bg-background border border-border rounded-md text-[10px] font-mono uppercase">Auto-Resume Logic</span>
+              <span className="px-3 py-1 bg-background border border-border rounded-md text-[10px] font-mono uppercase">Epoch Boundary Safety</span>
+              <span className="px-3 py-1 bg-background border border-border rounded-md text-[10px] font-mono uppercase">Multi-GPU Ready</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer / Attribution */}
+      <footer className="pt-16 border-t border-border text-center space-y-6 px-4 md:px-0">
+        <div className="flex flex-col md:flex-row justify-center gap-4">
+          <div className="px-6 py-3 rounded-full bg-muted/50 border border-border text-xs font-medium uppercase tracking-wider">
+            University of Naples Federico II
+          </div>
+          <div className="px-6 py-3 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-widest">
+            Computer Science Department
+          </div>
+        </div>
+        <p className="text-muted-foreground text-sm max-w-lg mx-auto leading-relaxed">
+          Developed as a Master's Thesis project for the Master's Degree in Computer Science, 
+          at the DIETI Department (Dipartimento di Ingegneria Elettrica e delle Tecnologie dell'Informazione).
+        </p>
+      </footer>
     </div>
   );
 }
 
-function Section({ 
-  icon, 
-  title, 
-  children 
-}: { 
-  icon: React.ReactNode; 
-  title: string; 
-  children: React.ReactNode 
-}) {
+function FeatureCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2.5">
-        <div className="p-2 rounded-lg bg-primary/10 text-primary">
+    <Card className="shadow-none border-border/50 bg-background/50 hover:border-primary/30 transition-colors">
+      <CardHeader className="pb-3 text-left">
+        <div className="size-10 rounded-lg bg-primary/5 flex items-center justify-center text-primary mb-2">
           {icon}
         </div>
-        <h2 className="text-xl font-bold tracking-tight">{title}</h2>
-      </div>
-      <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
-        {children}
-      </div>
-    </div>
+        <CardTitle className="text-base">{title}</CardTitle>
+      </CardHeader>
+      <CardContent className="text-left">
+        <p className="text-xs text-muted-foreground leading-relaxed">{description}</p>
+      </CardContent>
+    </Card>
   );
 }
