@@ -7,38 +7,124 @@
     "dataset": "Dataset",
     "classify": "Classify",
     "experiments": "Experiments",
+    "embeddings": "Embeddings",
     "about": "About"
+  },
+  "dashboard": {
+    "title": "OrchID Dashboard",
+    "summary_title": "System Summary",
+    "species_distribution": "Species Distribution",
+    "recent_experiments": "Recent Experiments",
+    "kpis": {
+      "total_images": "Total Images",
+      "classes": "Classes",
+      "completed_models": "Models",
+      "best_f1": "Best F1"
+    },
+    "table": {
+      "species": "Species",
+      "count": "Count",
+      "percentage": "Percentage"
+    }
+  },
+  "experiments": {
+    "title": "Experiments Explorer",
+    "filters": {
+      "all": "All",
+      "kfold": "K-Fold",
+      "baseline": "Baseline"
+    },
+    "table": {
+      "experiment": "Experiment",
+      "model": "Model",
+      "f1": "Mean F1",
+      "status": "Status",
+      "date": "Date",
+      "actions": "Actions"
+    }
+  },
+  "experiment_detail": {
+    "back_to_experiments": "Back to experiments",
+    "metrics": {
+      "accuracy": "Test Accuracy",
+      "f1": "Test F1 Score",
+      "precision": "Precision",
+      "recall": "Recall"
+    },
+    "charts": {
+      "loss": "Loss Curves",
+      "metrics": "Metric Curves",
+      "folds": "Fold Summary",
+      "overfitting": "Overfitting Proxy",
+      "confusion": "Confusion Matrix"
+    }
+  },
+  "classify": {
+    "title": "Species Identification",
+    "upload": {
+      "title": "Upload Orchid Photo",
+      "drop": "Drop the image here",
+      "browse": "Browse files",
+      "support": "Supports JPG, PNG, WEBP"
+    },
+    "model_select": {
+      "label": "Select Model",
+      "description": "Vision Transformer (DINOv2) models are recommended for higher precision."
+    },
+    "results": {
+      "title": "Classification Results",
+      "confidence": "Confidence",
+      "top_predictions": "Top 5 Predictions",
+      "explainability": "Explainability Analysis (Heatmap)"
+    }
+  },
+  "dataset": {
+    "title": "Dataset Explorer",
+    "stats": {
+      "train": "Training Images",
+      "test": "Test Images",
+      "total": "Total"
+    },
+    "tabs": {
+      "all": "All",
+      "train": "Train",
+      "test": "Test"
+    }
+  },
+  "embeddings": {
+    "title": "Latent Space Visualization",
+    "description": "This section will allow exploring morphological relationships between species in an interactive 3D space (Phase 2)."
   },
   "about": {
     "hero": {
       "title": "OrchID",
       "subtitle": "NCD",
-      "description": "An end-to-end research ecosystem built at the University of Naples Federico II, bridging the gap between field botany and state-of-the-art Computer Vision.",
-      "tag": "Master's Thesis Project"
+      "description": "An end-to-end research ecosystem developed at University of Naples Federico II, merging field botany with cutting-edge Computer Vision.",
+      "tag": "Master Thesis Project"
     },
     "scientific": {
       "title": "Scientific Context",
-      "content1": "The Ophrys genus represents one of the most complex and fascinating cases of biological evolution driven by pollinators. These orchids utilize 'sexual deception,' emitting pheromones and mimicking the morphology of insects to attract males of specific species.",
-      "content2": "This extreme specialization leads to incredible morphological variability and frequent hybridization, making field identification extremely difficult even for expert botanists. The OrchID project was born to provide objective computational tools capable of supporting biodiversity monitoring."
+      "content1": "The genus Ophrys represents one of the most complex and fascinating cases of pollinator-driven biological evolution. These orchids utilize sexual deception, emitting pheromones and mimicking insect morphology to attract males of specific species.",
+      "content2": "This extreme specialization leads to incredible morphological variability and frequent hybridization, making field identification extremely difficult even for expert botanists. The OrchID project was born to provide objective computational tools to support biodiversity monitoring."
     },
     "objectives": {
       "title": "Core Objectives",
       "vectorSpace": {
         "title": "Latent Embedding Space",
-        "description": "One of the primary goals of this research is the construction of a high-dimensional vector space (embedding space) where orchid images are mapped based on their morphological features. This serves as the foundation for similarity search and outlier detection."
+        "description": "One of the primary goals of this research is constructing a high-dimensional vector space where orchid images are mapped based on their morphological features. This serves as a foundation for similarity search and outlier detection."
       },
       "ncd": {
         "title": "Novel Class Discovery (NCD)",
-        "description": "Traditional classifiers assume a 'closed world.' Our research focuses on Novel Class Discovery, the ability of the model to recognize species it has never seen during training, identifying 'novel' entities in the wild."
+        "description": "Traditional classifiers assume a 'closed world'. Our research focuses on Novel Class Discovery, the model's ability to recognize species never seen during training, identifying 'new' entities in the wild."
       }
     },
     "experiment6": {
-      "title": "Experiment Analysis: Serie 6",
-      "description": "Experiment 6 is the cornerstone of our current results. After identifying leakage in previous series, Exp 6 provides a realistic assessment of model generalization.",
+      "title": "Experiment Analysis: Series 6",
+      "description": "Experiment 6 is the milestone of our current results. After identifying data leakage in previous series, Exp 6 provides a realistic assessment of model generalization.",
       "resnet": "ResNet50 Peak Performance",
-      "resnetDesc": "Our ResNet50 model reached a peak Val F1-Score of 0.905, demonstrating that standard architectures are still highly competitive.",
+      "resnetDesc": "Our ResNet50 model reached a peak Val F1-Score of 0.905, proving that standard architectures are still highly competitive.",
       "vit": "Vision Transformers (DINOv2)",
-      "vitDesc": "DINOv2-Base is our current champion, achieving a mean Val F1-Score of 0.914 ± 0.012. It shows exceptional robustness to occlusions and clutter in field photos."
+      "vitDesc": "DINOv2-Base is our current champion, achieving an average Val F1-Score of 0.914 ± 0.012. It shows exceptional robustness to occlusions and noise in field photos."
     }
   }
 }
