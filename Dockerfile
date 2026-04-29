@@ -20,7 +20,7 @@ WORKDIR /workspace/backend
 # Install PyTorch CPU-only (much smaller than CUDA image)
 RUN pip install --no-cache-dir \
     torch torchvision torcheval \
-    --index-url https://download.pytorch.org/whl/cpu
+    --extra-index-url https://download.pytorch.org/whl/cpu
 
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir --default-timeout=1000 -r requirements.txt
