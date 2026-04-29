@@ -20,11 +20,13 @@ export function ClassGallery({ classInfo, split, totalImages }: ClassGalleryProp
   const [offset, setOffset] = useState(0);
   useEffect(() => { setOffset(0); }, [split]);
   const apiSplit = split === "train_clean" ? "train" : "test";
-  const { data, isLoading } = useClassImages(classInfo.name, apiSplit, PAGE_SIZE, offset);
-  const total = data?.total ?? 0;
+  const { data, isLoading, isPlaceholderData } = useClassImages(classInfo.name, apiSplit, PAGE_SIZE, offset);
+  
+  const total = split === "train_clean" ? classInfo.train_count : classInfo.test_count;
   const totalPages = Math.ceil(total / PAGE_SIZE);
   const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
   const hasMore = offset + PAGE_SIZE < total;
+  const isFetchingNext = isLoading || isPlaceholderData;
 
   return (
     <Card>
@@ -41,7 +43,7 @@ export function ClassGallery({ classInfo, split, totalImages }: ClassGalleryProp
                   variant="outline"
                   size="icon"
                   className="size-7"
-                  disabled={offset === 0 || isLoading}
+                  disabled={offset === 0 || isFetchingNext}
                   onClick={() => setOffset((o) => Math.max(0, o - PAGE_SIZE))}
                 >
                   <ChevronLeft className="size-4" />
@@ -53,7 +55,7 @@ export function ClassGallery({ classInfo, split, totalImages }: ClassGalleryProp
                   variant="outline"
                   size="icon"
                   className="size-7"
-                  disabled={!hasMore || isLoading}
+                  disabled={!hasMore || isFetchingNext}
                   onClick={() => setOffset((o) => o + PAGE_SIZE)}
                 >
                   <ChevronRight className="size-4" />

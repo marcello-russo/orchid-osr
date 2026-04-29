@@ -1,5 +1,5 @@
 // frontend/src/features/dataset/hooks/useDataset.ts
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { fetchDatasetClasses, fetchClassImages } from "@/lib/api";
 import type { DatasetClassesResponse, ClassImagesResponse } from "@/lib/types";
 
@@ -20,5 +20,6 @@ export function useClassImages(
     queryKey: ["dataset", "classes", className, "images", split, limit, offset],
     queryFn: () => fetchClassImages(className, split, limit, offset),
     enabled: !!className,
+    placeholderData: keepPreviousData,
   });
 }
