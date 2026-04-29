@@ -1,6 +1,5 @@
-// frontend/src/pages/ClassifyPage.tsx
-
 import { useState, useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Upload, Loader2, Sparkles, Eye, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 
 export function ClassifyPage() {
+  const { t } = useTranslation();
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [heatmapUrl, setHeatmapUrl] = useState<string | null>(null);
@@ -36,7 +36,7 @@ export function ClassifyPage() {
       : 0;
   const uploadDone = isWorking && activeProgress >= 100;
   const activeLabel = uploadDone
-    ? "Processing on server..."
+    ? t("common.loading")
     : classify.isPending
       ? "Uploading..."
       : explain.isPending
@@ -114,11 +114,11 @@ export function ClassifyPage() {
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-primary">
-          🔍 Classify
+          🔍 {t("classify.title")}
         </h1>
         {file && (
           <Button variant="ghost" size="sm" onClick={clearAll}>
-            <X className="mr-1 size-4" /> Clear
+            <X className="mr-1 size-4" /> {t("common.back")}
           </Button>
         )}
       </div>
@@ -133,10 +133,10 @@ export function ClassifyPage() {
         >
           <Upload className="mb-3 size-12 text-muted-foreground" />
           <p className="text-lg font-medium text-muted-foreground">
-            Drag & drop an orchid photo here
+            {t("classify.upload.drop")}
           </p>
           <p className="mt-1 text-sm text-muted-foreground/70">
-            or click to browse (JPG, PNG)
+            {t("classify.upload.browse")} ({t("classify.upload.support")})
           </p>
           <input
             ref={inputRef}
@@ -152,7 +152,7 @@ export function ClassifyPage() {
           <Card>
             <CardHeader>
               <CardTitle>
-                {showHeatmap ? "Explainability Heatmap" : "Uploaded Image"}
+                {showHeatmap ? t("classify.results.explainability") : t("classify.upload.title")}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -192,8 +192,8 @@ export function ClassifyPage() {
                 {models.length > 0 && (
                   <div className="space-y-1.5">
                     <p className="text-xs font-medium text-muted-foreground flex items-center">
-                      Model
-                      <InfoTooltip text="Only models from Experiment 6 (clean split, 6 classes) are available for classification." />
+                      {t("classify.model_select.label")}
+                      <InfoTooltip text={t("classify.model_select.description")} />
                     </p>
                     <div className="flex flex-wrap gap-1.5">
                       {models.map((m) => (
@@ -234,7 +234,7 @@ export function ClassifyPage() {
                     ) : (
                       <Sparkles className="mr-2 size-4" />
                     )}
-                    Classify
+                    {t("common.home")}
                   </Button>
                   {classify.data && (
                     <Button
@@ -323,7 +323,7 @@ export function ClassifyPage() {
             {explain.data && (
               <Card>
                 <CardHeader>
-                  <CardTitle>🔬 Explainability</CardTitle>
+                  <CardTitle>🔬 {t("classify.results.explainability")}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
@@ -346,16 +346,7 @@ export function ClassifyPage() {
               <Card className="border-destructive/50">
                 <CardContent className="pt-4">
                   <p className="text-sm text-destructive">
-                    Classification failed: {classify.error?.message}
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-            {explain.isError && (
-              <Card className="border-destructive/50">
-                <CardContent className="pt-4">
-                  <p className="text-sm text-destructive">
-                    Explainability failed: {explain.error?.message}
+                    {t("common.error")}: {classify.error?.message}
                   </p>
                 </CardContent>
               </Card>

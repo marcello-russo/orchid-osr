@@ -1,7 +1,6 @@
-// frontend/src/pages/ExperimentsPage.tsx
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { FlaskConical } from "lucide-react";
 import {
   Table,
@@ -17,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 export function ExperimentsPage() {
+  const { t } = useTranslation();
   const { data: experiments, isLoading } = useExperiments();
   const [filter, setFilter] = useState<"all" | "kfold" | "baseline">("all");
 
@@ -27,7 +27,7 @@ export function ExperimentsPage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-bold text-primary">🧪 Experiments</h1>
+        <h1 className="text-2xl font-bold text-primary">🧪 {t("experiments.title")}</h1>
         <div className="flex flex-wrap gap-2">
           {(["all", "kfold", "baseline"] as const).map((f) => (
             <button
@@ -40,7 +40,7 @@ export function ExperimentsPage() {
                   : "text-muted-foreground bg-muted/50 hover:bg-muted"
               )}
             >
-              {f === "all" ? "All" : f === "kfold" ? "K-Fold" : "Baseline"}
+              {t(`experiments.filters.${f}`)}
             </button>
           ))}
         </div>
@@ -56,7 +56,7 @@ export function ExperimentsPage() {
         <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
           <FlaskConical className="mb-3 size-10 opacity-30" />
           <p className="text-sm">
-            {filter !== "all" ? `No ${filter} experiments found.` : "No experiments found."}
+            {t("common.error")}
           </p>
         </div>
       ) : (
@@ -64,10 +64,10 @@ export function ExperimentsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Model</TableHead>
+                <TableHead>{t("experiments.table.experiment")}</TableHead>
+                <TableHead>{t("experiments.table.model")}</TableHead>
                 <TableHead>Type</TableHead>
-                <TableHead className="text-right">Mean F1</TableHead>
+                <TableHead className="text-right">{t("experiments.table.f1")}</TableHead>
                 <TableHead className="text-right">Test Acc</TableHead>
                 <TableHead className="text-right">Folds</TableHead>
               </TableRow>

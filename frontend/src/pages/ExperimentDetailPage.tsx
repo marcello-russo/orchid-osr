@@ -1,7 +1,6 @@
-// frontend/src/pages/ExperimentDetailPage.tsx
-
 import { useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -39,6 +38,7 @@ import { useChartSize } from "@/features/explorer/hooks/useChartSize";
 import { useChartColors } from "@/features/explorer/hooks/useChartColors";
 
 export function ExperimentDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const { data: experiment, isLoading, error } = useExperiment(id ?? "");
   const [selectedFold, setSelectedFold] = useState<number | null>(null);
@@ -59,9 +59,9 @@ export function ExperimentDetailPage() {
   if (error || !experiment) {
     return (
       <div className="py-20 text-center text-muted-foreground">
-        <p>Experiment not found.</p>
+        <p>{t("common.error")}</p>
         <Link to="/experiments" className="mt-2 inline-block text-primary hover:underline">
-          Back to experiments
+          {t("experiment_detail.back_to_experiments")}
         </Link>
       </div>
     );
@@ -80,7 +80,7 @@ export function ExperimentDetailPage() {
           className="mb-2 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors duration-150"
         >
           <ArrowLeft className="h-4 w-4" />
-          Experiments
+          {t("common.experiments")}
         </Link>
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="text-lg sm:text-2xl font-bold text-primary break-all">{id}</h1>
@@ -99,13 +99,13 @@ export function ExperimentDetailPage() {
 
           {summary.test_accuracy !== null && (
             <span className="font-medium text-primary">
-              Test Accuracy: {(summary.test_accuracy * 100).toFixed(2)}%
+              {t("experiment_detail.metrics.accuracy")}: {(summary.test_accuracy * 100).toFixed(2)}%
               <InfoTooltip text={TOOLTIPS.testAccuracy} />
             </span>
           )}
           {summary.test_f1 !== null && (
             <span className="font-medium text-primary">
-              Test F1: {(summary.test_f1 * 100).toFixed(2)}%
+              {t("experiment_detail.metrics.f1")}: {(summary.test_f1 * 100).toFixed(2)}%
               <InfoTooltip text={TOOLTIPS.f1macro} />
             </span>
           )}
@@ -158,17 +158,18 @@ interface ChartCarouselProps {
   confusionMatrix: { matrix: number[][]; labels: string[] } | null;
 }
 
-const CHART_TITLES = [
-  "Loss Curves",
-  "Metric Curves",
-  "Fold Summary",
-  "Overfitting Proxy",
-  "Confusion Matrix",
-];
-
 function ChartCarousel({ folds, selectedFold, meanF1, stdF1, confusionMatrix }: ChartCarouselProps) {
+  const { t } = useTranslation();
   const total = confusionMatrix ? 5 : 4;
   const [active, setActive] = useState(0);
+
+  const chart_titles = [
+    t("experiment_detail.charts.loss"),
+    t("experiment_detail.charts.metrics"),
+    t("experiment_detail.charts.folds"),
+    t("experiment_detail.charts.overfitting"),
+    t("experiment_detail.charts.confusion"),
+  ];
 
   const clamp = useCallback((i: number) => Math.max(0, Math.min(total - 1, i)), [total]);
 
@@ -196,7 +197,7 @@ function ChartCarousel({ folds, selectedFold, meanF1, stdF1, confusionMatrix }: 
                 : "text-muted-foreground bg-muted/50 hover:bg-muted"
             )}
           >
-            {CHART_TITLES[i]}
+            {chart_titles[i]}
           </button>
         ))}
         <Button
@@ -235,6 +236,7 @@ interface TestMetrics {
 }
 
 function BaselineResults({ metrics }: { metrics: TestMetrics }) {
+  const { t } = useTranslation();
   const chartRef = useRef<HTMLDivElement>(null);
   const { width, height } = useChartSize(chartRef);
   const chartColors = useChartColors();
@@ -250,10 +252,10 @@ function BaselineResults({ metrics }: { metrics: TestMetrics }) {
     <div className="space-y-4">
       {/* Summary cards */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <MetricCard label="Accuracy" value={metrics.accuracy} />
-        <MetricCard label="F1 Macro" value={metrics.f1_macro} />
-        {metrics.precision_macro != null && <MetricCard label="Precision" value={metrics.precision_macro} />}
-        {metrics.recall_macro != null && <MetricCard label="Recall" value={metrics.recall_macro} />}
+        <MetricCard label={t("experiment_detail.metrics.accuracy")} value={metrics.accuracy} />
+        <MetricCard label={t("experiment_detail.metrics.f1")} value={metrics.f1_macro} />
+        {metrics.precision_macro != null && <MetricCard label={t("experiment_detail.metrics.precision")} value={metrics.precision_macro} />}
+        {metrics.recall_macro != null && <MetricCard label={t("experiment_detail.metrics.recall")} value={metrics.recall_macro} />}
       </div>
 
       {/* Per-class bar chart */}
@@ -289,8 +291,8 @@ function BaselineResults({ metrics }: { metrics: TestMetrics }) {
               <TableHeader>
                 <TableRow>
                   <TableHead>Class</TableHead>
-                  <TableHead className="text-right">Precision</TableHead>
-                  <TableHead className="text-right">Recall</TableHead>
+                  <TableHead className="text-right">{t("experiment_detail.metrics.precision")}</TableHead>
+                  <TableHead className="text-right">{t("experiment_detail.metrics.recall")}</TableHead>
                   <TableHead className="text-right">F1</TableHead>
                   <TableHead className="text-right whitespace-nowrap">Support</TableHead>
                 </TableRow>
