@@ -53,3 +53,6 @@ htmlcov/
 temp_kfold/
 
 superpowers/
+
+# HF adapter boilerplate
+*_adapter/README.md
