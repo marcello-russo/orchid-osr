@@ -24,8 +24,8 @@ export function Header() {
         <div className="flex items-center justify-center size-7 rounded-md bg-primary/10">
           <span className="text-sm">🌸</span>
         </div>
-        <span className="font-black text-lg tracking-tighter">
-          <span className="text-primary">Orch</span><span className="text-foreground">ID</span>
+        <span className="font-black text-base md:text-lg tracking-tighter">
+          <span className="text-primary">Orch</span><span className="text-foreground">ID</span><span className="text-muted-foreground font-bold text-xs ml-0.5">NCD</span>
         </span>
       </div>
 
