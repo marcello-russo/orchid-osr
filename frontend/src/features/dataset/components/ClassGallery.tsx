@@ -9,7 +9,7 @@ import { useClassImages } from "@/features/dataset/hooks/useDataset";
 import { cn } from "@/lib/utils";
 import type { DatasetClassInfo } from "@/lib/types";
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 8;
 
 interface ClassGalleryProps {
   classInfo: DatasetClassInfo;
