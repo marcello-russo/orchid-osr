@@ -152,7 +152,6 @@ def train(
     patience: int = 0,
     gradient_accumulation_steps: int = 1,
     resume_from: Optional[str] = None,
-    overfit_threshold: float = 0,
     optimizer_type: str = "adam",
     weight_decay: float = 0.0,
 ) -> tuple[ClassifierModel, dict]:
@@ -172,7 +171,6 @@ def train(
         patience: Early stopping patience on val_loss (0 = disabled)
         gradient_accumulation_steps: Accumulate gradients over N batches
         resume_from: Path to checkpoint file to resume from
-        overfit_threshold: Prechelt GL — stop when val_loss > threshold * best_val_loss (0 = disabled)
         optimizer_type: "adam" or "adamw"
         weight_decay: Weight decay for the optimizer
 
@@ -258,14 +256,6 @@ def train(
                 model, optimizer, scheduler, epoch, best_f1, best_val_loss,
                 epochs_no_improve, history, ckpt_path
             )
-
-        # Prechelt GL: stop when val_loss diverges significantly from best
-        if overfit_threshold > 0 and best_val_loss < float("inf") and val_loss > best_val_loss * overfit_threshold:
-            logger.info(
-                f"Early stopping at epoch {epoch+1}: overfitting detected "
-                f"(val_loss={val_loss:.4f} > {overfit_threshold}x best={best_val_loss:.4f})"
-            )
-            break
 
         if patience > 0 and epochs_no_improve >= patience:
             logger.info(f"Early stopping at epoch {epoch+1} (no val_loss improvement for {patience} epochs)")

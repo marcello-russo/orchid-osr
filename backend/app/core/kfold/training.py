@@ -230,7 +230,7 @@ def prepare_fold_data(augmented_train_dir, val_dir, batch_size, seed, model_vari
 
 def train_fold(model_variant, num_classes, train_loader, val_loader,
                num_epochs, learning_rate, device, checkpoint_path, patience=0,
-               gradient_accumulation_steps=1, resume=False, overfit_threshold=0,
+               gradient_accumulation_steps=1, resume=False,
                optimizer_type="adam", weight_decay=0.0):
     """
     Train di un singolo fold. Riutilizza train() da app.core.training.
@@ -277,7 +277,6 @@ def train_fold(model_variant, num_classes, train_loader, val_loader,
         patience=patience,
         gradient_accumulation_steps=gradient_accumulation_steps,
         resume_from=resume_from,
-        overfit_threshold=overfit_threshold,
         optimizer_type=opt_type,
         weight_decay=wd,
     )
