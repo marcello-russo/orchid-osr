@@ -54,10 +54,11 @@ def create_model(
 
 
 def create_transform(model_type: str) -> T.Compose:
+    from app.preprocessing.resizing import ResizeImageTransform
     entry = get_registry_entry(model_type)
     h, w = entry.input_size
     return T.Compose([
-        T.Resize((h, w)),
+        ResizeImageTransform(w, h),
         T.ToTensor(),
         T.Normalize(mean=entry.norm_mean, std=entry.norm_std),
     ])
