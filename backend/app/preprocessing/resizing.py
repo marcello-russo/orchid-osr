@@ -1,34 +1,33 @@
+from PIL import Image
 import logging
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def crop_image(image, target_width, target_height):
-    width, height = image.size
-    target_aspect_ratio = target_width / target_height
-    current_aspect_ratio = width / height
+def letterbox_resize(image, target_width, target_height):
+    """
+    Resizes image maintaining aspect ratio and adds padding (letterbox) to reach target size.
+    Prevents both distortion and information loss.
+    """
+    iw, ih = image.size
+    w, h = target_width, target_height
+    
+    # Calculate scale while preserving aspect ratio
+    scale = min(w/iw, h/ih)
+    nw = int(iw * scale)
+    nh = int(ih * scale)
 
-    if current_aspect_ratio > target_aspect_ratio:
-        # Image is too wide, crop the sides
-        new_width = int(height * target_aspect_ratio)
-        left = (width - new_width) / 2
-        top = 0
-        right = (width + new_width) / 2
-        bottom = height
-    else:
-        # Image is too tall, crop the top and bottom
-        new_height = int(width / target_aspect_ratio)
-        left = 0
-        top = (height - new_height) / 2
-        right = width
-        bottom = (height + new_height) / 2
+    # Resize image with high quality Lanczos filter
+    image = image.resize((nw, nh), Image.Resampling.LANCZOS)
 
-    cropped_image = image.crop((left, top, right, bottom))
-    return cropped_image
+    # Create black canvas and paste resized image in the center
+    new_image = Image.new('RGB', (w, h), (0, 0, 0))
+    new_image.paste(image, ((w - nw) // 2, (h - nh) // 2))
+
+    return new_image
 
 def resize_image(image, target_width, target_height):
-    cropped_image = crop_image(image, target_width, target_height)
-    resized_image = cropped_image.resize((target_width, target_height))
-    return resized_image
+    """Alias for letterbox_resize to maintain compatibility."""
+    return letterbox_resize(image, target_width, target_height)
 
 def is_correct_image_size(image, target_width, target_height):
     width, height = image.size
@@ -40,7 +39,7 @@ class ResizeImageTransform:
         self.height = height
 
     def __call__(self, image):
-        logging.debug(f'Applying resize transform to image of size {image.size}')
+        logging.debug(f'Applying letterbox resize transform to image of size {image.size}')
         if not is_correct_image_size(image, self.width, self.height):
-            image = resize_image(image, self.width, self.height)
+            image = letterbox_resize(image, self.width, self.height)
         return image
