@@ -17,7 +17,6 @@ from app.core.kfold.training import (
 )
 from app.core.kfold.testing import (
     aggregate_results,
-    final_test,
     aggregate_and_test,
 )
 from app.core.kfold.reporting import generate_report
@@ -135,7 +134,7 @@ def kfold_experiment(
     try:
         from app.core.models import get_registry_entry
         entry = get_registry_entry(model_variant)
-        h, w = entry.input_size
+        w, h = entry.input_size
 
         base_temp_dir = os.path.join(os.path.dirname(raw_dataset_dir), "temp_kfold")
         base_aug_cache = os.path.join(os.path.dirname(raw_dataset_dir), f"kfold_augmented_{w}x{h}")

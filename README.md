@@ -9,9 +9,9 @@ pinned: false
 
 [🇮🇹 Italiano](README.it.md)
 
-# 🌸 OrchID — Orchid Representation Learning
+# 🌸 OrchID-NCD — Orchid Representation Learning & Novel Class Discovery
 
-> Learning structured vector spaces of *Ophrys* orchid species through contrastive learning and metric embedding techniques.
+> Ultra-fine-grained visual classification and representation learning of *Ophrys* orchid species through self-supervised learning and contrastive techniques.
 
 ---
 
@@ -39,18 +39,9 @@ pinned: false
 
 ---
 
-## 📊 Results — Serie 1 (Clean Split, CE Loss)
+## 📊 Results
 
-5-fold StratifiedKFold on exp6 clean split (seed=57). 2,017 train / 300 test (50/class, balanced). Zero data leakage verified via MD5.
-
-| Model | Val F1 Macro | Test Accuracy | Test F1 Macro | Status |
-|-------|-------------|---------------|---------------|--------|
-| ResNet18 | 0.868 ± 0.016 | 85.00% | 84.96% | ✅ |
-| ResNet50 | 0.905 ± 0.027 | 88.00% | 88.01% | ✅ |
-| ConvNeXt-Tiny | 0.862 ± 0.020 | 84.00% | 83.91% | ✅ |
-| DINOv2-Small + LoRA | 0.893 ± 0.006 | 85.33% | 85.50% | ✅ |
-| DINOv2-Base + LoRA | 0.914 ± 0.012 | 88.00% | 87.88% | ✅ |
-| ConvNeXt-Small | — | — | — | 🔜 Training |
+Results from Serie 1 (exp6 clean split) will be published after re-running with proper flower cropping. Previous experiments (exp 1–5) were invalidated by data leakage, and exp 6 needs to be redone with a Faster R-CNN cropper for optimal flower detection.
 
 <details>
 <summary>Per-architecture training recipes</summary>
@@ -62,21 +53,6 @@ pinned: false
 | DINOv2-Small/Base | AdamW | 0.0002 | 0.01 | Light regularization on LoRA adapters (~0.5% trainable params) |
 
 Shared: batch=8 (effective 32 via gradient accumulation ×4), patience=15, ReduceLROnPlateau, 100 epochs max.
-
-</details>
-
-<details>
-<summary>Legacy experiments (exp1-5, data leakage)</summary>
-
-These experiments used combined datasets with content overlap between train and test (verified via MD5). Results are inflated and not reliable.
-
-| Experiment | Train | Test | Accuracy | F1 Macro | Notes |
-|------------|-------|------|----------|----------|-------|
-| Exp1 | Private | Private | 94.78% | 93.72% | Baseline (6 classes) |
-| Exp2 | Private | Internet Raw | 35.09% | 37.57% | Strong domain shift |
-| Exp3 | Private | Internet Cropped | 48.15% | 50.43% | Cropping helps (+12.9%) |
-| Exp4 | Combined | Internet Cropped | 95.19% | 95.37% | Data leakage present |
-| Exp5 | Combined | Private | 96.79% | 95.83% | Data leakage present |
 
 </details>
 
@@ -122,18 +98,18 @@ python cli.py --status                                          # Check status
 
 # K-fold cross-validation on clean split (exp6)
 python cli.py --cross-validate --exp 6 --model resnet18 \
-  --epochs 100 --patience 15 --overfit-threshold 0 --accumulation 4
+  --epochs 100 --patience 15 --accumulation 4
 
 python cli.py --cross-validate --exp 6 --model convnext_tiny \
-  --epochs 100 --patience 15 --overfit-threshold 0 --accumulation 4
+  --epochs 100 --patience 15 --accumulation 4
 
 # Single fold (for resume)
 python cli.py --cross-validate --exp 6 --model resnet50 --fold 0 \
-  --epochs 100 --patience 15 --overfit-threshold 0 --accumulation 4
+  --epochs 100 --patience 15 --accumulation 4
 
 # Aggregate completed folds
 python cli.py --cross-validate --exp 6 --model resnet50 \
-  --epochs 100 --patience 15 --overfit-threshold 0 --accumulation 4 --aggregate-only
+  --epochs 100 --patience 15 --accumulation 4 --aggregate-only
 ```
 
 ---
@@ -166,7 +142,7 @@ resnet18/
 │   │   │   ├── explorer/         # Charts, hooks, experiment config
 │   │   │   ├── classify/         # Classification hooks
 │   │   │   └── dataset/          # Dataset explorer gallery & charts
-│   │   ├── pages/                # Dashboard, Experiments, Detail, Classify, Dataset, About
+│   │   ├── pages/                # Dashboard, Experiments, Detail, Classify, Dataset, Research
 │   │   ├── stores/               # Zustand (theme, sidebar)
 │   │   └── lib/                  # API client, React Query, types
 │   └── package.json

@@ -242,7 +242,7 @@ def train_fold(model_variant, num_classes, train_loader, val_loader,
         tuple: (modello, fold_metrics_dict)
     """
     from app.core.models import create_model, get_registry_entry
-    from app.core.training import train, cleanup_gpu
+    from app.core.training import train
 
     ckpt_dir = os.path.dirname(checkpoint_path)
     os.makedirs(ckpt_dir, exist_ok=True)

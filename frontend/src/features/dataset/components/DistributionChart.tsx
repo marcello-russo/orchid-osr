@@ -1,5 +1,6 @@
 // frontend/src/features/dataset/components/DistributionChart.tsx
 import { useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useChartSize } from "@/features/explorer/hooks/useChartSize";
@@ -11,6 +12,7 @@ interface DistributionChartProps {
 }
 
 export function DistributionChart({ classes }: DistributionChartProps) {
+  const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
   const { width, height } = useChartSize(ref);
   const chartColors = useChartColors();
@@ -26,7 +28,7 @@ export function DistributionChart({ classes }: DistributionChartProps) {
   return (
     <Card>
       <CardHeader className="pb-2 border-b border-border/50">
-        <CardTitle className="text-base">Class Distribution</CardTitle>
+        <CardTitle className="text-base">{t("dataset.class_distribution")}</CardTitle>
       </CardHeader>
       <CardContent className="pt-4 px-1 sm:px-6">
         <div ref={ref} style={{ width: "100%", height }}>

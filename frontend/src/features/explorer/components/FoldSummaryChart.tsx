@@ -1,6 +1,7 @@
 // frontend/src/features/explorer/components/FoldSummaryChart.tsx
 
 import { useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import {
   BarChart,
   Bar,
@@ -22,22 +23,23 @@ interface FoldSummaryChartProps {
 }
 
 export function FoldSummaryChart({ folds, meanF1, stdF1 }: FoldSummaryChartProps) {
+  const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
   const { width, height } = useChartSize(ref);
   const chartColors = useChartColors();
 
   const data = useMemo(
     () => folds.map((f) => ({
-      name: `Fold ${f.fold}`,
+      name: `${t("experiment_detail.fold_selector.fold")}${f.fold}`,
       F1: f.best_f1,
       Accuracy: f.best_accuracy,
     })),
-    [folds]
+    [folds, t]
   );
 
   const titleSuffix =
     meanF1 != null
-      ? ` — Mean F1: ${(meanF1 * 100).toFixed(2)}%${
+      ? ` — ${t("experiment_detail.charts.fold_mean_f1")}${(meanF1 * 100).toFixed(2)}%${
           stdF1 != null ? ` ± ${(stdF1 * 100).toFixed(2)}%` : ""
         }`
       : "";
@@ -45,7 +47,7 @@ export function FoldSummaryChart({ folds, meanF1, stdF1 }: FoldSummaryChartProps
   return (
     <Card>
       <CardHeader className="pb-2 border-b border-border/50">
-        <CardTitle className="text-base">Fold Summary{titleSuffix}</CardTitle>
+        <CardTitle className="text-base">{t("experiment_detail.charts.folds")}{titleSuffix}</CardTitle>
       </CardHeader>
       <CardContent className="pt-4">
         <div ref={ref} style={{ width: "100%", height }}>
@@ -62,7 +64,7 @@ export function FoldSummaryChart({ folds, meanF1, stdF1 }: FoldSummaryChartProps
           </BarChart>
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
-          Best validation F1 and accuracy for each fold at the best epoch.
+          {t("experiment_detail.charts.fold_summary_description")}
         </p>
       </CardContent>
     </Card>

@@ -1,6 +1,7 @@
 // frontend/src/features/explorer/components/MetricCurvesChart.tsx
 
 import { useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   LineChart,
   Line,
@@ -24,6 +25,7 @@ interface MetricCurvesChartProps {
 }
 
 export function MetricCurvesChart({ folds, selectedFold }: MetricCurvesChartProps) {
+  const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
   const { width, height } = useChartSize(ref);
   const chartColors = useChartColors();
@@ -59,7 +61,7 @@ export function MetricCurvesChart({ folds, selectedFold }: MetricCurvesChartProp
     <Card>
       <CardHeader className="pb-2 border-b border-border/50">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base">Metric Curves</CardTitle>
+          <CardTitle className="text-base">{t("experiment_detail.charts.metrics")}</CardTitle>
           <div className="flex gap-1">
             {(["f1", "accuracy"] as const).map((m) => (
               <button
@@ -72,7 +74,7 @@ export function MetricCurvesChart({ folds, selectedFold }: MetricCurvesChartProp
                     : "text-muted-foreground bg-muted/50 hover:bg-muted"
                 )}
               >
-                {m === "f1" ? "F1" : "Accuracy"}
+                {m === "f1" ? t("experiment_detail.charts.f1_label") : t("experiment_detail.charts.accuracy")}
               </button>
             ))}
           </div>
@@ -86,11 +88,11 @@ export function MetricCurvesChart({ folds, selectedFold }: MetricCurvesChartProp
             <YAxis tick={{ fontSize: 14 }} domain={[0, 1]} />
             <Tooltip
               formatter={(value) => (Number(value) * 100).toFixed(2) + "%"}
-              labelFormatter={(l) => `Epoch ${l}`}
+              labelFormatter={(l) => `${t("experiment_detail.charts.epoch")}${l}`}
             />
             <Legend
               wrapperStyle={{ fontSize: 13 }}
-              formatter={(value: string) => `Fold ${value}`}
+              formatter={(value: string) => `${t("experiment_detail.fold_selector.fold")}${value}`}
               align="right"
             />
             {metric === "f1" && meanBestF1 > 0 && (
@@ -98,7 +100,7 @@ export function MetricCurvesChart({ folds, selectedFold }: MetricCurvesChartProp
                 y={meanBestF1}
                 stroke={chartColors[1]}
                 strokeDasharray="4 4"
-                label={{ value: `Mean Best F1: ${(meanBestF1 * 100).toFixed(2)}%`, fontSize: 13, fill: chartColors[1] }}
+                label={{ value: `${t("experiment_detail.charts.mean_best_f1")}${(meanBestF1 * 100).toFixed(2)}%`, fontSize: 13, fill: chartColors[1] }}
               />
             )}
             {visibleFolds.map((f) => (
@@ -115,7 +117,7 @@ export function MetricCurvesChart({ folds, selectedFold }: MetricCurvesChartProp
           </LineChart>
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
-          Selected metric per epoch for each fold. The dashed horizontal line shows the mean best F1.
+          {t("experiment_detail.charts.metrics_description")}
         </p>
       </CardContent>
     </Card>

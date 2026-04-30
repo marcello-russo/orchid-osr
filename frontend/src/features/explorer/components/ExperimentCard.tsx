@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FlaskConical } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import type { ExperimentSummary } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -12,6 +13,7 @@ interface ExperimentCardProps {
 }
 
 export function ExperimentCard({ experiment }: ExperimentCardProps) {
+  const { t } = useTranslation();
   const isKfold = experiment.type === "kfold";
 
   return (
@@ -42,15 +44,15 @@ export function ExperimentCard({ experiment }: ExperimentCardProps) {
               </span>
             )}
             {experiment.mean_f1 !== null && (
-              <span>F1: {(experiment.mean_f1 * 100).toFixed(2)}%</span>
+              <span>{`${t("experiment_detail.charts.f1_label")}:`} {(experiment.mean_f1 * 100).toFixed(2)}%</span>
             )}
             {experiment.test_accuracy !== null && (
               <span>
-                Test: {(experiment.test_accuracy * 100).toFixed(2)}%
+                {`${t("experiment_detail.charts.test_label")}:`} {(experiment.test_accuracy * 100).toFixed(2)}%
               </span>
             )}
             {experiment.num_folds !== null && (
-              <span>{experiment.num_folds} folds</span>
+              <span>{experiment.num_folds} {t("experiment_detail.charts.folds_label")}</span>
             )}
           </div>
         </CardContent>

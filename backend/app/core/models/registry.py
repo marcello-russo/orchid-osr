@@ -13,7 +13,7 @@ from app.core.models.base import ModelConfig, ClassifierModel
 class ModelRegistryEntry:
     config_cls: Type[ModelConfig]
     classifier_cls: Type[ClassifierModel]
-    input_size: tuple[int, int]  # (height, width)
+    input_size: tuple[int, int]  # (width, height)
     norm_mean: list[float]
     norm_std: list[float]
     embedding_dim: int
@@ -56,7 +56,7 @@ def create_model(
 def create_transform(model_type: str) -> T.Compose:
     from app.preprocessing.resizing import ResizeImageTransform
     entry = get_registry_entry(model_type)
-    h, w = entry.input_size
+    w, h = entry.input_size
     return T.Compose([
         ResizeImageTransform(w, h),
         T.ToTensor(),

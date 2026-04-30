@@ -66,10 +66,10 @@ export function ExperimentsPage() {
               <TableRow>
                 <TableHead>{t("experiments.table.experiment")}</TableHead>
                 <TableHead>{t("experiments.table.model")}</TableHead>
-                <TableHead>Type</TableHead>
+                <TableHead>{t("experiments.table.type")}</TableHead>
                 <TableHead className="text-right">{t("experiments.table.f1")}</TableHead>
-                <TableHead className="text-right">Test Acc</TableHead>
-                <TableHead className="text-right">Folds</TableHead>
+                <TableHead className="text-right">{t("experiments.table.test_acc")}</TableHead>
+                <TableHead className="text-right">{t("experiments.table.folds")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

@@ -1,6 +1,7 @@
 // frontend/src/features/explorer/components/ConfusionMatrixChart.tsx
 
 import { useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import {
@@ -17,6 +18,7 @@ interface ConfusionMatrixChartProps {
 }
 
 export function ConfusionMatrixChart({ matrix, labels }: ConfusionMatrixChartProps) {
+  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const { width } = useChartSize(containerRef);
 
@@ -34,7 +36,7 @@ export function ConfusionMatrixChart({ matrix, labels }: ConfusionMatrixChartPro
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-base">Confusion Matrix (Test Set — overall)</CardTitle>
+        <CardTitle className="text-base">{t("experiment_detail.charts.confusion_title")}</CardTitle>
       </CardHeader>
       <CardContent>
         <TooltipProvider>
@@ -88,7 +90,7 @@ export function ConfusionMatrixChart({ matrix, labels }: ConfusionMatrixChartPro
                       </TooltipTrigger>
                       <TooltipContent>
                         <p className="text-xs">
-                          True: {labels[i]} → Pred: {labels[j]}: {val}
+                          {t("experiment_detail.charts.confusion_true")} {labels[i]} → {t("experiment_detail.charts.confusion_pred")} {labels[j]}: {val}
                         </p>
                       </TooltipContent>
                     </Tooltip>

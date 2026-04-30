@@ -35,6 +35,6 @@ podman run -d \
 
 echo "Container avviato. Comandi utili:"
 echo "  podman exec pytorch_app python cli.py --status"
-echo "  podman exec pytorch_app python cli.py --cross-validate --exp 6 --model resnet18 --epochs 26 --accumulation 4"
-echo "  podman exec pytorch_app python cli.py --cross-validate --exp 6 --model resnet50 --epochs 26 --accumulation 4"
+echo "  podman exec pytorch_app python cli.py --cross-validate --exp 6 --model resnet18 --epochs 100 --patience 15 --accumulation 4"
+echo "  podman exec pytorch_app python cli.py --cross-validate --exp 6 --model resnet50 --epochs 100 --patience 15 --accumulation 4"
 echo "  podman exec pytorch_app python server.py"

@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
 import {
-  BarChart3,
   GraduationCap,
   Target,
   FlaskConical,
@@ -13,6 +12,7 @@ import {
   ArrowRight,
   BookMarked,
   Route,
+  Layers,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -204,7 +204,7 @@ export function AboutPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
           <FeatureCard
             icon={<Cpu className="size-5" />}
             title={t("about.methodology.model_selection.title")}
@@ -220,56 +220,11 @@ export function AboutPage() {
             title={t("about.methodology.rigor.title")}
             description={t("about.methodology.rigor.description")}
           />
-        </div>
-      </section>
-
-      {/* 5. Results */}
-      <section className="space-y-6 md:space-y-8">
-        <div className="flex items-center gap-4">
-          <div className="size-12 rounded-2xl bg-green-500/10 flex items-center justify-center text-green-500">
-            <BarChart3 className="size-6" />
-          </div>
-          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">{t("about.experiment6.title")}</h2>
-        </div>
-        <div className="bg-muted/30 border border-border rounded-2xl md:rounded-[2.5rem] p-5 md:p-12 overflow-hidden relative">
-          <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12">
-            <div className="space-y-6">
-              <p className="text-muted-foreground leading-relaxed text-base">
-                {t("about.experiment6.description")}
-              </p>
-              <div className="space-y-3 md:space-y-4">
-                <div className="flex items-start gap-3 p-4 md:p-5 rounded-xl md:rounded-2xl bg-background/50 border border-border/50">
-                  <div className="text-primary font-bold text-xl md:text-2xl">0.91</div>
-                  <div className="text-sm text-muted-foreground">
-                    <span className="text-foreground font-bold block mb-1 text-base">
-                      {t("about.experiment6.vit")}
-                    </span>
-                    {renderCitations(t("about.experiment6.vitDesc"))}
-                  </div>
-                </div>
-                <div className="flex items-start gap-3 p-4 md:p-5 rounded-xl md:rounded-2xl bg-background/50 border border-border/50">
-                  <div className="text-primary font-bold text-xl md:text-2xl">0.90</div>
-                  <div className="text-sm text-muted-foreground">
-                    <span className="text-foreground font-bold block mb-1 text-base">
-                      {t("about.experiment6.resnet")}
-                    </span>
-                    {t("about.experiment6.resnetDesc")}
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center justify-center bg-background/40 rounded-xl md:rounded-3xl border border-border/50 p-5 md:p-8">
-              <div className="text-center space-y-3">
-                <div className="text-xs text-muted-foreground uppercase tracking-widest font-bold">
-                  {t("about.experiment6.badge_model")}
-                </div>
-                <div className="text-5xl font-black text-primary uppercase">DINOv2-Base</div>
-                <div className="text-xs text-muted-foreground">
-                  {t("about.experiment6.badge_folds")}
-                </div>
-              </div>
-            </div>
-          </div>
+          <FeatureCard
+            icon={<Layers className="size-5" />}
+            title={t("about.methodology.augmentation.title")}
+            description={t("about.methodology.augmentation.description")}
+          />
         </div>
       </section>
 

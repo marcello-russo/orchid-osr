@@ -19,7 +19,6 @@
   "test_dataset_dir": "/workspace/backend/dataset/test_clean",
   "patience": 15,
   "gradient_accumulation_steps": 4,
-  "overfit_threshold": 0,
   "optimizer": "adam",
   "weight_decay": 0.0,
   "effective_learning_rate": 0.001,

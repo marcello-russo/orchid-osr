@@ -8,18 +8,27 @@
     "classify": "Classify",
     "experiments": "Experiments",
     "embeddings": "Embeddings",
-    "about": "About"
+    "about": "Research"
   },
   "dashboard": {
     "title": "OrchID-NCD Dashboard",
-    "summary_title": "System Summary",
     "species_distribution": "Species Distribution",
     "recent_experiments": "Recent Experiments",
+    "nav": {
+      "experiments": "Browse training runs and compare model performance",
+      "classify": "Identify orchid species from photos",
+      "dataset": "Explore the Ophrys image collection",
+      "embeddings": "Visualize species relationships in latent space (Phase 2)",
+      "research": "Discover the research framework, methodology, and scientific context"
+    },
     "kpis": {
       "total_images": "Total Images",
       "classes": "Classes",
       "completed_models": "Models",
-      "best_f1": "Best F1"
+      "best_f1": "Best F1",
+      "best_test_accuracy": "Best Test Accuracy",
+      "in_dataset": "in dataset",
+      "combined_dataset": "combined dataset"
     },
     "table": {
       "species": "Species",
@@ -38,59 +47,116 @@
       "experiment": "Experiment",
       "model": "Model",
       "f1": "Mean F1",
-      "status": "Status",
-      "date": "Date",
-      "actions": "Actions"
+      "type": "Type",
+      "test_acc": "Test Acc",
+      "folds": "Folds"
     }
   },
   "experiment_detail": {
     "back_to_experiments": "Back to experiments",
+    "no_results": "Baseline experiment — no results data available.",
+    "per_class_metrics": "Per-Class Metrics",
+    "per_class_breakdown": "Per-Class Breakdown",
     "metrics": {
       "accuracy": "Test Accuracy",
       "f1": "Test F1 Score",
       "precision": "Precision",
       "recall": "Recall"
     },
+    "table": {
+      "class": "Class",
+      "support": "Support"
+    },
+    "config": {
+      "training_recipe": "Training Recipe",
+      "epochs": "Epochs",
+      "batch_size": "Batch Size",
+      "patience": "Patience",
+      "lr": "LR",
+      "optimizer": "Optimizer",
+      "weight_decay": "Weight Decay",
+      "source": "Source",
+      "registry": "Registry"
+    },
+    "fold_selector": {
+      "all": "All Folds",
+      "fold": "Fold "
+    },
     "charts": {
       "loss": "Loss Curves",
       "metrics": "Metric Curves",
       "folds": "Fold Summary",
       "overfitting": "Overfitting Proxy",
-      "confusion": "Confusion Matrix"
+      "confusion": "Confusion Matrix",
+      "train": "Train",
+      "validation": "Validation",
+      "epoch": "Epoch ",
+      "accuracy": "Accuracy",
+      "mean_best_f1": "Mean Best F1: ",
+      "f1_label": "F1",
+      "test_label": "Test",
+      "folds_label": "folds",
+      "loss_description": "Training or validation loss per epoch for each fold. Dashed vertical lines mark the best epoch.",
+      "metrics_description": "Selected metric per epoch for each fold. The dashed horizontal line shows the mean best F1.",
+      "overfitting_title": "Overfitting Proxy (val_loss / train_loss)",
+      "overfitting_threshold": "Overfitting threshold",
+      "overfitting_description": "Ratio of val_loss / train_loss per epoch. Values above 1 indicate potential overfitting.",
+      "fold_mean_f1": "Mean F1:",
+      "fold_summary_description": "Best validation F1 and accuracy for each fold at the best epoch.",
+      "confusion_title": "Confusion Matrix (Test Set — overall)",
+      "confusion_true": "True:",
+      "confusion_pred": "Pred:"
+    },
+    "tooltips": {
+      "optimizer": "Adam for ResNet (proven fine-tuning baseline). AdamW for ConvNeXt and DINOv2 — decoupled weight decay prevents overfitting on small datasets.",
+      "learning_rate": "Fine-tuning LR from the model registry. ResNet: 0.001 (standard), ConvNeXt: 0.0001 (LayerNorm is sensitive to large gradients), DINOv2: 0.0002 (LoRA adapter).",
+      "weight_decay": "L2 regularization strength. 0 for ResNet (BatchNorm provides implicit regularization), 0.05 for ConvNeXt (ConvNeXt paper recipe), 0.01 for DINOv2 (light regularization on LoRA adapters).",
+      "patience": "Stops training after 15 consecutive epochs without val_loss improvement. Catches convergence without premature stopping.",
+      "batch_size": "Physical batch=8 (fits 4GB VRAM). Effective batch=32 via gradient accumulation (4 steps). Mathematically identical to batch=32 for cross-entropy loss.",
+      "epochs": "Maximum training duration. Early stopping terminates earlier via patience.",
+      "test_accuracy": "Overall fraction of correctly classified test images (300 total, 50 per class).",
+      "f1_macro": "Harmonic mean of per-class F1 scores. Preferred over accuracy for imbalanced datasets."
     }
   },
   "classify": {
-    "title": "Species Identification",
+    "title": "🔍 Species Identification",
     "upload": {
       "title": "Upload Orchid Photo",
       "drop": "Drop the image here",
       "browse": "Browse files",
-      "support": "Supports JPG, PNG, WEBP"
+      "support": "Supports JPG, PNG, WEBP",
+      "alt": "Uploaded orchid"
     },
     "model_select": {
       "label": "Select Model",
       "description": "Vision Transformer (DINOv2) models are recommended for higher precision."
     },
+    "progress": {
+      "uploading": "Uploading...",
+      "please_wait": "please wait",
+      "connecting": "Connecting..."
+    },
+    "actions": {
+      "explain": "Explain"
+    },
     "results": {
-      "title": "Classification Results",
-      "confidence": "Confidence",
-      "top_predictions": "Top 5 Predictions",
-      "explainability": "Explainability Analysis (Heatmap)"
+      "explainability": "🔬 Explainability Analysis (Heatmap)",
+      "heatmap_alt": "Heatmap overlay",
+      "heatmap_btn": "Heatmap",
+      "original": "Original",
+      "predicted": "🌸 Predicted:",
+      "heatmap_explanation": "The heatmap highlights which regions of the image most influenced the model's prediction. Green = positive contribution, Red = negative."
     }
   },
   "dataset": {
     "title": "Dataset Explorer",
-    "stats": {
-      "train": "Training Images",
-      "test": "Test Images",
-      "total": "Total"
-    },
     "tabs": {
       "all": "All",
       "train": "Train",
       "test": "Test"
     },
     "classes": "classes",
+    "class_distribution": "Class Distribution",
     "images": "images",
     "train_label": "train",
     "test_label": "test",
@@ -125,11 +191,11 @@
     "journey": {
       "title": "Experimental Journey",
       "baselines_title": "Preliminary Baselines (Exp 1–5)",
-      "baselines": "The first five experiments explored only ResNet18 (Exp 1–3) and ResNet50 (Exp 4–5) on standard train/val/test splits, using a combined dataset of private field photos and internet-sourced images. Experiment 4 introduced 5-fold stratified cross-validation for both architectures, establishing the rigorous evaluation protocol still in use today. ConvNeXt and DINOv2 had not yet been tested.",
+      "baselines": "The first five experiments explored only ResNet18 (Exp 1–3) and ResNet50 (Exp 4–5) on standard train/val/test splits, using a combined dataset of private field photos and internet-sourced images across six Ophrys species of the sphegodes complex: O. exaltata, O. garganica, O. incubacea, O. majellensis, O. sphegodes, and O. sphegodes ssp. sphegodes (Palena population). Experiment 4 introduced 5-fold stratified cross-validation for both architectures, establishing the rigorous evaluation protocol still in use today. ConvNeXt and DINOv2 had not yet been tested.",
       "leakage_title": "The Data Leakage Problem",
       "leakage": "MD5 content hashing revealed that the train and test sets shared visually identical images under different filenames — a subtle form of data leakage that artificially inflated metrics and invalidated all results from Exp 1–5. The same orchid photograph, downloaded multiple times with different names, was present in both training and test partitions.",
       "preprocessing_title": "The Preprocessing Problem",
-      "preprocessing": "The original pipeline applied aggressive center-cropping to a fixed resolution, destroying aspect ratio information. Since ResNet expects 512×256 inputs while ConvNeXt and DINOv2 use 224×224, the same crop produced distorted, information-poor inputs across architectures. We replaced this with letterbox resizing: images are scaled to fit within the target dimensions while preserving aspect ratio, with black padding bands filling the remaining space.",
+      "preprocessing": "The original pipeline applied aggressive center-cropping to a fixed resolution, destroying aspect ratio information. Since ResNet expects 256×512 inputs while ConvNeXt and DINOv2 use 224×224, the same crop produced distorted, information-poor inputs across architectures. We replaced this with letterbox resizing: images are scaled to fit within the target dimensions while preserving aspect ratio, with black padding bands filling the remaining space.",
       "clean_title": "Exp 6 — Clean Slate",
       "clean": "Experiment 6 is a complete restart on a deduplicated clean split with MD5-verified zero overlap between training (2,017 images) and test (300 balanced, 50 per class). For the first time, six architectures — ResNet18, ResNet50, ConvNeXt-Tiny, ConvNeXt-Small, DINOv2-Small, and DINOv2-Base — are evaluated with per-architecture input sizing and 5-fold stratified cross-validation."
     },
@@ -141,22 +207,16 @@
       },
       "optimization": {
         "title": "Per-Architecture Recipes",
-        "description": "Each architecture receives a tailored training recipe. DINOv2 is fine-tuned via LoRA adapters [9] on just 0.5% of its parameters, preserving the powerful self-supervised representations while adapting to our specialised domain. ResNet uses Adam [10], while ConvNeXt and DINOv2 use AdamW with decoupled weight decay [11]."
+        "description": "Each architecture receives a tailored training recipe. DINOv2 is fine-tuned via LoRA adapters [9] (rank r=8, alpha=16, dropout=0.1) targeting the query and value projections of all attention layers, updating just ~0.5% of parameters while keeping the backbone frozen. ResNet uses Adam [10], while ConvNeXt and DINOv2 use AdamW with decoupled weight decay [11]."
       },
       "rigor": {
         "title": "Experimental Rigor",
-        "description": "All results are validated through 5-fold stratified cross-validation on a deduplicated clean split. MD5 hashing ensures zero content overlap between training and test sets, eliminating the data leakage that invalidated our preliminary experiments. Early stopping uses the Generalization Loss criterion [12]."
+        "description": "All results are validated through 5-fold stratified cross-validation on a deduplicated clean split. MD5 hashing ensures zero content overlap between training and test sets, eliminating the data leakage that invalidated our preliminary experiments. Early stopping uses patience on val_loss. We evaluated the Generalization Loss criterion [12] but found it terminated training prematurely, before convergence."
+      },
+      "augmentation": {
+        "title": "Balanced Augmentation",
+        "description": "Class imbalance is addressed per-fold: the minority class determines the target count, which is multiplied by the number of augmentation transforms (random flips, rotation, color jitter) to produce a balanced dataset where every class has the same number of training images."
       }
-    },
-    "experiment6": {
-      "title": "Serie 1 Results",
-      "description": "After identifying data leakage in preliminary experiments, Serie 1 (Exp 6) establishes reliable baselines across six architectures on our clean split: 2,017 training images, 300 balanced test images (50 per class), 5-fold stratified cross-validation.",
-      "resnet": "ResNet50 — Best CNN",
-      "resnetDesc": "Reached Val F1 of 0.905 ± 0.027 with Test Accuracy of 88.00%. Standard hierarchical residual features [4] prove highly competitive for this ultra-fine-grained task.",
-      "vit": "DINOv2-Base — Best Overall",
-      "vitDesc": "Achieved Val F1 of 0.914 ± 0.012 with Test Accuracy of 88.00%. Self-supervised pre-training on 142M images provides exceptional robustness to field-photo variability [6].",
-      "badge_model": "Best Model",
-      "badge_folds": "5-Fold CV Complete"
     },
     "future": {
       "title": "Next Steps",

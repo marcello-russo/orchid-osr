@@ -8,7 +8,7 @@ import {
   ScanSearch,
   Box,
   Database,
-  Info,
+  BookOpen,
   X,
 } from "lucide-react";
 import { useAppStore } from "@/stores/useAppStore";
@@ -20,7 +20,7 @@ const navItems = [
   { to: "/classify", icon: ScanSearch, key: "common.classify" },
   { to: "/dataset", icon: Database, key: "common.dataset" },
   { to: "/embeddings", icon: Box, key: "common.embeddings" },
-  { to: "/about", icon: Info, key: "common.about" },
+  { to: "/about", icon: BookOpen, key: "common.about" },
 ];
 
 export function Sidebar() {

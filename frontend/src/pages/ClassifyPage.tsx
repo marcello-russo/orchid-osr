@@ -38,9 +38,9 @@ export function ClassifyPage() {
   const activeLabel = uploadDone
     ? t("common.loading")
     : classify.isPending
-      ? "Uploading..."
+      ? t("classify.progress.uploading")
       : explain.isPending
-        ? "Uploading..."
+        ? t("classify.progress.uploading")
         : "";
 
   const handleFile = useCallback((f: File) => {
@@ -114,7 +114,7 @@ export function ClassifyPage() {
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-primary">
-          🔍 {t("classify.title")}
+          {t("classify.title")}
         </h1>
         {file && (
           <Button variant="ghost" size="sm" onClick={clearAll}>
@@ -159,7 +159,7 @@ export function ClassifyPage() {
               <div className="relative overflow-hidden rounded-lg bg-muted">
                 <img
                   src={showHeatmap && heatmapUrl ? heatmapUrl : previewUrl!}
-                  alt={showHeatmap ? "Heatmap overlay" : "Uploaded orchid"}
+                  alt={showHeatmap ? t("classify.results.heatmap_alt") : t("classify.upload.alt")}
                   className="mx-auto max-h-[500px] w-auto object-contain"
                 />
               </div>
@@ -170,14 +170,14 @@ export function ClassifyPage() {
                     size="sm"
                     onClick={() => setShowHeatmap(true)}
                   >
-                    <Eye className="mr-1 size-4" /> Heatmap
+                    <Eye className="mr-1 size-4" /> {t("classify.results.heatmap_btn")}
                   </Button>
                   <Button
                     variant={!showHeatmap ? "default" : "outline"}
                     size="sm"
                     onClick={() => setShowHeatmap(false)}
                   >
-                    Original
+                    {t("classify.results.original")}
                   </Button>
                 </div>
               )}
@@ -216,7 +216,7 @@ export function ClassifyPage() {
                           {m.model_variant}
                           {m.mean_f1 !== null && (
                             <span className="ml-1 opacity-70">
-                              F1 {(m.mean_f1 * 100).toFixed(1)}%
+                              {t("experiment_detail.charts.f1_label")} {(m.mean_f1 * 100).toFixed(1)}%
                             </span>
                           )}
                         </button>
@@ -234,7 +234,7 @@ export function ClassifyPage() {
                     ) : (
                       <Sparkles className="mr-2 size-4" />
                     )}
-                    {t("common.home")}
+                    {t("common.classify")}
                   </Button>
                   {classify.data && (
                     <Button
@@ -247,7 +247,7 @@ export function ClassifyPage() {
                       ) : (
                         <Eye className="mr-2 size-4" />
                       )}
-                      Explain
+                      {t("classify.actions.explain")}
                     </Button>
                   )}
                 </div>
@@ -261,7 +261,7 @@ export function ClassifyPage() {
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">{activeLabel}</span>
                     <span className="font-mono text-xs text-muted-foreground">
-                      {uploadDone ? "please wait" : activeProgress > 0 ? `${activeProgress}%` : "Connecting..."}
+                      {uploadDone ? t("classify.progress.please_wait") : activeProgress > 0 ? `${activeProgress}%` : t("classify.progress.connecting")}
                     </span>
                   </div>
                   <div className="h-2 overflow-hidden rounded-full bg-muted">
@@ -283,7 +283,7 @@ export function ClassifyPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>
-                    🌸 {classify.data.predicted_species}
+                    {t("classify.results.predicted")} {classify.data.predicted_species}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -323,19 +323,15 @@ export function ClassifyPage() {
             {explain.data && (
               <Card>
                 <CardHeader>
-                  <CardTitle>🔬 {t("classify.results.explainability")}</CardTitle>
+                  <CardTitle>{t("classify.results.explainability")}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    Predicted: <strong>{explain.data.predicted_species}</strong>{" "}
+                    {t("classify.results.predicted")} <strong>{explain.data.predicted_species}</strong>{" "}
                     ({(explain.data.confidence * 100).toFixed(2)}%)
                   </p>
                   <p className="mt-2 text-xs text-muted-foreground">
-                    The heatmap highlights which regions of the image most
-                    influenced the model's prediction.{" "}
-                    <span className="text-green-600">Green</span> = positive
-                    contribution, <span className="text-red-600">Red</span> =
-                    negative.
+                    {t("classify.results.heatmap_explanation")}
                   </p>
                 </CardContent>
               </Card>
