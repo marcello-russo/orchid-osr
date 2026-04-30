@@ -21,8 +21,8 @@ export function Header() {
       </button>
 
       <div className="flex items-center gap-2">
-        <div className="flex items-center justify-center size-7 rounded-md bg-primary/10">
-          <span className="text-sm">🌸</span>
+        <div className="flex items-center justify-center size-7">
+          <img src="/favicon.svg" alt="" className="size-6" />
         </div>
         <span className="font-black text-base md:text-lg tracking-tighter">
           <span className="text-primary">Orch</span><span className="text-foreground">ID</span><span className="text-muted-foreground font-bold text-xs ml-0.5">NCD</span>
