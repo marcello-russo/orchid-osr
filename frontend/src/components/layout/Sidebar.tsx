@@ -41,7 +41,7 @@ export function Sidebar() {
         </div>
         <button
           onClick={() => setSidebarOpen(false)}
-          className="flex items-center justify-center rounded-lg p-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          className="flex items-center justify-center rounded-lg p-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
           aria-label="Close menu"
         >
           <X className="size-4" />
@@ -58,7 +58,7 @@ export function Sidebar() {
             onClick={() => setSidebarOpen(false)}
             className={({ isActive }) =>
               cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors duration-150",
+                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors duration-150 cursor-pointer",
                 isActive
                   ? "bg-primary/10 text-primary"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"

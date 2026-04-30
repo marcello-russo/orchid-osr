@@ -12,7 +12,7 @@ export function Header() {
     <header className="fixed top-0 right-0 left-0 z-30 flex h-14 items-center justify-between border-b border-border bg-card/80 backdrop-blur-md px-4">
       <button
         onClick={toggleSidebar}
-        className="flex items-center justify-center rounded-lg p-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+        className="cursor-pointer flex items-center justify-center rounded-lg p-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
         aria-label={sidebarOpen ? "Close menu" : "Open menu"}
         aria-expanded={sidebarOpen}
         aria-controls="sidebar"

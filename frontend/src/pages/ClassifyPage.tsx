@@ -207,7 +207,7 @@ export function ClassifyPage() {
                             setShowHeatmap(false);
                           }}
                           className={cn(
-                            "rounded-lg px-3 py-2 text-xs font-medium transition-colors min-h-[44px]",
+                            "rounded-lg px-3 py-2 text-xs font-medium transition-colors min-h-[44px] cursor-pointer",
                             selectedModelId === m.id
                               ? "bg-primary text-primary-foreground"
                               : "text-muted-foreground bg-muted/50 hover:bg-muted"

@@ -34,7 +34,7 @@ export function ExperimentsPage() {
               key={f}
               onClick={() => setFilter(f)}
               className={cn(
-                "rounded-lg px-4 py-2 text-sm font-medium transition-colors duration-150",
+                "rounded-lg px-4 py-2 text-sm font-medium transition-colors duration-150 cursor-pointer",
                 filter === f
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground bg-muted/50 hover:bg-muted"

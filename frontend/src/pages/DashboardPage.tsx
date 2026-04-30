@@ -98,7 +98,7 @@ export function DashboardPage() {
         <div>
           <button
             onClick={() => setDatasetOpen((o) => !o)}
-            className="mb-4 flex items-center gap-1 text-lg font-medium transition-colors hover:text-primary"
+            className="mb-4 flex items-center gap-1 text-lg font-medium transition-colors hover:text-primary cursor-pointer"
           >
             {datasetOpen ? (
               <ChevronDown className="size-5" />

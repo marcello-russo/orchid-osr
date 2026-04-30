@@ -66,7 +66,7 @@ export function MetricCurvesChart({ folds, selectedFold }: MetricCurvesChartProp
                 key={m}
                 onClick={() => setMetric(m)}
                 className={cn(
-                  "rounded-md px-2 py-0.5 text-xs font-medium transition-colors",
+                  "rounded-md px-2 py-0.5 text-xs font-medium transition-colors cursor-pointer",
                   metric === m
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground bg-muted/50 hover:bg-muted"
