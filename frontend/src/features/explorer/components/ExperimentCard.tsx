@@ -15,7 +15,7 @@ export function ExperimentCard({ experiment }: ExperimentCardProps) {
   const isKfold = experiment.type === "kfold";
 
   return (
-    <Link to={`/experiments/${experiment.id}`}>
+    <Link to={`/experiments/${experiment.id}`} className="block cursor-pointer">
       <Card className="transition-colors duration-150 hover:border-primary/30">
         <CardHeader className="pb-2">
           <div className="flex items-start justify-between gap-2">

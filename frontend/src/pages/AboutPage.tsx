@@ -302,7 +302,7 @@ export function AboutPage() {
                 href={ref.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-foreground hover:text-primary transition-colors"
+                className="block text-foreground hover:text-primary transition-colors"
               >
                 {ref.citation}
               </a>

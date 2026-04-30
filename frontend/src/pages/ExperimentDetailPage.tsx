@@ -191,7 +191,7 @@ function ChartCarousel({ folds, selectedFold, meanF1, stdF1, confusionMatrix }: 
             key={i}
             onClick={() => setActive(i)}
             className={cn(
-              "shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap min-h-[44px]",
+              "shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap min-h-[44px] cursor-pointer",
               i === active
                 ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground bg-muted/50 hover:bg-muted"
