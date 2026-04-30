@@ -8,18 +8,27 @@
     "classify": "Classificazione",
     "experiments": "Esperimenti",
     "embeddings": "Embeddings",
-    "about": "Informazioni"
+    "about": "Ricerca"
   },
   "dashboard": {
     "title": "Dashboard OrchID-NCD",
-    "summary_title": "Riepilogo Sistema",
     "species_distribution": "Distribuzione Specie",
     "recent_experiments": "Esperimenti Recenti",
+    "nav": {
+      "experiments": "Esplora i run di training e confronta le performance dei modelli",
+      "classify": "Identifica le specie di orchidee da foto",
+      "dataset": "Esplora la collezione di immagini Ophrys",
+      "embeddings": "Visualizza le relazioni tra specie nello spazio latente (Fase 2)",
+      "research": "Scopri il framework di ricerca, la metodologia e il contesto scientifico"
+    },
     "kpis": {
       "total_images": "Immagini Totali",
       "classes": "Classi",
       "completed_models": "Modelli",
-      "best_f1": "Miglior F1"
+      "best_f1": "Miglior F1",
+      "best_test_accuracy": "Miglior Test Accuracy",
+      "in_dataset": "nel dataset",
+      "combined_dataset": "dataset combinato"
     },
     "table": {
       "species": "Specie",
@@ -38,59 +47,116 @@
       "experiment": "Esperimento",
       "model": "Modello",
       "f1": "Mean F1",
-      "status": "Stato",
-      "date": "Data",
-      "actions": "Azioni"
+      "type": "Tipo",
+      "test_acc": "Test Acc",
+      "folds": "Fold"
     }
   },
   "experiment_detail": {
     "back_to_experiments": "Torna agli esperimenti",
+    "no_results": "Esperimento baseline — nessun dato sui risultati disponibile.",
+    "per_class_metrics": "Metriche per Classe",
+    "per_class_breakdown": "Dettaglio per Classe",
     "metrics": {
       "accuracy": "Accuratezza Test",
       "f1": "Test F1 Score",
       "precision": "Precisione",
       "recall": "Richiamo"
     },
+    "table": {
+      "class": "Classe",
+      "support": "Support"
+    },
+    "config": {
+      "training_recipe": "Recipe di Training",
+      "epochs": "Epoche",
+      "batch_size": "Batch Size",
+      "patience": "Patience",
+      "lr": "LR",
+      "optimizer": "Ottimizzatore",
+      "weight_decay": "Weight Decay",
+      "source": "Sorgente",
+      "registry": "Registro"
+    },
+    "fold_selector": {
+      "all": "Tutti i Fold",
+      "fold": "Fold "
+    },
     "charts": {
       "loss": "Curve di Loss",
       "metrics": "Curve delle Metriche",
       "folds": "Sommario Fold",
       "overfitting": "Proxy Overfitting",
-      "confusion": "Matrice di Confusione"
+      "confusion": "Matrice di Confusione",
+      "train": "Train",
+      "validation": "Validazione",
+      "epoch": "Epoca ",
+      "accuracy": "Accuratezza",
+      "mean_best_f1": "F1 Medio Migliore: ",
+      "f1_label": "F1",
+      "test_label": "Test",
+      "folds_label": "fold",
+      "loss_description": "Loss di training o validazione per epoca per ogni fold. Le linee tratteggiate verticali segnano la miglior epoca.",
+      "metrics_description": "Metrica selezionata per epoca per ogni fold. La linea tratteggiata orizzontale mostra il F1 medio migliore.",
+      "overfitting_title": "Proxy Overfitting (val_loss / train_loss)",
+      "overfitting_threshold": "Soglia overfitting",
+      "overfitting_description": "Rapporto val_loss / train_loss per epoca. Valori sopra 1 indicano potenziale overfitting.",
+      "fold_mean_f1": "F1 Medio:",
+      "fold_summary_description": "Miglior F1 e accuratezza di validazione per ogni fold alla migliore epoca.",
+      "confusion_title": "Matrice di Confusione (Test Set — complessiva)",
+      "confusion_true": "Vero:",
+      "confusion_pred": "Pred:"
+    },
+    "tooltips": {
+      "optimizer": "Adam per ResNet (baseline di fine-tuning collaudata). AdamW per ConvNeXt e DINOv2 — il weight decay disaccoppiato previene l'overfitting su dataset piccoli.",
+      "learning_rate": "LR di fine-tuning dal registro modelli. ResNet: 0.001 (standard), ConvNeXt: 0.0001 (LayerNorm sensibile a gradienti grandi), DINOv2: 0.0002 (adapter LoRA).",
+      "weight_decay": "Forza di regolarizzazione L2. 0 per ResNet (BatchNorm fornisce regolarizzazione implicita), 0.05 per ConvNeXt (recipe del paper), 0.01 per DINOv2 (regolarizzazione leggera su adapter LoRA).",
+      "patience": "Interrompe il training dopo 15 epoche consecutive senza miglioramento di val_loss. Cattura la convergenza senza arresti prematuri.",
+      "batch_size": "Batch fisico=8 (entra in 4GB VRAM). Batch effettivo=32 tramite gradient accumulation (4 step). Matematicamente identico a batch=32 per cross-entropy.",
+      "epochs": "Durata massima del training. L'early stopping interrompe prima tramite patience.",
+      "test_accuracy": "Frazione complessiva di immagini test classificate correttamente (300 totali, 50 per classe).",
+      "f1_macro": "Media armonica degli F1 per classe. Preferita rispetto all'accuracy per dataset sbilanciati."
     }
   },
   "classify": {
-    "title": "Identificazione Specie",
+    "title": "🔍 Identificazione Specie",
     "upload": {
       "title": "Carica Foto Orchidea",
       "drop": "Rilascia l'immagine qui",
       "browse": "Sfoglia i file",
-      "support": "Supporta JPG, PNG, WEBP"
+      "support": "Supporta JPG, PNG, WEBP",
+      "alt": "Orchidea caricata"
     },
     "model_select": {
       "label": "Seleziona Modello",
       "description": "I modelli basati su Vision Transformer (DINOv2) sono consigliati per una maggiore precisione."
     },
+    "progress": {
+      "uploading": "Caricamento...",
+      "please_wait": "attendere prego",
+      "connecting": "Connessione..."
+    },
+    "actions": {
+      "explain": "Spiega"
+    },
     "results": {
-      "title": "Risultati Classificazione",
-      "confidence": "Confidenza",
-      "top_predictions": "Top 5 Predizioni",
-      "explainability": "Analisi Spiegabilità (Heatmap)"
+      "explainability": "🔬 Analisi Spiegabilità (Heatmap)",
+      "heatmap_alt": "Sovrimpressione heatmap",
+      "heatmap_btn": "Heatmap",
+      "original": "Originale",
+      "predicted": "🌸 Predetta:",
+      "heatmap_explanation": "L'heatmap evidenzia le regioni dell'immagine che hanno più influenzato la predizione del modello. Verde = contributo positivo, Rosso = contributo negativo."
     }
   },
   "dataset": {
     "title": "Dataset Explorer",
-    "stats": {
-      "train": "Immagini Training",
-      "test": "Immagini Test",
-      "total": "Totale"
-    },
     "tabs": {
       "all": "Tutti",
       "train": "Train",
       "test": "Test"
     },
     "classes": "classi",
+    "class_distribution": "Distribuzione Classi",
     "images": "immagini",
     "train_label": "train",
     "test_label": "test",
@@ -125,11 +191,11 @@
     "journey": {
       "title": "Percorso Sperimentale",
       "baselines_title": "Baseline Preliminari (Exp 1–5)",
-      "baselines": "I primi cinque esperimenti hanno esplorato solo ResNet18 (Exp 1–3) e ResNet50 (Exp 4–5) su split train/val/test standard, utilizzando un dataset combinato di foto in campo private e immagini da internet. L'esperimento 4 ha introdotto la 5-fold stratified cross-validation per entrambe le architetture, stabilendo il protocollo di valutazione rigoroso ancora in uso. ConvNeXt e DINOv2 non erano ancora stati testati.",
+      "baselines": "I primi cinque esperimenti hanno esplorato solo ResNet18 (Exp 1–3) e ResNet50 (Exp 4–5) su split train/val/test standard, utilizzando un dataset combinato di foto in campo private e immagini da internet distribuite su sei specie di Ophrys del complesso sphegodes: O. exaltata, O. garganica, O. incubacea, O. majellensis, O. sphegodes e O. sphegodes ssp. sphegodes (popolazione di Palena). L'esperimento 4 ha introdotto la 5-fold stratified cross-validation per entrambe le architetture, stabilendo il protocollo di valutazione rigoroso ancora in uso oggi. ConvNeXt e DINOv2 non erano ancora stati testati.",
       "leakage_title": "Il Problema della Data Leakage",
       "leakage": "L'hashing MD5 del contenuto ha rivelato che i set di train e test condividevano immagini visivamente identiche sotto nomi diversi — una forma sottile di data leakage che ha gonfiato artificialmente le metriche e invalidato tutti i risultati di Exp 1–5. La stessa foto di orchidea, scaricata più volte con nomi diversi, era presente sia nel partition di training che in quello di test.",
       "preprocessing_title": "Il Problema del Preprocessing",
-      "preprocessing": "La pipeline originale applicava un center-crop aggressivo a risoluzione fissa, distruggendo le informazioni sul rapporto d'aspetto. Poiché ResNet richiede input 512×256 mentre ConvNeXt e DINOv2 usano 224×224, lo stesso crop produceva input distorti e poveri di informazioni tra le architetture. Abbiamo sostituito con il letterbox resizing: le immagini vengono scalate per rientrare nelle dimensioni target preservando il rapporto d'aspetto, con bande nere di padding a riempire lo spazio rimanente.",
+      "preprocessing": "La pipeline originale applicava un center-crop aggressivo a risoluzione fissa, distruggendo le informazioni sul rapporto d'aspetto. Poiché ResNet richiede input 256×512 mentre ConvNeXt e DINOv2 usano 224×224, lo stesso crop produceva input distorti e poveri di informazioni tra le architetture. Abbiamo sostituito con il letterbox resizing: le immagini vengono scalate per rientrare nelle dimensioni target preservando il rapporto d'aspetto, con bande nere di padding a riempire lo spazio rimanente.",
       "clean_title": "Exp 6 — Tabula Rasa",
       "clean": "L'esperimento 6 è un riavvio completo su uno split deduplicato con zero sovrapposizioni verificate tramite MD5 tra training (2.017 immagini) e test (300 bilanciate, 50 per classe). Per la prima volta, sei architetture — ResNet18, ResNet50, ConvNeXt-Tiny, ConvNeXt-Small, DINOv2-Small e DINOv2-Base — vengono valutate con dimensioni di input per-architettura e 5-fold stratified cross-validation."
     },
@@ -141,22 +207,16 @@
       },
       "optimization": {
         "title": "Recipe per-Architettura",
-        "description": "Ciascuna architettura riceve una recipe di training dedicata. DINOv2 è fine-tunata tramite adapter LoRA [9] su appena lo 0.5% dei parametri, preservando le potenti rappresentazioni self-supervisionate adattandole al nostro dominio specialistico. ResNet usa Adam [10], mentre ConvNeXt e DINOv2 usano AdamW con weight decay disaccoppiato [11]."
+        "description": "Ciascuna architettura riceve una recipe di training dedicata. DINOv2 è fine-tunata tramite adapter LoRA [9] (rank r=8, alpha=16, dropout=0.1) sulle proiezioni query e value di tutti i layer di attenzione, aggiornando appena lo 0.5% dei parametri mantenendo il backbone congelato. ResNet usa Adam [10], mentre ConvNeXt e DINOv2 usano AdamW con weight decay disaccoppiato [11]."
       },
       "rigor": {
         "title": "Rigor Sperimentale",
-        "description": "Tutti i risultati sono validati tramite 5-fold stratified cross-validation su uno split pulito e deduplicato. L'hashing MD5 garantisce zero sovrapposizioni di contenuto tra training e test set, eliminando la data leakage che aveva invalidato gli esperimenti preliminari. L'early stopping utilizza il criterio di Generalization Loss [12]."
+        "description": "Tutti i risultati sono validati tramite 5-fold stratified cross-validation su uno split pulito e deduplicato. L'hashing MD5 garantisce zero sovrapposizioni di contenuto tra training e test set, eliminando la data leakage che aveva invalidato gli esperimenti preliminari. L'early stopping utilizza la patience su val_loss. Abbiamo valutato il criterio di Generalization Loss [12] ma abbiamo riscontrato che interrompeva il training prematuramente, prima della convergenza."
+      },
+      "augmentation": {
+        "title": "Augmentation Bilanciata",
+        "description": "Lo squilibrio tra le classi è affrontato per-fold: la classe minoritaria determina il conteggio target, che viene moltiplicato per il numero di trasformazioni di augmentation (flip casuali, rotazione, color jitter) per produrre un dataset bilanciato in cui ogni classe ha lo stesso numero di immagini di training."
       }
-    },
-    "experiment6": {
-      "title": "Risultati Serie 1",
-      "description": "Dopo aver identificato data leakage negli esperimenti preliminari, la Serie 1 (Exp 6) stabilisce baseline affidabili su sei architetture con il nostro clean split: 2.017 immagini di training, 300 di test bilanciate (50 per classe), 5-fold stratified cross-validation.",
-      "resnet": "ResNet50 — Miglior CNN",
-      "resnetDesc": "Ha raggiunto un Val F1 di 0.905 ± 0.027 con Test Accuracy dell'88.00%. Le feature gerarchiche residue standard [4] si dimostrano altamente competitive per questo task ultra-fine-grained.",
-      "vit": "DINOv2-Base — Migliore in assoluto",
-      "vitDesc": "Ha ottenuto un Val F1 di 0.914 ± 0.012 con Test Accuracy dell'88.00%. Il pre-training self-supervisionato su 142M di immagini conferisce una robustezza eccezionale alla variabilità delle foto in campo [6].",
-      "badge_model": "Miglior Modello",
-      "badge_folds": "5-Fold CV Completata"
     },
     "future": {
       "title": "Sviluppi Futuri",

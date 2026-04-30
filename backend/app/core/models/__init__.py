@@ -17,7 +17,7 @@ from app.core.models import dinov2 as _dinov2_mod
 register_model("resnet18", ModelRegistryEntry(
     config_cls=_resnet_mod.ResNetConfig,
     classifier_cls=_resnet_mod.ResNetClassifier,
-    input_size=(512, 256),
+    input_size=(256, 512),
     norm_mean=[0.5364, 0.5518, 0.3866],
     norm_std=[0.2045, 0.2296, 0.2025],
     embedding_dim=512,
@@ -26,7 +26,7 @@ register_model("resnet18", ModelRegistryEntry(
 register_model("resnet50", ModelRegistryEntry(
     config_cls=_resnet_mod.ResNetConfig,
     classifier_cls=_resnet_mod.ResNetClassifier,
-    input_size=(512, 256),
+    input_size=(256, 512),
     norm_mean=[0.5364, 0.5518, 0.3866],
     norm_std=[0.2045, 0.2296, 0.2025],
     embedding_dim=2048,

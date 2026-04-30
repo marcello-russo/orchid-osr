@@ -1,6 +1,7 @@
 // frontend/src/features/explorer/components/LossCurvesChart.tsx
 
 import { useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   LineChart,
   Line,
@@ -24,6 +25,7 @@ interface LossCurvesChartProps {
 }
 
 export function LossCurvesChart({ folds, selectedFold }: LossCurvesChartProps) {
+  const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
   const { width, height } = useChartSize(ref);
   const chartColors = useChartColors();
@@ -57,7 +59,7 @@ export function LossCurvesChart({ folds, selectedFold }: LossCurvesChartProps) {
     <Card>
       <CardHeader className="pb-2 border-b border-border/50">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base">Loss Curves</CardTitle>
+          <CardTitle className="text-base">{t("experiment_detail.charts.loss")}</CardTitle>
           <div className="flex gap-1">
             {(["train", "val"] as const).map((m) => (
               <button
@@ -70,7 +72,7 @@ export function LossCurvesChart({ folds, selectedFold }: LossCurvesChartProps) {
                     : "text-muted-foreground bg-muted/50 hover:bg-muted"
                 )}
               >
-                {m === "train" ? "Train" : "Validation"}
+                {m === "train" ? t("experiment_detail.charts.train") : t("experiment_detail.charts.validation")}
               </button>
             ))}
           </div>
@@ -84,11 +86,11 @@ export function LossCurvesChart({ folds, selectedFold }: LossCurvesChartProps) {
             <YAxis tick={{ fontSize: 14 }} />
             <Tooltip
               formatter={(value) => Number(value).toFixed(2)}
-              labelFormatter={(l) => `Epoch ${l}`}
+              labelFormatter={(l) => `${t("experiment_detail.charts.epoch")}${l}`}
             />
             <Legend
               wrapperStyle={{ fontSize: 13 }}
-              formatter={(value: string) => `Fold ${value}`}
+              formatter={(value: string) => `${t("experiment_detail.fold_selector.fold")}${value}`}
               align="right"
             />
             {visibleFolds.map((f) => {
@@ -121,7 +123,7 @@ export function LossCurvesChart({ folds, selectedFold }: LossCurvesChartProps) {
           </LineChart>
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
-          Training or validation loss per epoch for each fold. Dashed vertical lines mark the best epoch.
+          {t("experiment_detail.charts.loss_description")}
         </p>
       </CardContent>
     </Card>

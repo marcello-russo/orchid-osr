@@ -1,8 +1,8 @@
 [🇬🇧 English](README.md)
 
-# 🌸 OrchID — Representation Learning delle Orchidee
+# 🌸 OrchID-NCD — Orchid Representation Learning & Novel Class Discovery
 
-> Costruire uno spazio vettoriale strutturato delle specie di orchidee *Ophrys* tramite apprendimento contrastivo e tecniche di metric embedding.
+> Classificazione visiva ultra-fine-grained e representation learning delle specie di orchidee *Ophrys* tramite self-supervised learning e tecniche contrastive.
 
 ---
 
@@ -11,7 +11,7 @@
 | Fase | Obiettivo | Stato |
 |------|-----------|-------|
 | **F1 — Classificazione** | Baseline ResNet18/50, ConvNeXt-Tiny/Small, DINOv2+LoRA, k-fold CV su clean split, recipe per-architettura, model registry | ✅ Completata |
-| **F1b — Explorer** | Dashboard React SPA, classificazione upload, explainability, statistiche specie, selettore modello, dataset explorer con galleria live, tooltip esplicativi, pagina about | ✅ Completata |
+| **F1b — Explorer** | Dashboard React SPA, classificazione upload, explainability, statistiche specie, selettore modello, dataset explorer con galleria live, tooltip esplicativi, pagina ricerca | ✅ Completata |
 | **F2 — Spazio Vettoriale** | Supervised Contrastive Learning (SupCon) per costruire uno spazio vettoriale strutturato | 🔜 Prossima |
 | **F3 — Retrieval & Similarità** | Ricerca nearest-neighbor, clustering specie, detection classi sconosciute | 📋 Pianificata |
 
@@ -30,18 +30,9 @@
 
 ---
 
-## 📊 Risultati — Serie 1 (Clean Split, CE Loss)
+## 📊 Risultati
 
-5-fold StratifiedKFold su exp6 clean split (seed=57). 2,017 train / 300 test (50/classe, bilanciato). Zero data leakage verificata via MD5.
-
-| Modello | Val F1 Macro | Test Accuracy | Test F1 Macro | Stato |
-|---------|-------------|---------------|---------------|-------|
-| ResNet18 | 0.868 ± 0.016 | 85.00% | 84.96% | ✅ |
-| ResNet50 | 0.905 ± 0.027 | 88.00% | 88.01% | ✅ |
-| ConvNeXt-Tiny | 0.862 ± 0.020 | 84.00% | 83.91% | ✅ |
-| DINOv2-Small + LoRA | 0.893 ± 0.006 | 85.33% | 85.50% | ✅ |
-| DINOv2-Base + LoRA | 0.914 ± 0.012 | 88.00% | 87.88% | ✅ |
-| ConvNeXt-Small | — | — | — | 🔜 Training |
+I risultati della Serie 1 (exp6 clean split) saranno pubblicati dopo aver ri-eseguito gli esperimenti con un cropper adeguato per il rilevamento del fiore. Gli esperimenti precedenti (exp 1–5) sono stati invalidati da data leakage, e l'exp 6 deve essere rifatto con un cropper Faster R-CNN per una rilevazione ottimale del fiore.
 
 <details>
 <summary>Recipe di training per-architettura</summary>
@@ -53,21 +44,6 @@
 | DINOv2-Small/Base | AdamW | 0.0002 | 0.01 | Leggera regolarizzazione su adapter LoRA (~0.5% parametri trainable) |
 
 Comuni: batch=8 (effettivo 32 via gradient accumulation ×4), patience=15, ReduceLROnPlateau, max 100 epoche.
-
-</details>
-
-<details>
-<summary>Esperimenti legacy (exp1-5, data leakage)</summary>
-
-Questi esperimenti usano dataset combined con overlap di contenuto tra train e test (verificato via MD5). I risultati sono gonfiati e non affidabili.
-
-| Esperimento | Train | Test | Accuracy | F1 Macro | Note |
-|-------------|-------|------|----------|----------|------|
-| Exp1 | Privato | Privato | 94.78% | 93.72% | Baseline (6 classi) |
-| Exp2 | Privato | Internet Raw | 35.09% | 37.57% | Domain shift forte |
-| Exp3 | Privato | Internet Cropped | 48.15% | 50.43% | Il cropping aiuta |
-| Exp4 | Combined | Internet Cropped | 95.19% | 95.37% | Data leakage presente |
-| Exp5 | Combined | Privato | 96.79% | 95.83% | Data leakage presente |
 
 </details>
 
@@ -114,18 +90,18 @@ python cli.py --status                                          # Verifica stato
 
 # K-fold cross-validation su clean split (exp6)
 python cli.py --cross-validate --exp 6 --model resnet18 \
-  --epochs 100 --patience 15 --overfit-threshold 0 --accumulation 4
+  --epochs 100 --patience 15 --accumulation 4
 
 python cli.py --cross-validate --exp 6 --model convnext_tiny \
-  --epochs 100 --patience 15 --overfit-threshold 0 --accumulation 4
+  --epochs 100 --patience 15 --accumulation 4
 
 # Fold singolo (per resume)
 python cli.py --cross-validate --exp 6 --model resnet50 --fold 0 \
-  --epochs 100 --patience 15 --overfit-threshold 0 --accumulation 4
+  --epochs 100 --patience 15 --accumulation 4
 
 # Aggregazione fold completati
 python cli.py --cross-validate --exp 6 --model resnet50 \
-  --epochs 100 --patience 15 --overfit-threshold 0 --accumulation 4 --aggregate-only
+  --epochs 100 --patience 15 --accumulation 4 --aggregate-only
 ```
 
 ---
@@ -158,7 +134,7 @@ resnet18/
 │   │   │   ├── explorer/         # Grafici, hook, config esperimenti
 │   │   │   ├── classify/         # Hook classificazione
 │   │   │   └── dataset/          # Galleria dataset explorer e grafici
-│   │   ├── pages/                # Dashboard, Experiments, Detail, Classify, Dataset, About
+│   │   ├── pages/                # Dashboard, Experiments, Detail, Classify, Dataset, Ricerca
 │   │   ├── stores/               # Zustand (tema, sidebar)
 │   │   └── lib/                  # Client API, React Query, tipi
 │   └── package.json

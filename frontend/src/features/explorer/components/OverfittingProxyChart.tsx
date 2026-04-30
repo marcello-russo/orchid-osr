@@ -1,6 +1,7 @@
 // frontend/src/features/explorer/components/OverfittingProxyChart.tsx
 
 import { useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import {
   LineChart,
   Line,
@@ -23,6 +24,7 @@ interface OverfittingProxyChartProps {
 }
 
 export function OverfittingProxyChart({ folds, selectedFold }: OverfittingProxyChartProps) {
+  const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
   const { width, height } = useChartSize(ref);
   const chartColors = useChartColors();
@@ -52,7 +54,7 @@ export function OverfittingProxyChart({ folds, selectedFold }: OverfittingProxyC
   return (
     <Card>
       <CardHeader className="pb-2 border-b border-border/50">
-        <CardTitle className="text-base">Overfitting Proxy (val_loss / train_loss)</CardTitle>
+        <CardTitle className="text-base">{t("experiment_detail.charts.overfitting_title")}</CardTitle>
       </CardHeader>
       <CardContent className="pt-4">
         <div ref={ref} style={{ width: "100%", height }}>
@@ -66,13 +68,13 @@ export function OverfittingProxyChart({ folds, selectedFold }: OverfittingProxyC
               y={1}
               stroke={chartColors[4]}
               strokeDasharray="4 4"
-              label={{ value: "Overfitting threshold", fontSize: 13, fill: chartColors[4] }}
+              label={{ value: t("experiment_detail.charts.overfitting_threshold"), fontSize: 13, fill: chartColors[4] }}
             />
             {visibleFolds.map((f) => (
               <Line
                 key={`ratio_${f.fold}`}
                 dataKey={`ratio_${f.fold}`}
-                name={`Fold ${f.fold}`}
+                name={`${t("experiment_detail.fold_selector.fold")}${f.fold}`}
                 stroke={chartColors[f.fold % chartColors.length]}
                 dot={false}
                 strokeWidth={1.5}
@@ -82,7 +84,7 @@ export function OverfittingProxyChart({ folds, selectedFold }: OverfittingProxyC
           </LineChart>
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
-          Ratio of val_loss / train_loss per epoch. Values above 1 indicate potential overfitting.
+          {t("experiment_detail.charts.overfitting_description")}
         </p>
       </CardContent>
     </Card>

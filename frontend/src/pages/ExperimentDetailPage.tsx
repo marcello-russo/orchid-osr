@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { ExperimentConfigCard } from "@/features/explorer/components/ExperimentConfigCard";
-import { TOOLTIPS } from "@/features/explorer/tooltipText";
+import { getTooltips } from "@/features/explorer/tooltipText";
 import {
   Table,
   TableBody,
@@ -39,6 +39,7 @@ import { useChartColors } from "@/features/explorer/hooks/useChartColors";
 
 export function ExperimentDetailPage() {
   const { t } = useTranslation();
+  const TOOLTIPS = getTooltips(t);
   const { id } = useParams<{ id: string }>();
   const { data: experiment, isLoading, error } = useExperiment(id ?? "");
   const [selectedFold, setSelectedFold] = useState<number | null>(null);
@@ -141,7 +142,7 @@ export function ExperimentDetailPage() {
         <BaselineResults metrics={results.test_metrics} />
       ) : (
         <div className="py-10 text-center text-muted-foreground">
-          Baseline experiment — no results data available.
+          {t("experiment_detail.no_results")}
         </div>
       )}
     </div>
@@ -262,7 +263,7 @@ function BaselineResults({ metrics }: { metrics: TestMetrics }) {
       {classData.length > 0 && (
         <Card>
           <CardHeader className="pb-2 border-b border-border/50">
-            <CardTitle className="text-base">Per-Class Metrics</CardTitle>
+            <CardTitle className="text-base">{t("experiment_detail.per_class_metrics")}</CardTitle>
           </CardHeader>
           <CardContent className="pt-4">
             <div ref={chartRef} style={{ width: "100%", height }}>
@@ -284,17 +285,17 @@ function BaselineResults({ metrics }: { metrics: TestMetrics }) {
       {classData.length > 0 && (
         <Card>
           <CardHeader className="pb-2 border-b border-border/50">
-            <CardTitle className="text-base">Per-Class Breakdown</CardTitle>
+            <CardTitle className="text-base">{t("experiment_detail.per_class_breakdown")}</CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Class</TableHead>
+                  <TableHead>{t("experiment_detail.table.class")}</TableHead>
                   <TableHead className="text-right">{t("experiment_detail.metrics.precision")}</TableHead>
                   <TableHead className="text-right">{t("experiment_detail.metrics.recall")}</TableHead>
-                  <TableHead className="text-right">F1</TableHead>
-                  <TableHead className="text-right whitespace-nowrap">Support</TableHead>
+                  <TableHead className="text-right">{t("experiment_detail.charts.f1_label")}</TableHead>
+                  <TableHead className="text-right whitespace-nowrap">{t("experiment_detail.table.support")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

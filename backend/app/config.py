@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     img_width: int = 256
     img_height: int = 512
 
-    # Normalization (balanced dataset 256x512)
+    # Normalization (balanced dataset 256×512 — W×H)
     norm_mean: str = "0.5364 0.5518 0.3866"
     norm_std: str = "0.2045 0.2296 0.2025"
 
