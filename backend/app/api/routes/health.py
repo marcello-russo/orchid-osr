@@ -1,6 +1,8 @@
 # app/api/routes/health.py
-from fastapi import APIRouter
 from datetime import datetime
+
+from fastapi import APIRouter
+
 from app.api.schemas import HealthResponse
 from app.core.models import available_models
 

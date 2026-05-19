@@ -90,13 +90,13 @@ export function ClassGallery({ classInfo, split, totalImages }: ClassGalleryProp
         {isLoading ? (
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
             {Array.from({ length: PAGE_SIZE }).map((_, i) => (
-              <Skeleton key={i} className="aspect-square rounded-md" />
+              <Skeleton key={i} className="aspect-[1/2] rounded-md" />
             ))}
           </div>
         ) : data && data.images.length > 0 ? (
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 animate-in fade-in zoom-in-95 duration-300">
             {data.images.map((img) => (
-              <div key={img.filename} className="group relative aspect-square overflow-hidden rounded-md bg-muted">
+                <div key={img.filename} className="group relative aspect-[1/2] overflow-hidden rounded-md bg-muted/50">
                 <ImageWithFade 
                   src={`${img.url}?size=300`} 
                   alt={img.filename} 

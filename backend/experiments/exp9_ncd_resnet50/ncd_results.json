@@ -1,0 +1,937 @@
+{
+  "model_variant": "resnet50",
+  "num_classes": 5,
+  "class_names": [
+    "O. exaltata",
+    "O. garganica",
+    "O. incubacea",
+    "O. sphegodes",
+    "O. sphegodes_Palena"
+  ],
+  "embedding_shape": [
+    2232,
+    2048
+  ],
+  "clustering": {
+    "kmeans_best": {
+      "k": 2,
+      "acc": 0.4390681003584229,
+      "nmi": 0.32780649066662837,
+      "ari": 0.14133192840351744,
+      "ami": 0.3271154893726074,
+      "f_measure": 0,
+      "silhouette": 0.3728443384170532
+    },
+    "selected_k": 2,
+    "kmeans_true_k": {
+      "acc": 0.6895161290322581,
+      "nmi": 0.5444568154611938,
+      "ari": 0.38160578426441116,
+      "ami": 0.5431639935774738,
+      "f_measure": 0.5255353018482575,
+      "info": {
+        "inertia": 34760.15625,
+        "n_iter": 11,
+        "cluster_sizes": [
+          946,
+          299,
+          365,
+          328,
+          294
+        ]
+      }
+    },
+    "dbscan": {
+      "acc": 0.2553763440860215,
+      "nmi": 0.0,
+      "ari": 0.0,
+      "ami": 0.0,
+      "f_measure": 0.43960479855178797,
+      "info": {
+        "n_clusters": 0,
+        "n_noise": 2232,
+        "eps": 0.5,
+        "min_samples": 5
+      }
+    },
+    "spectral": {
+      "acc": 0.6684587813620072,
+      "nmi": 0.6557215603238915,
+      "ari": 0.5554403584951726,
+      "ami": 0.6547286106864627,
+      "f_measure": 0.6641076065320788,
+      "info": {
+        "cluster_sizes": [
+          303,
+          877,
+          369,
+          573,
+          110
+        ]
+      }
+    }
+  },
+  "openset": {
+    "model_variant": "resnet50",
+    "num_classes": 5,
+    "class_names": [
+      "O. exaltata",
+      "O. garganica",
+      "O. incubacea",
+      "O. sphegodes",
+      "O. sphegodes_Palena"
+    ],
+    "mean_auroc": 0.46084,
+    "per_class_metrics": [
+      {
+        "auroc": 0.32760000000000006,
+        "known_accuracy": 0.005,
+        "unknown_recall": 0.75,
+        "num_known": 200,
+        "num_unknown": 100,
+        "left_out": "O. exaltata"
+      },
+      {
+        "auroc": 0.5043000000000001,
+        "known_accuracy": 0.13,
+        "unknown_recall": 1.0,
+        "num_known": 200,
+        "num_unknown": 100,
+        "left_out": "O. garganica"
+      },
+      {
+        "auroc": 0.47645000000000004,
+        "known_accuracy": 0.125,
+        "unknown_recall": 0.99,
+        "num_known": 200,
+        "num_unknown": 100,
+        "left_out": "O. incubacea"
+      },
+      {
+        "auroc": 0.40325000000000005,
+        "known_accuracy": 0.13,
+        "unknown_recall": 0.98,
+        "num_known": 200,
+        "num_unknown": 100,
+        "left_out": "O. sphegodes"
+      },
+      {
+        "auroc": 0.5925999999999999,
+        "known_accuracy": 0.13,
+        "unknown_recall": 1.0,
+        "num_known": 200,
+        "num_unknown": 100,
+        "left_out": "O. sphegodes_Palena"
+      }
+    ],
+    "oscr_curve": [
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 0.9933,
+        "known_acc": 0.008
+      },
+      {
+        "reject_rate": 0.9867,
+        "known_acc": 0.016
+      },
+      {
+        "reject_rate": 0.98,
+        "known_acc": 0.024
+      },
+      {
+        "reject_rate": 0.9767,
+        "known_acc": 0.028
+      },
+      {
+        "reject_rate": 0.97,
+        "known_acc": 0.036
+      },
+      {
+        "reject_rate": 0.9667,
+        "known_acc": 0.04
+      },
+      {
+        "reject_rate": 0.96,
+        "known_acc": 0.048
+      },
+      {
+        "reject_rate": 0.9533,
+        "known_acc": 0.056
+      },
+      {
+        "reject_rate": 0.94,
+        "known_acc": 0.072
+      },
+      {
+        "reject_rate": 0.93,
+        "known_acc": 0.084
+      },
+      {
+        "reject_rate": 0.9167,
+        "known_acc": 0.1
+      },
+      {
+        "reject_rate": 0.9167,
+        "known_acc": 0.1
+      },
+      {
+        "reject_rate": 0.9133,
+        "known_acc": 0.104
+      },
+      {
+        "reject_rate": 0.9067,
+        "known_acc": 0.112
+      },
+      {
+        "reject_rate": 0.9067,
+        "known_acc": 0.112
+      },
+      {
+        "reject_rate": 0.8967,
+        "known_acc": 0.124
+      },
+      {
+        "reject_rate": 0.8767,
+        "known_acc": 0.148
+      },
+      {
+        "reject_rate": 0.87,
+        "known_acc": 0.152
+      },
+      {
+        "reject_rate": 0.8533,
+        "known_acc": 0.172
+      },
+      {
+        "reject_rate": 0.8,
+        "known_acc": 0.216
+      },
+      {
+        "reject_rate": 0.77,
+        "known_acc": 0.24
+      },
+      {
+        "reject_rate": 0.7267,
+        "known_acc": 0.28
+      },
+      {
+        "reject_rate": 0.69,
+        "known_acc": 0.312
+      },
+      {
+        "reject_rate": 0.63,
+        "known_acc": 0.348
+      },
+      {
+        "reject_rate": 0.59,
+        "known_acc": 0.372
+      },
+      {
+        "reject_rate": 0.55,
+        "known_acc": 0.412
+      },
+      {
+        "reject_rate": 0.49,
+        "known_acc": 0.468
+      },
+      {
+        "reject_rate": 0.44,
+        "known_acc": 0.52
+      },
+      {
+        "reject_rate": 0.36,
+        "known_acc": 0.608
+      },
+      {
+        "reject_rate": 0.3233,
+        "known_acc": 0.644
+      },
+      {
+        "reject_rate": 0.2633,
+        "known_acc": 0.704
+      },
+      {
+        "reject_rate": 0.24,
+        "known_acc": 0.728
+      },
+      {
+        "reject_rate": 0.2133,
+        "known_acc": 0.76
+      },
+      {
+        "reject_rate": 0.1633,
+        "known_acc": 0.82
+      },
+      {
+        "reject_rate": 0.1167,
+        "known_acc": 0.876
+      },
+      {
+        "reject_rate": 0.08,
+        "known_acc": 0.916
+      },
+      {
+        "reject_rate": 0.0533,
+        "known_acc": 0.944
+      },
+      {
+        "reject_rate": 0.03,
+        "known_acc": 0.968
+      },
+      {
+        "reject_rate": 0.0267,
+        "known_acc": 0.972
+      },
+      {
+        "reject_rate": 0.01,
+        "known_acc": 0.992
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      }
+    ],
+    "baseline_oscr_curve": [
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 1.0,
+        "known_acc": 0.0
+      },
+      {
+        "reject_rate": 0.9867,
+        "known_acc": 0.016
+      },
+      {
+        "reject_rate": 0.9567,
+        "known_acc": 0.052
+      },
+      {
+        "reject_rate": 0.9167,
+        "known_acc": 0.1
+      },
+      {
+        "reject_rate": 0.9,
+        "known_acc": 0.12
+      },
+      {
+        "reject_rate": 0.8,
+        "known_acc": 0.24
+      },
+      {
+        "reject_rate": 0.5933,
+        "known_acc": 0.432
+      },
+      {
+        "reject_rate": 0.3467,
+        "known_acc": 0.64
+      },
+      {
+        "reject_rate": 0.16,
+        "known_acc": 0.832
+      },
+      {
+        "reject_rate": 0.0767,
+        "known_acc": 0.924
+      },
+      {
+        "reject_rate": 0.0367,
+        "known_acc": 0.964
+      },
+      {
+        "reject_rate": 0.0033,
+        "known_acc": 0.996
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      },
+      {
+        "reject_rate": 0.0,
+        "known_acc": 1.0
+      }
+    ],
+    "baselines": {
+      "softmax_threshold": {
+        "mean_auroc": 0.52396
+      }
+    }
+  }
+}

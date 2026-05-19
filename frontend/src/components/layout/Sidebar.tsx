@@ -20,7 +20,7 @@ const navItems = [
   { to: "/classify", icon: ScanSearch, key: "common.classify" },
   { to: "/dataset", icon: Database, key: "common.dataset" },
   { to: "/embeddings", icon: Box, key: "common.embeddings" },
-  { to: "/about", icon: BookOpen, key: "common.about" },
+  { to: "/research", icon: BookOpen, key: "common.about" },
 ];
 
 export function Sidebar() {

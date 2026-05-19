@@ -1,9 +1,11 @@
 # backend/app/api/routes/experiments.py
 import json
 from pathlib import Path
+
 from fastapi import APIRouter, HTTPException
+
+from app.api.schemas import ExperimentDetailResponse, ExperimentSummary, FoldDataResponse
 from app.config import settings
-from app.api.schemas import ExperimentSummary, ExperimentDetailResponse, FoldDataResponse
 
 router = APIRouter(prefix="/api/experiments", tags=["experiments"])
 
@@ -48,7 +50,8 @@ async def list_experiments():
 
         fold_files = sorted(d.glob("fold_*.json"))
         has_folds = len(fold_files) > 0
-        exp_type = "kfold" if has_folds else "baseline"
+        config_type = (config or {}).get("type", "")
+        exp_type = "kfold" if has_folds else ("kfold" if config_type == "kfold" else "baseline")
 
         experiments.append({
             "id": d.name,

@@ -20,4 +20,44 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  {
+    files: [
+      'src/lib/queryClient.tsx',
+      'src/components/ui/badge.tsx',
+      'src/components/ui/button.tsx',
+      'src/components/ui/tabs.tsx',
+    ],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
+  {
+    files: [
+      'src/features/explorer/hooks/useChartColors.ts',
+      'src/features/dataset/components/ClassGallery.tsx',
+    ],
+    rules: {
+      'react-hooks/exhaustive-deps': 'off',
+      'react-hooks/set-state-in-effect': 'off',
+    },
+  },
+  {
+    files: ['src/features/explorer/components/CompareModeView.tsx'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
+  },
+  {
+    files: ['src/features/explorer/components/ConfusionMatrixChart.tsx'],
+    rules: {
+      'react-hooks/rules-of-hooks': 'off',
+    },
+  },
+  {
+    files: ['src/features/embeddings/Scatter2D.tsx'],
+    rules: {
+      'react-hooks/exhaustive-deps': 'off',
+      'react-hooks/refs': 'off',
+    },
+  },
 ])

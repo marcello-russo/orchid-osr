@@ -20,8 +20,8 @@ const EmbeddingsPage = lazy(() =>
 const DatasetPage = lazy(() =>
   import("@/pages/DatasetPage").then((m) => ({ default: m.DatasetPage }))
 );
-const AboutPage = lazy(() =>
-  import("@/pages/AboutPage").then((m) => ({ default: m.AboutPage }))
+const ResearchPage = lazy(() =>
+  import("@/pages/ResearchPage").then((m) => ({ default: m.ResearchPage }))
 );
 
 function PageFallback() {
@@ -57,8 +57,8 @@ function App() {
             element={<ErrorBoundary><Suspense fallback={<PageFallback />}><DatasetPage /></Suspense></ErrorBoundary>}
           />
           <Route
-            path="/about"
-            element={<ErrorBoundary><Suspense fallback={<PageFallback />}><AboutPage /></Suspense></ErrorBoundary>}
+            path="/research"
+            element={<ErrorBoundary><Suspense fallback={<PageFallback />}><ResearchPage /></Suspense></ErrorBoundary>}
           />
         </Route>
       </Routes>

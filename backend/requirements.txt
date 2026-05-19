@@ -13,12 +13,6 @@ fastapi
 uvicorn
 python-multipart
 httpx
-jupyter
-notebook
-
-# Testing
-pytest>=7.0.0
-pytest-cov>=4.0.0
 
 # Transformers / PEFT (DINOv2 + LoRA)
 transformers>=4.40.0

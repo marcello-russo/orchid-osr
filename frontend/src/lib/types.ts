@@ -170,3 +170,153 @@ export interface ClassImagesResponse {
   total: number;
   images: DatasetImage[];
 }
+
+// Comparison types
+
+export interface FoldSnapshot {
+  fold: number;
+  best_f1: number | null;
+  best_accuracy: number | null;
+  best_epoch: number | null;
+}
+
+export interface ModelComparisonEntry {
+  name: string;
+  model_variant: string;
+  folds_completed: number;
+  num_folds: number;
+  mean_f1: number | null;
+  std_f1: number | null;
+  mean_accuracy: number | null;
+  test_accuracy: number | null;
+  test_f1: number | null;
+  best_fold: number | null;
+  rank: number | null;
+  fold_results: FoldSnapshot[];
+}
+
+export interface ModelComparisonResponse {
+  models: ModelComparisonEntry[];
+}
+
+export interface ExperimentModelEntry {
+  variant: string;
+  display_name: string;
+  mean_f1: number | null;
+  std_f1: number | null;
+  mean_accuracy: number | null;
+  test_accuracy: number | null;
+}
+
+export interface ExperimentGroup {
+  slug: string;
+  label: string;
+  description: string;
+  has_leakage: boolean;
+  models: Record<string, ExperimentModelEntry>;
+}
+
+export interface ExperimentComparisonResponse {
+  groups: ExperimentGroup[];
+  architectures: string[];
+}
+
+export interface SeriesModelEntry {
+  variant: string;
+  display_name: string;
+  f1_ce: number | null;
+  f1_supcon: number | null;
+  delta: number | null;
+}
+
+export interface ExperimentComparisonResponse {
+  exp6: ModelComparisonEntry[];
+  exp7: ModelComparisonEntry[];
+  delta: SeriesModelEntry[];
+}
+
+export interface EmbeddingPoint {
+  idx: number;
+  x: number;
+  y: number;
+  z: number;
+  species: string;
+  filename: string;
+  image_url: string;
+  split: string;
+}
+
+export interface ServingInfo {
+  note: string;
+  repo: string;
+  path: string;
+}
+
+export interface EmbeddingResponse {
+  experiment: string;
+  method: string;
+  dimension: number;
+  total_points: number;
+  species: string[];
+  points: EmbeddingPoint[];
+  serving: ServingInfo;
+}
+
+// --- NCD types ---
+
+export interface NcdClusteringResult {
+  k?: number;
+  acc?: number;
+  nmi?: number;
+  ari?: number;
+  ami?: number;
+  f_measure?: number;
+  silhouette?: number;
+  n_clusters?: number;
+  n_noise?: number;
+  selection_criterion?: string;
+}
+
+export interface NcdOsrPerClass {
+  left_out: string;
+  auroc: number;
+  known_acc: number;
+  unknown_recall: number;
+}
+
+export interface NcdOsrResults {
+  mean_auroc: number;
+  oscr_curve: { reject_rate: number; known_acc: number }[];
+  per_class: NcdOsrPerClass[];
+  baselines?: {
+    softmax_threshold: { mean_auroc: number };
+  };
+}
+
+export interface NcdResults {
+  model_variant: string;
+  exp: number;
+  clustering: Record<string, NcdClusteringResult>;
+  openset: NcdOsrResults;
+}
+
+export interface NcdComparisonEntry {
+  experiment: string;
+  exp_prefix: string;
+  model: string;
+  selected_k: number;
+  acc: number;
+  nmi: number;
+  ari: number;
+  ami: number;
+  f_measure: number;
+  silhouette: number;
+  mean_auroc: number;
+  knn_auroc: number;
+  baseline_auroc: number;
+  improvement: number;
+}
+
+export interface NcdComparison {
+  models: NcdComparisonEntry[];
+}

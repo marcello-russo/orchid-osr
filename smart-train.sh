@@ -1,126 +1,149 @@
 #!/bin/bash
-# smart-train.sh — Battery-aware training manager for all remaining models
-# Stops training when battery < STOP, resumes when battery > START.
-# No charging status check — only battery level matters.
-# Automatically moves to the next model when all folds complete.
+# smart-train.sh — Sequencer training a batteria (o senza)
+# Esegue tutti i fold di tutti i modelli in sequenza, poi aggrega e carica su HF.
 #
 # Usage:
-#   ./smart-train.sh                      # Train all remaining models
-#   ./smart-train.sh --model convnext_tiny # Only one model
+#   ./smart-train.sh                          # Exp 6
+#   ./smart-train.sh --exp 7                  # Exp 7 (SupCon)
+#   ./smart-train.sh --exp 8                  # Exp 8 (SpHOR)
+#   ./smart-train.sh --exp 9                  # Exp 9 (SpHOR, no O. majellensis)
+#   ./smart-train.sh --model resnet18         # Solo un modello
+#   ./smart-train.sh --no-upload             # Senza upload HF finale
+#   nohup ./smart-train.sh --exp 8 >> smart-train.log 2>&1 &   # Append log!
+#   nohup ./smart-train.sh --exp 9 >> smart-train.log 2>&1 &
+#
+# Se interrotto (Ctrl+C o crash), riprende dal fold successivo.
+
+set -euo pipefail
 
 # --- Config ---
-STOP_THRESHOLD=40    # Stop training below this %
-START_THRESHOLD=80   # Resume training above this %
-CHECK_INTERVAL=120
-EXP=6
-EPOCHS=100
+EPOCHS=150
+CE_EPOCHS=100
 PATIENCE=15
-OVERFIT_THRESHOLD=0
+BATCH_SIZE=8
 ACCUMULATION=4
+UPLOAD=true
 
-ALL_MODELS=(resnet18 resnet50 convnext_tiny dinov2_small dinov2_base convnext_small)
+EXP=6
+EXP6_MODELS=(resnet18 resnet50 convnext_tiny convnext_small dinov2_small dinov2_base)
+EXP7_MODELS=(resnet50 resnet18 dinov2_small dinov2_base convnext_tiny convnext_small)
+EXP8_MODELS=(resnet18 convnext_tiny convnext_small dinov2_base)
+EXP9_MODELS=(convnext_tiny dinov2_small resnet50 resnet18 dinov2_base convnext_small)
 
 # --- Battery ---
 BAT="/sys/class/power_supply/BAT0"
-battery_level() { cat "$BAT/capacity"; }
-is_charging() { grep -q "Charging\|Full" "$BAT/status"; }
-
-# --- Training helpers ---
-model_dir() { echo "experiments/exp6_clean_split_${1}"; }
-
-model_done() {
-    podman exec pytorch_app test -f "$(model_dir "$1")/results.json" 2>/dev/null
-}
-
-next_fold_for() {
-    # Retry to avoid race condition: process exits but file not visible yet
-    for attempt in 1 2 3; do
-        local missing=""
-        for i in 0 1 2 3 4; do
-            if ! podman exec pytorch_app test -f "$(model_dir "$1")/fold_${i}.json" 2>/dev/null; then
-                missing="$i"
-                break
-            fi
-        done
-        if [ -z "$missing" ]; then
-            echo "done"
-            return
-        fi
-        [ "$attempt" -lt 3 ] && sleep 2
-    done
-    echo "$missing"
-}
-
-training_is_running() {
-    podman exec pytorch_app pgrep -f "cli.py.*--model" >/dev/null 2>&1
-}
-
-stop_training() {
-    echo "[$(date +%H:%M:%S)] Battery $(battery_level)% — waiting for current epoch to finish..."
-    # Wait for the next epoch boundary (checkpoint saved)
-    local log="experiments/exp6_clean_split_${CURRENT_MODEL}/exp6_clean_split_${CURRENT_MODEL}.log"
-    timeout 360 podman exec pytorch_app bash -c "
-        tail -f '$log' 2>/dev/null | grep -m 1 'Epoch [0-9]*/100'
-    " 2>/dev/null || true
-    echo "[$(date +%H:%M:%S)] Epoch boundary reached. Killing training..."
-    podman exec pytorch_app pkill -f "cli.py" 2>/dev/null || true
-    for i in $(seq 1 10); do
-        training_is_running || break
-        sleep 2
-    done
-    TRAIN_PID=""
-    echo "[$(date +%H:%M:%S)] Training stopped (battery: $(battery_level)%)."
-}
-
-start_fold() {
-    local model="$1" fold="$2"
-    echo "[$(date +%H:%M:%S)] $model fold $fold — starting (battery: $(battery_level)%)..."
-    podman exec pytorch_app python cli.py --cross-validate \
-        --exp "$EXP" --model "$model" --epochs "$EPOCHS" \
-        --patience "$PATIENCE" --overfit-threshold "$OVERFIT_THRESHOLD" \
-        --accumulation "$ACCUMULATION" --fold "$fold" &
-    TRAIN_PID=$!
-    CURRENT_MODEL="$model"
-    CURRENT_FOLD="$fold"
-}
-
-# Aggregate results after all folds done
-aggregate_model() {
-    local model="$1"
-    echo "[$(date +%H:%M:%S)] Aggregating $model results..."
-    podman exec pytorch_app python cli.py --cross-validate \
-        --exp "$EXP" --model "$model" --epochs "$EPOCHS" \
-        --patience "$PATIENCE" --overfit-threshold "$OVERFIT_THRESHOLD" \
-        --accumulation "$ACCUMULATION" --aggregate-only 2>&1 | tail -5
-    echo "[$(date +%H:%M:%S)] $model complete!"
-}
+STOP_THRESHOLD=15
+START_THRESHOLD=40
+battery_level() { cat "$BAT/capacity" 2>/dev/null || echo "100"; }
+BATTERY_POLL=30  # secondi tra un controllo e l'altro
 
 # --- Parse args ---
 SINGLE_MODEL=""
 while [[ $# -gt 0 ]]; do
     case $1 in
+        --exp) EXP="$2"; shift 2 ;;
         --model) SINGLE_MODEL="$2"; shift 2 ;;
+        --no-upload) UPLOAD=false ;;
         *) echo "Unknown: $1"; exit 1 ;;
     esac
 done
 
-if [ -n "$SINGLE_MODEL" ]; then
-    MODELS=("$SINGLE_MODEL")
+if [ "$EXP" -eq 6 ]; then
+    EXP_PREFIX="exp6_clean_split"
+    HF_PREFIX="exp6_ce"
+    MODELS=("${EXP6_MODELS[@]}")
+elif [ "$EXP" -eq 7 ]; then
+    EXP_PREFIX="exp7_supcon"
+    HF_PREFIX="exp7_supcon"
+    MODELS=("${EXP7_MODELS[@]}")
+elif [ "$EXP" -eq 8 ]; then
+    EXP_PREFIX="exp8_sphor"
+    HF_PREFIX="exp8_sphor"
+    MODELS=("${EXP8_MODELS[@]}")
 else
-    MODELS=("${ALL_MODELS[@]}")
+    EXP=9
+    EXP_PREFIX="exp9_ncd"
+    HF_PREFIX="exp9_ncd"
+    MODELS=("${EXP9_MODELS[@]}")
 fi
 
-echo "============================================"
-echo "Smart Train — battery-aware manager"
-echo "Stop < ${STOP_THRESHOLD}%, resume > ${START_THRESHOLD}% (battery only)"
-echo "Models: ${MODELS[*]}"
-echo "============================================"
+if [ -n "$SINGLE_MODEL" ]; then
+    MODELS=("$SINGLE_MODEL")
+fi
 
-CURRENT_MODEL=""
-CURRENT_FOLD=""
-TRAIN_PID=""
+# --- Paths ---
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+BACKEND_DIR="$SCRIPT_DIR/backend"
 
-# Find next work item: (model, fold) or ("aggregate", model) or ("done", "")
+model_dir() { echo "$BACKEND_DIR/experiments/${EXP_PREFIX}_${1}"; }
+model_done()  { test -f "$(model_dir "$1")/results.json"; }
+
+next_fold_for() {
+    for i in 0 1 2 3 4; do
+        if ! test -f "$(model_dir "$1")/fold_${i}.json"; then
+            echo "$i"
+            return
+        fi
+    done
+    echo "done"
+}
+
+training_is_running() { pgrep -f "cli.py.*${EXP_PREFIX}" >/dev/null 2>&1; }
+
+stop_training() {
+    echo "[$(date +%H:%M:%S)] Battery $(battery_level)% — stopping..."
+    pkill -f "cli.py.*${EXP_PREFIX}" 2>/dev/null || true
+    for i in $(seq 1 10); do
+        training_is_running || break
+        sleep 2
+    done
+}
+
+start_fold() {
+    local model="$1" fold="$2"
+    echo "[$(date +%H:%M:%S)] >>> $model fold $fold (battery: $(battery_level)%)"
+    local BS="$BATCH_SIZE"
+    local ACC="$ACCUMULATION"
+    local EPOCHS_PER_MODEL="$EPOCHS"
+    local CE_EPOCHS_PER_MODEL="$CE_EPOCHS"
+    local SPHOR=""
+    case "$model" in
+        dinov2_small|dinov2_base)
+            EPOCHS_PER_MODEL=100
+            CE_EPOCHS_PER_MODEL=50
+            BS=4
+            ACC=8
+            ;;
+    esac
+    if [ "$EXP" -eq 8 ] || [ "$EXP" -eq 9 ]; then
+        SPHOR="--sphor"
+    fi
+    cd "$BACKEND_DIR"
+    python cli.py --cross-validate \
+        --exp "$EXP" --model "$model" --epochs "$EPOCHS_PER_MODEL" \
+        --patience "$PATIENCE" --batch-size "$BS" --accumulation "$ACC" \
+        --ce-epochs "$CE_EPOCHS_PER_MODEL" --fold "$fold" $SPHOR &
+    TRAIN_PID=$!
+    CURRENT_MODEL="$model"
+    CURRENT_FOLD="$fold"
+}
+
+aggregate_model() {
+    local model="$1"
+    echo "[$(date +%H:%M:%S)] >>> Aggregating $model..."
+    cd "$BACKEND_DIR"
+    python cli.py --cross-validate \
+        --exp "$EXP" --model "$model" --epochs "$EPOCHS" \
+        --patience "$PATIENCE" --accumulation "$ACCUMULATION" \
+        --ce-epochs "$CE_EPOCHS" --aggregate-only 2>&1 | tail -5
+    echo "[$(date +%H:%M:%S)] $model complete!"
+
+    if $UPLOAD; then
+        echo "[$(date +%H:%M:%S)] Uploading $model to HuggingFace..."
+        HF_TOKEN="${HF_TOKEN:-}" python "$BACKEND_DIR/scripts/hf_tools/upload_models.py" --exp "$HF_PREFIX" 2>&1 | tail -3 || true
+    fi
+}
+
 find_next() {
     for model in "${MODELS[@]}"; do
         if model_done "$model"; then
@@ -128,7 +151,6 @@ find_next() {
         fi
         local fold=$(next_fold_for "$model")
         if [ "$fold" = "done" ]; then
-            # All folds done but no results.json — need aggregate
             echo "aggregate $model"
             return
         fi
@@ -138,54 +160,62 @@ find_next() {
     echo "done"
 }
 
-# --- Main loop ---
+# --- Main ---
+echo "============================================"
+echo "Smart Train"
+echo "Exp: $EXP"
+echo "Models: ${MODELS[*]}"
+echo "Battery: stop < ${STOP_THRESHOLD}%, resume > ${START_THRESHOLD}%"
+$UPLOAD && echo "Upload to HF: enabled"
+echo "============================================"
+
+trap "echo; echo 'Interrotto. I fold completati non veranno ripetuti.'; exit 0" INT TERM
+
+CURRENT_MODEL=""
+CURRENT_FOLD=""
+TRAIN_PID=""
+
 while true; do
     LEVEL=$(battery_level)
-    CHARGING=$(is_charging && echo "yes" || echo "no")
-
-    # Check if training process just finished
-    if [ -n "$TRAIN_PID" ] && ! kill -0 "$TRAIN_PID" 2>/dev/null; then
-        wait "$TRAIN_PID" 2>/dev/null
-        TRAIN_PID=""
-
-        if [ -n "$CURRENT_MODEL" ] && [ "$CURRENT_FOLD" != "aggregate" ]; then
-            if podman exec pytorch_app test -f "$(model_dir "$CURRENT_MODEL")/fold_${CURRENT_FOLD}.json" 2>/dev/null; then
-                echo "[$(date +%H:%M:%S)] $CURRENT_MODEL fold $CURRENT_FOLD completed! (battery: ${LEVEL}%)"
-            fi
+    if [ "$LEVEL" -lt "$STOP_THRESHOLD" ]; then
+        if training_is_running; then
+            stop_training
         fi
+        echo "[$(date +%H:%M:%S)] Battery ${LEVEL}% — in attesa di ${START_THRESHOLD}%..."
+        sleep "$BATTERY_POLL"
+        continue
+    fi
+
+    if [ "$LEVEL" -lt "$START_THRESHOLD" ] && ! training_is_running && [ -z "${TRAIN_PID:-}" ]; then
+        echo "[$(date +%H:%M:%S)] Battery ${LEVEL}%. In attesa di ${START_THRESHOLD}%..."
+        sleep "$BATTERY_POLL"
+        continue
+    fi
+
+    # Check if training just finished
+    if [ -n "$TRAIN_PID" ] && ! kill -0 "$TRAIN_PID" 2>/dev/null; then
+        wait "$TRAIN_PID" 2>/dev/null || true
+        if [ -n "$CURRENT_FOLD" ] && [ "$CURRENT_FOLD" != "aggregate" ]; then
+            test -f "$(model_dir "$CURRENT_MODEL")/fold_${CURRENT_FOLD}.json" && \
+                echo "[$(date +%H:%M:%S)] $CURRENT_MODEL fold $CURRENT_FOLD done"
+        fi
+        TRAIN_PID=""
         CURRENT_MODEL=""
         CURRENT_FOLD=""
     fi
 
-    # Find next task
-    read -r action arg1 arg2 <<< "$(find_next)"
+    read -r action arg1 arg2 < <(find_next)
 
     if [ "$action" = "done" ]; then
         echo "[$(date +%H:%M:%S)] All models complete!"
+        if $UPLOAD; then
+            echo "[$(date +%H:%M:%S)] Final HF upload & README update..."
+            cd "$BACKEND_DIR"
+            HF_TOKEN="${HF_TOKEN:-}" python scripts/hf_tools/upload_models.py --exp "$HF_PREFIX" 2>&1 | tail -5 || true
+        fi
         break
     fi
 
-    # Battery check
-    if [ "$LEVEL" -lt "$STOP_THRESHOLD" ]; then
-        # Battery critical — always stop
-        if training_is_running; then
-            stop_training
-        fi
-        echo "[$(date +%H:%M:%S)] Battery ${LEVEL}% — paused. Waiting for ${START_THRESHOLD}%..."
-        sleep "$CHECK_INTERVAL"
-        continue
-    fi
-
-    if [ "$LEVEL" -lt "$START_THRESHOLD" ]; then
-        # Mid zone — keep running if already training, don't start new
-        if ! training_is_running && [ -z "$TRAIN_PID" ]; then
-            echo "[$(date +%H:%M:%S)] Battery ${LEVEL}%. Waiting for ${START_THRESHOLD}%..."
-        fi
-        sleep "$CHECK_INTERVAL"
-        continue
-    fi
-
-    # Battery OK — start next task
     if ! training_is_running && [ -z "$TRAIN_PID" ]; then
         if [ "$action" = "aggregate" ]; then
             aggregate_model "$arg1"
@@ -194,5 +224,5 @@ while true; do
         fi
     fi
 
-    sleep "$CHECK_INTERVAL"
+    sleep "$BATTERY_POLL"
 done

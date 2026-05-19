@@ -1,15 +1,15 @@
 """Visualization module: generate plots from k-fold experiment results."""
 import os
 
-from app.visualization.utils import load_experiment_data
-from app.visualization.style import setup_style
 from app.visualization.plots import (
+    plot_confusion_matrix,
+    plot_fold_summary,
     plot_loss_curves,
     plot_metric_curves,
-    plot_fold_summary,
-    plot_confusion_matrix,
     plot_overfitting_proxy,
 )
+from app.visualization.style import setup_style
+from app.visualization.utils import load_experiment_data
 
 
 def plot_experiment(exp_dir, output_dir=None):

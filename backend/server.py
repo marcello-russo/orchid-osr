@@ -8,8 +8,12 @@ Usage:
     python server.py --reload           # Enable auto-reload for development
 """
 
+import os
 import argparse
 import uvicorn
+
+# Ensure CWD is the backend directory (for relative paths in config)
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 from app.config import settings
 
 

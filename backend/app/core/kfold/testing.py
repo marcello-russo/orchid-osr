@@ -2,6 +2,14 @@
 """Testing and aggregation functions for k-fold cross-validation."""
 import logging
 import os
+from pathlib import Path
+
+try:
+    from dotenv import load_dotenv
+    _env = Path(__file__).resolve().parent.parent.parent.parent / ".env"
+    load_dotenv(_env)
+except ImportError:
+    pass
 
 import numpy as np
 import torch
@@ -13,13 +21,13 @@ HF_MODELS_REPO = "marcellorusso/orchid-ncd-models"
 
 
 def _upload_to_hf(output_dir, model_variant):
-    """Upload completed model results to HuggingFace if token is configured."""
+    """Upload only essential model files to HuggingFace: best fold weights + metadata."""
     try:
         from huggingface_hub import HfApi
     except ImportError:
         return
 
-    api = HfApi()
+    api = HfApi(token=os.environ.get("HF_TOKEN"))
     try:
         api.whoami()
     except Exception:
@@ -27,25 +35,54 @@ def _upload_to_hf(output_dir, model_variant):
         return
 
     exp_name = os.path.basename(output_dir)
-    remote_dir = f"serie1_ce/{exp_name}"
+    if exp_name.startswith("exp8"):
+        exp_group = "exp8_sphor"
+    elif exp_name.startswith("exp7"):
+        exp_group = "exp7_supcon"
+    else:
+        exp_group = "exp6_ce"
+    remote_dir = f"{exp_group}/{exp_name}"
     logger.info(f"Uploading results to HF: {HF_MODELS_REPO}/{remote_dir}/")
 
+    # Read results to find best fold
+    results_path = os.path.join(output_dir, "results.json")
+    best_fold = None
+    if os.path.exists(results_path):
+        import json
+        with open(results_path) as f:
+            results = json.load(f)
+        best_fold = results.get("best_fold")
+
     try:
-        for fname in os.listdir(output_dir):
+        # Upload essential files: results.json, config.json, best_fold_N.pt only
+        for fname in ["results.json", "config.json"]:
             fpath = os.path.join(output_dir, fname)
-            if fname.endswith(".json") or (fname.endswith(".pt") and fname.startswith("best_fold")):
+            if os.path.exists(fpath):
                 logger.info(f"  Uploading {fname}")
                 api.upload_file(
                     repo_id=HF_MODELS_REPO,
                     path_or_fileobj=fpath,
                     path_in_repo=f"{remote_dir}/{fname}",
                 )
-            elif fname.endswith("_adapter") and os.path.isdir(fpath):
-                logger.info(f"  Uploading adapter directory {fname}")
+
+        if best_fold is not None:
+            best_pt = f"best_fold_{best_fold}.pt"
+            fpath = os.path.join(output_dir, best_pt)
+            if os.path.exists(fpath):
+                logger.info(f"  Uploading {best_pt}")
+                api.upload_file(
+                    repo_id=HF_MODELS_REPO,
+                    path_or_fileobj=fpath,
+                    path_in_repo=f"{remote_dir}/{best_pt}",
+                )
+            # Upload LoRA adapter if present
+            adapter_dir = os.path.join(output_dir, f"best_fold_{best_fold}_adapter")
+            if os.path.isdir(adapter_dir):
+                logger.info("  Uploading adapter directory")
                 api.upload_folder(
                     repo_id=HF_MODELS_REPO,
-                    folder_path=fpath,
-                    path_in_repo=f"{remote_dir}/{fname}",
+                    folder_path=adapter_dir,
+                    path_in_repo=f"{remote_dir}/best_fold_{best_fold}_adapter",
                 )
 
         logger.info(f"Upload to HF complete: {HF_MODELS_REPO}/{remote_dir}/")
@@ -91,12 +128,18 @@ def final_test(best_model_path, model_variant, num_classes, test_dataset_dir,
     Returns:
         dict con metriche complete
     """
-    from app.core.models import create_model, create_transform
-    from app.preprocessing.dataset_tool import ImageFolderWithName
     from sklearn.metrics import (
-        accuracy_score, f1_score, precision_score, recall_score,
+        accuracy_score,
+        f1_score,
+        precision_score,
+        recall_score,
+    )
+    from sklearn.metrics import (
         confusion_matrix as sk_confusion_matrix,
     )
+
+    from app.core.models import create_model, create_transform
+    from app.preprocessing.dataset_tool import ImageFolderWithName
 
     transform = create_transform(model_variant)
 
@@ -143,7 +186,9 @@ def final_test(best_model_path, model_variant, num_classes, test_dataset_dir,
 
     # Filtra campioni con classe non mappata e remappa le label
     valid_mask = np.isin(all_labels_raw, list(test_to_model.keys()))
-    all_labels_mapped = np.array([test_to_model[l] for l in all_labels_raw[valid_mask]])
+    all_labels_mapped = np.array(
+        [test_to_model[label] for label in all_labels_raw[valid_mask]]
+    )
     all_predictions = all_predictions[valid_mask]
     if valid_mask.sum() < len(all_labels_raw):
         logger.warning(f"Filtrati {len(all_labels_raw) - valid_mask.sum()} campioni con classe non mappata")
@@ -236,6 +281,7 @@ def aggregate_and_test(
     Legge i risultati dei fold completati, aggrega, fa test finale e genera report.
     """
     import json
+
     from app.core.kfold.reporting import generate_report
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -302,15 +348,18 @@ def aggregate_and_test(
     }
 
     # Salva JSON
-    json_path = os.path.join(output_dir, f"results.json")
+    json_path = os.path.join(output_dir, "results.json")
     with open(json_path, "w") as f:
         json.dump(results, f, indent=2, default=str)
     logger.info(f"Risultati salvati in: {json_path}")
 
-    # Upload to HuggingFace if token is available
-    _upload_to_hf(output_dir, model_variant)
-
-    # Genera report
+    # Genera report (sempre, prima dell'upload HF)
     generate_report(results, model_variant, output_dir)
+
+    # Upload to HuggingFace se disponibile (best-effort)
+    try:
+        _upload_to_hf(output_dir, model_variant)
+    except Exception as e:
+        logger.warning(f"HF upload fallito (report salvato localmente): {e}")
 
     return results

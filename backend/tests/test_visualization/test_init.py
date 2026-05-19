@@ -1,6 +1,8 @@
 import json
 import os
+
 import pytest
+
 from app.visualization import plot_experiment
 
 

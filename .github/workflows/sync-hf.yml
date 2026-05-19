@@ -78,7 +78,7 @@ jobs:
 
           api = HfApi(token=os.environ['HF_TOKEN'])
           repo = 'marcellorusso/orchid-ncd-models'
-          base = 'serie1_ce'
+          base = 'exp6_ce'
 
           uploaded = 0
           for exp_dir in sorted(glob.glob('backend/experiments/exp6_*')):

@@ -2,10 +2,10 @@
 """Tests for explainability core: inference() and get_percentages()."""
 import importlib.util
 import os
-import pytest
+
 import torch
 
-from app.core.models.resnet import ResNetConfig, ResNetClassifier
+from app.core.models.resnet import ResNetClassifier, ResNetConfig
 from app.preprocessing.reproducibility import set_seed
 
 # Load core module directly to avoid triggering matplotlib via __init__.py

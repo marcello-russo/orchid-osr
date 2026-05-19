@@ -2,11 +2,12 @@
 
 const API_BASE = import.meta.env.VITE_API_URL ?? "";
 
-async function fetchApi<T>(path: string): Promise<T> {
+export async function fetchApi<T>(path: string): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`);
   if (!res.ok) {
     const body = await res.text();
-    throw new Error(`API ${res.status}: ${body}`);
+    const snippet = body.length > 200 ? body.slice(0, 200) + "..." : body;
+    throw new Error(`API ${res.status}: ${snippet}`);
   }
   return res.json();
 }
@@ -106,8 +107,44 @@ export async function fetchDatasetClasses() {
   return fetchApi<import("./types").DatasetClassesResponse>("/api/dataset/classes");
 }
 
+export async function fetchComparison() {
+  return fetchApi<import("./types").ModelComparisonResponse>("/api/comparison");
+}
+
+export async function fetchEmbeddings(experiment?: string, method: string = "tsne_3d") {
+  const params = new URLSearchParams({ method });
+  if (experiment) params.set("experiment", experiment);
+  return fetchApi<import("./types").EmbeddingResponse>(`/api/embeddings?${params}`);
+}
+
+export async function fetchExpComparison() {
+  return fetchApi<import("./types").ExperimentComparisonResponse>("/api/comparison/experiments");
+}
+
+export async function fetchExperimentComparison() {
+  return fetchApi<import("./types").ExperimentComparisonResponse>("/api/comparison/experiments");
+}
+
+export async function fetchComparisonFold(modelVariant: string, fold: number) {
+  return fetchApi<import("./types").FoldData>(
+    `/api/comparison/${modelVariant}/fold/${fold}`
+  );
+}
+
 export async function fetchClassImages(className: string, split: string = "train", limit: number = 12, offset: number = 0) {
   return fetchApi<import("./types").ClassImagesResponse>(
     `/api/dataset/classes/${encodeURIComponent(className)}/images?split=${split}&limit=${limit}&offset=${offset}`
   );
+}
+
+export async function fetchNcdResults(modelVariant: string, exp: number = 8) {
+  return fetchApi<import("./types").NcdResults>(`/api/ncd/${modelVariant}/results?exp=${exp}`);
+}
+
+export async function fetchNcdFigure(modelVariant: string, figureName: string, exp: number = 8) {
+  return `/api/ncd/${modelVariant}/figure/${figureName}?exp=${exp}`;
+}
+
+export async function fetchNcdComparison() {
+  return fetchApi<import("./types").NcdComparison>("/api/ncd/comparison");
 }

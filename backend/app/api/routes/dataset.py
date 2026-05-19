@@ -1,13 +1,12 @@
-import io
 import mimetypes
 from pathlib import Path
-from PIL import Image
 
 from fastapi import APIRouter, HTTPException, Query
-from fastapi.responses import FileResponse, Response
 from fastapi.concurrency import run_in_threadpool
+from fastapi.responses import FileResponse
+from PIL import Image
 
-from app.api.schemas import DatasetClassesResponse, DatasetClassInfo, ClassImagesResponse, DatasetImage
+from app.api.schemas import ClassImagesResponse, DatasetClassesResponse, DatasetClassInfo, DatasetImage
 from app.config import settings
 
 router = APIRouter(prefix="/api/dataset", tags=["dataset"])
@@ -16,10 +15,11 @@ _IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
 _VALID_SPLITS = {"train_clean", "test_clean"}
 _SPLIT_ALIASES = {"train": "train_clean", "test": "test_clean"}
 _VALID_CLASSES = set(settings.class_names)
+_CROPPED_DIR = "cropped_256x512"
 
 
 def _get_dataset_base() -> Path:
-    return Path(settings.dataset_dir)
+    return Path(settings.dataset_dir) / _CROPPED_DIR
 
 
 def _validate_segment(value: str) -> str:
@@ -76,7 +76,7 @@ async def list_class_images(class_name: str, split: str = "train", limit: int = 
         raise HTTPException(status_code=400, detail=f"Unknown class: {class_name}")
     split = _SPLIT_ALIASES.get(split, split)
     if split not in _VALID_SPLITS:
-        raise HTTPException(status_code=400, detail=f"Invalid split. Use: train, test, train_clean, or test_clean")
+        raise HTTPException(status_code=400, detail="Invalid split. Use: train, test, train_clean, or test_clean")
 
     base = _get_dataset_base()
     class_dir = base / split / class_name
@@ -148,10 +148,10 @@ async def serve_image(split: str, class_name: str, filename: str, size: int = Qu
             return False
 
     success = await run_in_threadpool(_generate_thumbnail)
-    
+
     if success and cache_path.is_file():
         return FileResponse(cache_path, media_type="image/webp")
-    
+
     # Fallback to original
     media_type = mimetypes.guess_type(str(file_path))[0] or "image/jpeg"
     return FileResponse(file_path, media_type=media_type)

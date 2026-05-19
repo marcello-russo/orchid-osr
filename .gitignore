@@ -5,7 +5,7 @@ models*/
 !app/core/models/
 !backend/app/core/models/
 inference*/
-# analysis/ (removed to allow assets/analysis documentation)
+documents/
 archive/
 *.pt
 *.safetensors
@@ -15,6 +15,7 @@ archive/
 # Generated outputs
 *_1/
 *_2/
+embeddings.npy
 
 # Backend data dirs
 backend/dataset*/
@@ -24,7 +25,6 @@ backend/inference*/
 backend/test_dataset/
 backend/logs*/
 backend/temp_kfold/
-backend/experiments/
 
 # Environment and Secrets
 .env

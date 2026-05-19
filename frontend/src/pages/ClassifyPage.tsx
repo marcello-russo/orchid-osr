@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { Upload, Loader2, Sparkles, Eye, X } from "lucide-react";
+import { Upload, Loader2, Sparkles, Eye, X, ScanSearch } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -111,11 +111,17 @@ export function ClassifyPage() {
   const topPredictions = classify.data?.top_predictions ?? [];
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
+    <div className="space-y-6 max-w-7xl mx-auto px-4 md:px-12 animate-in fade-in duration-700">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-primary">
-          {t("classify.title")}
-        </h1>
+        <div className="flex items-center gap-4">
+          <div className="size-10 md:size-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+            <ScanSearch className="size-6" />
+          </div>
+          <div>
+            <h1 className="text-2xl md:text-4xl font-black tracking-tight">{t("classify.title")}</h1>
+            <p className="text-muted-foreground text-sm mt-1">{t("classify.subtitle")}</p>
+          </div>
+        </div>
         {file && (
           <Button variant="ghost" size="sm" onClick={clearAll}>
             <X className="mr-1 size-4" /> {t("common.back")}

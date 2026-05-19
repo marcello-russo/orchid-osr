@@ -1,8 +1,10 @@
 # app/core/models/convnext.py
+from typing import Literal
+
 import torch
 import torch.nn as nn
 from torchvision import models
-from typing import Literal
+
 from app.core.models.base import ClassifierModel, ModelConfig
 
 _CONVNEXT_WEIGHTS = {
@@ -81,3 +83,7 @@ class ConvNeXtClassifier(ClassifierModel):
     @property
     def embedding_dim(self) -> int:
         return self._embedding_dim
+
+    def _unfreeze_head(self) -> None:
+        for param in self._backbone.classifier[2].parameters():
+            param.requires_grad = True

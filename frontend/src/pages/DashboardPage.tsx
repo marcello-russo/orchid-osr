@@ -13,6 +13,7 @@ import {
   ScanSearch,
   Box,
   BookOpen,
+  LayoutDashboard,
   ArrowRight,
 } from "lucide-react";
 import { useExperiments } from "@/features/explorer/hooks/useExperiments";
@@ -43,8 +44,16 @@ export function DashboardPage() {
   );
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300">
-      <h1 className="text-2xl font-bold text-primary">{t("dashboard.title")}</h1>
+    <div className="space-y-8 max-w-7xl mx-auto px-4 md:px-12 animate-in fade-in duration-700">
+      <div className="flex items-center gap-4">
+        <div className="size-10 md:size-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+          <LayoutDashboard className="size-6" />
+        </div>
+        <div>
+          <h1 className="text-2xl md:text-4xl font-black tracking-tight">{t("dashboard.title")}</h1>
+          <p className="text-muted-foreground text-sm mt-1">{t("dashboard.subtitle")}</p>
+        </div>
+      </div>
 
       {/* Navigation Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

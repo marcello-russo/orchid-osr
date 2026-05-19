@@ -1,7 +1,9 @@
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from app.visualization.style import setup_style, COLORS, FIGURE_SIZE, DPI
+
+from app.visualization.style import COLORS, DPI, FIGURE_SIZE, setup_style
 
 
 def test_setup_style_applies_ggplot():

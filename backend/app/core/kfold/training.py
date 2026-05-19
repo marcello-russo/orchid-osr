@@ -6,27 +6,30 @@ import os
 import shutil
 
 import numpy as np
+import torch
 from sklearn.model_selection import StratifiedKFold
 from torch.utils.data import DataLoader
-
-import torch
 
 logger = logging.getLogger(__name__)
 
 
 
 
-def split_raw_images(raw_dataset_dir, class_names, num_folds, seed):
+def split_raw_images(raw_dataset_dir, class_names, num_folds, seed, exclude_classes=None):
     """
     Divide le immagini originali in fold con StratifiedKFold.
+
+    exclude_classes: classi da escludere dal training (es. lasciate come novel per NCD).
 
     Returns:
         tuple: (all_paths, all_labels, folds) dove folds e' lista di (train_idx, val_idx)
     """
     all_paths = []
     all_labels = []
+    exclude = set(exclude_classes or [])
 
-    for class_idx, class_name in enumerate(class_names):
+    active_names = [c for c in class_names if c not in exclude]
+    for class_idx, class_name in enumerate(active_names):
         class_dir = os.path.join(raw_dataset_dir, class_name)
         if not os.path.exists(class_dir):
             logger.warning(f"Classe {class_name} non trovata in {raw_dataset_dir}")
@@ -42,8 +45,8 @@ def split_raw_images(raw_dataset_dir, class_names, num_folds, seed):
     skf = StratifiedKFold(n_splits=num_folds, shuffle=True, random_state=seed)
     folds = list(skf.split(all_paths, all_labels))
 
-    logger.info(f"Dataset: {len(all_paths)} immagini, {len(class_names)} classi")
-    for cls_idx, cls_name in enumerate(class_names):
+    logger.info(f"Dataset: {len(all_paths)} immagini, {len(active_names)} classi")
+    for cls_idx, cls_name in enumerate(active_names):
         count = int((all_labels == cls_idx).sum())
         logger.info(f"  {cls_name}: {count} immagini")
 
@@ -118,7 +121,10 @@ def augment_fold_train(fold_train_dir, class_names, width, height, cache_dir=Non
             for cn in class_names:
                 cp = os.path.join(fold_train_dir, cn)
                 if os.path.exists(cp):
-                    current_sizes[cn] = len([f for f in os.listdir(cp) if f.lower().endswith(('.jpg', '.png', '.jpeg'))])
+                    current_sizes[cn] = len(
+                        [f for f in os.listdir(cp)
+                         if f.lower().endswith(('.jpg', '.png', '.jpeg'))]
+                    )
                 else:
                     current_sizes[cn] = 0
             if manifest.get("source_sizes") == current_sizes and manifest.get("input_size") == [height, width]:
@@ -190,15 +196,11 @@ def prepare_fold_data(augmented_train_dir, val_dir, batch_size, seed, model_vari
     from app.core.models import create_transform
     from app.preprocessing.dataset_tool import ImageFolderWithName
     from app.preprocessing.reproducibility import seed_worker
-    from torch.utils.data import DataLoader
 
     transform = create_transform(model_variant)
 
     train_dataset = ImageFolderWithName(augmented_train_dir, transform=transform)
     val_dataset = ImageFolderWithName(val_dir, transform=transform)
-
-    g = torch.Generator()
-    g.manual_seed(seed)
 
     train_loader = DataLoader(
         train_dataset,
@@ -207,9 +209,8 @@ def prepare_fold_data(augmented_train_dir, val_dir, batch_size, seed, model_vari
         num_workers=2,
         pin_memory=True,
         persistent_workers=True,
-        prefetch_factor=2,
+        multiprocessing_context="spawn",
         worker_init_fn=seed_worker,
-        generator=g,
     )
     val_loader = DataLoader(
         val_dataset,
@@ -218,7 +219,7 @@ def prepare_fold_data(augmented_train_dir, val_dir, batch_size, seed, model_vari
         num_workers=2,
         pin_memory=True,
         persistent_workers=True,
-        prefetch_factor=2,
+        multiprocessing_context="spawn",
         worker_init_fn=seed_worker,
     )
 
@@ -303,5 +304,191 @@ def train_fold(model_variant, num_classes, train_loader, val_loader,
     }
 
     logger.info(f"  Fold completato: F1={best_f1:.4f}, Acc={best_acc:.4f}, Best epoch={best_epoch}")
+
+    return model, fold_metrics
+
+
+def _train_head_only(
+    model, head_params, train_loader, val_loader,
+    num_epochs, learning_rate, device, num_classes, patience=0,
+):
+    """Train only the classifier head with backbone frozen. Lightweight loop for SupCon Phase 2."""
+    import copy
+
+    from torcheval.metrics import MulticlassAccuracy, MulticlassF1Score
+
+    model = model.to(device)
+    criterion = torch.nn.CrossEntropyLoss()
+    optimizer = torch.optim.Adam(head_params, lr=learning_rate)
+
+    best_f1 = 0.0
+    best_wts = copy.deepcopy(model.state_dict())
+    best_val_loss = float("inf")
+    epochs_no_improve = 0
+
+    history = {"train_loss": [], "val_loss": [], "val_accuracy": [], "val_f1": []}
+
+    for epoch in range(num_epochs):
+        # Train
+        model.train()
+        running_loss = 0.0
+        n = 0
+        for inputs, labels, _ in train_loader:
+            inputs, labels = inputs.to(device, non_blocking=True), labels.to(device, non_blocking=True)
+            optimizer.zero_grad(set_to_none=True)
+            loss = criterion(model(inputs), labels)
+            loss.backward()
+            optimizer.step()
+            running_loss += loss.item() * inputs.size(0)
+            n += inputs.size(0)
+        train_loss = running_loss / max(n, 1)
+
+        # Validate
+        model.eval()
+        acc_m = MulticlassAccuracy(num_classes=num_classes, average="macro").to(device)
+        f1_m = MulticlassF1Score(num_classes=num_classes, average="macro").to(device)
+        val_loss = 0.0
+        vb = 0
+        with torch.no_grad():
+            for inputs, labels, _ in val_loader:
+                inputs, labels = inputs.to(device, non_blocking=True), labels.to(device, non_blocking=True)
+                out = model(inputs)
+                val_loss += criterion(out, labels).item()
+                vb += 1
+                _, pred = torch.max(out, 1)
+                acc_m.update(pred, labels)
+                f1_m.update(pred, labels)
+        val_loss /= max(vb, 1)
+        accuracy = acc_m.compute().item()
+        f1 = f1_m.compute().item()
+
+        history["train_loss"].append(train_loss)
+        history["val_loss"].append(val_loss)
+        history["val_accuracy"].append(accuracy)
+        history["val_f1"].append(f1)
+
+        logger.info(
+            f"[CE Head] Epoch {epoch+1}/{num_epochs} | "
+            f"Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f} | Acc: {accuracy:.4f} | F1: {f1:.4f}"
+        )
+
+        if f1 >= best_f1:
+            best_f1 = f1
+            best_wts = copy.deepcopy(model.state_dict())
+            logger.info(f"[CE Head] New best F1: {f1:.4f}")
+
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+            epochs_no_improve = 0
+        else:
+            epochs_no_improve += 1
+
+        if patience > 0 and epochs_no_improve >= patience:
+            logger.info(f"[CE Head] Early stopping at epoch {epoch+1}")
+            break
+
+    model.load_state_dict(best_wts)
+    logger.info(f"[CE Head] Phase 2 complete. Best F1: {best_f1:.4f}")
+    return model, history
+
+
+def train_fold_supcon(
+    model_variant, num_classes, train_loader, val_loader,
+    num_epochs, learning_rate, device, checkpoint_path,
+    proj_dim=128, temperature=0.07,
+    ce_epochs=50, ce_patience=15,
+    patience=0, gradient_accumulation_steps=1, resume=False,
+    optimizer_type="adam", weight_decay=0.0,
+    use_prototypes=False, repulse_weight=0.05,
+):
+    """Two-phase training for SupCon: Phase 1 (contrastive) + Phase 2 (CE fine-tune).
+
+    Phase 1: backbone + projection head trained with SupCon loss.
+    Phase 2: backbone frozen, classifier head trained with CE loss.
+
+    Returns:
+        tuple: (model, fold_metrics_dict with both phases)
+    """
+    from app.core.models import create_model, get_registry_entry
+    from app.core.supcon import train_supcon
+
+    ckpt_dir = os.path.dirname(checkpoint_path)
+    os.makedirs(ckpt_dir, exist_ok=True)
+
+    model = create_model(model_variant, num_classes=num_classes, pretrained=True)
+    entry = get_registry_entry(model_variant)
+    opt_type = optimizer_type or entry.optimizer
+    wd = weight_decay if weight_decay > 0 else entry.weight_decay
+    lr = entry.learning_rate if entry.learning_rate else learning_rate
+
+    if lr != learning_rate:
+        logger.info(f"  Registry LR override: {learning_rate} -> {lr} ({model_variant})")
+
+    # --- Phase 1: SupCon ---
+    logger.info("  === Phase 1: SupCon Contrastive Learning ===")
+    model, supcon_metrics = train_supcon(
+        model=model,
+        train_loader=train_loader,
+        val_loader=val_loader,
+        num_epochs=num_epochs,
+        learning_rate=lr,
+        device=device,
+        checkpoint_dir=ckpt_dir,
+        proj_dim=proj_dim,
+        temperature=temperature,
+        patience=patience,
+        gradient_accumulation_steps=gradient_accumulation_steps,
+        resume=resume,
+        optimizer_type=opt_type,
+        weight_decay=wd,
+        use_prototypes=use_prototypes,
+        repulse_weight=repulse_weight,
+    )
+
+    # --- Phase 2: CE fine-tuning (backbone frozen, head only) ---
+    logger.info("  === Phase 2: CE Fine-tuning (backbone frozen) ===")
+    for param in model.parameters():
+        param.requires_grad = False
+    model._unfreeze_head()
+
+    head_params = [p for p in model.parameters() if p.requires_grad]
+    logger.info(f"  Trainable params (head only): {sum(p.numel() for p in head_params):,}")
+
+    model, ce_history = _train_head_only(
+        model=model,
+        head_params=head_params,
+        train_loader=train_loader,
+        val_loader=val_loader,
+        num_epochs=ce_epochs,
+        learning_rate=0.01,
+        device=device,
+        num_classes=num_classes,
+        patience=ce_patience,
+    )
+
+    # Save best weights
+    model.save_weights(checkpoint_path)
+
+    best_f1 = max(ce_history["val_f1"])
+    best_epoch = ce_history["val_f1"].index(best_f1) + 1
+    best_acc = ce_history["val_accuracy"][best_epoch - 1]
+
+    fold_metrics = {
+        "best_f1": float(best_f1),
+        "best_accuracy": float(best_acc),
+        "best_epoch": best_epoch,
+        "final_train_loss": float(ce_history["train_loss"][-1]),
+        "final_val_loss": float(ce_history["val_loss"][-1]),
+        "supcon_phase": supcon_metrics,
+        "history": {
+            "train_loss": [float(x) for x in ce_history["train_loss"]],
+            "val_loss": [float(x) for x in ce_history["val_loss"]],
+            "val_accuracy": [float(x) for x in ce_history["val_accuracy"]],
+            "val_f1": [float(x) for x in ce_history["val_f1"]],
+        },
+    }
+
+    logger.info(f"  Fold completato (SupCon+CE): F1={best_f1:.4f}, Acc={best_acc:.4f}, "
+                f"Best epoch={best_epoch}, SupCon KNN={supcon_metrics['best_knn_acc']:.4f}")
 
     return model, fold_metrics

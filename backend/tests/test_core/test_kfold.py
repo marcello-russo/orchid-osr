@@ -2,18 +2,16 @@
 """Test per il modulo k-fold cross validation."""
 import os
 import shutil
-import tempfile
 
 import numpy as np
 import pytest
 
 from app.core.kfold import (
-    _split_raw_images,
-    _copy_fold_images,
     _aggregate_results,
+    _copy_fold_images,
+    _split_raw_images,
 )
 from app.core.kfold.reporting import generate_report
-
 
 CLASS_NAMES = [
     "O. exaltata",
@@ -405,6 +403,17 @@ class TestGenerateReport:
         report_path = tmp_path / "REPORT_KFOLD_resnet18.txt"
         assert report_path.exists()
 
+    def test_report_saved_before_hf_upload(self, sample_results, tmp_path):
+        """Simula la sequenza reale: report salvato anche se upload fallisce."""
+        output_dir = str(tmp_path)
+        from app.core.kfold.reporting import generate_report
+        report_path = tmp_path / "REPORT_KFOLD_resnet18.txt"
+
+        generate_report(sample_results, "resnet18", output_dir)
+
+        assert report_path.exists()
+        assert report_path.stat().st_size > 0
+
     def test_report_without_test_metrics(self, tmp_path):
         """Report should work even without test_metrics."""
         results = {
@@ -443,7 +452,7 @@ class TestFinalTest:
     def test_final_test_with_saved_model(self, tiny_test_dataset, tmp_path, device):
         """final_test() loads a model, runs evaluation, returns metrics."""
         from app.core.kfold.testing import final_test
-        from app.core.models.resnet import ResNetConfig, ResNetClassifier
+        from app.core.models.resnet import ResNetClassifier, ResNetConfig
         from app.preprocessing.reproducibility import set_seed
 
         set_seed(42)
@@ -474,9 +483,10 @@ class TestFinalTest:
 
     def test_final_test_class_subset_mapping(self, tmp_path, device):
         """final_test() correctly maps subset of model classes."""
-        from app.core.kfold.testing import final_test
-        from app.core.models.resnet import ResNetConfig, ResNetClassifier
         from PIL import Image
+
+        from app.core.kfold.testing import final_test
+        from app.core.models.resnet import ResNetClassifier, ResNetConfig
         from app.preprocessing.reproducibility import set_seed
 
         set_seed(42)

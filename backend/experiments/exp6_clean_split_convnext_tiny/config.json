@@ -1,0 +1,26 @@
+{
+  "type": "kfold",
+  "model_variant": "convnext_tiny",
+  "num_folds": 5,
+  "num_epochs": 100,
+  "batch_size": 8,
+  "learning_rate": 0.001,
+  "seed": 57,
+  "num_classes": 6,
+  "class_names": [
+    "O. exaltata",
+    "O. garganica",
+    "O. incubacea",
+    "O. majellensis",
+    "O. sphegodes",
+    "O. sphegodes_Palena"
+  ],
+  "raw_dataset_dir": "/home/user/Documenti/orchid/resnet18/backend/dataset/train_clean",
+  "test_dataset_dir": "/home/user/Documenti/orchid/resnet18/backend/dataset/cropped_224x224/test_clean",
+  "patience": 15,
+  "gradient_accumulation_steps": 4,
+  "optimizer": "adamw",
+  "weight_decay": 0.05,
+  "effective_learning_rate": 0.0001,
+  "timestamp": "2026-05-03T05:27:17.328814"
+}

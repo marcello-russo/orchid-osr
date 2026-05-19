@@ -1,8 +1,10 @@
 # tests/test_api/test_classify_upload.py
-import pytest
 from io import BytesIO
-from PIL import Image
+
+import pytest
 from fastapi.testclient import TestClient
+from PIL import Image
+
 from app.api.main import app
 
 client = TestClient(app)

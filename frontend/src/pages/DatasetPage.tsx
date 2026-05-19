@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Image as ImageIcon } from "lucide-react";
+import { Database } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDatasetClasses } from "@/features/dataset/hooks/useDataset";
@@ -31,16 +31,16 @@ export function DatasetPage() {
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
+    <div className="space-y-6 max-w-7xl mx-auto px-4 md:px-12 animate-in fade-in duration-700">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-primary flex items-center gap-2">
-          <ImageIcon className="size-6" />
-          {t("dataset.title")}
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          {data.total_train} {t("dataset.tabs.train")} / {data.total_test} {t("dataset.tabs.test")} / {data.classes.length} {t("dataset.classes")}
-        </p>
+      <div className="flex items-center gap-4">
+        <div className="size-10 md:size-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+          <Database className="size-6" />
+        </div>
+        <div>
+          <h1 className="text-2xl md:text-4xl font-black tracking-tight">{t("dataset.title")}</h1>
+          <p className="text-muted-foreground text-sm mt-1">{t("dataset.subtitle")}</p>
+        </div>
       </div>
 
       {/* Distribution chart */}

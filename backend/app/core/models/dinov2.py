@@ -1,7 +1,9 @@
 # app/core/models/dinov2.py
+from typing import Literal
+
 import torch
 import torch.nn as nn
-from typing import Literal
+
 from app.core.models.base import ClassifierModel, ModelConfig
 
 _DINOV2_MODEL_IDS = {
@@ -36,8 +38,8 @@ class DINOv2Classifier(ClassifierModel):
         self._head = nn.Linear(self._embedding_dim, config.num_classes)
 
     def _create_backbone(self, config: DINOv2Config):
-        from transformers import Dinov2Model
         from peft import LoraConfig, get_peft_model
+        from transformers import Dinov2Model
 
         model_id = _DINOV2_MODEL_IDS[config.variant]
         backbone = Dinov2Model.from_pretrained(model_id)
@@ -96,3 +98,7 @@ class DINOv2Classifier(ClassifierModel):
     @property
     def embedding_dim(self) -> int:
         return self._embedding_dim
+
+    def _unfreeze_head(self) -> None:
+        for param in self._head.parameters():
+            param.requires_grad = True

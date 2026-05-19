@@ -1,5 +1,4 @@
 # tests/test_core/test_config.py
-import pytest
 from app.config import Settings
 
 
@@ -34,3 +33,10 @@ def test_settings_paths():
     assert settings.models_dir == "models"
     assert settings.results_dir == "experiments"
     assert settings.logs_dir == "logs"
+
+
+def test_settings_hf_configured():
+    """Test HF token detection."""
+    settings = Settings()
+    assert hasattr(settings, "hf_configured")
+    assert isinstance(settings.hf_configured, bool)

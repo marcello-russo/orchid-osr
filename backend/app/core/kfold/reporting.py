@@ -77,7 +77,10 @@ def generate_report(results, variant, output_dir):
         if "per_class_metrics" in tm:
             lines.append("METRICHE PER CLASSE (tutte le classi del modello):")
             lines.append("-" * 90)
-            lines.append(f"{'Classe':<25} {'Precision':>10} {'Recall':>10} {'F1':>10} {'Support':>10} {'TP':>6} {'FP':>6} {'FN':>6}")
+            lines.append(
+                f"{'Classe':<25} {'Precision':>10} {'Recall':>10} {'F1':>10}"
+                f" {'Support':>10} {'TP':>6} {'FP':>6} {'FN':>6}"
+            )
             lines.append("-" * 90)
             for cls_name, cls_metrics in tm["per_class_metrics"].items():
                 note = ""
