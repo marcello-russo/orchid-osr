@@ -85,6 +85,7 @@ def kfold_experiment(
             "proj_dim": proj_dim if loss_type == "supcon" else None,
             "temperature": temperature if loss_type == "supcon" else None,
             "ce_epochs": ce_epochs if loss_type == "supcon" else None,
+            "use_prototypes": use_prototypes if loss_type == "supcon" else None,
             "timestamp": datetime.now().isoformat(),
         }
         with open(config_path, "w") as f:
