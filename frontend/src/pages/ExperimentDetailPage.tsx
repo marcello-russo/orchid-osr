@@ -3,7 +3,7 @@ import { useParams, Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, ChevronLeft, ChevronRight, GitCompare } from "lucide-react";
-import { fetchNcdResults } from "@/lib/api";
+import { fetchNcdResults, fetchNcdFigure } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -428,12 +428,35 @@ function NcdDetail({ modelVariant, exp }: { modelVariant: string; exp?: number }
     staleTime: 5 * 60 * 1000,
     enabled: modelVariant.length > 0,
   });
+  const isExp9 = exp === 9;
+  const majellensis = data?.openset.per_class?.find((pc) => pc.left_out.toLowerCase().includes("majellensis"));
 
   if (isLoading) return <div className="flex justify-center py-8"><div className="size-5 rounded-full border-2 border-primary border-t-transparent animate-spin" /></div>;
   if (error || !data) return <p className="text-sm text-muted-foreground text-center py-8">{t("experiment_detail.ncd_no_data")}</p>;
 
   return (
     <div className="space-y-8 p-4">
+      {/* NCD figures — only for exp9 */}
+      {isExp9 && (
+        <section>
+          <h3 className="text-lg font-bold mb-4">NCD Figures</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {["tsne_known_vs_unknown.png", "auroc_per_class.png"].map((fig) => (
+              <div key={fig} className="rounded-xl border border-border/50 bg-background/50 p-4">
+                <img src={fetchNcdFigure(modelVariant, fig, 9)} alt={fig} className="w-full rounded-lg" />
+              </div>
+            ))}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            {["oscr_curve.png", "clustering_comparison.png"].map((fig) => (
+              <div key={fig} className="rounded-xl border border-border/50 bg-background/50 p-4">
+                <img src={fetchNcdFigure(modelVariant, fig, 9)} alt={fig} className="w-full rounded-lg" />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Clustering table */}
       <section>
         <h3 className="text-lg font-bold mb-4">{t("experiment_detail.ncd_clustering")}</h3>
@@ -470,10 +493,13 @@ function NcdDetail({ modelVariant, exp }: { modelVariant: string; exp?: number }
       {/* OSR section */}
       <section>
         <h3 className="text-lg font-bold mb-4">{t("experiment_detail.ncd_osr")}</h3>
+
+        {/* Metric cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <div className="rounded-xl border border-border/40 bg-background p-4 text-center">
             <div className="text-xs text-muted-foreground uppercase font-bold mb-1">{t("experiment_detail.ncd_auroc")}</div>
             <div className="text-2xl font-black">{(data.openset.mean_auroc * 100).toFixed(1)}%</div>
+            {isExp9 && <div className="text-xs text-muted-foreground mt-1">Random chance: 50%</div>}
           </div>
           {data.openset.baselines?.softmax_threshold && (
             <div className="rounded-xl border border-border/40 bg-background p-4 text-center">
@@ -487,6 +513,15 @@ function NcdDetail({ modelVariant, exp }: { modelVariant: string; exp?: number }
               <div className="text-2xl font-black">{
                 ((data.openset.mean_auroc - data.openset.baselines.softmax_threshold.mean_auroc) * 100).toFixed(1)
               }%</div>
+            </div>
+          )}
+          {isExp9 && majellensis && (
+            <div className="rounded-xl border-2 border-red-500/30 bg-red-500/5 p-4 text-center">
+              <div className="text-xs text-muted-foreground uppercase font-bold mb-1">O. majellensis AUROC</div>
+              <div className="text-2xl font-black">{(majellensis.auroc * 100).toFixed(1)}%</div>
+              <div className={`text-xs mt-1 ${majellensis.auroc > 0.5 ? "text-green-600" : "text-red-500"}`}>
+                {majellensis.auroc > 0.5 ? "Above random" : "Below random (inverted)"}
+              </div>
             </div>
           )}
         </div>
@@ -505,7 +540,8 @@ function NcdDetail({ modelVariant, exp }: { modelVariant: string; exp?: number }
               </thead>
               <tbody className="divide-y divide-border/30">
                 {data.openset.per_class.map((pc) => (
-                  <tr key={pc.left_out}>
+                  <tr key={pc.left_out}
+                    className={pc.left_out.toLowerCase().includes("majellensis") ? "bg-red-500/10 font-bold" : ""}>
                     <td className="py-2 px-4 font-bold">{pc.left_out}</td>
                     <td className="text-center py-2 px-2 font-mono">{(pc.auroc * 100).toFixed(1)}%</td>
                     <td className="text-center py-2 px-2 font-mono">{(pc.known_acc * 100).toFixed(1)}%</td>
