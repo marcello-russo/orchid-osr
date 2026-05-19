@@ -3,7 +3,7 @@ from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.concurrency import run_in_threadpool
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from PIL import Image
 
 from app.api.schemas import ClassImagesResponse, DatasetClassesResponse, DatasetClassInfo, DatasetImage
@@ -16,6 +16,8 @@ _VALID_SPLITS = {"train_clean", "test_clean"}
 _SPLIT_ALIASES = {"train": "train_clean", "test": "test_clean"}
 _VALID_CLASSES = set(settings.class_names)
 _CROPPED_DIR = "cropped_256x512"
+_HF_DATASET = "marcellorusso/orchid-ncd-dataset"
+_HF_BRANCH = "main"
 
 
 def _get_dataset_base() -> Path:
@@ -116,7 +118,14 @@ async def serve_image_legacy(class_name: str, filename: str, size: int = Query(N
                 return FileResponse(file_path, media_type=media_type)
             return await _serve_resized(file_path, size, base, split, class_name, filename)
 
-    raise HTTPException(status_code=404, detail="Image not found in any split")
+    # Fallback to HuggingFace dataset CDN
+    return _hf_redirect(class_name, filename)
+
+
+def _hf_redirect(class_name: str, filename: str) -> RedirectResponse:
+    """Redirect to the HuggingFace dataset CDN."""
+    hf_url = f"https://huggingface.co/datasets/{_HF_DATASET}/resolve/{_HF_BRANCH}/cropped/256x512/train/{class_name}/{filename}"
+    return RedirectResponse(hf_url)
 
 
 async def _serve_resized(file_path: Path, size: int, base: Path, split: str, class_name: str, filename: str):
@@ -167,7 +176,7 @@ async def serve_image(split: str, class_name: str, filename: str, size: int = Qu
         raise HTTPException(status_code=403, detail="Path traversal denied")
 
     if not file_path.is_file():
-        raise HTTPException(status_code=404, detail="Image not found")
+        return _hf_redirect(class_name, filename)
 
     if size is None:
         media_type = mimetypes.guess_type(str(file_path))[0] or "image/jpeg"
