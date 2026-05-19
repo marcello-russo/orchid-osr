@@ -141,7 +141,7 @@ export async function fetchNcdResults(modelVariant: string, exp: number = 8) {
   return fetchApi<import("./types").NcdResults>(`/api/ncd/${modelVariant}/results?exp=${exp}`);
 }
 
-export async function fetchNcdFigure(modelVariant: string, figureName: string, exp: number = 8) {
+export function fetchNcdFigure(modelVariant: string, figureName: string, exp: number = 8) {
   return `/api/ncd/${modelVariant}/figure/${figureName}?exp=${exp}`;
 }
 

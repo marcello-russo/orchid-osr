@@ -314,7 +314,7 @@ export function ResearchPage() {
         ) : expQuery.error ? (
           <p className="text-sm text-muted-foreground text-center py-8">{t("about.results.unavailable")}</p>
         ) : (
-          <ExpTable exp={expQuery.data?.exp6 ?? []} label="Exp 6 — Cross-Entropy" />
+          <ExpTable exp={expQuery.data?.exp6 ?? []} />
         )}
       </section>
 
@@ -329,22 +329,19 @@ export function ResearchPage() {
           <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Exp 7 — Supervised Contrastive Learning</h2>
         </div>
 
-        {/* Why move to SupCon */}
         <div className="p-6 rounded-xl bg-amber-500/5 border border-amber-500/20 text-muted-foreground leading-relaxed">
           <p className="font-bold text-foreground mb-2">{t("about.exp7.motivation_title")}</p>
           <p>{renderCitations(t("about.exp7.motivation"))}</p>
         </div>
 
-        {/* Results table */}
         {expQuery.isLoading ? (
           <div className="flex justify-center py-8"><div className="size-5 rounded-full border-2 border-primary border-t-transparent animate-spin" /></div>
         ) : expQuery.error ? (
           <p className="text-sm text-muted-foreground text-center py-8">{t("about.results.unavailable")}</p>
         ) : (
-          <ExpTable exp={expQuery.data?.exp7 ?? []} label="Exp 7 — Supervised Contrastive Learning" />
+          <ExpTable exp={expQuery.data?.exp7 ?? []} />
         )}
 
-        {/* Winner card */}
         <div className="p-6 md:p-8 rounded-2xl bg-gradient-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/20">
           <div className="flex items-center gap-3 mb-4">
             <Cpu className="size-6 text-amber-500" />
@@ -353,21 +350,18 @@ export function ResearchPage() {
           <p className="text-muted-foreground leading-relaxed">{t("about.exp7.winner")}</p>
         </div>
 
-        {/* Overfitting analysis */}
         <h3 className="text-lg font-bold flex items-center gap-2">
           <ShieldCheck className="size-5 text-red-500" />
           {t("about.exp7.overfitting_title")}
         </h3>
         <p className="text-muted-foreground leading-relaxed">{renderCitations(t("about.exp7.overfitting"))}</p>
 
-        {/* Per-species analysis */}
         <h3 className="text-lg font-bold flex items-center gap-2">
           <Microscope className="size-5 text-blue-500" />
           {t("about.exp7.species_title")}
         </h3>
         <p className="text-muted-foreground leading-relaxed">{renderCitations(t("about.exp7.species"))}</p>
 
-        {/* Architecture comparison */}
         <h3 className="text-lg font-bold flex items-center gap-2">
           <Layers className="size-5 text-purple-500" />
           {t("about.exp7.arch_title")}
@@ -388,13 +382,12 @@ export function ResearchPage() {
 
         <p className="text-muted-foreground leading-relaxed">{renderCitations(t("about.future.phase3"))}</p>
 
-        {/* Results table */}
         {expQuery.isLoading ? (
           <div className="flex justify-center py-8"><div className="size-5 rounded-full border-2 border-primary border-t-transparent animate-spin" /></div>
         ) : expQuery.error ? (
           <p className="text-sm text-muted-foreground text-center py-8">{t("about.results.unavailable")}</p>
         ) : (
-          <ExpTable exp={expQuery.data?.exp8 ?? []} label="Exp 8 — SpHOR" />
+          <ExpTable exp={expQuery.data?.exp8 ?? []} />
         )}
 
         {/* Embedding geometry */}
@@ -544,10 +537,21 @@ export function ResearchPage() {
 }
 
 const MEDAL = ["🥇", "🥈", "🥉"];
-const FAMILY: Record<string, string> = {
-  resnet18: "ResNet", resnet50: "ResNet",
-  convnext_tiny: "ConvNeXt", convnext_small: "ConvNeXt",
-  dinov2_small: "DINOv2", dinov2_base: "DINOv2",
+
+function MicrosoftLogo() {
+  return <img src="/microsoft-logo.webp" alt="Microsoft" className="size-full object-scale-down p-1" />;
+}
+function MetaLogo() {
+  return <img src="/meta-logo.webp" alt="Meta" className="h-full max-w-full object-scale-down p-1" />;
+}
+
+const FAMILY: Record<string, { label: string; logo: React.ReactNode }> = {
+  resnet18:        { label: "ResNet / Microsoft", logo: <MicrosoftLogo /> },
+  resnet50:        { label: "ResNet / Microsoft", logo: <MicrosoftLogo /> },
+  convnext_tiny:   { label: "ConvNeXt / Meta",   logo: <MetaLogo /> },
+  convnext_small:  { label: "ConvNeXt / Meta",   logo: <MetaLogo /> },
+  dinov2_small:    { label: "DINOv2 / Meta",     logo: <MetaLogo /> },
+  dinov2_base:     { label: "DINOv2 / Meta",     logo: <MetaLogo /> },
 };
 
 function formatPct(v: number | null | undefined, d = 2): string {
@@ -562,23 +566,27 @@ function formatF1WithStd(f1: number | null | undefined, std: number | null | und
   return `${base} ± ${(std * 100).toFixed(2)}`;
 }
 
-function ExpTable({ exp: entries, label }: { exp: ModelComparisonEntry[]; label: string }) {
-  const sorted = [...entries].sort((a, b) => -(a.test_f1 ?? 0) + (b.test_f1 ?? 0));
+function ExpTable({ exp: entries }: { exp: ModelComparisonEntry[] }) {
+  const sorted = [...entries].sort((a, b) => -(a.mean_f1 ?? 0) + (b.mean_f1 ?? 0));
   const [expanded, setExpanded] = useState<string | null>(null);
   const toggle = useCallback((v: string) => setExpanded(p => p === v ? null : v), []);
 
   if (sorted.length === 0) return null;
 
+  const best = sorted[0];
+  const gap = sorted.length >= 2 && sorted[0]?.mean_f1 != null && sorted[sorted.length - 1]?.mean_f1 != null
+    ? (sorted[0].mean_f1! - sorted[sorted.length - 1].mean_f1!) * 100 : null;
+
   return (
     <div className="space-y-2">
-      <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">{label}</h3>
       <div className="overflow-x-auto rounded-xl border border-border/50 bg-background/50">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border/50 text-xs uppercase tracking-widest text-muted-foreground font-bold">
-              <th className="text-left py-3 px-4 w-10">#</th>
-              <th className="text-left py-3 px-2">Modello</th>
-              <th className="text-center py-3 px-2">F1 medio (CV)</th>
+              <th className="text-left py-3 px-4 w-12">#</th>
+              <th className="text-left py-3 px-3">Modello</th>
+              <th className="text-center py-3 px-2">F1 (CV)</th>
+              <th className="text-center py-3 px-2">Acc (CV)</th>
               <th className="text-center py-3 px-2">Test F1</th>
               <th className="text-center py-3 px-2">Test Acc</th>
               <th className="text-center py-3 pr-4 pl-2">Best Fold</th>
@@ -594,6 +602,15 @@ function ExpTable({ exp: entries, label }: { exp: ModelComparisonEntry[]; label:
           </tbody>
         </table>
       </div>
+
+      {best?.mean_f1 != null && (
+        <div className="space-y-1 text-sm text-muted-foreground leading-relaxed">
+          <CommentLine text={`Vincente: ${best.name} con F1 ${(best.mean_f1 * 100).toFixed(2)}%`} />
+          {gap != null && gap > 1 && (
+            <CommentLine text={`Gap primo-ultimo: ${gap.toFixed(1)} punti percentuali`} />
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -611,24 +628,34 @@ function ExpRow({ model, rank, isExpanded, onToggle }: {
     enabled: isExpanded,
   });
   const colors = useChartColors();
-  const colorIdx = Object.keys(FAMILY).indexOf(model.model_variant);
+  const fam = FAMILY[model.model_variant];
+  const colorIdx = fam ? Object.keys(FAMILY).indexOf(model.model_variant) : 0;
   const color = colors[Math.max(0, colorIdx)];
 
   return (
     <>
       <tr onClick={onToggle} className={`cursor-pointer transition-colors hover:bg-muted/30 ${rank === 1 ? "bg-amber-500/5" : ""}`}>
         <td className="py-3 px-4"><span className="text-lg font-black tabular-nums">{rank <= 3 ? MEDAL[rank - 1] : `#${rank}`}</span></td>
-        <td className="py-3 px-2">
-          <div className="font-bold text-foreground">{model.name}</div>
+        <td className="py-3 px-3">
+          <div className="flex items-center gap-3">
+            <span className="size-8 rounded-lg flex items-center justify-center shrink-0 bg-background/80 ring-1 ring-border/60">
+              {fam?.logo}
+            </span>
+            <div>
+              <div className="font-bold text-foreground">{model.name}</div>
+              {fam && <div className="text-[11px] text-muted-foreground tracking-wider uppercase">{fam.label}</div>}
+            </div>
+          </div>
         </td>
         <td className="text-center py-3 px-2 font-bold tabular-nums">{formatF1WithStd(model.mean_f1, model.std_f1)}</td>
+        <td className="text-center py-3 px-2 tabular-nums">{formatPct(model.mean_accuracy)}</td>
         <td className="text-center py-3 px-2 tabular-nums">{formatPct(model.test_f1)}</td>
         <td className="text-center py-3 px-2 tabular-nums text-xs text-muted-foreground">{formatPct(model.test_accuracy)}</td>
         <td className="text-center py-3 pr-4 pl-2 tabular-nums text-xs text-muted-foreground">{model.best_fold != null ? `Fold ${model.best_fold}` : "—"}</td>
         <td className="text-muted-foreground">{isExpanded ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}</td>
       </tr>
       {isExpanded && (
-        <tr><td colSpan={6} className="p-0">
+        <tr><td colSpan={7} className="p-0">
           <div className="bg-muted/10 border-t border-border/30 p-4">
             {foldQuery.isLoading ? (
               <div className="flex justify-center py-4"><div className="size-5 rounded-full border-2 border-primary border-t-transparent animate-spin" /></div>
@@ -673,6 +700,10 @@ function FoldCard({ fold, index, color }: { fold: FoldData; index: number; color
       </div>
     </div>
   );
+}
+
+function CommentLine({ text }: { text: string }) {
+  return <p className="pl-4 border-l-2 border-primary/30">{text}</p>;
 }
 
 function Exp9NcdResults() {
