@@ -199,7 +199,7 @@ export function ExperimentDetailPage() {
           >
             Charts
           </button>
-          {config.experiment === 8 && (
+          {(config.experiment === 8 || config.experiment === 9) && (
             <button
               onClick={() => setActiveTab("ncd")}
               className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${
