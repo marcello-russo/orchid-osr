@@ -1,17 +1,17 @@
 # app/core/models/__init__.py
-from app.core.models.base import ModelConfig, ClassifierModel
-from app.core.models.registry import (
-    ModelRegistryEntry,
-    MODEL_REGISTRY,
-    register_model,
-    get_registry_entry,
-    create_model,
-    create_transform,
-    available_models,
-)
-from app.core.models import resnet as _resnet_mod
 from app.core.models import convnext as _convnext_mod
 from app.core.models import dinov2 as _dinov2_mod
+from app.core.models import resnet as _resnet_mod
+from app.core.models.base import ClassifierModel, ModelConfig
+from app.core.models.registry import (
+    MODEL_REGISTRY,
+    ModelRegistryEntry,
+    available_models,
+    create_model,
+    create_transform,
+    get_registry_entry,
+    register_model,
+)
 
 # Register ResNet variants
 register_model("resnet18", ModelRegistryEntry(

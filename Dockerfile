@@ -29,9 +29,12 @@ RUN pip install --no-cache-dir huggingface_hub
 COPY backend/scripts/ scripts/
 RUN mkdir -p models dataset
 
-# Download dataset and models during build phase to speed up container startup
-RUN --mount=type=secret,id=HF_TOKEN,mode=0444,required=true \
-    python scripts/hf_tools/download_cache.py
+# Token opzionale (repo pubblici) — HF Spaces lo inietta come build-arg
+ARG HF_TOKEN
+ENV HF_TOKEN=${HF_TOKEN}
+
+# Download dataset and models during build phase
+RUN python scripts/hf_tools/download_cache.py
 
 COPY backend/app/ app/
 COPY backend/server.py .
@@ -45,8 +48,34 @@ COPY --from=frontend-builder /workspace/frontend/dist /workspace/backend/fronten
 
 # HF Spaces configuration
 ENV API_PORT=7860
+EXPOSE 7860
+
+CMD ["./entrypoint.sh"]
+
+# GPU variant (override via --target=gpu during build)
+FROM docker.io/pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime AS gpu
+WORKDIR /workspace/backend
+
+COPY backend/requirements.txt .
+RUN pip install --no-cache-dir --default-timeout=1000 -r requirements.txt
+RUN pip install --no-cache-dir huggingface_hub
+
+COPY backend/scripts/ scripts/
+RUN mkdir -p models dataset
+
 ARG HF_TOKEN
 ENV HF_TOKEN=${HF_TOKEN}
+
+COPY backend/app/ app/
+COPY backend/server.py .
+COPY backend/cli.py .
+COPY backend/experiments/ experiments/
+COPY entrypoint.sh .
+RUN chmod +x entrypoint.sh
+
+COPY --from=frontend-builder /workspace/frontend/dist /workspace/backend/frontend/dist
+
+ENV API_PORT=7860
 EXPOSE 7860
 
 CMD ["./entrypoint.sh"]

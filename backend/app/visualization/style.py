@@ -1,5 +1,6 @@
 """Plotting style: ggplot theme, color palette, figure defaults."""
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 

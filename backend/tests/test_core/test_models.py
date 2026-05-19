@@ -1,9 +1,9 @@
 # tests/test_core/test_models.py
 import pytest
 import torch
-from app.core.models.base import ModelConfig, ClassifierModel
-from app.core.models.resnet import ResNetConfig, ResNetClassifier
-from app.config import settings
+
+from app.core.models.base import ClassifierModel, ModelConfig
+from app.core.models.resnet import ResNetClassifier, ResNetConfig
 
 
 def test_model_config_defaults():

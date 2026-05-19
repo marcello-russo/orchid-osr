@@ -1,7 +1,9 @@
 import { useState, useCallback } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { ArrowLeft, ChevronLeft, ChevronRight, GitCompare } from "lucide-react";
+import { fetchNcdResults } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,6 +19,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { ExperimentConfigCard } from "@/features/explorer/components/ExperimentConfigCard";
 import { getTooltips } from "@/features/explorer/tooltipText";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useCompareExperiments } from "@/features/explorer/hooks/useCompareExperiments";
+import { CompareModeView } from "@/features/explorer/components/CompareModeView";
+import { ExperimentSelectTable } from "@/features/explorer/components/ExperimentSelectTable";
 import {
   Table,
   TableBody,
@@ -42,7 +48,15 @@ export function ExperimentDetailPage() {
   const TOOLTIPS = getTooltips(t);
   const { id } = useParams<{ id: string }>();
   const { data: experiment, isLoading, error } = useExperiment(id ?? "");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const compareRaw = searchParams.get("compare") ?? "";
+  const compareIds = compareRaw ? compareRaw.split(",").filter((x) => x && x !== id) : [];
+  const isCompareMode = compareIds.length >= 1;
+  const { experiments: compareExperiments, isLoading: compareLoading } = useCompareExperiments(
+    isCompareMode ? compareIds : []
+  );
   const [selectedFold, setSelectedFold] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState("charts");
 
   if (isLoading) {
     return (
@@ -84,18 +98,60 @@ export function ExperimentDetailPage() {
           {t("common.experiments")}
         </Link>
         <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-lg sm:text-2xl font-bold text-primary break-all">{id}</h1>
-          <Badge variant="secondary" className="text-xs">
-            {summary.type}
-          </Badge>
-          {summary.model_variant && (
-            <Badge variant="outline" className="font-mono text-xs">
-              {summary.model_variant}
-            </Badge>
+          {isCompareMode ? (
+            <>
+              <span className="text-lg sm:text-2xl font-bold">Comparing:</span>
+              {[experiment, ...compareExperiments].filter(Boolean).map((exp, i) => {
+                const COLORS = ["#3B82F6", "#D97706", "#10B981", "#8B5CF6"];
+                return (
+                  <Badge key={exp.id} variant="outline" className="font-mono text-xs"
+                    style={{ borderColor: COLORS[i % 4], color: COLORS[i % 4] }}>
+                    {exp.id}
+                  </Badge>
+                );
+              })}
+            </>
+          ) : (
+            <>
+              <h1 className="text-lg sm:text-2xl font-bold text-primary break-all">{id}</h1>
+              <Badge variant="secondary" className="text-xs">
+                {summary.type}
+              </Badge>
+              {summary.model_variant && (
+                <Badge variant="outline" className="font-mono text-xs">
+                  {summary.model_variant}
+                </Badge>
+              )}
+            </>
+          )}
+        </div>
+        <div className="mt-2 flex items-center gap-2">
+          {!isCompareMode ? (
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <GitCompare className="mr-1.5 size-4" /> Compare
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-2xl md:max-w-3xl lg:max-w-4xl">
+                <DialogHeader>
+                  <DialogTitle>Select experiments to compare</DialogTitle>
+                </DialogHeader>
+                <ExperimentSelectTable
+                  currentId={id!}
+                  onCompare={(selected) => setSearchParams({ compare: selected.join(",") })}
+                />
+              </DialogContent>
+            </Dialog>
+          ) : (
+            <Button variant="ghost" size="sm" onClick={() => setSearchParams({})}>
+              Exit compare
+            </Button>
           )}
         </div>
 
-        {/* Config summary */}
+        {/* Config summary — only in single-experiment mode */}
+        {!isCompareMode && (
         <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
 
           {summary.test_accuracy !== null && (
@@ -111,13 +167,22 @@ export function ExperimentDetailPage() {
             </span>
           )}
         </div>
+        )}
       </div>
 
-      {/* Training recipe card */}
-      <ExperimentConfigCard config={config} />
+      {/* Training recipe card — replaced by CompareModeView in compare mode */}
+      {isCompareMode && compareLoading ? (
+        <Skeleton className="h-40 rounded-lg" />
+      ) : isCompareMode ? (
+        <CompareModeView
+          experiments={[experiment, ...compareExperiments].filter(Boolean)}
+        />
+      ) : (
+        <ExperimentConfigCard config={config} />
+      )}
 
-      {/* Fold selector — only for kfold experiments */}
-      {hasFolds && (
+      {/* Fold selector — hidden in compare mode */}
+      {hasFolds && !isCompareMode && (
         <FoldSelector
           folds={folds}
           selectedFold={selectedFold}
@@ -125,8 +190,32 @@ export function ExperimentDetailPage() {
         />
       )}
 
-      {/* Charts carousel */}
-      {hasFolds ? (
+      {/* Tab bar — hidden in compare mode */}
+      {!isCompareMode && (
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setActiveTab("charts")}
+            className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${
+              activeTab === "charts" ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"
+            }`}
+          >
+            Charts
+          </button>
+          {config.experiment === 8 && (
+            <button
+              onClick={() => setActiveTab("ncd")}
+              className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${
+                activeTab === "ncd" ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"
+              }`}
+            >
+              {t("experiment_detail.ncd_tab")}
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Content — hidden in compare mode */}
+      {!isCompareMode && activeTab === "charts" && (hasFolds ? (
         <ChartCarousel
           folds={folds}
           selectedFold={selectedFold}
@@ -137,6 +226,7 @@ export function ExperimentDetailPage() {
               ? { matrix: results.test_metrics.confusion_matrix, labels: results.test_metrics.confusion_matrix_labels }
               : null
           }
+          experimentId={id}
         />
       ) : hasResults && results.test_metrics ? (
         <BaselineResults metrics={results.test_metrics} />
@@ -144,6 +234,10 @@ export function ExperimentDetailPage() {
         <div className="py-10 text-center text-muted-foreground">
           {t("experiment_detail.no_results")}
         </div>
+      ))}
+
+      {!isCompareMode && activeTab === "ncd" && (config.experiment === 8 || config.experiment === 9) && (
+        <NcdDetail modelVariant={summary.model_variant ?? config.model_variant ?? ""} exp={config.experiment} />
       )}
     </div>
   );
@@ -157,9 +251,10 @@ interface ChartCarouselProps {
   meanF1?: number | null;
   stdF1?: number | null;
   confusionMatrix: { matrix: number[][]; labels: string[] } | null;
+  experimentId?: string;
 }
 
-function ChartCarousel({ folds, selectedFold, meanF1, stdF1, confusionMatrix }: ChartCarouselProps) {
+function ChartCarousel({ folds, selectedFold, meanF1, stdF1, confusionMatrix, experimentId }: ChartCarouselProps) {
   const { t } = useTranslation();
   const total = confusionMatrix ? 5 : 4;
   const [active, setActive] = useState(0);
@@ -210,6 +305,14 @@ function ChartCarousel({ folds, selectedFold, meanF1, stdF1, confusionMatrix }: 
         >
           <ChevronRight className="size-4" />
         </Button>
+        {experimentId && (
+          <Link
+            to={`/embeddings?experiment=${experimentId}`}
+            className="shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500/20 border border-indigo-500/20"
+          >
+            🧬 {t("experiment_detail.latent_space")}
+          </Link>
+        )}
       </div>
 
       {/* Chart area — only active chart is rendered */}
@@ -313,6 +416,109 @@ function BaselineResults({ metrics }: { metrics: TestMetrics }) {
           </CardContent>
         </Card>
       )}
+    </div>
+  );
+}
+
+/* ---- NCD Detail ---- */
+
+function NcdDetail({ modelVariant, exp }: { modelVariant: string; exp?: number }) {
+  const { t } = useTranslation();
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["ncd", modelVariant, exp ?? 8],
+    queryFn: () => fetchNcdResults(modelVariant, exp ?? 8),
+    staleTime: 5 * 60 * 1000,
+    enabled: modelVariant.length > 0,
+  });
+
+  if (isLoading) return <div className="flex justify-center py-8"><div className="size-5 rounded-full border-2 border-primary border-t-transparent animate-spin" /></div>;
+  if (error || !data) return <p className="text-sm text-muted-foreground text-center py-8">{t("experiment_detail.ncd_no_data")}</p>;
+
+  return (
+    <div className="space-y-8 p-4">
+      {/* Clustering table */}
+      <section>
+        <h3 className="text-lg font-bold mb-4">{t("experiment_detail.ncd_clustering")}</h3>
+        <div className="overflow-x-auto rounded-xl border border-border/50">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border/50 text-xs uppercase text-muted-foreground font-bold">
+                <th className="text-left py-3 px-4">{t("experiment_detail.ncd_algorithm")}</th>
+                <th className="text-center py-3 px-2">{t("experiment_detail.ncd_clustering_acc")}</th>
+                <th className="text-center py-3 px-2">{t("experiment_detail.ncd_clustering_nmi")}</th>
+                <th className="text-center py-3 px-2">{t("experiment_detail.ncd_clustering_ari")}</th>
+                <th className="text-center py-3 px-2">{t("experiment_detail.ncd_clustering_ami")}</th>
+                <th className="text-center py-3 px-2">{t("experiment_detail.ncd_clustering_f")}</th>
+                <th className="text-center py-3 px-2">k</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/30">
+              {Object.entries(data.clustering).map(([key, val]) => (
+                <tr key={key}>
+                  <td className="py-2 px-4 font-bold">{key}</td>
+                  <td className="text-center py-2 px-2 font-mono">{val.acc?.toFixed(4) ?? "—"}</td>
+                  <td className="text-center py-2 px-2 font-mono">{val.nmi?.toFixed(4) ?? "—"}</td>
+                  <td className="text-center py-2 px-2 font-mono">{val.ari?.toFixed(4) ?? "—"}</td>
+                  <td className="text-center py-2 px-2 font-mono">{val.ami?.toFixed(4) ?? "—"}</td>
+                  <td className="text-center py-2 px-2 font-mono">{val.f_measure?.toFixed(4) ?? "—"}</td>
+                  <td className="text-center py-2 px-2 font-mono">{val.k ?? val.n_clusters ?? "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* OSR section */}
+      <section>
+        <h3 className="text-lg font-bold mb-4">{t("experiment_detail.ncd_osr")}</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div className="rounded-xl border border-border/40 bg-background p-4 text-center">
+            <div className="text-xs text-muted-foreground uppercase font-bold mb-1">{t("experiment_detail.ncd_auroc")}</div>
+            <div className="text-2xl font-black">{(data.openset.mean_auroc * 100).toFixed(1)}%</div>
+          </div>
+          {data.openset.baselines?.softmax_threshold && (
+            <div className="rounded-xl border border-border/40 bg-background p-4 text-center">
+              <div className="text-xs text-muted-foreground uppercase font-bold mb-1">{t("experiment_detail.ncd_baseline_softmax")}</div>
+              <div className="text-2xl font-black">{(data.openset.baselines.softmax_threshold.mean_auroc * 100).toFixed(1)}%</div>
+            </div>
+          )}
+          {data.openset.baselines?.softmax_threshold && (
+            <div className="rounded-xl border border-border/40 bg-background p-4 text-center">
+              <div className="text-xs text-muted-foreground uppercase font-bold mb-1">{t("experiment_detail.ncd_improvement")}</div>
+              <div className="text-2xl font-black">{
+                ((data.openset.mean_auroc - data.openset.baselines.softmax_threshold.mean_auroc) * 100).toFixed(1)
+              }%</div>
+            </div>
+          )}
+        </div>
+
+        {/* Per-class table */}
+        {data.openset.per_class && data.openset.per_class.length > 0 && (
+          <div className="overflow-x-auto rounded-xl border border-border/50 mt-4">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border/50 text-xs uppercase text-muted-foreground font-bold">
+                  <th className="text-left py-3 px-4">Class</th>
+                  <th className="text-center py-3 px-2">AUROC</th>
+                  <th className="text-center py-3 px-2">Known Acc</th>
+                  <th className="text-center py-3 px-2">Unknown Recall</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/30">
+                {data.openset.per_class.map((pc) => (
+                  <tr key={pc.left_out}>
+                    <td className="py-2 px-4 font-bold">{pc.left_out}</td>
+                    <td className="text-center py-2 px-2 font-mono">{(pc.auroc * 100).toFixed(1)}%</td>
+                    <td className="text-center py-2 px-2 font-mono">{(pc.known_acc * 100).toFixed(1)}%</td>
+                    <td className="text-center py-2 px-2 font-mono">{(pc.unknown_recall * 100).toFixed(1)}%</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
     </div>
   );
 }

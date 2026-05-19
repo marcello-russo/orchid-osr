@@ -39,15 +39,9 @@ DATASET_PATHS = {
     },
 }
 
-# Class definitions
+# Class definitions — single source of truth is app.config
 ALL_CLASSES = settings.class_names
-
-INTERNET_CLASSES = [
-    "O. exaltata",
-    "O. garganica",
-    "O. incubacea",
-    "O. sphegodes"
-]
+INTERNET_CLASSES = settings.internet_classes
 
 # Experiment definitions
 # NOTE: Exp 1-5 have data leakage issues (confirmed for exp4 and exp5, likely for exp1-3).
@@ -55,46 +49,8 @@ INTERNET_CLASSES = [
 # Exp 5: combined contains all private images → test on privato = test on seen data.
 # Exp 6 uses a clean split with no leakage (50 test/class held out from training).
 EXPERIMENTS = {
-    1: {
-        "name": "exp1_privato_privato",
-        "train_dataset": "privato",
-        "test_dataset": "privato",
-        "num_classes": 6,
-        "test_classes": ALL_CLASSES,
-        "description": "Baseline: train and test on private dataset (6 classes)"
-    },
-    2: {
-        "name": "exp2_privato_internet_raw",
-        "train_dataset": "privato",
-        "test_dataset": "internet_raw",
-        "num_classes": 6,
-        "test_classes": INTERNET_CLASSES,
-        "description": "Domain shift: train on private, test on internet raw"
-    },
-    3: {
-        "name": "exp3_privato_internet_cropped",
-        "train_dataset": "privato",
-        "test_dataset": "internet_cropped",
-        "num_classes": 6,
-        "test_classes": INTERNET_CLASSES,
-        "description": "Domain shift: train on private, test on internet cropped"
-    },
-    4: {
-        "name": "exp4_combined_internet_cropped",
-        "train_dataset": "combined",
-        "test_dataset": "internet_cropped",
-        "num_classes": 6,
-        "test_classes": INTERNET_CLASSES,
-        "description": "Best on internet: train on combined, test on internet cropped"
-    },
-    5: {
-        "name": "exp5_combined_privato",
-        "train_dataset": "combined",
-        "test_dataset": "privato",
-        "num_classes": 6,
-        "test_classes": ALL_CLASSES,
-        "description": "Catastrophic forgetting test: train on combined, test on private"
-    },
+    # Experiments 1-5 removed — invalidated by data leakage (MD5 duplicates between train/test).
+    # See git history or AUDIT.md for details.
     6: {
         "name": "exp6_clean_split",
         "train_dataset": "clean",
@@ -102,6 +58,34 @@ EXPERIMENTS = {
         "num_classes": 6,
         "test_classes": ALL_CLASSES,
         "description": "Clean split: no data leakage, balanced test (50/class), all 6 classes"
+    },
+    7: {
+        "name": "exp7_supcon",
+        "train_dataset": "clean",
+        "test_dataset": "clean",
+        "num_classes": 6,
+        "test_classes": ALL_CLASSES,
+        "loss_type": "supcon",
+        "description": "Supervised Contrastive pretraining + CE fine-tuning (Exp 7)",
+    },
+    8: {
+        "name": "exp8_sphor",
+        "train_dataset": "clean",
+        "test_dataset": "clean",
+        "num_classes": 6,
+        "test_classes": ALL_CLASSES,
+        "loss_type": "supcon",
+        "description": "SupCon + Spherical Orthogonal Prototypes (SpHOR-style, Exp 8)",
+    },
+    9: {
+        "name": "exp9_ncd",
+        "train_dataset": "clean",
+        "test_dataset": "clean",
+        "num_classes": 5,
+        "test_classes": ALL_CLASSES,
+        "exclude_classes": ["O. majellensis"],
+        "loss_type": "supcon",
+        "description": "SpHOR senza O. majellensis (hidden novel per NCD)",
     },
 }
 

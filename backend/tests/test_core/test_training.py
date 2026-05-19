@@ -1,10 +1,10 @@
 # tests/test_core/test_training.py
-import pytest
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from app.core.models.resnet import ResNetConfig, ResNetClassifier
-from app.core.training import train_one_epoch, validate_one_epoch, train, cross_validate
+
+from app.core.models.resnet import ResNetClassifier, ResNetConfig
+from app.core.training import cross_validate, train, train_one_epoch, validate_one_epoch
 from app.preprocessing.reproducibility import set_seed
 
 

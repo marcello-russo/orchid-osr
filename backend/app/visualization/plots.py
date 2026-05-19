@@ -2,11 +2,12 @@
 import os
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-from app.visualization.style import COLORS, FIGURE_SIZE, DPI
+from app.visualization.style import COLORS, DPI, FIGURE_SIZE
 
 
 def plot_loss_curves(data, output_dir):

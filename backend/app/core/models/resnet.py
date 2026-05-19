@@ -1,8 +1,10 @@
 # app/core/models/resnet.py
+from typing import Literal
+
 import torch
 import torch.nn as nn
 from torchvision import models
-from typing import Literal
+
 from app.core.models.base import ClassifierModel, ModelConfig
 
 # Map variant to weights enum (avoids deprecated pretrained= param)
@@ -115,3 +117,7 @@ class ResNetClassifier(ClassifierModel):
     def embedding_dim(self) -> int:
         """Return embedding dimension."""
         return self._embedding_dim
+
+    def _unfreeze_head(self) -> None:
+        for param in self._backbone.fc.parameters():
+            param.requires_grad = True

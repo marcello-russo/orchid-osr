@@ -1,12 +1,12 @@
 # app/core/models/registry.py
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Type
 
 from torchvision import transforms as T
 
-from app.core.models.base import ModelConfig, ClassifierModel
+from app.core.models.base import ClassifierModel, ModelConfig
 
 
 @dataclass
@@ -66,3 +66,18 @@ def create_transform(model_type: str) -> T.Compose:
 
 def available_models() -> list[str]:
     return list(MODEL_REGISTRY.keys())
+
+
+def unique_input_sizes() -> dict[str, tuple[int, int]]:
+    """Return unique input sizes across all registered models.
+
+    Returns:
+        Dict mapping label "WxH" → (width, height).
+    """
+    seen = {}
+    for entry in MODEL_REGISTRY.values():
+        w, h = entry.input_size
+        label = f"{w}x{h}"
+        if label not in seen:
+            seen[label] = (w, h)
+    return seen

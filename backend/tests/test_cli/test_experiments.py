@@ -1,19 +1,22 @@
 # tests/test_cli/test_experiments.py
-import pytest
-from app.cli.experiments import (
-    EXPERIMENTS, DATASET_PATHS, DEFAULT_CONFIG,
-    parse_args, show_status, get_device
+import torch
+
+from app.cli.definitions import (
+    DATASET_PATHS,
+    DEFAULT_CONFIG,
+    EXPERIMENTS,
 )
+from app.cli.experiments import parse_args
+from app.cli.runner import get_device, show_status
 
 
 class TestCLI:
     """Tests for CLI module."""
 
     def test_experiments_defined(self):
-        """Test that all 5 experiments are defined."""
-        assert len(EXPERIMENTS) == 5
-        assert 1 in EXPERIMENTS
-        assert 5 in EXPERIMENTS
+        """Test that only valid experiments are defined."""
+        assert len(EXPERIMENTS) == 4
+        assert all(i in EXPERIMENTS for i in [6, 7, 8, 9])
 
     def test_experiment_structure(self):
         """Test that experiments have required fields."""
@@ -24,8 +27,8 @@ class TestCLI:
                 assert field in config, f"Exp{exp_id} missing field: {field}"
 
     def test_dataset_paths_defined(self):
-        """Test that all dataset paths are defined."""
-        required_datasets = ["privato", "internet_raw", "internet_cropped", "combined"]
+        """Test that required dataset paths are defined."""
+        required_datasets = ["clean"]
 
         for dataset in required_datasets:
             assert dataset in DATASET_PATHS, f"Missing dataset: {dataset}"
@@ -108,10 +111,5 @@ class TestCLI:
         captured = capsys.readouterr()
 
         assert "EXPERIMENT STATUS" in captured.out
-        assert "Exp1" in captured.out
-        assert "Exp5" in captured.out
-        assert "Baseline" in captured.out  # Description check
-
-
-# Need torch for device test
-import torch
+        assert "Exp6" in captured.out
+        assert "Clean split" in captured.out or "clean_split" in captured.out

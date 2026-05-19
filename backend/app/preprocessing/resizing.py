@@ -1,5 +1,6 @@
-from PIL import Image
 import logging
+
+from PIL import Image
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -10,7 +11,7 @@ def letterbox_resize(image, target_width, target_height):
     """
     iw, ih = image.size
     w, h = target_width, target_height
-    
+
     # Calculate scale while preserving aspect ratio
     scale = min(w/iw, h/ih)
     nw = int(iw * scale)

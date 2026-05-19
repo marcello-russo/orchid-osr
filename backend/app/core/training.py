@@ -3,15 +3,16 @@ import copy
 import gc
 import logging
 import os
+from typing import Optional
+
 import numpy as np
-from typing import Optional, Dict
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader, Dataset
+from sklearn.model_selection import StratifiedKFold
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torch.utils.data import DataLoader
 from torcheval.metrics import MulticlassAccuracy, MulticlassF1Score
-from sklearn.model_selection import StratifiedKFold
 
 from app.core.models.base import ClassifierModel, ModelConfig
 

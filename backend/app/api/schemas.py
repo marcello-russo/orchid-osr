@@ -1,7 +1,8 @@
 # app/api/schemas.py
-from pydantic import BaseModel
-from typing import Dict, Optional
 from datetime import datetime
+from typing import Dict, Optional
+
+from pydantic import BaseModel
 
 
 class ClassifyRequest(BaseModel):
@@ -159,3 +160,99 @@ class ClassImagesResponse(BaseModel):
     split: str
     total: int
     images: list[DatasetImage]
+
+
+class FoldSnapshot(BaseModel):
+    """Single fold result in the comparison view."""
+    fold: int
+    best_f1: float | None = None
+    best_accuracy: float | None = None
+    best_epoch: int | None = None
+
+
+class ModelComparisonEntry(BaseModel):
+    """One model's full comparison data."""
+    name: str
+    model_variant: str
+    folds_completed: int
+    num_folds: int
+    mean_f1: float | None = None
+    std_f1: float | None = None
+    mean_accuracy: float | None = None
+    test_accuracy: float | None = None
+    test_f1: float | None = None
+    best_fold: int | None = None
+    rank: int | None = None
+    fold_results: list[FoldSnapshot] = []
+
+
+class ModelComparisonResponse(BaseModel):
+    """Full comparison of all models in the active experiment."""
+    models: list[ModelComparisonEntry]
+
+
+class ExperimentModelEntry(BaseModel):
+    """One model's result within an experiment comparison group."""
+    variant: str
+    display_name: str
+    mean_f1: float | None = None
+    std_f1: float | None = None
+    mean_accuracy: float | None = None
+    test_accuracy: float | None = None
+
+
+class ExperimentGroup(BaseModel):
+    """A group of model results from one experiment."""
+    slug: str
+    label: str
+    description: str
+    has_leakage: bool = False
+    models: dict[str, ExperimentModelEntry] = {}
+
+
+class SeriesModelEntry(BaseModel):
+    """One model's comparison between experiments."""
+    variant: str
+    display_name: str
+    f1_ce: float | None = None
+    f1_supcon: float | None = None
+    f1_sphor: float | None = None
+    delta: float | None = None
+
+
+class ExperimentComparisonResponse(BaseModel):
+    """Comparison across all experiments."""
+    exp6: list[ModelComparisonEntry]
+    exp7: list[ModelComparisonEntry]
+    exp8: list[ModelComparisonEntry]
+    delta: list[SeriesModelEntry]
+
+
+class EmbeddingPoint(BaseModel):
+    """A single point in the embedding space."""
+    idx: int
+    x: float
+    y: float
+    z: float = 0.0
+    species: str
+    filename: str = ""
+    image_url: str = ""
+    split: str = ""
+
+
+class ServingInfo(BaseModel):
+    """Metadata about how embeddings are served."""
+    note: str = ""
+    repo: str = ""
+    path: str = ""
+
+
+class EmbeddingResponse(BaseModel):
+    """Embedding space data for visualization."""
+    experiment: str
+    method: str
+    dimension: int
+    total_points: int
+    species: list[str]
+    points: list[EmbeddingPoint]
+    serving: ServingInfo = ServingInfo()

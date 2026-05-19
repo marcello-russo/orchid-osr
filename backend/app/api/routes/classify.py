@@ -1,10 +1,12 @@
 # app/api/routes/classify.py
 import base64
 import io
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form
+
 import torch
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from PIL import Image
 
+from app.api.deps import CLASS_NAMES, get_device, get_model, get_model_options
 from app.api.schemas import (
     ClassifyRequest,
     ClassifyResponse,
@@ -13,8 +15,7 @@ from app.api.schemas import (
     ModelListResponse,
     TopPrediction,
 )
-from app.api.deps import get_model, get_device, get_model_options, CLASS_NAMES
-from app.core.models import create_transform, available_models, get_registry_entry
+from app.core.models import available_models, create_transform, get_registry_entry
 
 MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10 MB
 ALLOWED_MIME_TYPES = {"image/jpeg", "image/png", "image/webp", "image/bmp"}
@@ -150,14 +151,15 @@ async def classify_upload(file: UploadFile = File(...), model_id: str = Form(Non
 async def explain_image(file: UploadFile = File(...), model_id: str = Form(None)):
     """Generate an occlusion-based explainability heatmap for an uploaded image."""
     import gc
-    import numpy as np
+
     import matplotlib
+    import numpy as np
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
     from app.explainability.visualization import (
-        compute_occlusion,
         _normalize_attr,
+        compute_occlusion,
     )
     from app.preprocessing.normalization import denormalize_image
 

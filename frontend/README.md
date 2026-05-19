@@ -15,4 +15,4 @@ npm install
 npm run dev
 ```
 
-The frontend will be available at `http://localhost:5173`. It requires the OrchID backend running on port `5000` (API calls are proxied automatically via `vite.config.ts`).
+The frontend will be available at `http://localhost:5175`. It requires the OrchID backend running on port `5000` (API calls are proxied automatically via `vite.config.ts`).

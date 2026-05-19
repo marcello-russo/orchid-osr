@@ -1,12 +1,14 @@
 # app/api/deps.py
-from collections import OrderedDict
-from pathlib import Path
 import json
 import logging
+from collections import OrderedDict
+from pathlib import Path
+
 import torch
-from app.config import settings
-from app.core.models import create_model, available_models, ClassifierModel
+
 from app.api.schemas import ModelOption
+from app.config import settings
+from app.core.models import ClassifierModel, available_models, create_model
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +41,25 @@ def _get_mean_f1(results: dict) -> float | None:
     return results.get("mean_f1") or results.get("test_metrics", {}).get("f1_macro")
 
 
+def _format_model_name(exp_id: str, model_variant: str) -> str:
+    """Generate a user-friendly model name from experiment directory name."""
+    variant_display = {
+        "resnet18": "ResNet-18",
+        "resnet50": "ResNet-50",
+        "convnext_tiny": "ConvNeXt-Tiny",
+        "convnext_small": "ConvNeXt-Small",
+        "dinov2_small": "DINOv2-Small",
+        "dinov2_base": "DINOv2-Base",
+    }.get(model_variant, model_variant)
+
+    if "supcon" in exp_id or "sphor" in exp_id:
+        exp_label = "Exp 7 (SupCon)" if "supcon" in exp_id else "Exp 8 (SpHOR)"
+    else:
+        exp_label = "Exp 6 (CE)"
+
+    return f"{variant_display} — {exp_label}"
+
+
 def _discover_models() -> list[ModelOption]:
     """Discover all trained models with weights and metrics."""
     experiments_dir = Path(settings.results_dir)
@@ -63,7 +84,7 @@ def _discover_models() -> list[ModelOption]:
 
         options.append(ModelOption(
             id=exp_id,
-            name=exp_id.replace("_", " ").replace("exp4 ", ""),
+            name=_format_model_name(exp_id, mv),
             model_variant=mv,
             mean_f1=_get_mean_f1(results),
             test_accuracy=tm.get("accuracy") if tm else None,

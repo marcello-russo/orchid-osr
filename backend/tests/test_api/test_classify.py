@@ -1,11 +1,11 @@
 # tests/test_api/test_classify.py
-import pytest
 import base64
 from io import BytesIO
-from PIL import Image
-from fastapi.testclient import TestClient
-from app.api.main import app
 
+from fastapi.testclient import TestClient
+from PIL import Image
+
+from app.api.main import app
 
 client = TestClient(app)
 

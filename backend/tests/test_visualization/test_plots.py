@@ -1,11 +1,16 @@
 import os
+
 import pytest
-from app.visualization.utils import load_experiment_data
+
 from app.visualization.plots import (
-    plot_loss_curves, plot_metric_curves,
-    plot_fold_summary, plot_confusion_matrix, plot_overfitting_proxy,
+    plot_confusion_matrix,
+    plot_fold_summary,
+    plot_loss_curves,
+    plot_metric_curves,
+    plot_overfitting_proxy,
 )
 from app.visualization.style import setup_style
+from app.visualization.utils import load_experiment_data
 
 
 @pytest.fixture

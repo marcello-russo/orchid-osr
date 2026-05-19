@@ -3,11 +3,14 @@ import logging
 import os
 from collections import defaultdict
 
-import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.colors import LinearSegmentedColormap
+import numpy as np
 import torch
 from captum.attr import IntegratedGradients, Occlusion
+from matplotlib.colors import LinearSegmentedColormap
+
+import app.preprocessing.normalization as normalization
+from app.explainability.core import get_percentages, inference
 
 
 def _normalize_attr(attr, sign="all", outlier_perc=2, reduction_axis=None):
@@ -27,9 +30,6 @@ def _normalize_attr(attr, sign="all", outlier_perc=2, reduction_axis=None):
     if sign == "all":
         return np.clip(attr / scale, -1, 1).astype(np.float32)
     return np.clip(attr / scale, 0, 1).astype(np.float32)
-
-import app.preprocessing.normalization as normalization
-from app.explainability.core import inference, get_percentages
 
 
 def display_image(ax, image, predicted, label, class_names):
@@ -83,7 +83,6 @@ def _add_occlusion_hover_text(fig, ax, class_map, global_attribution, occlusion_
     """Attach a hover handler that shows per-class occlusion scores."""
     def update_occlusion_text(x, y):
         if 0 <= x < class_map.shape[2] and 0 <= y < class_map.shape[1]:
-            class_id = int(class_map[0, y, x])
             actual_class_vector = global_attribution[:, 0, y, x].cpu().detach().numpy()
             ordered_classes = np.argsort(actual_class_vector)[::-1]
             occlusion_text_str = ''
@@ -169,7 +168,7 @@ def display_occlusion_for_save(ax, image, model, label, sliding_window_size, str
     vmin, vmax = -1, 1
 
     ax.clear()
-    im = ax.imshow(np.mean(image_np, axis=2), cmap="gray")
+    ax.imshow(np.mean(image_np, axis=2), cmap="gray")
     im_attr = ax.imshow(norm_attr, cmap=cmap, vmin=vmin, vmax=vmax, alpha=0.5)
     ax.set_title(f'Occlusion attributions\nfor class {class_names[label]}')
     ax.axis('off')

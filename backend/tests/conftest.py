@@ -1,8 +1,8 @@
 # tests/conftest.py
+import numpy as np
 import pytest
 import torch
-import numpy as np
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader, Dataset
 
 
 def set_seed(seed: int = 42):

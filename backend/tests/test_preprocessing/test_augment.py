@@ -1,7 +1,8 @@
 # tests/test_preprocessing/test_augment.py
 import torch
-from app.preprocessing.augment import get_augmentation_functions
+
 from app.preprocessing import rotation
+from app.preprocessing.augment import get_augmentation_functions
 
 
 class TestGetAugmentationFunctions:

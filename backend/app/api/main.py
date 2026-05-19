@@ -1,11 +1,13 @@
 # backend/app/api/main.py
-import os
 from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from app.api.routes import health, classify, experiments, species, dataset
+from fastapi.staticfiles import StaticFiles
+
+from app.api.routes import classify, comparison, dataset, embeddings, experiments, health, species
+from app.api.routes import ncd as ncd_router
 
 app = FastAPI(
     title="Orchid Classification API",
@@ -16,7 +18,8 @@ app = FastAPI(
 # CORS — allow Vite dev server
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173",
+                   "http://localhost:5175", "http://127.0.0.1:5175"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -28,6 +31,9 @@ app.include_router(classify.router, tags=["classification"])
 app.include_router(experiments.router, tags=["experiments"])
 app.include_router(species.router, tags=["species"])
 app.include_router(dataset.router, tags=["dataset"])
+app.include_router(comparison.router, tags=["comparison"])
+app.include_router(embeddings.router, tags=["embeddings"])
+app.include_router(ncd_router.router, tags=["ncd"])
 
 # Serve frontend static files in production (when frontend/dist exists)
 _static_dir = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"

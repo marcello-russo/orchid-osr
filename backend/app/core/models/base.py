@@ -1,9 +1,10 @@
 # app/core/models/base.py
 from abc import ABC, abstractmethod
 from typing import Optional
+
 import torch
-from torch import nn
 from pydantic import BaseModel
+from torch import nn
 
 
 class ModelConfig(BaseModel):
@@ -100,3 +101,7 @@ class ClassifierModel(ABC, nn.Module):
     def num_classes(self) -> int:
         """Return number of output classes."""
         return self._config.num_classes
+
+    def _unfreeze_head(self) -> None:
+        """Unfreeze only the classifier head parameters (for SupCon Phase 2)."""
+        raise NotImplementedError(f"{type(self).__name__} must implement _unfreeze_head()")
