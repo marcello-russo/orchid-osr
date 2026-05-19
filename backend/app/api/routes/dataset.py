@@ -95,6 +95,56 @@ async def list_class_images(class_name: str, split: str = "train", limit: int = 
     return ClassImagesResponse(class_name=class_name, split=split, total=total, images=images)
 
 
+@router.get("/image/{class_name}/{filename}")
+async def serve_image_legacy(class_name: str, filename: str, size: int = Query(None, gt=0, le=1024)):
+    """Serve a dataset image from any split (backward-compatible URL used by embeddings metadata)."""
+    class_name = _validate_segment(class_name)
+    filename = _validate_segment(filename)
+    if class_name not in _VALID_CLASSES:
+        raise HTTPException(status_code=400, detail=f"Unknown class: {class_name}")
+
+    base = _get_dataset_base()
+    for split in _VALID_SPLITS:
+        file_path = base / split / class_name / filename
+        try:
+            file_path.resolve().relative_to(base.resolve())
+        except ValueError:
+            raise HTTPException(status_code=403, detail="Path traversal denied")
+        if file_path.is_file():
+            if size is None:
+                media_type = mimetypes.guess_type(str(file_path))[0] or "image/jpeg"
+                return FileResponse(file_path, media_type=media_type)
+            return await _serve_resized(file_path, size, base, split, class_name, filename)
+
+    raise HTTPException(status_code=404, detail="Image not found in any split")
+
+
+async def _serve_resized(file_path: Path, size: int, base: Path, split: str, class_name: str, filename: str):
+    """Generate and serve a resized WebP thumbnail."""
+    cache_dir = base / ".thumbnails" / str(size) / split / class_name
+    cache_path = cache_dir / f"{file_path.stem}.webp"
+    if cache_path.is_file():
+        return FileResponse(cache_path, media_type="image/webp")
+    def _generate():
+        try:
+            cache_dir.mkdir(parents=True, exist_ok=True)
+            with Image.open(file_path) as img:
+                w, h = img.size
+                if w > size:
+                    new_h = int(h * (size / w))
+                    img = img.resize((size, new_h), Image.Resampling.BILINEAR)
+                img.save(cache_path, "WEBP", quality=80)
+            return True
+        except Exception as e:
+            print(f"Thumbnail generation failed: {e}")
+            return False
+    success = await run_in_threadpool(_generate)
+    if success and cache_path.is_file():
+        return FileResponse(cache_path, media_type="image/webp")
+    media_type = mimetypes.guess_type(str(file_path))[0] or "image/jpeg"
+    return FileResponse(file_path, media_type=media_type)
+
+
 @router.get("/images/{split}/{class_name}/{filename}")
 async def serve_image(split: str, class_name: str, filename: str, size: int = Query(None, gt=0, le=1024)):
     """Serve a dataset image file, optionally resized and converted to WebP."""
@@ -119,39 +169,8 @@ async def serve_image(split: str, class_name: str, filename: str, size: int = Qu
     if not file_path.is_file():
         raise HTTPException(status_code=404, detail="Image not found")
 
-    # If no size specified, serve original file
     if size is None:
         media_type = mimetypes.guess_type(str(file_path))[0] or "image/jpeg"
         return FileResponse(file_path, media_type=media_type)
 
-    # Dynamic Resizing + WebP conversion
-    cache_dir = base / ".thumbnails" / str(size) / split / class_name
-    cache_path = cache_dir / f"{file_path.stem}.webp"
-
-    if cache_path.is_file():
-        return FileResponse(cache_path, media_type="image/webp")
-
-    # Generate thumbnail
-    def _generate_thumbnail():
-        try:
-            cache_dir.mkdir(parents=True, exist_ok=True)
-            with Image.open(file_path) as img:
-                w, h = img.size
-                if w > size:
-                    new_h = int(h * (size / w))
-                    # BILINEAR is much faster than LANCZOS for thumbnails
-                    img = img.resize((size, new_h), Image.Resampling.BILINEAR)
-                img.save(cache_path, "WEBP", quality=80)
-            return True
-        except Exception as e:
-            print(f"Thumbnail generation failed: {e}")
-            return False
-
-    success = await run_in_threadpool(_generate_thumbnail)
-
-    if success and cache_path.is_file():
-        return FileResponse(cache_path, media_type="image/webp")
-
-    # Fallback to original
-    media_type = mimetypes.guess_type(str(file_path))[0] or "image/jpeg"
-    return FileResponse(file_path, media_type=media_type)
+    return await _serve_resized(file_path, size, base, split, class_name, filename)
