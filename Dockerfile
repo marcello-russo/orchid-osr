@@ -29,12 +29,10 @@ RUN pip install --no-cache-dir huggingface_hub
 COPY backend/scripts/ scripts/
 RUN mkdir -p models dataset
 
-# Token opzionale (repo pubblici) — HF Spaces lo inietta come build-arg
-ARG HF_TOKEN
-ENV HF_TOKEN=${HF_TOKEN}
-
-# Download dataset and models during build phase
-RUN python scripts/hf_tools/download_cache.py
+# Scarica dataset (se HF_TOKEN disponibile) e modelli (pubblici)
+# Il token runtime dei Secrets di HF Spaces non è disponibile in build,
+# quindi se il dataset è privato verrà scaricato all'avvio via entrypoint.sh
+RUN python scripts/hf_tools/download_cache.py || echo "Download non critico fallito — si continua"
 
 COPY backend/app/ app/
 COPY backend/server.py .

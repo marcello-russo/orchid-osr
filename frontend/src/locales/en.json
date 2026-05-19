@@ -178,7 +178,9 @@
     "images": "images",
     "train_label": "train",
     "test_label": "test",
-    "no_images": "No images found."
+    "no_images": "No images found.",
+    "not_available_title": "Dataset not available",
+    "not_available_description": "The full Ophrys image dataset is not available in this deployment. Images are still served on-demand in the Latent Space viewer via HuggingFace CDN."
   },
   "compare": {
     "title": "Experiment Comparison",

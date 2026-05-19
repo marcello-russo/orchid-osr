@@ -30,6 +30,19 @@ export function DatasetPage() {
     );
   }
 
+  // Dataset non disponibile (es. HF Spaces senza download)
+  if (data.total_train === 0 && data.total_test === 0) {
+    return (
+      <div className="space-y-6 max-w-7xl mx-auto px-4 md:px-12 animate-in fade-in duration-700 text-center py-20">
+        <div className="size-16 rounded-3xl bg-muted/50 flex items-center justify-center text-muted-foreground mx-auto mb-4">
+          <Database className="size-8" />
+        </div>
+        <h2 className="text-xl font-bold">{t("dataset.not_available_title")}</h2>
+        <p className="text-muted-foreground max-w-md mx-auto">{t("dataset.not_available_description")}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto px-4 md:px-12 animate-in fade-in duration-700">
       {/* Header */}
