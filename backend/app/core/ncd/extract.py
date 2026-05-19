@@ -133,7 +133,7 @@ def save_embeddings(
             "species": species[i] if i < len(species) else "",
             "label": int(labels[i]) if i < len(labels) else -1,
             "filename": filename,
-            "image_url": f"/api/dataset/image/{species[i]}/{filename}" if species[i] else "",
+            "image_url": f"/api/dataset/images/train/{species[i]}/{filename}" if species[i] else "",
             "split": "train",
         })
 
