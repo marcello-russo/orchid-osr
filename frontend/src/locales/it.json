@@ -178,7 +178,9 @@
     "images": "immagini",
     "train_label": "train",
     "test_label": "test",
-    "no_images": "Nessuna immagine trovata."
+    "no_images": "Nessuna immagine trovata.",
+    "not_available_title": "Dataset non disponibile",
+    "not_available_description": "Il dataset completo non è disponibile in questo deployment. Le immagini sono comunque servite on-demand nel visualizzatore Spazio Latente tramite CDN HuggingFace."
   },
   "compare": {
     "title": "Confronto Esperimenti",
