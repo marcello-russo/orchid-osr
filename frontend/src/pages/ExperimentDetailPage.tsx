@@ -128,10 +128,8 @@ export function ExperimentDetailPage() {
         <div className="mt-2 flex items-center gap-2">
           {!isCompareMode ? (
             <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <GitCompare className="mr-1.5 size-4" /> Compare
-                </Button>
+              <DialogTrigger render={<Button variant="outline" size="sm" />}>
+                <GitCompare className="mr-1.5 size-4" /> Compare
               </DialogTrigger>
               <DialogContent className="sm:max-w-2xl md:max-w-3xl lg:max-w-4xl">
                 <DialogHeader>

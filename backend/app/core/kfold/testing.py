@@ -35,7 +35,9 @@ def _upload_to_hf(output_dir, model_variant):
         return
 
     exp_name = os.path.basename(output_dir)
-    if exp_name.startswith("exp8"):
+    if exp_name.startswith("exp9"):
+        exp_group = "exp9_ncd"
+    elif exp_name.startswith("exp8"):
         exp_group = "exp8_sphor"
     elif exp_name.startswith("exp7"):
         exp_group = "exp7_supcon"

@@ -30,7 +30,7 @@ import {
 } from "recharts";
 import { foldToEpochPoints } from "@/features/explorer/types";
 import { useChartColors } from "@/features/explorer/hooks/useChartColors";
-import type { ModelComparisonEntry, FoldData, NcdComparison } from "@/lib/types";
+import type { ModelComparisonEntry, FoldData, NcdComparison, NcdComparisonEntry } from "@/lib/types";
 
 const REFERENCES = [
   {
@@ -457,7 +457,7 @@ export function ResearchPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/30">
-                  {(ncdCompQuery.data.models as NcdComparisonEntry[]).map((m, i) => (
+                  {(ncdCompQuery.data.models as NcdComparisonEntry[]).map((m) => (
                     <tr key={`${m.experiment}-${m.model}`} className="hover:bg-muted/30 transition-colors">
                       <td className="py-3 px-4 text-xs text-muted-foreground">{m.experiment}</td>
                       <td className="py-3 px-2 font-bold">{m.model}</td>

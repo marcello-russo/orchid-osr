@@ -5,7 +5,7 @@ from huggingface_hub import snapshot_download
 DATASET_REPO = "marcellorusso/orchid-ncd-dataset"
 MODELS_REPO = "marcellorusso/orchid-ncd-models"
 
-EXP_PATHS = ["exp6_ce", "exp7_supcon", "exp8_sphor"]
+EXP_PATHS = ["exp6_ce", "exp7_supcon", "exp8_sphor", "exp9_ncd"]
 
 
 def _download_and_flatten_models(local_base, token):
@@ -27,6 +27,10 @@ def _download_and_flatten_models(local_base, token):
             "exp8_sphor/**/*.json",
             "exp8_sphor/**/*.safetensors",
             "exp8_sphor/**/embeddings/*",
+            "exp9_ncd/**/*.pt",
+            "exp9_ncd/**/*.json",
+            "exp9_ncd/**/*.safetensors",
+            "exp9_ncd/**/embeddings/*",
         ],
         token=token,
     )
