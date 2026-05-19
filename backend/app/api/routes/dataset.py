@@ -1,9 +1,11 @@
 import mimetypes
+import os
 from pathlib import Path
 
+import httpx
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.concurrency import run_in_threadpool
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.responses import FileResponse, Response
 from PIL import Image
 
 from app.api.schemas import ClassImagesResponse, DatasetClassesResponse, DatasetClassInfo, DatasetImage
@@ -18,6 +20,15 @@ _VALID_CLASSES = set(settings.class_names)
 _CROPPED_DIR = "cropped_256x512"
 _HF_DATASET = "marcellorusso/orchid-ncd-dataset"
 _HF_BRANCH = "main"
+_HF_TOKEN = os.environ.get("HF_TOKEN") or _read_hf_token_secret()
+
+
+def _read_hf_token_secret() -> str | None:
+    secret_path = "/run/secrets/HF_TOKEN"
+    if os.path.exists(secret_path):
+        with open(secret_path) as f:
+            return f.read().strip()
+    return None
 
 
 def _get_dataset_base() -> Path:
@@ -118,14 +129,19 @@ async def serve_image_legacy(class_name: str, filename: str, size: int = Query(N
                 return FileResponse(file_path, media_type=media_type)
             return await _serve_resized(file_path, size, base, split, class_name, filename)
 
-    # Fallback to HuggingFace dataset CDN
-    return _hf_redirect(class_name, filename)
+    # Fallback: proxy from HuggingFace dataset
+    return await _hf_proxy(class_name, filename)
 
 
-def _hf_redirect(class_name: str, filename: str) -> RedirectResponse:
-    """Redirect to the HuggingFace dataset CDN."""
+async def _hf_proxy(class_name: str, filename: str) -> Response:
+    """Proxy image from the HuggingFace dataset CDN via the backend."""
     hf_url = f"https://huggingface.co/datasets/{_HF_DATASET}/resolve/{_HF_BRANCH}/cropped/256x512/train/{class_name}/{filename}"
-    return RedirectResponse(hf_url)
+    headers = {"Authorization": f"Bearer {_HF_TOKEN}"} if _HF_TOKEN else {}
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(hf_url, headers=headers)
+        if resp.status_code != 200:
+            raise HTTPException(status_code=404, detail="Image not found locally or on HuggingFace")
+        return Response(content=resp.content, media_type=resp.headers.get("content-type", "image/jpeg"))
 
 
 async def _serve_resized(file_path: Path, size: int, base: Path, split: str, class_name: str, filename: str):
@@ -176,7 +192,7 @@ async def serve_image(split: str, class_name: str, filename: str, size: int = Qu
         raise HTTPException(status_code=403, detail="Path traversal denied")
 
     if not file_path.is_file():
-        return _hf_redirect(class_name, filename)
+        return await _hf_proxy(class_name, filename)
 
     if size is None:
         media_type = mimetypes.guess_type(str(file_path))[0] or "image/jpeg"
