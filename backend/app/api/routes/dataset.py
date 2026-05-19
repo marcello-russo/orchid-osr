@@ -54,7 +54,7 @@ async def list_classes():
     test_dir = base / "test_clean"
 
     if not train_dir.is_dir() or not test_dir.is_dir():
-        raise HTTPException(status_code=404, detail="Dataset directories not found")
+        return DatasetClassesResponse(classes=[], total_train=0, total_test=0)
 
     for class_dir in sorted(train_dir.iterdir()):
         if not class_dir.is_dir():
