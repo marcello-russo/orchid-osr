@@ -177,12 +177,6 @@ export function ResearchPage() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const ncdCompQuery = useQuery({
-    queryKey: ["ncd-comparison"],
-    queryFn: () => fetchApi<NcdComparison>("/api/ncd/comparison"),
-    staleTime: 5 * 60 * 1000,
-  });
-
   return (
     <div className="space-y-12 md:space-y-20 animate-in fade-in duration-700 pb-20 md:pb-32 max-w-7xl mx-auto px-4 md:px-12">
       {/* 1. Hero */}
@@ -390,7 +384,6 @@ export function ResearchPage() {
           <ExpTable exp={expQuery.data?.exp8 ?? []} />
         )}
 
-        {/* Embedding geometry */}
         <div className="p-6 rounded-xl bg-muted/20 border border-border/50 text-muted-foreground leading-relaxed">
           <p className="font-bold text-foreground mb-2">{t("about.future.phase1_embedding_title")}</p>
           <p className="text-sm">{renderCitations(t("about.future.phase1_embedding"))}</p>
@@ -413,60 +406,14 @@ export function ResearchPage() {
           </div>
         </div>
 
-        {/* Incremental learning */}
         <div className="p-6 rounded-xl bg-amber-500/5 border border-amber-500/20 text-muted-foreground leading-relaxed">
           <p className="font-bold text-foreground mb-2">{t("about.future.phase3_incremental_title")}</p>
           <p className="text-sm">{t("about.future.phase3_incremental")}</p>
         </div>
 
-        {/* Connection to NCD literature */}
         <div className="p-6 rounded-xl bg-primary/5 border border-primary/10 text-muted-foreground leading-relaxed">
           <p className="font-bold text-foreground mb-2">{t("about.future.phase3_ncd_title")}</p>
           <p className="text-sm">{renderCitations(t("about.future.phase3_ncd"))}</p>
-        </div>
-
-        {/* NCD Benchmark */}
-        <div className="space-y-4 mt-8">
-          <h3 className="text-lg font-bold">NCD Results — Open-World Recognition</h3>
-          <p className="text-sm text-muted-foreground">
-            Cross-model comparison of Open-Set Recognition performance. AUROC measures how well each model distinguishes known from unknown species. Improvement shows the gain of OpenMax over a simple softmax threshold baseline.
-          </p>
-          {ncdCompQuery.isLoading ? (
-            <div className="flex justify-center py-4"><div className="size-5 rounded-full border-2 border-primary border-t-transparent animate-spin" /></div>
-          ) : ncdCompQuery.error || !ncdCompQuery.data?.models?.length ? (
-            <p className="text-sm text-muted-foreground text-center py-4">NCD results not available yet. Run the NCD pipeline first.</p>
-          ) : (
-            <div className="overflow-x-auto rounded-xl border border-border/50 bg-background/50">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border/50 text-xs uppercase tracking-widest text-muted-foreground font-bold">
-                    <th className="text-left py-3 px-4">Exp</th>
-                    <th className="text-left py-3 px-2">Modello</th>
-                    <th className="text-center py-3 px-2">ACC</th>
-                    <th className="text-center py-3 px-2">NMI</th>
-                    <th className="text-center py-3 px-2">AUROC</th>
-                    <th className="text-center py-3 px-2">Baseline</th>
-                    <th className="text-center py-3 pr-4 pl-2">Δ</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/30">
-                  {(ncdCompQuery.data.models as NcdComparisonEntry[]).map((m) => (
-                    <tr key={`${m.experiment}-${m.model}`} className="hover:bg-muted/30 transition-colors">
-                      <td className="py-3 px-4 text-xs text-muted-foreground">{m.experiment}</td>
-                      <td className="py-3 px-2 font-bold">{m.model}</td>
-                      <td className="text-center py-3 px-2 font-mono">{(m.acc * 100).toFixed(1)}%</td>
-                      <td className="text-center py-3 px-2 font-mono">{(m.nmi * 100).toFixed(1)}%</td>
-                      <td className="text-center py-3 px-2 font-mono font-bold">{(m.mean_auroc * 100).toFixed(1)}%</td>
-                      <td className="text-center py-3 px-2 font-mono text-muted-foreground">{(m.baseline_auroc * 100).toFixed(1)}%</td>
-                      <td className={`text-center py-3 pr-4 pl-2 font-mono ${m.improvement >= 0 ? "text-green-600" : "text-red-500"}`}>
-                        {m.improvement >= 0 ? "+" : ""}{(m.improvement * 100).toFixed(1)}%
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
         </div>
       </section>
 
