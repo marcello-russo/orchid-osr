@@ -29,10 +29,8 @@ RUN pip install --no-cache-dir huggingface_hub
 COPY backend/scripts/ scripts/
 RUN mkdir -p models dataset
 
-# Scarica dataset (se HF_TOKEN disponibile) e modelli (pubblici)
-# Il token runtime dei Secrets di HF Spaces non è disponibile in build,
-# quindi se il dataset è privato verrà scaricato all'avvio via entrypoint.sh
-RUN python scripts/hf_tools/download_cache.py || echo "Download non critico fallito — si continua"
+# Scarica dataset e modelli (optional — i metadati JSON sono già copiati sotto)
+RUN python scripts/hf_tools/download_cache.py || true
 
 COPY backend/app/ app/
 COPY backend/server.py .
