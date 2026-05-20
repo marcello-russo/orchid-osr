@@ -10,6 +10,21 @@ import { cn } from "@/lib/utils";
 export function Layout() {
   const { sidebarOpen, setSidebarOpen } = useAppStore();
 
+  // Fix viewport height on mobile (account for browser chrome)
+  useEffect(() => {
+    const setVh = () => {
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty("--vh", `${vh}px`);
+    };
+    setVh();
+    window.addEventListener("resize", setVh);
+    window.addEventListener("orientationchange", setVh);
+    return () => {
+      window.removeEventListener("resize", setVh);
+      window.removeEventListener("orientationchange", setVh);
+    };
+  }, []);
+
   // Lock body scroll when drawer is open
   useEffect(() => {
     if (sidebarOpen) {
@@ -29,7 +44,7 @@ export function Layout() {
   }, [sidebarOpen, setSidebarOpen]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-[calc(var(--vh,1vh)*100)] bg-background">
       <Header />
 
       {/* Backdrop */}
