@@ -47,6 +47,7 @@ export function ExperimentDetailPage() {
   const { t } = useTranslation();
   const TOOLTIPS = getTooltips(t);
   const { id } = useParams<{ id: string }>();
+  const expNum = id ? parseInt(id.match(/exp(\d+)/)?.[1] ?? "", 10) : NaN;
   const { data: experiment, isLoading, error } = useExperiment(id ?? "");
   const [searchParams, setSearchParams] = useSearchParams();
   const compareRaw = searchParams.get("compare") ?? "";
@@ -199,7 +200,7 @@ export function ExperimentDetailPage() {
           >
             Charts
           </button>
-          {(config.experiment === 8 || config.experiment === 9) && (
+          {(expNum === 8 || expNum === 9) && (
             <button
               onClick={() => setActiveTab("ncd")}
               className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${
@@ -234,8 +235,8 @@ export function ExperimentDetailPage() {
         </div>
       ))}
 
-      {!isCompareMode && activeTab === "ncd" && (config.experiment === 8 || config.experiment === 9) && (
-        <NcdDetail modelVariant={summary.model_variant ?? config.model_variant ?? ""} exp={config.experiment} />
+      {!isCompareMode && activeTab === "ncd" && (expNum === 8 || expNum === 9) && (
+        <NcdDetail modelVariant={summary.model_variant ?? config.model_variant ?? ""} exp={expNum} />
       )}
     </div>
   );
