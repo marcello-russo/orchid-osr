@@ -86,6 +86,7 @@ def run_experiment(
     repulse_weight: float = 0.05,
     pair_weights: dict | None = None,
     full_finetune: bool = False,
+    osr_ensemble: bool = False,
 ):
     """Run a single experiment (k-fold cross-validation or single fold)."""
     import logging
@@ -158,6 +159,7 @@ def run_experiment(
             batch_size=batch_size,
             run_osr=True,
             test_dir=cropped_test if os.path.exists(cropped_test) else None,
+            osr_method="ensemble" if osr_ensemble else "openmax",
         )
         return
 

@@ -588,13 +588,13 @@ export function ResearchPage() {
               <tbody className="divide-y divide-border/30">
                 <tr>
                   <td className="py-2 px-3 font-medium">{t("about.exp10.outcome_known_f1")}</td>
-                  <td className="text-center py-2 px-3 font-mono">~0.90</td>
-                  <td className="text-center py-2 px-3 font-mono text-green-600">{'>'}0.93</td>
+                  <td className="text-center py-2 px-3 font-mono">0.927 (CE)</td>
+                  <td className="text-center py-2 px-3 font-mono text-green-600">{'>'}0.94</td>
                 </tr>
                 <tr>
                   <td className="py-2 px-3 font-medium">{t("about.exp10.outcome_majellensis")}</td>
-                  <td className="text-center py-2 px-3 font-mono">~13%</td>
-                  <td className="text-center py-2 px-3 font-mono text-green-600">{'>'}80%</td>
+                  <td className="text-center py-2 px-3 font-mono">96\u2013100% (CE)</td>
+                  <td className="text-center py-2 px-3 font-mono text-green-600">{'>'}98%</td>
                 </tr>
                 <tr>
                   <td className="py-2 px-3 font-medium">{t("about.exp10.outcome_auroc")}</td>
