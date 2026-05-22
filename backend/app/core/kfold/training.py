@@ -395,13 +395,12 @@ def _train_head_only(
 
 def _train_phase2(
     model, optimizer, train_loader, val_loader,
-    num_epochs, device, num_classes, patience=0, use_amp=False,
+    num_epochs, device, num_classes, patience=0,
 ):
-    """Deep fine-tuning Phase 2 with optional half-precision (fp16) for memory savings.
+    """Deep fine-tuning Phase 2: backbone + head with CE loss and label smoothing.
 
-    Trains backbone + head with CE loss and label smoothing.
-    When use_amp=True, wraps forward/backward in torch.cuda.amp.autocast()
-    and uses a GradScaler to prevent underflow.
+    The model should have only the desired parameters set to requires_grad=True
+    (LoRA adapters + last blocks + head). This keeps memory usage under 4GB.
     """
     import copy
     from torcheval.metrics import MulticlassAccuracy, MulticlassF1Score
@@ -411,8 +410,6 @@ def _train_phase2(
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, mode="min", factor=0.5, patience=10
     )
-
-    scaler = torch.amp.GradScaler() if use_amp else None
 
     best_f1 = 0.0
     best_wts = copy.deepcopy(model.state_dict())
@@ -428,19 +425,10 @@ def _train_phase2(
         for inputs, labels, _ in train_loader:
             inputs, labels = inputs.to(device, non_blocking=True), labels.to(device, non_blocking=True)
             optimizer.zero_grad(set_to_none=True)
-            if use_amp:
-                with torch.amp.autocast(device_type="cuda"):
-                    loss = criterion(model(inputs), labels)
-                scaler.scale(loss).backward()
-                scaler.unscale_(optimizer)
-                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-                scaler.step(optimizer)
-                scaler.update()
-            else:
-                loss = criterion(model(inputs), labels)
-                loss.backward()
-                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-                optimizer.step()
+            loss = criterion(model(inputs), labels)
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+            optimizer.step()
             running_loss += loss.item() * inputs.size(0)
             n += inputs.size(0)
         train_loss = running_loss / max(n, 1)
@@ -608,7 +596,6 @@ def train_fold_supcon(
             device=device,
             num_classes=num_classes,
             patience=ce_patience,
-            use_amp=True,
         )
     else:
         logger.info("  === Phase 2: CE Fine-tuning (head only) ===")
