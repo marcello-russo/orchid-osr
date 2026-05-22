@@ -13,12 +13,12 @@
   },
   "dashboard": {
     "title": "OrchID-NCD Dashboard",
-    "subtitle": "Overview of the orchid classification benchmark and experiment tracking.",
+    "subtitle": "Overview of the Orchid classification benchmark and experiment tracking.",
     "species_distribution": "Species Distribution",
     "recent_experiments": "Recent Experiments",
     "nav": {
       "experiments": "Browse training runs and compare model performance",
-      "classify": "Identify orchid species from photos",
+      "classify": "Identify Orchid species from photos",
       "dataset": "Explore the Ophrys image collection",
       "embeddings": "Visualize species relationships in latent space (Phase 2)",
       "research": "Discover the research framework, methodology, and scientific context"
@@ -137,13 +137,13 @@
   },
   "classify": {
     "title": "Species Identification",
-    "subtitle": "Upload an orchid photo and identify the species using trained models.",
+    "subtitle": "Upload an Orchid photo and identify the species using trained models.",
     "upload": {
       "title": "Upload Orchid Photo",
       "drop": "Drop the image here",
       "browse": "Browse files",
       "support": "Supports JPG, PNG, WEBP",
-      "alt": "Uploaded orchid"
+      "alt": "Uploaded Orchid"
     },
     "models": {
       "load_error": "Could not load trained models",
@@ -221,18 +221,18 @@
   "about": {
     "hero": {
       "title": "OrchID-NCD",
-      "description": "An end-to-end research framework developed at the University of Naples Federico II for ultra-fine-grained visual classification and representation learning of Ophrys orchids.",
+      "description": "An end-to-end research framework developed at the University of Naples Federico II for ultra-fine-grained visual classification and representation learning of Ophrys species.",
       "tag": "Master Thesis Project"
     },
     "objectives": {
       "title": "Research Objectives",
       "vectorSpace": {
         "title": "Structured Embedding Space",
-        "description": "We construct a high-dimensional vector space where morphologically similar orchid species cluster together via Supervised Contrastive Learning [8]. This latent representation enables similarity search, outlier detection, and provides the foundation for discovering previously unseen species."
+        "description": "We construct a high-dimensional vector space where morphologically similar Ophrys species cluster together via Supervised Contrastive Learning [8]. This latent representation enables similarity search, outlier detection, and provides the foundation for discovering previously unseen species."
       },
       "ncd": {
         "title": "Novel Class Discovery",
-        "description": "Standard classifiers operate under a closed-world assumption. Our research tackles Novel Class Discovery [7]: can a model recognize that an unknown orchid does not belong to any known species, and group novel entities into meaningful clusters without supervision?"
+        "description": "Standard classifiers operate under a closed-world assumption. Our research tackles Novel Class Discovery [7]: can a model recognize that an unknown Ophrys does not belong to any known species, and group novel entities into meaningful clusters without supervision?"
       }
     },
     "scientific": {
@@ -245,7 +245,7 @@
       "baselines_title": "Preliminary Baselines (Exp 1–5)",
       "baselines": "The first five experiments explored only ResNet18 (Exp 1–3) and ResNet50 (Exp 4–5) on standard train/val/test splits, using a combined dataset of private field photos and internet-sourced images across six Ophrys species of the sphegodes complex: O. exaltata, O. garganica, O. incubacea, O. majellensis, O. sphegodes, and O. sphegodes ssp. sphegodes (Palena population). Experiment 4 introduced 5-fold stratified cross-validation for both architectures, establishing the rigorous evaluation protocol still in use today. ConvNeXt and DINOv2 had not yet been tested.",
       "leakage_title": "The Data Leakage Problem",
-      "leakage": "MD5 content hashing revealed that the train and test sets shared visually identical images under different filenames — a subtle form of data leakage that artificially inflated metrics and invalidated all results from Exp 1–5. The same orchid photograph, downloaded multiple times with different names, was present in both training and test partitions.",
+      "leakage": "MD5 content hashing revealed that the train and test sets shared visually identical images under different filenames — a subtle form of data leakage that artificially inflated metrics and invalidated all results from Exp 1–5. The same Ophrys photograph, downloaded multiple times with different names, was present in both training and test partitions.",
       "preprocessing_title": "The Preprocessing Problem",
       "preprocessing": "The original pipeline applied aggressive center-cropping to a fixed resolution, destroying aspect ratio information. Since ResNet expects 256×512 inputs while ConvNeXt and DINOv2 use 224×224, the same crop produced distorted, information-poor inputs across architectures. We replaced this with letterbox resizing: images are scaled to fit within the target dimensions while preserving aspect ratio, with black padding bands filling the remaining space.",
       "clean_title": "Exp 6 — Clean Slate",
@@ -294,7 +294,7 @@
       "phase2_why_frozen": "Why freeze the backbone? If the backbone were updated during CE fine-tuning, gradients from the Cross-Entropy loss would warp the embedding space to maximize class separability at the expense of the contrastive structure learned in Phase 1 [8]. The resulting embeddings would lose the property that morphologically similar species cluster together — a property essential for Novel Class Discovery [7]. Freezing the backbone also reduces the parameter count by 99.5%, meaning Phase 2 converges in fewer than 50 epochs even with a small learning rate (0.01) and no weight decay, since only the 6×512-weight linear head needs training.",
       "phase2_params": "Hyperparameters. SupCon Phase: temperature τ=0.07, the standard value from the SupCon paper [8], controlling how sharply the distribution over negative pairs is peaked — lower τ enforces harder negative separation but risks collapsing when batch diversity is low. Projection dimension 128, as recommended for ImageNet-scale features [8]; higher values (256, 512) add capacity but increase the risk of overfitting on our 2,232-image dataset. Per-architecture optimizer and LR from the model registry: Adam [10] with LR=0.001 for ResNet (BatchNorm provides implicit regularization, so weight decay is unnecessary); AdamW [11] with LR=0.0001 for ConvNeXt (its LayerNorm-based architecture benefits from decoupled weight decay at 0.05); AdamW [11] with LR=0.0002 for LoRA-tuned DINOv2 (light regularization at 0.01 on the small set of trainable adapters). Physical batch size 8 (ResNet/ConvNeXt) or 4 (DINOv2) due to 4 GB VRAM; effective batch 32 via 4x or 8x gradient accumulation [8]. CE Phase: LR=0.01 (higher than Phase 1 because only the randomly initialized linear head trains), Adam [10], zero weight decay (the frozen BatchNorm layers in the backbone already provide regularization), patience 15 on val_loss following the standard early stopping criterion [12], maximum 50 epochs (early stopping typically triggers around epoch 20–35). Both phases use 5-fold stratified cross-validation on the same clean split (seed=57), ensuring the only variable between Exp 6 and Exp 7 is the training objective, not the data partition.",
       "phase2_memory": "Memory constraints and SupCon stability. The Quadro T2000 (4 GB VRAM) limits physical batch size to 8 for ResNet/ConvNeXt and 4 for DINOv2-Base. At batch=4 with 6 classes, random sampling frequently yields batches where all samples belong to different species. The InfoNCE objective [13] underlying SupCon requires at least one positive pair per anchor — without it, the log-sum-exp over an all-negative similarity matrix produces numerically unstable gradients (NaN). We mitigate this through three mechanisms: (1) empty-positive-batch detection returning a zero loss instead of propagating NaNs, (2) gradient clipping at max_norm=2.0 [12] to bound gradient variance from sparse positive signals, and (3) safe L2-normalization of projection head outputs with a numerical epsilon to avoid division-by-zero in the normalization step. The effective contrastive signal is maintained through gradient accumulation (8 steps), ensuring each optimizer step aggregates enough positive pairs for stable learning.",
-      "phase2_dinov2": "DINOv2 special case. DINOv2-Base [6] is a Vision Transformer (ViT-B) with 86M parameters, pre-trained on 142M images via self-supervised learning. Full fine-tuning would require substantial GPU memory; we instead use Low-Rank Adaptation (LoRA) [9] with rank r=8, alpha=16, dropout=0.1, applied to the query and value projection matrices of all 12 attention layers. This adds only 0.42M trainable parameters (~0.5% of total). During SupCon Phase 1, both the LoRA adapters and the projection head (768→768→ReLU→128) are trained jointly — the backbone weights remain frozen. The LoRA adapters learn domain-specific shifts to the attention projections, adapting the generic ViT features to the orchid domain without overwriting the pre-trained weights. In Phase 2, both the ViT backbone and the LoRA adapters are frozen; only the linear classifier head (768×6) is trained with Cross-Entropy. This preserves the structured embedding space learned in Phase 1 while adding a classification head on top.",
+      "phase2_dinov2": "DINOv2 special case. DINOv2-Base [6] is a Vision Transformer (ViT-B) with 86M parameters, pre-trained on 142M images via self-supervised learning. Full fine-tuning would require substantial GPU memory; we instead use Low-Rank Adaptation (LoRA) [9] with rank r=8, alpha=16, dropout=0.1, applied to the query and value projection matrices of all 12 attention layers. This adds only 0.42M trainable parameters (~0.5% of total). During SupCon Phase 1, both the LoRA adapters and the projection head (768→768→ReLU→128) are trained jointly — the backbone weights remain frozen. The LoRA adapters learn domain-specific shifts to the attention projections, adapting the generic ViT features to the Orchid domain without overwriting the pre-trained weights. In Phase 2, both the ViT backbone and the LoRA adapters are frozen; only the linear classifier head (768×6) is trained with Cross-Entropy. This preserves the structured embedding space learned in Phase 1 while adding a classification head on top.",
       "phase3_title": "Exp 8: Open-World Recognition (SpHOR + GCD)",
       "phase3": "Exp 8 implements an open-world pipeline for recognizing and discovering new Ophrys species, building on the SupCon models from Exp 7. The system consists of three phases: (1) Open-Set Recognition based on spherical orthogonal prototypes [16] and Extreme Value Theory (OpenMax) [14] to detect whether an image does not belong to any known species — instead of using arbitrary thresholds, the decision is based on the Weibull distribution of distances from class prototypes; (2) Generalized Category Discovery via multi-granularity clustering [17] to group 'unknown' candidates into potential new species, automatically estimating the number of clusters via semi-supervised InfoMap; (3) Incremental addition of new species with CE head fine-tuning on a frozen backbone, without retraining the entire model. The architecture combines SpHOR's spherical orthogonal prototypes with MGCE's multi-expert clustering, adapted to the botanical ultra-FGVC domain — an original contribution not found in the literature [15].",
       "osr_title": "Open-Set Recognition",
@@ -411,7 +411,7 @@
       "title": "Exp 7 Analysis — SupCon",
       "overview": "Exp 7 trained 6 architectures with SupCon + CE fine-tuning via 5-fold cross-validation, with final testing on 300 images (50 per species).",
       "winner_title": "🏆 Overall Winner: DINOv2-Small",
-      "winner": "DINOv2-Small dominates the leaderboard with a Test F1 of 0.8958, outperforming the runner-up (ResNet-50, 0.7993) by nearly 10 percentage points. The gap between cross-validation (CV F1 0.9058) and test (0.8958) is only 0.01 — the lowest among all models — indicating excellent generalization. At the species level, it excels on O. sphegodes_Palena (F1=0.990) and O. majellensis (0.980), while the hardest species remains O. sphegodes (0.782). This result confirms DINOv2-Small as the ideal backbone for our domain: lightweight (42M parameters), pre-trained on 142M images, and effectively adaptable via LoRA to 2,232 orchid images.",
+      "winner": "DINOv2-Small dominates the leaderboard with a Test F1 of 0.8958, outperforming the runner-up (ResNet-50, 0.7993) by nearly 10 percentage points. The gap between cross-validation (CV F1 0.9058) and test (0.8958) is only 0.01 — the lowest among all models — indicating excellent generalization. At the species level, it excels on O. sphegodes_Palena (F1=0.990) and O. majellensis (0.980), while the hardest species remains O. sphegodes (0.782). This result confirms DINOv2-Small as the ideal backbone for our domain: lightweight (42M parameters), pre-trained on 142M images, and effectively adaptable via LoRA to 2,232 Ophrys images.",
       "overfitting_title": "⚠️ Overfitting: the big model problem",
       "overfitting": "The most striking finding of Exp 7 is the gap between cross-validation and test performance. DINOv2-Base (304M parameters) has a gap of 0.2262 — the worst overall — despite a CV F1 of 0.9135. On O. majellensis, its recall is only 0.12, meaning only 6 out of 50 test images are correctly classified. ConvNeXt-Small (gap 0.1935) and ConvNeXt-Tiny (0.1945) fare similarly poorly. Conversely, ResNet-50 shows a negative gap (-0.0635): its test F1 (0.7993) exceeds CV (0.7359), suggesting that 5-fold cross-validation underestimates its capabilities due to the small validation set size. This pattern suggests that for small datasets, models with fewer parameters and strong implicit regularization generalize better than massive architectures with generic pre-training.",
       "species_title": "🔬 Easiest and hardest species",
