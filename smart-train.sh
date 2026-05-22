@@ -7,6 +7,7 @@
 #   ./smart-train.sh --exp 7                  # Exp 7 (SupCon)
 #   ./smart-train.sh --exp 8                  # Exp 8 (SpHOR)
 #   ./smart-train.sh --exp 9                  # Exp 9 (SpHOR, no O. majellensis)
+#   ./smart-train.sh --exp 10                 # Exp 10 (Ultimate: hard negative + full finetune)
 #   ./smart-train.sh --model resnet18         # Solo un modello
 #   ./smart-train.sh --no-upload             # Senza upload HF finale
 #   nohup ./smart-train.sh --exp 8 >> smart-train.log 2>&1 &   # Append log!
@@ -29,6 +30,7 @@ EXP6_MODELS=(resnet18 resnet50 convnext_tiny convnext_small dinov2_small dinov2_
 EXP7_MODELS=(resnet50 resnet18 dinov2_small dinov2_base convnext_tiny convnext_small)
 EXP8_MODELS=(resnet18 convnext_tiny convnext_small dinov2_base)
 EXP9_MODELS=(convnext_tiny dinov2_small resnet50 resnet18 dinov2_base convnext_small)
+EXP10_MODELS=(dinov2_base dinov2_small convnext_tiny convnext_small resnet18 resnet50)
 
 # --- Battery ---
 BAT="/sys/class/power_supply/BAT0"
@@ -60,11 +62,15 @@ elif [ "$EXP" -eq 8 ]; then
     EXP_PREFIX="exp8_sphor"
     HF_PREFIX="exp8_sphor"
     MODELS=("${EXP8_MODELS[@]}")
-else
-    EXP=9
+elif [ "$EXP" -eq 9 ]; then
     EXP_PREFIX="exp9_ncd"
     HF_PREFIX="exp9_ncd"
     MODELS=("${EXP9_MODELS[@]}")
+else
+    EXP=10
+    EXP_PREFIX="exp10_ultimate"
+    HF_PREFIX="exp10_ultimate"
+    MODELS=("${EXP10_MODELS[@]}")
 fi
 
 if [ -n "$SINGLE_MODEL" ]; then
@@ -107,6 +113,7 @@ start_fold() {
     local EPOCHS_PER_MODEL="$EPOCHS"
     local CE_EPOCHS_PER_MODEL="$CE_EPOCHS"
     local SPHOR=""
+    local EXTRA=""
     case "$model" in
         dinov2_small|dinov2_base)
             EPOCHS_PER_MODEL=100
@@ -118,11 +125,27 @@ start_fold() {
     if [ "$EXP" -eq 8 ] || [ "$EXP" -eq 9 ]; then
         SPHOR="--sphor"
     fi
+    if [ "$EXP" -eq 10 ]; then
+        SPHOR=""
+        EPOCHS_PER_MODEL=150
+        CE_EPOCHS_PER_MODEL=150
+        EXTRA="--full-finetune --hard-weight 5.0"
+        case "$model" in
+            dinov2_small|dinov2_base)
+                BS=4
+                ACC=8
+                ;;
+            convnext_tiny|convnext_small|resnet18|resnet50)
+                BS=8
+                ACC=4
+                ;;
+        esac
+    fi
     cd "$BACKEND_DIR"
     python cli.py --cross-validate \
         --exp "$EXP" --model "$model" --epochs "$EPOCHS_PER_MODEL" \
         --patience "$PATIENCE" --batch-size "$BS" --accumulation "$ACC" \
-        --ce-epochs "$CE_EPOCHS_PER_MODEL" --fold "$fold" $SPHOR &
+        --ce-epochs "$CE_EPOCHS_PER_MODEL" --fold "$fold" $SPHOR $EXTRA &
     TRAIN_PID=$!
     CURRENT_MODEL="$model"
     CURRENT_FOLD="$fold"
