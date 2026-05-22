@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Loader2, Sparkles, Eye, X,
+  Loader2, Sparkles, Eye, X, ScanSearch,
   Download, HardDrive, RefreshCw, ChevronDown,
   CheckCircle, AlertCircle, Flower2, Image as ImageIcon,
 } from "lucide-react";
@@ -278,9 +278,14 @@ export function ClassifyPage() {
     <div className="max-w-5xl mx-auto px-4 md:px-8 py-8 md:py-12 animate-in fade-in duration-500 space-y-6">
       {/* ── Header ── */}
       <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl md:text-4xl font-black tracking-tight">{t("classify.title")}</h1>
-          <p className="text-muted-foreground text-sm mt-1">{t("classify.subtitle")}</p>
+        <div className="flex items-center gap-4">
+          <div className="size-10 md:size-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+            <ScanSearch className="size-5 md:size-6" />
+          </div>
+          <div>
+            <h1 className="text-2xl md:text-4xl font-black tracking-tight">{t("classify.title")}</h1>
+            <p className="text-muted-foreground text-sm mt-1">{t("classify.subtitle")}</p>
+          </div>
         </div>
         {file && (
           <Button variant="ghost" size="sm" onClick={clearAll}>
@@ -378,7 +383,7 @@ export function ClassifyPage() {
             <div className="relative bg-muted/30">
               <img
                 src={showHeatmap && heatmapUrl ? heatmapUrl : previewUrl!}
-                alt="Uploaded orchid"
+                alt={t("classify.upload.alt")}
                 className="w-full h-full object-contain max-h-[480px]"
               />
               {/* Image overlay actions */}
