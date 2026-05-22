@@ -7,7 +7,7 @@
 #   ./smart-train.sh --exp 7                  # Exp 7 (SupCon)
 #   ./smart-train.sh --exp 8                  # Exp 8 (SpHOR)
 #   ./smart-train.sh --exp 9                  # Exp 9 (SpHOR, no O. majellensis)
-#   ./smart-train.sh --exp 10                 # Exp 10 (Ultimate: hard negative + full finetune)
+#   ./smart-train.sh --exp 10                 # Exp 10 (MGH-NCD: multi-grano + hard negative + deep f.t.)
 #   ./smart-train.sh --model resnet18         # Solo un modello
 #   ./smart-train.sh --no-upload             # Senza upload HF finale
 #   nohup ./smart-train.sh --exp 8 >> smart-train.log 2>&1 &   # Append log!
@@ -68,8 +68,8 @@ elif [ "$EXP" -eq 9 ]; then
     MODELS=("${EXP9_MODELS[@]}")
 else
     EXP=10
-    EXP_PREFIX="exp10_ultimate"
-    HF_PREFIX="exp10_ultimate"
+    EXP_PREFIX="exp10_mgh_ncd"
+    HF_PREFIX="exp10_mgh_ncd"
     MODELS=("${EXP10_MODELS[@]}")
 fi
 
