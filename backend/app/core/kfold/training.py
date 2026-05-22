@@ -395,9 +395,14 @@ def _train_head_only(
 
 def _train_phase2(
     model, optimizer, train_loader, val_loader,
-    num_epochs, device, num_classes, patience=0,
+    num_epochs, device, num_classes, patience=0, use_amp=False,
 ):
-    """Full fine-tuning Phase 2: backbone + head trained with CE loss and label smoothing."""
+    """Deep fine-tuning Phase 2 with optional half-precision (fp16) for memory savings.
+
+    Trains backbone + head with CE loss and label smoothing.
+    When use_amp=True, wraps forward/backward in torch.cuda.amp.autocast()
+    and uses a GradScaler to prevent underflow.
+    """
     import copy
     from torcheval.metrics import MulticlassAccuracy, MulticlassF1Score
 
@@ -406,6 +411,8 @@ def _train_phase2(
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, mode="min", factor=0.5, patience=10
     )
+
+    scaler = torch.amp.GradScaler() if use_amp else None
 
     best_f1 = 0.0
     best_wts = copy.deepcopy(model.state_dict())
@@ -421,10 +428,19 @@ def _train_phase2(
         for inputs, labels, _ in train_loader:
             inputs, labels = inputs.to(device, non_blocking=True), labels.to(device, non_blocking=True)
             optimizer.zero_grad(set_to_none=True)
-            loss = criterion(model(inputs), labels)
-            loss.backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-            optimizer.step()
+            if use_amp:
+                with torch.amp.autocast(device_type="cuda"):
+                    loss = criterion(model(inputs), labels)
+                scaler.scale(loss).backward()
+                scaler.unscale_(optimizer)
+                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+                scaler.step(optimizer)
+                scaler.update()
+            else:
+                loss = criterion(model(inputs), labels)
+                loss.backward()
+                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+                optimizer.step()
             running_loss += loss.item() * inputs.size(0)
             n += inputs.size(0)
         train_loss = running_loss / max(n, 1)
@@ -437,7 +453,11 @@ def _train_phase2(
         with torch.no_grad():
             for inputs, labels, _ in val_loader:
                 inputs, labels = inputs.to(device, non_blocking=True), labels.to(device, non_blocking=True)
-                out = model(inputs)
+                if use_amp:
+                    with torch.amp.autocast(device_type="cuda"):
+                        out = model(inputs)
+                else:
+                    out = model(inputs)
                 val_loss += criterion(out, labels).item()
                 vb += 1
                 _, pred = torch.max(out, 1)
@@ -510,7 +530,11 @@ def train_fold_supcon(
     ckpt_dir = os.path.dirname(checkpoint_path)
     os.makedirs(ckpt_dir, exist_ok=True)
 
-    model = create_model(model_variant, num_classes=num_classes, pretrained=True)
+    if full_finetune:
+        model = create_model(model_variant, num_classes=num_classes, pretrained=True, lora_r=32)
+        logger.info("  Full finetune mode: LoRA rank increased to 32")
+    else:
+        model = create_model(model_variant, num_classes=num_classes, pretrained=True)
     entry = get_registry_entry(model_variant)
     opt_type = optimizer_type or entry.optimizer
     wd = weight_decay if weight_decay > 0 else entry.weight_decay
@@ -543,22 +567,36 @@ def train_fold_supcon(
 
     # --- Phase 2: CE fine-tuning ---
     if full_finetune:
-        logger.info("  === Phase 2: Full Fine-tuning (backbone + head) ===")
-        # All params trainable, with different LRs
-        backbone_params = []
+        logger.info("  === Phase 2: Deep Fine-tuning (LoRA++ + last blocks + head) ===")
+        # Not truly full fine-tuning (won't fit on 4GB GPU for DINOv2-Base).
+        # Instead: unfreeze LoRA adapters, last 4 transformer blocks, and classifier head.
+        deep_params = []
         head_params = []
         for name, param in model.named_parameters():
-            param.requires_grad = True
-            if "head" in name or "fc" in name or "classifier" in name:
+            param.requires_grad = False
+            # Unfreeze LoRA adapters
+            if "lora_" in name:
+                param.requires_grad = True
+                deep_params.append(param)
+            # Unfreeze last 4 blocks (blocks 8-11 for DINOv2, adapt for CNNs)
+            elif any(f".{i}." in name for i in range(8, 12)) and "lora" not in name:
+                param.requires_grad = True
+                deep_params.append(param)
+            # Unfreeze classifier head
+            elif "head" in name or "fc" in name or "classifier" in name:
+                param.requires_grad = True
                 head_params.append(param)
-            else:
-                backbone_params.append(param)
+
+        if not deep_params:
+            # Fallback for non-DINOv2: train all backbone params that were already unfrozen
+            deep_params = [p for n, p in model.named_parameters()
+                          if p.requires_grad and not any(x in n for x in ["head", "fc", "classifier"])]
 
         optimizer = torch.optim.AdamW([
-            {"params": backbone_params, "lr": 1e-4, "weight_decay": entry.weight_decay},
+            {"params": deep_params, "lr": 1e-4, "weight_decay": entry.weight_decay},
             {"params": head_params, "lr": 1e-3, "weight_decay": 0.0},
         ])
-        logger.info(f"  Trainable params: backbone={sum(p.numel() for p in backbone_params):,}"
+        logger.info(f"  Trainable params: deep={sum(p.numel() for p in deep_params):,}"
                      f" + head={sum(p.numel() for p in head_params):,}")
 
         model, ce_history = _train_phase2(
@@ -570,6 +608,7 @@ def train_fold_supcon(
             device=device,
             num_classes=num_classes,
             patience=ce_patience,
+            use_amp=True,
         )
     else:
         logger.info("  === Phase 2: CE Fine-tuning (head only) ===")
