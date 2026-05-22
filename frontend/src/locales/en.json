@@ -1,6 +1,7 @@
 {
   "common": {
     "loading": "Loading...",
+    "retry": "Retry",
     "error": "An error occurred",
     "back": "Back",
     "home": "Home",
@@ -144,9 +145,21 @@
       "support": "Supports JPG, PNG, WEBP",
       "alt": "Uploaded orchid"
     },
+    "models": {
+      "load_error": "Could not load trained models",
+      "empty": "No trained models found",
+      "empty_hint": "Train models using the CLI or download them from HuggingFace Hub."
+    },
     "model_select": {
       "label": "Select Model",
       "description": "Vision Transformer (DINOv2) models are recommended for higher precision."
+    },
+    "cache": {
+      "download_all": "Download all models",
+      "clear": "Clear cache",
+      "downloading": "Downloading models...",
+      "cached": "cached",
+      "not_cached": "not cached"
     },
     "progress": {
       "uploading": "Uploading...",

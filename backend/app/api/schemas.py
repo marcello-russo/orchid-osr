@@ -126,11 +126,26 @@ class ModelOption(BaseModel):
     mean_f1: float | None = None
     test_accuracy: float | None = None
     num_folds: int | None = None
+    is_cached: bool = False
+    size_mb: float | None = None
+    exp_num: int = 0
+    exp_label: str = ""
 
 
 class ModelListResponse(BaseModel):
     """List of available classification models."""
     models: list[ModelOption]
+
+
+class CacheStatus(BaseModel):
+    """Status of locally cached model weights."""
+    total_models: int = 0
+    cached_models: int = 0
+    total_size_mb: float = 0
+    cached_size_mb: float = 0
+    is_downloading: bool = False
+    download_progress: float = 0
+    models: list[ModelOption] = []
 
 
 class DatasetClassInfo(BaseModel):

@@ -142,6 +142,20 @@ export interface ModelOption {
   mean_f1: number | null;
   test_accuracy: number | null;
   num_folds: number | null;
+  is_cached?: boolean;
+  size_mb?: number | null;
+  exp_num?: number;
+  exp_label?: string;
+}
+
+export interface CacheStatus {
+  total_models: number;
+  cached_models: number;
+  total_size_mb: number;
+  cached_size_mb: number;
+  is_downloading: boolean;
+  download_progress: number;
+  models: ModelOption[];
 }
 
 // Dataset types
