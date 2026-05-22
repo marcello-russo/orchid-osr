@@ -1,12 +1,7 @@
 import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  GraduationCap,
-  Cpu,
-  ShieldCheck,
-  Microscope,
-  Layers,
-  Brain,
+  FlaskConical,
   BarChart3,
   ChevronDown,
   ChevronRight,
@@ -14,9 +9,16 @@ import {
   Binary,
   BookOpen,
   Route,
-  FlaskConical,
   Zap,
   BookMarked,
+  AlertTriangle,
+  Rocket,
+  GraduationCap,
+  Cpu,
+  ShieldCheck,
+  Microscope,
+  Layers,
+  Brain,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
@@ -146,6 +148,24 @@ const REFERENCES = [
     citation:
       "Ioffe, S. & Szegedy, C. (2015). Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift. In International Conference on Machine Learning (ICML), 448–456.",
     url: "https://arxiv.org/abs/1502.03167",
+  },
+  {
+    id: 20,
+    citation:
+      "Liu, W., Wang, X., Owens, J. & Li, Y. (2020). Energy-based Out-of-distribution Detection. In Advances in Neural Information Processing Systems (NeurIPS), 33, 21480–21491.",
+    url: "https://proceedings.neurips.cc/paper/2020/hash/f5496252609c43eb8a3d147ab9b9c006-Abstract.html",
+  },
+  {
+    id: 21,
+    citation:
+      "Lee, K., Lee, K., Lee, H. & Shin, J. (2018). A Simple Unified Framework for Detecting Out-of-Distribution Samples and Adversarial Attacks. In Advances in Neural Information Processing Systems (NeurIPS), 31.",
+    url: "https://papers.nips.cc/paper_files/paper/2018/hash/aba6db44e10e11c95413e0b4cbf78f52-Abstract.html",
+  },
+  {
+    id: 22,
+    citation:
+      "Chen, Y., Lang, N., Schmidt, B.C., Jain, A., Basset, Y., Beery, S., Larrivée, M. & Rolnick, D. (2025). Open-Insect: Benchmarking Open-Set Recognition of Novel Species in Biodiversity Monitoring. In NeurIPS 2025 Dataset and Benchmark Track (Spotlight).",
+    url: "https://arxiv.org/abs/2503.01691",
   },
 ];
 
@@ -435,7 +455,173 @@ export function ResearchPage() {
         <Exp9NcdResults />
       </section>
 
-      {/* 9. Bibliography */}
+      {/* 9 ============================================================
+            CROSS-EXPERIMENT ANALYSIS
+      ============================================================ */}
+      <section className="space-y-6 md:space-y-8 pt-4">
+        <div className="flex items-center gap-4">
+          <div className="size-12 rounded-2xl bg-red-500/10 flex items-center justify-center text-red-500">
+            <AlertTriangle className="size-6" />
+          </div>
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Cross-Experiment Analysis</h2>
+        </div>
+
+        <p className="text-muted-foreground leading-relaxed">
+          After training 24 models across four experiments (6 architectures × Exp 6/7/8/9), a systematic analysis of confusion matrices reveals a fundamental limitation of contrastive learning for ultra-fine-grained open-set recognition.
+        </p>
+
+        <div className="p-6 rounded-xl bg-red-500/5 border border-red-500/20 text-muted-foreground leading-relaxed">
+          <p className="font-bold text-foreground mb-2">Key Finding: SupCon collapses visually similar species</p>
+          <p className="text-sm">
+            Cross-entropy (Exp 6) recognizes <strong>O. majellensis at 96–100%</strong> across all architectures. Switching to SupCon (Exp 7) collapses it with O. sphegodes — accuracy drops to <strong>12–14%</strong>. The confusion matrix shows that up to <strong>70% of majellensis images are misclassified as sphegodes</strong>. This occurs because SupCon optimizes for embedding similarity, pulling visually near-identical species into the same region of the latent space. The orthogonal prototype repulsion of SpHOR (Exp 8) does not resolve this — results are comparable to plain SupCon. In the NCD scenario (Exp 9), where O. majellensis is the hidden novel class, it is classified as O. sphegodes in 58–90% of cases, explaining the near-random AUROC (~0.5).
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-4 p-6 rounded-xl bg-blue-500/5 border border-blue-500/20">
+            <h3 className="text-foreground font-bold text-base">Confusion Patterns</h3>
+            <div className="text-sm text-muted-foreground space-y-2">
+              <p><strong>1. O. majellensis → O. sphegodes</strong>: 46–70% in SupCon, 58–90% in NCD</p>
+              <p><strong>2. O. sphegodes → O. exaltata</strong>: 8–24% across all experiments</p>
+              <p><strong>3. O. sphegodes → O. garganica</strong>: 6–20% across all experiments</p>
+              <p><strong>4. O. sphegodes_Palena → O. sphegodes</strong>: 14–42% in SupCon/SpHOR</p>
+            </div>
+          </div>
+          <div className="space-y-4 p-6 rounded-xl bg-violet-500/5 border border-violet-500/20">
+            <h3 className="text-foreground font-bold text-base">Root Cause</h3>
+            <div className="text-sm text-muted-foreground space-y-2">
+              <p>SupCon pulls same-class embeddings together. For ultra-fine-grained classes where inter-class variance is smaller than intra-class variance (lighting, angle, flower maturity), visually similar but distinct species collapse into overlapping clusters. CE directly optimizes the decision boundary, hence it separates them — but CE embeddings are less structured for clustering and novel-class discovery.</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-6 rounded-xl bg-amber-500/5 border border-amber-500/20 text-muted-foreground leading-relaxed">
+          <p className="font-bold text-foreground mb-2">Recent Literature Confirms This Pattern</p>
+          <p className="text-sm">
+            The Open-Insect benchmark {renderCitations("22")}, a NeurIPS 2025 spotlight evaluating 38 OSR algorithms on fine-grained species classification, finds that simple post-hoc approaches (Mahalanobis distance, KNN density ratio) consistently outperform complex training-time methods like OpenMax and SpHOR for biodiversity monitoring tasks. This supports our finding that the bottleneck is the embedding space structure, not the scoring function. Additionally, the Multi-Granularity Conceptual Experts (MGCE) framework {renderCitations("17")} achieves state-of-the-art on fine-grained Generalized Category Discovery by combining multi-granularity features with dynamic contrastive learning — exactly the direction needed for our domain.
+          </p>
+        </div>
+      </section>
+
+      {/* 10 ============================================================
+            EXP 10: ULTIMATE EXPERIMENT
+      ============================================================ */}
+      <section className="space-y-6 md:space-y-8 pt-4">
+        <div className="flex items-center gap-4">
+          <div className="size-12 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center text-white shadow-lg">
+            <Rocket className="size-6" />
+          </div>
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Exp 10 — Ultimate Experiment</h2>
+        </div>
+
+        <p className="text-muted-foreground leading-relaxed">
+          Exp 10 is designed as the final, definitive experiment of this thesis. It combines four innovations targeting the specific failure modes identified in the cross-experiment analysis. The goal is to maximize both closed-set accuracy and open-set detection (AUROC) for ultra-fine-grained novel class discovery.
+        </p>
+
+        {/* Innovation 1 */}
+        <div className="p-6 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-500/5 border border-blue-500/20">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="size-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500 font-black">1</div>
+            <h3 className="text-lg font-bold">Hard Negative Mining in SupCon</h3>
+          </div>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            The most critical innovation. During SupCon training, the contrastive loss contribution for pairs involving (O. majellensis, O. sphegodes) is multiplied by 5×, and for (O. sphegodes, O. sphegodes_Palena) pairs by 3×. This forces the model to explicitly separate these collapsed species in the embedding space, while maintaining the benefits of contrastive learning for the remaining classes.{renderCitations("8")}
+          </p>
+        </div>
+
+        {/* Innovation 2 */}
+        <div className="p-6 rounded-xl bg-gradient-to-br from-purple-500/10 to-purple-500/5 border border-purple-500/20">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="size-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-500 font-black">2</div>
+            <h3 className="text-lg font-bold">Multi-Granularity Feature Extraction</h3>
+          </div>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            For ViT-based architectures (DINOv2), features are extracted from three levels: the final CLS token (global semantics), attention-pooled patch tokens (local discriminative details), and the mid-layer CLS token (regional features). For CNN architectures (ResNet, ConvNeXt), features from the penultimate and final stages are concatenated. The concatenated multi-scale vector is projected to a unified 256-dim space via an MLP. This mimics the multi-granularity expert approach proposed in MGCE {renderCitations("17")}, adapted to our architectures.
+          </p>
+        </div>
+
+        {/* Innovation 3 */}
+        <div className="p-6 rounded-xl bg-gradient-to-br from-green-500/10 to-green-500/5 border border-green-500/20">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="size-8 rounded-lg bg-green-500/10 flex items-center justify-center text-green-500 font-black">3</div>
+            <h3 className="text-lg font-bold">Full Backbone Fine-Tuning</h3>
+          </div>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Unlike previous experiments where the backbone was frozen during Phase 2 CE fine-tuning, Exp 10 fine-tunes all parameters. The backbone uses a lower learning rate (1e-4) while the classification head uses 1e-3, with AdamW and gradient clipping. Training runs for up to 150 epochs with early stopping (patience=20) and label smoothing (0.1) applied to the CE loss{renderCitations("11")}.
+          </p>
+        </div>
+
+        {/* Innovation 4 */}
+        <div className="p-6 rounded-xl bg-gradient-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/20">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="size-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500 font-black">4</div>
+            <h3 className="text-lg font-bold">OSR Ensemble (Mahalanobis + KNN + Energy)</h3>
+          </div>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            OpenMax is replaced by a post-hoc ensemble of three scoring functions, following the findings of Open-Insect {renderCitations("22")}:
+          </p>
+          <ul className="text-sm text-muted-foreground space-y-1 mt-2 list-disc list-inside">
+            <li><strong>Mahalanobis distance</strong> {renderCitations("21")} — class-conditional Gaussian density estimation on the embedding space</li>
+            <li><strong>KNN density ratio</strong> — ratio of distance to nearest known-class neighbors vs. background neighbors</li>
+            <li><strong>Energy score</strong> {renderCitations("20")} — log-sum-exp of logits, theoretically aligned with input probability density</li>
+          </ul>
+          <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+            The final unknown score is a weighted combination: 0.4 × Mahalanobis + 0.3 × KNN + 0.3 × Energy. This ensemble is more robust than any single scoring function.
+          </p>
+        </div>
+
+        {/* Expected outcomes */}
+        <div className="p-6 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
+          <div className="flex items-center gap-3 mb-3">
+            <Rocket className="size-5 text-primary" />
+            <h3 className="text-lg font-bold">Expected Outcome</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border/50 text-xs uppercase tracking-widest text-muted-foreground font-bold">
+                  <th className="text-left py-2 px-3">Metric</th>
+                  <th className="text-center py-2 px-3">Exp 9 (baseline)</th>
+                  <th className="text-center py-2 px-3">Exp 10 (target)</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/30">
+                <tr>
+                  <td className="py-2 px-3 font-medium">Known class F1</td>
+                  <td className="text-center py-2 px-3 font-mono">~0.90</td>
+                  <td className="text-center py-2 px-3 font-mono text-green-600">{'>'}0.93</td>
+                </tr>
+                <tr>
+                  <td className="py-2 px-3 font-medium">O. majellensis accuracy</td>
+                  <td className="text-center py-2 px-3 font-mono">~13%</td>
+                  <td className="text-center py-2 px-3 font-mono text-green-600">{'>'}80%</td>
+                </tr>
+                <tr>
+                  <td className="py-2 px-3 font-medium">Mean AUROC (NCD)</td>
+                  <td className="text-center py-2 px-3 font-mono">~0.45</td>
+                  <td className="text-center py-2 px-3 font-mono text-green-600">{'>'}0.55</td>
+                </tr>
+                <tr>
+                  <td className="py-2 px-3 font-medium">Best AUROC</td>
+                  <td className="text-center py-2 px-3 font-mono">0.497</td>
+                  <td className="text-center py-2 px-3 font-mono text-green-600">{'>'}0.60</td>
+                </tr>
+                <tr>
+                  <td className="py-2 px-3 font-medium">Clustering ACC</td>
+                  <td className="text-center py-2 px-3 font-mono">~0.46</td>
+                  <td className="text-center py-2 px-3 font-mono text-green-600">{'>'}0.55</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <p className="text-muted-foreground text-sm leading-relaxed">
+          All 6 architectures will be trained with the same Exp 10 recipe for completeness. The primary analysis will focus on DINOv2-Base (best tradeoff between embedding quality and GPU memory), with cross-architecture comparisons provided.
+        </p>
+      </section>
+
+      {/* 12. Bibliography */}
       <section className="space-y-6">
         <div className="flex items-center gap-3 md:gap-4">
           <div className="size-10 md:size-12 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground">
