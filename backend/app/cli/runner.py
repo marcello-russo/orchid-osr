@@ -84,6 +84,8 @@ def run_experiment(
     ce_epochs: int = 50,
     use_prototypes: bool = False,
     repulse_weight: float = 0.05,
+    pair_weights: dict | None = None,
+    full_finetune: bool = False,
 ):
     """Run a single experiment (k-fold cross-validation or single fold)."""
     import logging
@@ -253,6 +255,8 @@ def run_experiment(
             use_prototypes=use_prototypes,
             repulse_weight=repulse_weight,
             exclude_classes=config.get("exclude_classes"),
+            pair_weights=pair_weights,
+            full_finetune=full_finetune,
         )
     else:
         from app.core.kfold import kfold_experiment

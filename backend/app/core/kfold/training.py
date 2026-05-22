@@ -7,6 +7,7 @@ import shutil
 
 import numpy as np
 import torch
+import torch.nn as nn
 from sklearn.model_selection import StratifiedKFold
 from torch.utils.data import DataLoader
 
@@ -392,6 +393,94 @@ def _train_head_only(
     return model, history
 
 
+def _train_phase2(
+    model, optimizer, train_loader, val_loader,
+    num_epochs, device, num_classes, patience=0,
+):
+    """Full fine-tuning Phase 2: backbone + head trained with CE loss and label smoothing."""
+    import copy
+    from torcheval.metrics import MulticlassAccuracy, MulticlassF1Score
+
+    model = model.to(device)
+    criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, mode="min", factor=0.5, patience=10
+    )
+
+    best_f1 = 0.0
+    best_wts = copy.deepcopy(model.state_dict())
+    best_val_loss = float("inf")
+    epochs_no_improve = 0
+
+    history = {"train_loss": [], "val_loss": [], "val_accuracy": [], "val_f1": []}
+
+    for epoch in range(num_epochs):
+        model.train()
+        running_loss = 0.0
+        n = 0
+        for inputs, labels, _ in train_loader:
+            inputs, labels = inputs.to(device, non_blocking=True), labels.to(device, non_blocking=True)
+            optimizer.zero_grad(set_to_none=True)
+            loss = criterion(model(inputs), labels)
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+            optimizer.step()
+            running_loss += loss.item() * inputs.size(0)
+            n += inputs.size(0)
+        train_loss = running_loss / max(n, 1)
+
+        model.eval()
+        acc_m = MulticlassAccuracy(num_classes=num_classes, average="macro").to(device)
+        f1_m = MulticlassF1Score(num_classes=num_classes, average="macro").to(device)
+        val_loss = 0.0
+        vb = 0
+        with torch.no_grad():
+            for inputs, labels, _ in val_loader:
+                inputs, labels = inputs.to(device, non_blocking=True), labels.to(device, non_blocking=True)
+                out = model(inputs)
+                val_loss += criterion(out, labels).item()
+                vb += 1
+                _, pred = torch.max(out, 1)
+                acc_m.update(pred, labels)
+                f1_m.update(pred, labels)
+        val_loss /= max(vb, 1)
+        accuracy = acc_m.compute().item()
+        f1 = f1_m.compute().item()
+
+        scheduler.step(val_loss)
+        current_lr = optimizer.param_groups[0]["lr"]
+
+        history["train_loss"].append(train_loss)
+        history["val_loss"].append(val_loss)
+        history["val_accuracy"].append(accuracy)
+        history["val_f1"].append(f1)
+
+        logger.info(
+            f"[Full FT] Epoch {epoch+1}/{num_epochs} | "
+            f"Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f} | "
+            f"Acc: {accuracy:.4f} | F1: {f1:.4f} | LR: {current_lr:.2e}"
+        )
+
+        if f1 >= best_f1:
+            best_f1 = f1
+            best_wts = copy.deepcopy(model.state_dict())
+            logger.info(f"[Full FT] New best F1: {f1:.4f}")
+
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+            epochs_no_improve = 0
+        else:
+            epochs_no_improve += 1
+
+        if patience > 0 and epochs_no_improve >= patience:
+            logger.info(f"[Full FT] Early stopping at epoch {epoch+1}")
+            break
+
+    model.load_state_dict(best_wts)
+    logger.info(f"[Full FT] Phase 2 complete. Best F1: {best_f1:.4f}")
+    return model, history
+
+
 def train_fold_supcon(
     model_variant, num_classes, train_loader, val_loader,
     num_epochs, learning_rate, device, checkpoint_path,
@@ -400,11 +489,17 @@ def train_fold_supcon(
     patience=0, gradient_accumulation_steps=1, resume=False,
     optimizer_type="adam", weight_decay=0.0,
     use_prototypes=False, repulse_weight=0.05,
+    pair_weights=None, full_finetune=False,
 ):
     """Two-phase training for SupCon: Phase 1 (contrastive) + Phase 2 (CE fine-tune).
 
     Phase 1: backbone + projection head trained with SupCon loss.
-    Phase 2: backbone frozen, classifier head trained with CE loss.
+    Phase 2: classifier head trained with CE loss (backbone optionally frozen).
+
+    If full_finetune=True, the entire model is fine-tuned in Phase 2 with
+    a lower learning rate for the backbone and a higher LR for the head.
+
+    If pair_weights is provided, applies hard negative mining during Phase 1.
 
     Returns:
         tuple: (model, fold_metrics_dict with both phases)
@@ -424,7 +519,7 @@ def train_fold_supcon(
     if lr != learning_rate:
         logger.info(f"  Registry LR override: {learning_rate} -> {lr} ({model_variant})")
 
-    # --- Phase 1: SupCon ---
+    # --- Phase 1: SupCon with optional hard negative mining ---
     logger.info("  === Phase 1: SupCon Contrastive Learning ===")
     model, supcon_metrics = train_supcon(
         model=model,
@@ -443,28 +538,59 @@ def train_fold_supcon(
         weight_decay=wd,
         use_prototypes=use_prototypes,
         repulse_weight=repulse_weight,
+        pair_weights=pair_weights,
     )
 
-    # --- Phase 2: CE fine-tuning (backbone frozen, head only) ---
-    logger.info("  === Phase 2: CE Fine-tuning (backbone frozen) ===")
-    for param in model.parameters():
-        param.requires_grad = False
-    model._unfreeze_head()
+    # --- Phase 2: CE fine-tuning ---
+    if full_finetune:
+        logger.info("  === Phase 2: Full Fine-tuning (backbone + head) ===")
+        # All params trainable, with different LRs
+        backbone_params = []
+        head_params = []
+        for name, param in model.named_parameters():
+            param.requires_grad = True
+            if "head" in name or "fc" in name or "classifier" in name:
+                head_params.append(param)
+            else:
+                backbone_params.append(param)
 
-    head_params = [p for p in model.parameters() if p.requires_grad]
-    logger.info(f"  Trainable params (head only): {sum(p.numel() for p in head_params):,}")
+        optimizer = torch.optim.AdamW([
+            {"params": backbone_params, "lr": 1e-4, "weight_decay": entry.weight_decay},
+            {"params": head_params, "lr": 1e-3, "weight_decay": 0.0},
+        ])
+        logger.info(f"  Trainable params: backbone={sum(p.numel() for p in backbone_params):,}"
+                     f" + head={sum(p.numel() for p in head_params):,}")
 
-    model, ce_history = _train_head_only(
-        model=model,
-        head_params=head_params,
-        train_loader=train_loader,
-        val_loader=val_loader,
-        num_epochs=ce_epochs,
-        learning_rate=0.01,
-        device=device,
-        num_classes=num_classes,
-        patience=ce_patience,
-    )
+        model, ce_history = _train_phase2(
+            model=model,
+            optimizer=optimizer,
+            train_loader=train_loader,
+            val_loader=val_loader,
+            num_epochs=ce_epochs,
+            device=device,
+            num_classes=num_classes,
+            patience=ce_patience,
+        )
+    else:
+        logger.info("  === Phase 2: CE Fine-tuning (head only) ===")
+        for param in model.parameters():
+            param.requires_grad = False
+        model._unfreeze_head()
+
+        head_params = [p for p in model.parameters() if p.requires_grad]
+        logger.info(f"  Trainable params (head only): {sum(p.numel() for p in head_params):,}")
+
+        model, ce_history = _train_head_only(
+            model=model,
+            head_params=head_params,
+            train_loader=train_loader,
+            val_loader=val_loader,
+            num_epochs=ce_epochs,
+            learning_rate=0.01,
+            device=device,
+            num_classes=num_classes,
+            patience=ce_patience,
+        )
 
     # Save best weights
     model.save_weights(checkpoint_path)

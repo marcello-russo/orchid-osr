@@ -141,6 +141,7 @@ def train_supcon(
     weight_decay: float = 0.0,
     use_prototypes: bool = False,
     repulse_weight: float = 0.05,
+    pair_weights: dict | None = None,
 ) -> tuple[ClassifierModel, dict]:
     """Phase 1: train backbone + projection head with SupCon loss.
 
@@ -148,15 +149,18 @@ def train_supcon(
     with a repulsion loss that encourages class prototypes to be orthogonal
     on the unit sphere, improving open-set separability.
 
+    If pair_weights is provided, applies hard negative mining: specific class
+    pairs receive higher loss weight to force separation of difficult pairs.
+
     Returns (model with best backbone weights, metrics dict).
     """
     from app.core.models.registry import get_registry_entry
 
     model = model.to(device)
     entry = get_registry_entry(model.model_name)
-    proj_head = ProjectionHead(entry.embedding_dim, proj_dim).to(device)
+    proj_head = ProjectionHead(model.embedding_dim, proj_dim).to(device)
 
-    criterion = SupConLoss(temperature=temperature)
+    criterion = SupConLoss(temperature=temperature, pair_weights=pair_weights)
 
     if use_prototypes:
         from app.core.losses import SphericalPrototypes
