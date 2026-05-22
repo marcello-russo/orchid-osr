@@ -35,6 +35,7 @@ EXPERIMENTS = [
     {"prefix": "exp7_supcon", "exp": "exp7_supcon", "label": "Exp 7 (SupCon)"},
     {"prefix": "exp8_sphor", "exp": "exp8_sphor", "label": "Exp 8 (SpHOR)"},
     {"prefix": "exp9_ncd", "exp": "exp9_ncd", "label": "Exp 9 (NCD)"},
+    {"prefix": "exp10_ultimate", "exp": "exp10_ultimate", "label": "Exp 10 (Ultimate)"},
 ]
 
 
@@ -176,11 +177,13 @@ def _build_results_table(exp, exp_prefix):
     return rows
 
 
-def _build_results_yaml(exp6_rows, exp7_rows, exp8_rows):
+def _build_results_yaml(exp6_rows, exp7_rows, exp8_rows, exp9_rows=None, exp10_rows=None):
     """Generate structured YAML for model evaluation results."""
     lines = ["model-index:"]
     all_rows = []
-    for exp_label, rows in [("Exp 6 (CE)", exp6_rows), ("Exp 7 (SupCon)", exp7_rows), ("Exp 8 (SpHOR)", exp8_rows)]:
+    for exp_label, rows in [("Exp 6 (CE)", exp6_rows), ("Exp 7 (SupCon)", exp7_rows),
+                             ("Exp 8 (SpHOR)", exp8_rows), ("Exp 9 (NCD)", exp9_rows or []),
+                             ("Exp 10 (Ultimate)", exp10_rows or [])]:
         for row in rows:
             model_name = row.split("|")[1].strip()
             f1_val = row.split("|")[2].strip().split(" ")[0]
@@ -215,6 +218,8 @@ def update_readme(api):
     exp6_rows = _build_results_table("exp6_ce", "exp6_clean_split")
     exp7_rows = _build_results_table("exp7_supcon", "exp7_supcon")
     exp8_rows = _build_results_table("exp8_sphor", "exp8_sphor")
+    exp9_rows = _build_results_table("exp9_ncd", "exp9_ncd")
+    exp10_rows = _build_results_table("exp10_ultimate", "exp10_ultimate")
 
     sections = []
 
@@ -248,7 +253,27 @@ Two-phase training: SupCon + Spherical Orthogonal Prototypes → CE fine-tuning 
 {header}
 {chr(10).join(exp8_rows)}""")
 
-    results_yaml = _build_results_yaml(exp6_rows, exp7_rows, exp8_rows)
+    if exp9_rows:
+        sections.append(f"""## Exp 9: Novel Class Discovery (NCD)
+
+NCD scenario: O. majellensis excluded from training (hidden novel class).
+
+**Recipe:** same as Exp 8.
+
+{header}
+{chr(10).join(exp9_rows)}""")
+
+    if exp10_rows:
+        sections.append(f"""## Exp 10: Ultimate Experiment
+
+Final experiment combining multi-granularity features, hard negative mining, deep fine-tuning, and OSR ensemble.
+
+**Recipe:** LoRA r=32 + partial unfreeze for DINOv2, full fine-tuning for ConvNeXt/ResNet. Hard negative weight 5.0 on (majellensis, sphegodes) pairs.
+
+{header}
+{chr(10).join(exp10_rows)}""")
+
+    results_yaml = _build_results_yaml(exp6_rows, exp7_rows, exp8_rows, exp9_rows, exp10_rows)
 
     readme = f"""---
 library_name: pytorch
@@ -289,6 +314,12 @@ exp7_supcon/                       — Exp 7 (SupCon + CE fine-tune)
     ...
 exp8_sphor/                        — Exp 8 (SpHOR)
   exp8_sphor_resnet18/
+    ...
+exp9_ncd/                          — Exp 9 (NCD)
+  exp9_ncd_resnet18/
+    ...
+exp10_ultimate/                    — Exp 10 (Ultimate)
+  exp10_ultimate_resnet18/
     ...
 ```
 

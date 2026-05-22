@@ -2,8 +2,11 @@
 
 const API_BASE = import.meta.env.VITE_API_URL ?? "";
 
-export async function fetchApi<T>(path: string): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`);
+export async function fetchApi<T>(path: string, opts?: { method?: string; body?: BodyInit }): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: opts?.method ?? "GET",
+    body: opts?.body,
+  });
   if (!res.ok) {
     const body = await res.text();
     const snippet = body.length > 200 ? body.slice(0, 200) + "..." : body;
@@ -97,6 +100,26 @@ export async function explainImage(
 
 export async function fetchModels() {
   return fetchApi<{ models: import("./types").ModelOption[] }>("/classify/models");
+}
+
+export async function fetchCacheStatus() {
+  return fetchApi<import("./types").CacheStatus>("/classify/cache");
+}
+
+export async function downloadAllModels() {
+  return fetchApi<{ status: string }>("/classify/cache/download");
+}
+
+export async function downloadModel(id: string) {
+  return fetchApi<{ status: string; model_id: string }>(`/classify/cache/download/${encodeURIComponent(id)}`);
+}
+
+export async function deleteCachedModel(id: string) {
+  return fetchApi<{ status: string; model_id: string }>(`/classify/cache/${encodeURIComponent(id)}`, { method: "DELETE" });
+}
+
+export async function clearModelCache() {
+  return fetchApi<{ status: string; files_removed: number }>("/classify/cache", { method: "DELETE" });
 }
 
 export async function fetchSpecies() {

@@ -1,4 +1,6 @@
 # backend/app/api/main.py
+import logging
+import threading
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -9,11 +11,27 @@ from fastapi.staticfiles import StaticFiles
 from app.api.routes import classify, comparison, dataset, embeddings, experiments, health, species
 from app.api.routes import ncd as ncd_router
 
+logger = logging.getLogger(__name__)
+
 app = FastAPI(
     title="Orchid Classification API",
     description="API per classificare specie di orchidee Ophrys con modelli multi-architettura",
     version="1.0.0",
 )
+
+
+@app.on_event("startup")
+async def _startup_sync_weights():
+    """Pre-download all model weights from HuggingFace Hub in background."""
+    from app.api.deps import download_all_weights
+    def _sync():
+        try:
+            download_all_weights(background=False)
+        except Exception as e:
+            logger.error(f"Weight sync failed: {e}")
+    thread = threading.Thread(target=_sync, daemon=True)
+    thread.start()
+    logger.info("Background weight sync started")
 
 # CORS — allow Vite dev server
 app.add_middleware(

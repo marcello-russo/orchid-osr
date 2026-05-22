@@ -1,6 +1,7 @@
 {
   "common": {
     "loading": "Caricamento...",
+    "retry": "Riprova",
     "error": "Si è verificato un errore",
     "back": "Indietro",
     "home": "Home",
@@ -144,9 +145,21 @@
       "support": "Supporta JPG, PNG, WEBP",
       "alt": "Orchidea caricata"
     },
+    "models": {
+      "load_error": "Impossibile caricare i modelli addestrati",
+      "empty": "Nessun modello addestrato trovato",
+      "empty_hint": "Addestra i modelli tramite CLI o scaricali da HuggingFace Hub."
+    },
     "model_select": {
       "label": "Seleziona Modello",
       "description": "I modelli basati su Vision Transformer (DINOv2) sono consigliati per una maggiore precisione."
+    },
+    "cache": {
+      "download_all": "Scarica tutti i modelli",
+      "clear": "Pulisci cache",
+      "downloading": "Download modelli in corso...",
+      "cached": "in cache",
+      "not_cached": "non in cache"
     },
     "progress": {
       "uploading": "Caricamento...",
