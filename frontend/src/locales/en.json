@@ -381,8 +381,8 @@
       "literature_detail": "The Open-Insect benchmark [22], a NeurIPS 2025 spotlight evaluating 38 OSR algorithms on fine-grained species classification, finds that simple post-hoc approaches (Mahalanobis distance, KNN density ratio) consistently outperform complex training-time methods like OpenMax and SpHOR for biodiversity monitoring tasks. This supports our finding that the bottleneck is the embedding space structure, not the scoring function. Additionally, the Multi-Granularity Conceptual Experts (MGCE) framework [17] achieves state-of-the-art on fine-grained Generalized Category Discovery by combining multi-granularity features with dynamic contrastive learning \u2014 exactly the direction needed for our domain. Unlike Exp 9 where O. majellensis was the hidden class, Exp 10 includes all 6 species as known and will evaluate NCD on a separate unseen species."
     },
     "exp10": {
-      "title": "Exp 10 \u2014 Ultimate Experiment",
-      "description": "Exp 10 is designed as the final, definitive experiment of this thesis. It combines four innovations targeting the specific failure modes identified in the cross-experiment analysis. The goal is to maximize both closed-set accuracy and open-set detection (AUROC) for ultra-fine-grained novel class discovery.",
+      "title": "Exp 10 \u2014 MGH-NCD (Ultimate Experiment)",
+      "description": "MGH-NCD (Multi-Granularity Hard-negative Novel Class Discovery) is the final, definitive experiment of this thesis. It combines four innovations targeting the specific failure modes identified in the cross-experiment analysis. The goal is to maximize both closed-set accuracy and open-set detection (AUROC) for ultra-fine-grained novel class discovery.",
       "innovation1_title": "Hard Negative Mining in SupCon",
       "innovation1_detail": "The most critical innovation. During SupCon training, the contrastive loss contribution for pairs involving (O. majellensis, O. sphegodes) is multiplied by 5\u00d7, and for (O. sphegodes, O. sphegodes_Palena) pairs by 3\u00d7. This forces the model to explicitly separate these collapsed species in the embedding space, while maintaining the benefits of contrastive learning for the remaining classes. For Exp 10, all 6 species (including O. majellensis) are known during training. [8]",
       "innovation2_title": "Multi-Granularity Feature Extraction",
@@ -403,7 +403,7 @@
       "outcome_clustering": "Novel clustering ACC",
       "outcome_baseline": "Exp 9 (baseline)",
       "outcome_target": "Exp 10 (target)",
-      "outcome_note": "All 6 architectures will be trained with the same Exp 10 recipe for completeness. Unlike Exp 9 where O. majellensis was the hidden class, Exp 10 includes all 6 known species during training. Novel class discovery will be evaluated using a separate unseen species collected for this purpose. Note that the Phase 2 fine-tuning strategy differs by architecture: DINOv2 models use LoRA r=32 + last 4 blocks unfreeze (~15M trainable params), while ConvNeXt and ResNet undergo full fine-tuning of all parameters. The primary analysis will focus on DINOv2-Base (best tradeoff between embedding quality and GPU memory), with cross-architecture comparisons provided."
+      "outcome_note": "All 6 architectures will be trained with the same MGH-NCD recipe for completeness. Unlike Exp 9 where O. majellensis was the hidden class, Exp 10 includes all 6 known species during training. Novel class discovery will be evaluated using a separate unseen species collected for this purpose. Note that the Phase 2 fine-tuning strategy differs by architecture: DINOv2 models use LoRA r=32 + last 4 blocks unfreeze (~15M trainable params), while ConvNeXt and ResNet undergo full fine-tuning of all parameters. The primary analysis will focus on DINOv2-Base (best tradeoff between embedding quality and GPU memory), with cross-architecture comparisons provided."
     },
     "exp7": {
       "motivation_title": "Why SupCon?",

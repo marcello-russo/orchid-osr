@@ -35,7 +35,7 @@ EXPERIMENTS = [
     {"prefix": "exp7_supcon", "exp": "exp7_supcon", "label": "Exp 7 (SupCon)"},
     {"prefix": "exp8_sphor", "exp": "exp8_sphor", "label": "Exp 8 (SpHOR)"},
     {"prefix": "exp9_ncd", "exp": "exp9_ncd", "label": "Exp 9 (NCD)"},
-    {"prefix": "exp10_ultimate", "exp": "exp10_ultimate", "label": "Exp 10 (Ultimate)"},
+    {"prefix": "exp10_mgh_ncd", "exp": "exp10_mgh_ncd", "label": "Exp 10 (MGH-NCD)"},
 ]
 
 
@@ -219,7 +219,7 @@ def update_readme(api):
     exp7_rows = _build_results_table("exp7_supcon", "exp7_supcon")
     exp8_rows = _build_results_table("exp8_sphor", "exp8_sphor")
     exp9_rows = _build_results_table("exp9_ncd", "exp9_ncd")
-    exp10_rows = _build_results_table("exp10_ultimate", "exp10_ultimate")
+    exp10_rows = _build_results_table("exp10_mgh_ncd", "exp10_mgh_ncd")
 
     sections = []
 
@@ -318,8 +318,8 @@ exp8_sphor/                        — Exp 8 (SpHOR)
 exp9_ncd/                          — Exp 9 (NCD)
   exp9_ncd_resnet18/
     ...
-exp10_ultimate/                    — Exp 10 (Ultimate)
-  exp10_ultimate_resnet18/
+exp10_mgh_ncd/                     — Exp 10 (MGH-NCD)
+  exp10_mgh_ncd_resnet18/
     ...
 ```
 

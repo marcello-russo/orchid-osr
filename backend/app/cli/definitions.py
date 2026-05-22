@@ -88,13 +88,13 @@ EXPERIMENTS = {
         "description": "SpHOR senza O. majellensis (hidden novel per NCD)",
     },
     10: {
-        "name": "exp10_ultimate",
+        "name": "exp10_mgh_ncd",
         "train_dataset": "clean",
         "test_dataset": "clean",
         "num_classes": 6,
         "test_classes": ALL_CLASSES,
         "loss_type": "supcon",
-        "description": "Ultimate NCD experiment: multi-grano + hard negative mining + deep fine-tune + OSR ensemble. All 6 species known during training; for NCD evaluation, a novel species will be treated as unknown.",
+        "description": "MGH-NCD: Multi-Granularity Hard-negative Novel Class Discovery. All 6 species known during training; for NCD evaluation, a novel species will be treated as unknown.",
     },
 }
 

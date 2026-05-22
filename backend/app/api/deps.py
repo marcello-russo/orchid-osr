@@ -30,7 +30,7 @@ _EXP_META: dict[str, tuple[str, int]] = {
     "exp7_supcon": ("Exp 7 (SupCon)", 7),
     "exp8_sphor": ("Exp 8 (SpHOR)", 8),
     "exp9_ncd": ("Exp 9 (NCD)", 9),
-    "exp10_ultimate": ("Exp 10 (Ultimate)", 10),
+    "exp10_mgh_ncd": ("Exp 10 (MGH-NCD)", 10),
 }
 
 # Mapping from directory prefix → HF upload prefix (upload_models.py convention)
@@ -39,7 +39,7 @@ _HF_PREFIX_MAP: dict[str, str] = {
     "exp7_supcon": "exp7_supcon",
     "exp8_sphor": "exp8_sphor",
     "exp9_ncd": "exp9_ncd",
-    "exp10_ultimate": "exp10_ultimate",
+    "exp10_mgh_ncd": "exp10_mgh_ncd",
 }
 
 _VARIANT_DISPLAY = {
