@@ -97,20 +97,24 @@ Examples:
                         help="Directory with raw internet images (O.{Class} subdirs)")
 
     # Experiment selection
-    parser.add_argument("--exp", type=int, choices=[1, 2, 3, 4, 5, 6, 7, 8, 9],
-                        help="Run specific experiment (1-7)")
+    parser.add_argument("--exp", type=int, choices=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                        help="Run specific experiment (1-10)")
     parser.add_argument("--tag", type=str, default=None,
                         help="Tag suffix for output directory (e.g. --tag 100ep creates exp4_..._100ep/)")
-    parser.add_argument("--proj-dim", type=int, default=128,
-                        help="SupCon projection head dimension (exp 7, default: 128)")
+    parser.add_argument("--proj-dim", type=int, default=256,
+                        help="SupCon projection head dimension (exp 7+, default: 256)")
     parser.add_argument("--temperature", type=float, default=0.07,
-                        help="SupCon temperature (exp 7, default: 0.07)")
-    parser.add_argument("--ce-epochs", type=int, default=50,
-                        help="CE fine-tune epochs after SupCon (exp 7, default: 50)")
+                        help="SupCon temperature (exp 7+, default: 0.07)")
+    parser.add_argument("--ce-epochs", type=int, default=150,
+                        help="CE fine-tune epochs after SupCon (exp 7+, default: 150)")
     parser.add_argument("--sphor", action="store_true",
                         help="Enable Spherical Orthogonal prototypes (SpHOR-style) for open-set SupCon training")
     parser.add_argument("--repulse-weight", type=float, default=0.01,
                         help="Weight for prototype repulsion loss (default: 0.01)")
+    parser.add_argument("--full-finetune", action="store_true",
+                        help="Full backbone + head fine-tuning in Phase 2 (Exp 10)")
+    parser.add_argument("--hard-weight", type=float, default=5.0,
+                        help="Hard negative mining weight for (majellensis, sphegodes) pair (default: 5.0)")
 
     return parser.parse_args()
 
@@ -337,6 +341,11 @@ def main():
                 ce_epochs=args.ce_epochs,
                 use_prototypes=args.sphor,
                 repulse_weight=args.repulse_weight,
+                pair_weights={
+                    (3, 2): args.hard_weight,  # (majellensis, sphegodes) 
+                    (2, 3): args.hard_weight,
+                } if args.hard_weight > 0 else None,
+                full_finetune=args.full_finetune,
             )
             success_count += 1
         except Exception as e:

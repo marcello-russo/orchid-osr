@@ -10,21 +10,19 @@ class SupConLoss(nn.Module):
     Operates on L2-normalized feature vectors. For each anchor, pulls
     same-class features closer and pushes different-class features apart
     via the InfoNCE objective with a temperature scaling.
+
+    Supports hard negative mining via pair_weights: a dict mapping
+    (class_i, class_j) tuples to multiplicative weights applied to the
+    loss contribution of those class pairs. This forces the model to
+    work harder on separating difficult pairs (e.g., visually similar species).
     """
 
-    def __init__(self, temperature: float = 0.07):
+    def __init__(self, temperature: float = 0.07, pair_weights: dict | None = None):
         super().__init__()
         self.temperature = temperature
+        self.pair_weights = pair_weights or {}
 
     def forward(self, features: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
-        """
-        Args:
-            features: (batch_size, feat_dim) — must be L2-normalized.
-            labels:   (batch_size,) — integer class labels.
-
-        Returns:
-            Scalar loss.
-        """
         device = features.device
         batch_size = features.shape[0]
 
@@ -35,6 +33,16 @@ class SupConLoss(nn.Module):
 
         logits_mask = torch.ones_like(mask) - torch.eye(batch_size, device=device)
         mask = mask * logits_mask
+
+        # Hard negative mining: weight specific class pairs higher
+        if self.pair_weights:
+            weight_mask = torch.ones_like(mask)
+            for (c1, c2), w in self.pair_weights.items():
+                c1_mask = (labels == c1).float()
+                c2_mask = (labels == c2).float()
+                hw = c1_mask @ c2_mask.T + c2_mask @ c1_mask.T
+                weight_mask = weight_mask * (1.0 + (w - 1.0) * hw)
+            sim = sim * weight_mask
 
         logits_max, _ = sim.max(dim=1, keepdim=True)
         logits = sim - logits_max.detach()

@@ -362,3 +362,85 @@ def run_openset_evaluation(
     logger.info(f"OSR results saved to: {osr_path}")
 
     return result
+
+
+# ──────────────────────────────────────────────
+# Ensemble OSR scoring (Mahalanobis + KNN + Energy)
+# ──────────────────────────────────────────────
+
+
+def _estimate_precision(embeddings: np.ndarray, reg: float = 1e-6) -> np.ndarray:
+    """Compute regularized precision matrix (inverse covariance)."""
+    cov = np.cov(embeddings, rowvar=False)
+    cov += reg * np.eye(cov.shape[0])
+    return np.linalg.inv(cov)
+
+
+def compute_mahalanobis_scores(
+    train_emb: np.ndarray,
+    train_labels: np.ndarray,
+    test_emb: np.ndarray,
+    num_classes: int,
+) -> np.ndarray:
+    """Mahalanobis distance-based OOD scores. Higher = more unknown."""
+    train_norm = train_emb / (np.linalg.norm(train_emb, axis=1, keepdims=True) + 1e-12)
+    test_norm = test_emb / (np.linalg.norm(test_emb, axis=1, keepdims=True) + 1e-12)
+
+    unknown_scores = np.zeros(len(test_emb))
+    for c in range(num_classes):
+        c_emb = train_norm[train_labels == c]
+        if len(c_emb) < 2:
+            continue
+        mean = c_emb.mean(axis=0)
+        precision = _estimate_precision(c_emb)
+        diff = test_norm - mean
+        maha = np.sum(diff @ precision * diff, axis=1)
+        unknown_scores = np.maximum(unknown_scores, maha)
+
+    # Normalize to [0, 1]
+    return unknown_scores / (unknown_scores.max() + 1e-12)
+
+
+def compute_knn_scores(
+    train_emb: np.ndarray,
+    test_emb: np.ndarray,
+    k: int = 5,
+    k_bg: int = 50,
+) -> np.ndarray:
+    """KNN density ratio scores. Higher = farther from known = more unknown."""
+    from sklearn.neighbors import NearestNeighbors
+
+    train_norm = train_emb / (np.linalg.norm(train_emb, axis=1, keepdims=True) + 1e-12)
+    test_norm = test_emb / (np.linalg.norm(test_emb, axis=1, keepdims=True) + 1e-12)
+
+    nn_known = NearestNeighbors(n_neighbors=min(k, len(train_norm)))
+    nn_known.fit(train_norm)
+    d_known, _ = nn_known.kneighbors(test_norm)
+
+    nn_bg = NearestNeighbors(n_neighbors=min(k_bg, len(train_norm)))
+    nn_bg.fit(train_norm)
+    d_bg, _ = nn_bg.kneighbors(test_norm)
+
+    scores = d_known.mean(axis=1) / (d_bg.mean(axis=1) + 1e-12)
+    return scores / (scores.max() + 1e-12)
+
+
+def compute_energy_scores(
+    logits: np.ndarray,
+) -> np.ndarray:
+    """Energy-based OOD scores. Lower energy = more unknown.
+    Score is inverted so higher = more unknown (consistent with other methods).
+    """
+    energy = np.log(np.sum(np.exp(logits), axis=1))
+    scores = -energy
+    return (scores - scores.min()) / (scores.max() - scores.min() + 1e-12)
+
+
+def compute_ensemble_scores(
+    maha_scores: np.ndarray,
+    knn_scores: np.ndarray,
+    energy_scores: np.ndarray,
+    weights: tuple[float, float, float] = (0.4, 0.3, 0.3),
+) -> np.ndarray:
+    """Weighted ensemble of three OSR scores. Higher = more unknown."""
+    return weights[0] * maha_scores + weights[1] * knn_scores + weights[2] * energy_scores

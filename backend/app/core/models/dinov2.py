@@ -3,6 +3,7 @@ from typing import Literal
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 from app.core.models.base import ClassifierModel, ModelConfig
 
@@ -16,6 +17,12 @@ _DINOV2_EMBEDDING_DIM = {
     "dinov2_base": 768,
 }
 
+# Multi-grano embedding = CLS final + CLS mid-layer + attention-pooled patches
+_MULTI_GRAIN_DIM = {
+    "dinov2_small": 384 + 384 + 384,  # 1152
+    "dinov2_base": 768 + 768 + 768,   # 2304
+}
+
 
 class DINOv2Config(ModelConfig):
     variant: Literal["dinov2_small", "dinov2_base"] = "dinov2_small"
@@ -23,6 +30,7 @@ class DINOv2Config(ModelConfig):
     lora_alpha: int = 16
     lora_dropout: float = 0.1
     freeze_backbone: bool = True
+    multi_grain: bool = True
 
     def create_model(self) -> "DINOv2Classifier":
         return DINOv2Classifier(self)
@@ -33,7 +41,11 @@ class DINOv2Classifier(ClassifierModel):
     def __init__(self, config: DINOv2Config):
         super().__init__(config)
         self._variant = config.variant
-        self._embedding_dim = _DINOV2_EMBEDDING_DIM[config.variant]
+        self._multi_grain = config.multi_grain
+        if self._multi_grain:
+            self._embedding_dim = _MULTI_GRAIN_DIM[config.variant]
+        else:
+            self._embedding_dim = _DINOV2_EMBEDDING_DIM[config.variant]
         self._backbone = self._create_backbone(config)
         self._head = nn.Linear(self._embedding_dim, config.num_classes)
 
@@ -48,7 +60,6 @@ class DINOv2Classifier(ClassifierModel):
             for param in backbone.parameters():
                 param.requires_grad = False
 
-        # Apply LoRA to attention query/value projections
         lora_config = LoraConfig(
             r=config.lora_r,
             lora_alpha=config.lora_alpha,
@@ -63,13 +74,33 @@ class DINOv2Classifier(ClassifierModel):
         return cls(config)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        outputs = self._backbone(x)
-        cls_token = outputs.last_hidden_state[:, 0]
-        return self._head(cls_token)
+        emb = self.get_embeddings(x)
+        return self._head(emb)
 
     def get_embeddings(self, x: torch.Tensor) -> torch.Tensor:
-        outputs = self._backbone(x)
-        return outputs.last_hidden_state[:, 0]
+        if not self._multi_grain:
+            outputs = self._backbone(x)
+            return outputs.last_hidden_state[:, 0]
+
+        outputs = self._backbone(x, output_hidden_states=True)
+        last_hidden = outputs.last_hidden_state
+
+        # Global: CLS token from final layer
+        cls_final = last_hidden[:, 0]
+
+        # Local: attention-weighted patch pooling on final layer
+        patches = last_hidden[:, 1:]
+        # Simple mean pooling as local feature (attention maps not exposed in eval)
+        patch_pooled = patches.mean(dim=1)
+
+        # Regional: CLS token from mid-layer (layer 6 for both variants)
+        mid_idx = min(6, len(outputs.hidden_states) - 1) if outputs.hidden_states else None
+        if mid_idx is not None:
+            cls_mid = outputs.hidden_states[mid_idx][:, 0]
+        else:
+            cls_mid = cls_final.new_zeros(cls_final.shape[0], cls_final.shape[1] // 2)
+
+        return torch.cat([cls_final, patch_pooled, cls_mid], dim=1)
 
     def load_weights(self, path: str) -> None:
         import os

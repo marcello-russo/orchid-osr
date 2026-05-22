@@ -56,6 +56,8 @@ def kfold_experiment(
     use_prototypes=False,
     repulse_weight=0.05,
     exclude_classes=None,
+    pair_weights=None,
+    full_finetune=False,
 ):
     """K-fold cross-validation con augmentation bilanciata per fold."""
     from app.preprocessing.reproducibility import set_seed
@@ -86,6 +88,7 @@ def kfold_experiment(
             "temperature": temperature if loss_type == "supcon" else None,
             "ce_epochs": ce_epochs if loss_type == "supcon" else None,
             "use_prototypes": use_prototypes if loss_type == "supcon" else None,
+            "full_finetune": full_finetune if loss_type == "supcon" else None,
             "timestamp": datetime.now().isoformat(),
         }
         with open(config_path, "w") as f:
@@ -201,6 +204,8 @@ def kfold_experiment(
                         resume=True,
                         use_prototypes=use_prototypes,
                         repulse_weight=repulse_weight,
+                        pair_weights=pair_weights,
+                        full_finetune=full_finetune,
                     )
                 else:
                     model, fold_metrics = train_fold(

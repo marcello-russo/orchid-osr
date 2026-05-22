@@ -21,6 +21,7 @@ def run_ncd_pipeline(
     run_osr: bool = False,
     test_dir: str | None = None,
     exclude_classes: list[str] | None = None,
+    osr_method: str = "openmax",
 ):
     """Full NCD pipeline: extract embeddings → cluster → OSR evaluation.
 
@@ -160,17 +161,67 @@ def run_ncd_pipeline(
         if test_dir is None:
             logger.warning("test_dir required for OSR, skipping")
         else:
-            logger.info("\n--- Open-Set Recognition ---")
-            from app.core.ncd.openset import run_openset_evaluation
-            osr_results = run_openset_evaluation(
-                exp_dir=exp_dir,
-                model_variant=model_variant,
-                num_classes=num_classes,
-                class_names=class_names,
-                train_dir=data_dir,
-                test_dir=test_dir,
-                batch_size=batch_size,
-            )
+            logger.info(f"\n--- Open-Set Recognition (method={osr_method}) ---")
+
+            if osr_method == "ensemble":
+                from app.core.ncd.openset import (
+                    compute_ensemble_scores, compute_energy_scores,
+                    compute_knn_scores, compute_mahalanobis_scores,
+                    compute_osr_metrics, fit_weibull,
+                )
+                from app.core.ncd.extract import extract_embeddings, load_trained_model
+                from app.core.ncd.metrics import compute_all_metrics
+                from app.core.models import get_registry_entry, create_model
+
+                import torch
+                model = load_trained_model(model_variant, num_classes, None, torch.device("cpu"))
+                train_emb, train_labels, _ = extract_embeddings(
+                    model_variant, data_dir, None, num_classes, batch_size, torch.device("cpu")
+                )
+                test_emb, test_labels, _ = extract_embeddings(
+                    model_variant, test_dir, None, num_classes, batch_size, torch.device("cpu")
+                )
+                train_norm = train_emb / (np.linalg.norm(train_emb, axis=1, keepdims=True) + 1e-12)
+                test_norm = test_emb / (np.linalg.norm(test_emb, axis=1, keepdims=True) + 1e-12)
+
+                maha = compute_mahalanobis_scores(train_norm, train_labels, test_norm, num_classes)
+                knn = compute_knn_scores(train_norm, test_norm)
+                energy = compute_energy_scores(test_norm)
+                ensemble = compute_ensemble_scores(maha, knn, energy)
+
+                unknown_labels = np.full(len(test_labels), -1)
+                all_metrics = []
+                for left_out in range(num_classes):
+                    val_labels = unknown_labels.copy()
+                    val_labels[test_labels != left_out] = test_labels[test_labels != left_out]
+                    val_known = [c for c in range(num_classes) if c != left_out]
+                    metrics = compute_osr_metrics(ensemble, val_labels, val_known)
+                    metrics["left_out"] = class_names[left_out]
+                    all_metrics.append(metrics)
+
+                osr_results = {
+                    "model_variant": model_variant,
+                    "num_classes": num_classes,
+                    "class_names": class_names,
+                    "mean_auroc": float(np.mean([m["auroc"] for m in all_metrics])),
+                    "per_class_metrics": all_metrics,
+                    "method": "ensemble",
+                    "ensemble_scores": {
+                        "mahalanobis": float(np.mean([compute_osr_metrics(maha, np.full(len(test_labels), -1) if _ else test_labels, list(range(num_classes)))["auroc"] for _ in [0]])),
+                    },
+                }
+                logger.info(f"Ensemble OSR complete. Mean AUROC: {osr_results['mean_auroc']:.4f}")
+            else:
+                from app.core.ncd.openset import run_openset_evaluation
+                osr_results = run_openset_evaluation(
+                    exp_dir=exp_dir,
+                    model_variant=model_variant,
+                    num_classes=num_classes,
+                    class_names=class_names,
+                    train_dir=data_dir,
+                    test_dir=test_dir,
+                    batch_size=batch_size,
+                )
             results["openset"] = osr_results
 
             # OSR figures
