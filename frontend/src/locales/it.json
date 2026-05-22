@@ -301,13 +301,13 @@
       "root_cause_title": "Causa Principale",
       "root_cause_detail": "SupCon raggruppa embedding della stessa classe. Per classi ultra-fine-grained dove la varianza inter-classe \u00e8 minore della varianza intra-classe (illuminazione, angolazione, maturit\u00e0 del fiore), specie visivamente simili ma distinte collassano in cluster sovrapposti. La CE ottimizza direttamente il confine decisionale, quindi le separa \u2014 ma gli embedding CE sono meno strutturati per clustering e scoperta di nuove classi.",
       "literature_title": "La Letteratura Recente Conferma Questo Pattern",
-      "literature_detail": "Il benchmark Open-Insect [22], un NeurIPS 2025 spotlight che valuta 38 algoritmi OSR sulla classificazione fine-grained di specie, scopre che approcci post-hoc semplici (distanza di Mahalanobis, rapporto densit\u00e0 KNN) superano costantemente metodi complessi come OpenMax e SpHOR per il monitoraggio della biodiversit\u00e0. Ci\u00f2 supporta la nostra scoperta che il collo di bottiglia \u00e8 la struttura dello spazio di embedding, non la funzione di scoring. Inoltre, il framework MGCE [17] raggiunge lo stato dell'arte sulla Generalized Category Discovery fine-grained combinando features multi-granularit\u00e0 con apprendimento contrastivo dinamico \u2014 esattamente la direzione necessaria per il nostro dominio."
+      "literature_detail": "Il benchmark Open-Insect [22], un NeurIPS 2025 spotlight che valuta 38 algoritmi OSR sulla classificazione fine-grained di specie, scopre che approcci post-hoc semplici (distanza di Mahalanobis, rapporto densit\u00e0 KNN) superano costantemente metodi complessi come OpenMax e SpHOR per il monitoraggio della biodiversit\u00e0. Ci\u00f2 supporta la nostra scoperta che il collo di bottiglia \u00e8 la struttura dello spazio di embedding, non la funzione di scoring. Inoltre, il framework MGCE [17] raggiunge lo stato dell'arte sulla Generalized Category Discovery fine-grained combinando features multi-granularit\u00e0 con apprendimento contrastivo dinamico \u2014 esattamente la direzione necessaria per il nostro dominio. A differenza di Exp 9 dove O. majellensis era la classe nascosta, Exp 10 include tutte e 6 le specie come note e valuter\u00e0 l'NCD su una specie separata non vista."
     },
     "exp10": {
       "title": "Exp 10 \u2014 Esperimento Finale",
       "description": "Exp 10 \u00e8 progettato come l'esperimento finale e definitivo di questa tesi. Combina quattro innovazioni mirate alle specifiche modalit\u00e0 di fallimento identificate nell'analisi cross-esperimento. L'obiettivo \u00e8 massimizzare sia l'accuratezza closed-set che la rilevazione open-set (AUROC) per la scoperta di nuove classi ultra-fine-grained.",
       "innovation1_title": "Hard Negative Mining in SupCon",
-      "innovation1_detail": "L'innovazione pi\u00f9 critica. Durante l'addestramento SupCon, il contributo della loss contrastiva per coppie che coinvolgono (O. majellensis, O. sphegodes) \u00e8 moltiplicato per 5\u00d7, e per coppie (O. sphegodes, O. sphegodes_Palena) per 3\u00d7. Ci\u00f2 forza il modello a separare esplicitamente queste specie collassate nello spazio di embedding, mantenendo i benefici dell'apprendimento contrastivo per le classi rimanenti. [8]",
+      "innovation1_detail": "L'innovazione pi\u00f9 critica. Durante l'addestramento SupCon, il contributo della loss contrastiva per coppie che coinvolgono (O. majellensis, O. sphegodes) \u00e8 moltiplicato per 5\u00d7, e per coppie (O. sphegodes, O. sphegodes_Palena) per 3\u00d7. Ci\u00f2 forza il modello a separare esplicitamente queste specie collassate nello spazio di embedding, mantenendo i benefici dell'apprendimento contrastivo per le classi rimanenti. Per Exp 10, tutte e 6 le specie (inclusa O. majellensis) sono note durante l'addestramento. [8]",
       "innovation2_title": "Estrazione Features Multi-Granularit\u00e0",
       "innovation2_detail": "Per architetture ViT (DINOv2), le features sono estratte da tre livelli: il token CLS finale (semantica globale), i patch token con attention pooling (dettagli locali discriminanti), e il token CLS intermedio (features regionali). Per architetture CNN (ResNet, ConvNeXt), le features degli stadi penultimo e finale sono concatenate. Il vettore multi-scala risultante \u00e8 proiettato in uno spazio unificato a 256 dimensioni tramite MLP. Ci\u00f2 imita l'approccio MGCE [17], adattato alle nostre architetture.",
       "innovation3_title": "Deep Fine-Tuning (Strategia Per-Architettura)",
@@ -319,14 +319,14 @@
       "innovation4_energy": "Energy score [20] \u2014 log-sum-exp dei logit, teoricamente allineato con la densit\u00e0 di probabilit\u00e0 dell'input",
       "innovation4_ensemble": "Lo score finale sconosciuto \u00e8 una combinazione pesata: 0.4 \u00d7 Mahalanobis + 0.3 \u00d7 KNN + 0.3 \u00d7 Energy. Questo ensemble \u00e8 pi\u00f9 robusto di ogni singola funzione di scoring.",
       "outcome_title": "Risultati Attesi",
-      "outcome_known_f1": "F1 classi note",
+      "outcome_known_f1": "F1 classi note (6 specie)",
       "outcome_majellensis": "Accuratezza O. majellensis",
-      "outcome_auroc": "AUROC medio (NCD)",
+      "outcome_auroc": "AUROC medio (nuova specie)",
       "outcome_best_auroc": "AUROC migliore",
-      "outcome_clustering": "ACC clustering",
+      "outcome_clustering": "ACC clustering novit\u00e0",
       "outcome_baseline": "Exp 9 (baseline)",
       "outcome_target": "Exp 10 (obiettivo)",
-      "outcome_note": "Tutte e 6 le architetture saranno addestrate con la stessa ricetta Exp 10 per completezza. Nota: la strategia di fine-tuning in Fase 2 varia per architettura: i DINOv2 usano LoRA r=32 + scongelamento ultimi 4 blocchi (~15M parametri addestrabili), mentre ConvNeXt e ResNet fanno full fine-tuning di tutti i parametri. L'analisi principale si concentrer\u00e0 su DINOv2-Base (miglior compromesso tra qualit\u00e0 embedding e memoria GPU), con confronti cross-architettura."
+      "outcome_note": "Tutte e 6 le architetture saranno addestrate con la stessa ricetta Exp 10 per completezza. A differenza di Exp 9 dove O. majellensis era la classe nascosta, Exp 10 include tutte e 6 le specie note durante l'addestramento. La novel class discovery sar\u00e0 valutata usando una specie separata non vista, raccolta appositamente per questo scopo. Nota: la strategia di fine-tuning in Fase 2 varia per architettura: i DINOv2 usano LoRA r=32 + scongelamento ultimi 4 blocchi (~15M parametri addestrabili), mentre ConvNeXt e ResNet fanno full fine-tuning di tutti i parametri. L'analisi principale si concentrer\u00e0 su DINOv2-Base (miglior compromesso tra qualit\u00e0 embedding e memoria GPU), con confronti cross-architettura."
     },
     "exp7": {
       "motivation_title": "Perch\u00e9 SupCon?",

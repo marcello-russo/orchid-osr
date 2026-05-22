@@ -112,9 +112,11 @@ Examples:
     parser.add_argument("--repulse-weight", type=float, default=0.01,
                         help="Weight for prototype repulsion loss (default: 0.01)")
     parser.add_argument("--full-finetune", action="store_true",
-                        help="Full backbone + head fine-tuning in Phase 2 (Exp 10)")
+                        help="Deep fine-tuning (LoRA++ + partial unfreeze) in Phase 2 (Exp 10)")
     parser.add_argument("--hard-weight", type=float, default=5.0,
                         help="Hard negative mining weight for (majellensis, sphegodes) pair (default: 5.0)")
+    parser.add_argument("--osr-ensemble", action="store_true",
+                        help="Use ensemble OSR (Mahalanobis+KNN+Energy) instead of OpenMax (Exp 10)")
 
     return parser.parse_args()
 
@@ -342,10 +344,13 @@ def main():
                 use_prototypes=args.sphor,
                 repulse_weight=args.repulse_weight,
                 pair_weights={
-                    (3, 2): args.hard_weight,  # (majellensis, sphegodes) 
-                    (2, 3): args.hard_weight,
+                    (3, 4): args.hard_weight,  # (majellensis, sphegodes) 
+                    (4, 3): args.hard_weight,
+                    (4, 5): args.hard_weight * 0.6,  # (sphegodes, sphegodes_Palena)
+                    (5, 4): args.hard_weight * 0.6,
                 } if args.hard_weight > 0 else None,
                 full_finetune=args.full_finetune,
+                osr_ensemble=args.osr_ensemble,
             )
             success_count += 1
         except Exception as e:

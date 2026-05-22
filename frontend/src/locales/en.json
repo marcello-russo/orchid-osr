@@ -365,13 +365,13 @@
       "root_cause_title": "Root Cause",
       "root_cause_detail": "SupCon pulls same-class embeddings together. For ultra-fine-grained classes where inter-class variance is smaller than intra-class variance (lighting, angle, flower maturity), visually similar but distinct species collapse into overlapping clusters. CE directly optimizes the decision boundary, hence it separates them \u2014 but CE embeddings are less structured for clustering and novel-class discovery.",
       "literature_title": "Recent Literature Confirms This Pattern",
-      "literature_detail": "The Open-Insect benchmark [22], a NeurIPS 2025 spotlight evaluating 38 OSR algorithms on fine-grained species classification, finds that simple post-hoc approaches (Mahalanobis distance, KNN density ratio) consistently outperform complex training-time methods like OpenMax and SpHOR for biodiversity monitoring tasks. This supports our finding that the bottleneck is the embedding space structure, not the scoring function. Additionally, the Multi-Granularity Conceptual Experts (MGCE) framework [17] achieves state-of-the-art on fine-grained Generalized Category Discovery by combining multi-granularity features with dynamic contrastive learning \u2014 exactly the direction needed for our domain."
+      "literature_detail": "The Open-Insect benchmark [22], a NeurIPS 2025 spotlight evaluating 38 OSR algorithms on fine-grained species classification, finds that simple post-hoc approaches (Mahalanobis distance, KNN density ratio) consistently outperform complex training-time methods like OpenMax and SpHOR for biodiversity monitoring tasks. This supports our finding that the bottleneck is the embedding space structure, not the scoring function. Additionally, the Multi-Granularity Conceptual Experts (MGCE) framework [17] achieves state-of-the-art on fine-grained Generalized Category Discovery by combining multi-granularity features with dynamic contrastive learning \u2014 exactly the direction needed for our domain. Unlike Exp 9 where O. majellensis was the hidden class, Exp 10 includes all 6 species as known and will evaluate NCD on a separate unseen species."
     },
     "exp10": {
       "title": "Exp 10 \u2014 Ultimate Experiment",
       "description": "Exp 10 is designed as the final, definitive experiment of this thesis. It combines four innovations targeting the specific failure modes identified in the cross-experiment analysis. The goal is to maximize both closed-set accuracy and open-set detection (AUROC) for ultra-fine-grained novel class discovery.",
       "innovation1_title": "Hard Negative Mining in SupCon",
-      "innovation1_detail": "The most critical innovation. During SupCon training, the contrastive loss contribution for pairs involving (O. majellensis, O. sphegodes) is multiplied by 5\u00d7, and for (O. sphegodes, O. sphegodes_Palena) pairs by 3\u00d7. This forces the model to explicitly separate these collapsed species in the embedding space, while maintaining the benefits of contrastive learning for the remaining classes. [8]",
+      "innovation1_detail": "The most critical innovation. During SupCon training, the contrastive loss contribution for pairs involving (O. majellensis, O. sphegodes) is multiplied by 5\u00d7, and for (O. sphegodes, O. sphegodes_Palena) pairs by 3\u00d7. This forces the model to explicitly separate these collapsed species in the embedding space, while maintaining the benefits of contrastive learning for the remaining classes. For Exp 10, all 6 species (including O. majellensis) are known during training. [8]",
       "innovation2_title": "Multi-Granularity Feature Extraction",
       "innovation2_detail": "For ViT-based architectures (DINOv2), features are extracted from three levels: the final CLS token (global semantics), attention-pooled patch tokens (local discriminative details), and the mid-layer CLS token (regional features). For CNN architectures (ResNet, ConvNeXt), features from the penultimate and final stages are concatenated. The concatenated multi-scale vector is projected to a unified 256-dim space via an MLP. This mimics the multi-granularity expert approach proposed in MGCE [17], adapted to our architectures.",
       "innovation3_title": "Deep Fine-Tuning (Per-Architecture Strategy)",
@@ -383,14 +383,14 @@
       "innovation4_energy": "Energy score [20] \u2014 log-sum-exp of logits, theoretically aligned with input probability density",
       "innovation4_ensemble": "The final unknown score is a weighted combination: 0.4 \u00d7 Mahalanobis + 0.3 \u00d7 KNN + 0.3 \u00d7 Energy. This ensemble is more robust than any single scoring function.",
       "outcome_title": "Expected Outcome",
-      "outcome_known_f1": "Known class F1",
+      "outcome_known_f1": "Known class F1 (6 species)",
       "outcome_majellensis": "O. majellensis accuracy",
-      "outcome_auroc": "Mean AUROC (NCD)",
+      "outcome_auroc": "Mean AUROC (novel species)",
       "outcome_best_auroc": "Best AUROC",
-      "outcome_clustering": "Clustering ACC",
+      "outcome_clustering": "Novel clustering ACC",
       "outcome_baseline": "Exp 9 (baseline)",
       "outcome_target": "Exp 10 (target)",
-      "outcome_note": "All 6 architectures will be trained with the same Exp 10 recipe for completeness. Note that the Phase 2 fine-tuning strategy differs by architecture: DINOv2 models use LoRA r=32 + last 4 blocks unfreeze (~15M trainable params), while ConvNeXt and ResNet undergo full fine-tuning of all parameters. The primary analysis will focus on DINOv2-Base (best tradeoff between embedding quality and GPU memory), with cross-architecture comparisons provided."
+      "outcome_note": "All 6 architectures will be trained with the same Exp 10 recipe for completeness. Unlike Exp 9 where O. majellensis was the hidden class, Exp 10 includes all 6 known species during training. Novel class discovery will be evaluated using a separate unseen species collected for this purpose. Note that the Phase 2 fine-tuning strategy differs by architecture: DINOv2 models use LoRA r=32 + last 4 blocks unfreeze (~15M trainable params), while ConvNeXt and ResNet undergo full fine-tuning of all parameters. The primary analysis will focus on DINOv2-Base (best tradeoff between embedding quality and GPU memory), with cross-architecture comparisons provided."
     },
     "exp7": {
       "motivation_title": "Why SupCon?",

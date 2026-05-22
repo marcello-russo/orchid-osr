@@ -91,11 +91,10 @@ EXPERIMENTS = {
         "name": "exp10_ultimate",
         "train_dataset": "clean",
         "test_dataset": "clean",
-        "num_classes": 5,
+        "num_classes": 6,
         "test_classes": ALL_CLASSES,
-        "exclude_classes": ["O. majellensis"],
         "loss_type": "supcon",
-        "description": "Final experiment: multi-grano + hard negative mining + full fine-tune + OSR ensemble",
+        "description": "Ultimate NCD experiment: multi-grano + hard negative mining + deep fine-tune + OSR ensemble. All 6 species known during training; for NCD evaluation, a novel species will be treated as unknown.",
     },
 }
 
