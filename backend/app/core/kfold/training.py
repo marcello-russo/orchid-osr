@@ -314,8 +314,6 @@ def _train_head_only(
     num_epochs, learning_rate, device, num_classes, patience=0,
 ):
     """Train only the classifier head with backbone frozen. Lightweight loop for SupCon Phase 2."""
-    import copy
-
     from torcheval.metrics import MulticlassAccuracy, MulticlassF1Score
 
     model = model.to(device)
@@ -323,14 +321,13 @@ def _train_head_only(
     optimizer = torch.optim.Adam(head_params, lr=learning_rate)
 
     best_f1 = 0.0
-    best_wts = copy.deepcopy(model.state_dict())
+    best_wts = {k: v.cpu() for k, v in model.state_dict().items()}
     best_val_loss = float("inf")
     epochs_no_improve = 0
 
     history = {"train_loss": [], "val_loss": [], "val_accuracy": [], "val_f1": []}
 
     for epoch in range(num_epochs):
-        # Train
         model.train()
         running_loss = 0.0
         n = 0
@@ -344,7 +341,6 @@ def _train_head_only(
             n += inputs.size(0)
         train_loss = running_loss / max(n, 1)
 
-        # Validate
         model.eval()
         acc_m = MulticlassAccuracy(num_classes=num_classes, average="macro").to(device)
         f1_m = MulticlassF1Score(num_classes=num_classes, average="macro").to(device)
@@ -375,7 +371,7 @@ def _train_head_only(
 
         if f1 >= best_f1:
             best_f1 = f1
-            best_wts = copy.deepcopy(model.state_dict())
+            best_wts = {k: v.cpu() for k, v in model.state_dict().items()}
             logger.info(f"[CE Head] New best F1: {f1:.4f}")
 
         if val_loss < best_val_loss:
@@ -397,12 +393,7 @@ def _train_phase2(
     model, optimizer, train_loader, val_loader,
     num_epochs, device, num_classes, patience=0,
 ):
-    """Deep fine-tuning Phase 2: backbone + head with CE loss and label smoothing.
-
-    The model should have only the desired parameters set to requires_grad=True
-    (LoRA adapters + last blocks + head). This keeps memory usage under 4GB.
-    """
-    import copy
+    """Deep fine-tuning Phase 2: backbone + head with CE loss and label smoothing."""
     from torcheval.metrics import MulticlassAccuracy, MulticlassF1Score
 
     model = model.to(device)
@@ -412,7 +403,8 @@ def _train_phase2(
     )
 
     best_f1 = 0.0
-    best_wts = copy.deepcopy(model.state_dict())
+    # Copy to CPU to avoid OOM (model has 86M params)
+    best_wts = {k: v.cpu() for k, v in model.state_dict().items()}
     best_val_loss = float("inf")
     epochs_no_improve = 0
 
@@ -467,7 +459,7 @@ def _train_phase2(
 
         if f1 >= best_f1:
             best_f1 = f1
-            best_wts = copy.deepcopy(model.state_dict())
+            best_wts = {k: v.cpu() for k, v in model.state_dict().items()}
             logger.info(f"[Full FT] New best F1: {f1:.4f}")
 
         if val_loss < best_val_loss:
