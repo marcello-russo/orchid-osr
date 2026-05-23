@@ -441,11 +441,7 @@ def _train_phase2(
         with torch.no_grad():
             for inputs, labels, _ in val_loader:
                 inputs, labels = inputs.to(device, non_blocking=True), labels.to(device, non_blocking=True)
-                if use_amp:
-                    with torch.amp.autocast(device_type="cuda"):
-                        out = model(inputs)
-                else:
-                    out = model(inputs)
+                out = model(inputs)
                 val_loss += criterion(out, labels).item()
                 vb += 1
                 _, pred = torch.max(out, 1)
