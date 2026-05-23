@@ -552,29 +552,26 @@ def train_fold_supcon(
     # --- Phase 2: CE fine-tuning ---
     if full_finetune:
         logger.info("  === Phase 2: Deep Fine-tuning (LoRA++ + last blocks + head) ===")
-        # Not truly full fine-tuning (won't fit on 4GB GPU for DINOv2-Base).
-        # Instead: unfreeze LoRA adapters, last 4 transformer blocks, and classifier head.
         deep_params = []
         head_params = []
         for name, param in model.named_parameters():
             param.requires_grad = False
-            # Unfreeze LoRA adapters
-            if "lora_" in name:
+            is_lora = "lora_" in name
+            is_last_blocks = any(f".{i}." in name for i in range(8, 12))
+            is_classifier_head = (
+                name == "_head.weight" or name == "_head.bias" or
+                name == "fc.weight" or name == "fc.bias" or
+                name.endswith(".classifier.2.weight") or name.endswith(".classifier.2.bias")
+            )
+            if is_lora:
                 param.requires_grad = True
                 deep_params.append(param)
-            # Unfreeze last 4 blocks (blocks 8-11 for DINOv2, adapt for CNNs)
-            elif any(f".{i}." in name for i in range(8, 12)) and "lora" not in name:
+            elif is_last_blocks and not is_lora:
                 param.requires_grad = True
                 deep_params.append(param)
-            # Unfreeze classifier head
-            elif "head" in name or "fc" in name or "classifier" in name:
+            elif is_classifier_head:
                 param.requires_grad = True
                 head_params.append(param)
-
-        if not deep_params:
-            # Fallback for non-DINOv2: train all backbone params that were already unfrozen
-            deep_params = [p for n, p in model.named_parameters()
-                          if p.requires_grad and not any(x in n for x in ["head", "fc", "classifier"])]
 
         optimizer = torch.optim.AdamW([
             {"params": deep_params, "lr": 1e-4, "weight_decay": entry.weight_decay},
