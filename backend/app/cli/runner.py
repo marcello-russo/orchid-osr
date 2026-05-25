@@ -91,10 +91,10 @@ def run_experiment(
     """Run a single experiment (k-fold cross-validation or single fold)."""
     import logging
 
-    # GPU optimizations: enable cuDNN auto-tuner + TF32 matmul on Tensor Cores
+    # cuDNN auto-tuner: seleziona l'algoritmo più veloce per le convolution
+    # (non altera i risultati numerici, solo la velocità di esecuzione)
     if torch.cuda.is_available():
         torch.backends.cudnn.benchmark = True
-        torch.set_float32_matmul_precision("medium")
 
     from app.cli.definitions import ALL_CLASSES, DATASET_PATHS, EXPERIMENTS, PROJECT_ROOT
     from app.core.kfold.testing import aggregate_results
