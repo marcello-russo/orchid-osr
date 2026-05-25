@@ -16,6 +16,7 @@
 # Se interrotto (Ctrl+C o crash), riprende dal fold successivo.
 
 set -euo pipefail
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
 # --- Config ---
 EPOCHS=150
