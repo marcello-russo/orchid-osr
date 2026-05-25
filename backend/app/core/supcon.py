@@ -18,13 +18,16 @@ logger = logging.getLogger(__name__)
 
 
 class ProjectionHead(nn.Module):
-    """MLP projection head for SupCon. Discarded after Phase 1."""
+    """Single-layer projection head for SupCon. Discarded after Phase 1.
+
+    Multi-grain features (2304-dim vs 768-dim) make a two-layer MLP
+    too large for 4GB VRAM: Linear(2304, 2304) = 5.3M extra params.
+    Single linear projection saves memory with minimal accuracy loss. [8]
+    """
 
     def __init__(self, embedding_dim: int, proj_dim: int = 128):
         super().__init__()
         self.net = nn.Sequential(
-            nn.Linear(embedding_dim, embedding_dim),
-            nn.ReLU(inplace=True),
             nn.Linear(embedding_dim, proj_dim),
         )
 
