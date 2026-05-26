@@ -1,6 +1,26 @@
 // frontend/src/lib/api.ts
 
+import { useAppStore } from "../stores/useAppStore";
+import type { AuthUser } from "./types";
+
 const API_BASE = import.meta.env.VITE_API_URL ?? "";
+
+function getAuthHeaders(): Record<string, string> {
+  const token = useAppStore.getState().token;
+  if (token) return { Authorization: `Bearer ${token}` };
+  return {};
+}
+
+async function apiFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  const headers: Record<string, string> = {
+    ...(options.headers as Record<string, string> || {}),
+    ...getAuthHeaders(),
+  };
+  if (url.startsWith("/auth/")) {
+    delete headers.Authorization;
+  }
+  return fetch(url, { ...options, headers });
+}
 
 export async function fetchApi<T>(path: string, opts?: { method?: string; body?: BodyInit }): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
@@ -170,4 +190,30 @@ export function fetchNcdFigure(modelVariant: string, figureName: string, exp: nu
 
 export async function fetchNcdComparison() {
   return fetchApi<import("./types").NcdComparison>("/api/ncd/comparison");
+}
+
+export async function login(username: string, password: string): Promise<{ token: string; user: AuthUser }> {
+  const res = await apiFetch("/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ username, password }),
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function register(inviteCode: string, username: string, password: string): Promise<{ token: string; user: AuthUser }> {
+  const res = await apiFetch("/auth/register", {
+    method: "POST",
+    body: JSON.stringify({ invite_code: inviteCode, username, password }),
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function fetchMe(): Promise<{ username: string; role: string }> {
+  const res = await apiFetch("/auth/me");
+  if (!res.ok) throw new Error("Not authenticated");
+  return res.json();
 }
