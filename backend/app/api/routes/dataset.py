@@ -1,5 +1,4 @@
 import mimetypes
-import os
 from pathlib import Path
 
 import httpx
@@ -20,12 +19,13 @@ _VALID_CLASSES = set(settings.class_names)
 _CROPPED_DIR = "cropped_256x512"
 _HF_DATASET = "marcellorusso/orchid-ncd-dataset"
 _HF_BRANCH = "main"
-_HF_TOKEN = os.environ.get("HF_TOKEN") or _read_hf_token_secret()
 
 
-def _read_hf_token_secret() -> str | None:
+def _hf_token() -> str | None:
+    if settings.hf_token:
+        return settings.hf_token
     secret_path = "/run/secrets/HF_TOKEN"
-    if os.path.exists(secret_path):
+    if Path(secret_path).exists():
         with open(secret_path) as f:
             return f.read().strip()
     return None
@@ -135,13 +135,16 @@ async def serve_image_legacy(class_name: str, filename: str, size: int = Query(N
 
 async def _hf_proxy(class_name: str, filename: str) -> Response:
     """Proxy image from the HuggingFace dataset CDN via the backend."""
-    hf_url = f"https://huggingface.co/datasets/{_HF_DATASET}/resolve/{_HF_BRANCH}/cropped/256x512/train/{class_name}/{filename}"
-    headers = {"Authorization": f"Bearer {_HF_TOKEN}"} if _HF_TOKEN else {}
-    async with httpx.AsyncClient() as client:
-        resp = await client.get(hf_url, headers=headers)
-        if resp.status_code != 200:
-            raise HTTPException(status_code=404, detail="Image not found locally or on HuggingFace")
-        return Response(content=resp.content, media_type=resp.headers.get("content-type", "image/jpeg"))
+    token = _hf_token()
+    headers = {"Authorization": f"Bearer {token}"} if token else {}
+    # Try both crop sizes; 224x224 first (DINOv2 default), fallback to 256x512
+    for crop in ["cropped/224x224/train", "cropped/256x512/train"]:
+        hf_url = f"https://huggingface.co/datasets/{_HF_DATASET}/resolve/{_HF_BRANCH}/{crop}/{class_name}/{filename}"
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(hf_url, headers=headers)
+            if resp.status_code == 200:
+                return Response(content=resp.content, media_type=resp.headers.get("content-type", "image/jpeg"))
+    raise HTTPException(status_code=404, detail="Image not found locally or on HuggingFace")
 
 
 async def _serve_resized(file_path: Path, size: int, base: Path, split: str, class_name: str, filename: str):
