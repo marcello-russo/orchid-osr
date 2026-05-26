@@ -7,6 +7,8 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { ExperimentsPage } from "@/pages/ExperimentsPage";
 import { Skeleton } from "@/components/ui/skeleton";
+import AuthPage from "@/pages/AuthPage";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 const ExperimentDetailPage = lazy(() =>
   import("@/pages/ExperimentDetailPage").then((m) => ({ default: m.ExperimentDetailPage }))
@@ -37,6 +39,8 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/auth" element={<AuthPage />} />
+
         <Route element={<Layout />}>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/experiments" element={<ExperimentsPage />} />
@@ -44,22 +48,28 @@ function App() {
             path="/experiments/:id"
             element={<ErrorBoundary><Suspense fallback={<PageFallback />}><ExperimentDetailPage /></Suspense></ErrorBoundary>}
           />
-          <Route
-            path="/classify"
-            element={<ErrorBoundary><Suspense fallback={<PageFallback />}><ClassifyPage /></Suspense></ErrorBoundary>}
-          />
-          <Route
-            path="/embeddings"
-            element={<ErrorBoundary><Suspense fallback={<PageFallback />}><EmbeddingsPage /></Suspense></ErrorBoundary>}
-          />
-          <Route
-            path="/dataset"
-            element={<ErrorBoundary><Suspense fallback={<PageFallback />}><DatasetPage /></Suspense></ErrorBoundary>}
-          />
-          <Route
-            path="/research"
-            element={<ErrorBoundary><Suspense fallback={<PageFallback />}><ResearchPage /></Suspense></ErrorBoundary>}
-          />
+
+          <Route element={<ProtectedRoute role="user" />}>
+            <Route
+              path="/classify"
+              element={<ErrorBoundary><Suspense fallback={<PageFallback />}><ClassifyPage /></Suspense></ErrorBoundary>}
+            />
+            <Route
+              path="/embeddings"
+              element={<ErrorBoundary><Suspense fallback={<PageFallback />}><EmbeddingsPage /></Suspense></ErrorBoundary>}
+            />
+            <Route
+              path="/research"
+              element={<ErrorBoundary><Suspense fallback={<PageFallback />}><ResearchPage /></Suspense></ErrorBoundary>}
+            />
+          </Route>
+
+          <Route element={<ProtectedRoute role="admin" />}>
+            <Route
+              path="/dataset"
+              element={<ErrorBoundary><Suspense fallback={<PageFallback />}><DatasetPage /></Suspense></ErrorBoundary>}
+            />
+          </Route>
         </Route>
       </Routes>
     </BrowserRouter>

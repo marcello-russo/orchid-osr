@@ -3,10 +3,12 @@
 import { Menu } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { LanguageToggle } from "./LanguageToggle";
+import { useNavigate } from "react-router-dom";
 import { useAppStore } from "@/stores/useAppStore";
 
 export function Header() {
-  const { sidebarOpen, toggleSidebar } = useAppStore();
+  const { sidebarOpen, toggleSidebar, token, user, logout } = useAppStore();
+  const navigate = useNavigate();
 
   return (
     <header className="fixed top-0 right-0 left-0 z-30 flex h-14 items-center justify-between border-b border-border bg-card/80 backdrop-blur-md px-4">
@@ -30,6 +32,24 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-1">
+        {token ? (
+          <div className="flex items-center gap-2 mr-2">
+            <span className="text-sm text-muted-foreground">{user?.username}</span>
+            <button
+              onClick={() => { logout(); navigate("/"); }}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            >
+              Esci
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => navigate("/auth")}
+            className="text-sm text-primary hover:underline cursor-pointer mr-2"
+          >
+            Accedi
+          </button>
+        )}
         <LanguageToggle />
         <ThemeToggle />
       </div>
