@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.api.routes import classify, comparison, dataset, embeddings, experiments, health, species
+from app.api.routes import auth, classify, comparison, dataset, embeddings, experiments, health, species
 from app.api.routes import ncd as ncd_router
 
 logger = logging.getLogger(__name__)
@@ -24,6 +24,8 @@ app = FastAPI(
 async def _startup_sync_weights():
     """Pre-download all model weights from HuggingFace Hub in background."""
     from app.api.deps import download_all_weights
+    from app.core.auth import ensure_admin_exists
+    ensure_admin_exists()
     def _sync():
         try:
             download_all_weights(background=False)
@@ -44,6 +46,7 @@ app.add_middleware(
 )
 
 # Include routers
+app.include_router(auth.router)
 app.include_router(health.router, tags=["health"])
 app.include_router(classify.router, tags=["classification"])
 app.include_router(experiments.router, tags=["experiments"])
