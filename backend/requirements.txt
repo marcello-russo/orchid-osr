@@ -1,4 +1,5 @@
 torcheval
+bcrypt==4.2.1
 captum
 torchvision
 numpy
@@ -7,6 +8,7 @@ pandas
 scikit-learn
 opencv-python
 pillow
+pyjwt==2.10.1
 python-dotenv
 flask
 fastapi
