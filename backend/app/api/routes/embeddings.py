@@ -1,8 +1,9 @@
 import json
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
+from app.api.deps import require_role
 from app.api.schemas import EmbeddingPoint, EmbeddingResponse, ServingInfo
 from app.config import settings
 
@@ -30,6 +31,7 @@ def _load_json(path: Path) -> dict | None:
 
 @router.get("", response_model=EmbeddingResponse)
 async def get_embeddings(
+    user=Depends(require_role("user")),
     experiment: str = Query("", description="Experiment directory name (e.g. exp6_clean_split_resnet50)"),
     method: str = Query("tsne_3d", description="Dimensionality reduction: tsne_3d, tsne_2d, umap_2d"),
 ):
