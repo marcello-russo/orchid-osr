@@ -334,3 +334,8 @@ export interface NcdComparisonEntry {
 export interface NcdComparison {
   models: NcdComparisonEntry[];
 }
+
+export interface AuthUser {
+  username: string;
+  role: "admin" | "user";
+}
