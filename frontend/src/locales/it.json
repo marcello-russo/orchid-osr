@@ -1,4 +1,23 @@
 {
+  "auth": {
+    "login": "Accedi",
+    "register": "Registrati",
+    "inviteCode": "Codice invito",
+    "username": "Username",
+    "password": "Password",
+    "confirmPassword": "Conferma password",
+    "loginButton": "Accedi",
+    "registerButton": "Registrati",
+    "noAccount": "Non hai un account? Registrati",
+    "hasAccount": "Hai già un account? Accedi",
+    "logout": "Esci",
+    "errors": {
+      "passwordsDontMatch": "Le password non coincidono",
+      "invalidInvite": "Codice invito non valido o scaduto",
+      "usernameTaken": "Username già in uso",
+      "invalidCredentials": "Username o password non validi"
+    }
+  },
   "common": {
     "loading": "Caricamento...",
     "retry": "Riprova",
