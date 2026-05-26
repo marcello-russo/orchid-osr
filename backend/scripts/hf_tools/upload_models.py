@@ -11,9 +11,9 @@ from dotenv import load_dotenv
 from huggingface_hub import HfApi
 
 # Carica HF_TOKEN dal .env (root progetto: resnet18/.env)
-_script_dir = Path(__file__).resolve().parent  # backend/scripts/hf_tools/
-_env = _script_dir.parent.parent.parent / ".env"  # risale a resnet18/.env
-load_dotenv(_env)
+_env = Path(__file__).resolve().parent.parent.parent / ".env"
+if _env.exists():
+    load_dotenv(_env)
 
 HF_REPO = "marcellorusso/orchid-ncd-models"
 EXP_BASE = os.path.join(os.path.dirname(__file__), "..", "..", "experiments")
