@@ -70,6 +70,11 @@ class Settings(BaseSettings):
     # HuggingFace token (from .env)
     hf_token: str = ""
 
+    # JWT authentication (from .env)
+    jwt_secret: str = ""
+    admin_username: str = "admin"
+    admin_password: str = "admin"
+
     model_config = SettingsConfigDict(
         env_file=str(Path(__file__).resolve().parent.parent.parent / ".env"),
         env_file_encoding="utf-8",
