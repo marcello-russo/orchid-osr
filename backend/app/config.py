@@ -2,7 +2,7 @@
 import os
 from pathlib import Path
 
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -67,12 +67,14 @@ class Settings(BaseSettings):
     api_port: int = 5000
     api_reload: bool = False
 
-    model_config = {
-        "env_file": ".env",
-        "env_file_encoding": "utf-8",
-        "case_sensitive": False,
-        "extra": "ignore",
-    }
+    # HuggingFace token (from .env)
+    hf_token: str = ""
+
+    model_config = SettingsConfigDict(
+        env_file=str(Path(__file__).resolve().parent.parent.parent / ".env"),
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
 
     def get_norm_mean(self) -> list[float]:
         return [float(x) for x in self.norm_mean.split()]
@@ -86,8 +88,7 @@ class Settings(BaseSettings):
 
     @property
     def hf_configured(self) -> bool:
-        token = os.environ.get("HF_TOKEN", "")
-        return bool(token) and token.startswith("hf_")
+        return bool(self.hf_token) and self.hf_token.startswith("hf_")
 
 
     def _check_env_exists(self):
