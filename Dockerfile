@@ -30,9 +30,6 @@ COPY backend/scripts/ scripts/
 COPY backend/data/ data/
 RUN mkdir -p models dataset
 
-# Scarica dataset e modelli (optional — i metadati JSON sono già copiati sotto)
-RUN python scripts/hf_tools/download_cache.py || true
-
 COPY backend/app/ app/
 COPY backend/server.py .
 COPY backend/cli.py .
@@ -60,9 +57,6 @@ RUN pip install --no-cache-dir huggingface_hub
 COPY backend/scripts/ scripts/
 COPY backend/data/ data/
 RUN mkdir -p models dataset
-
-ARG HF_TOKEN
-ENV HF_TOKEN=${HF_TOKEN}
 
 COPY backend/app/ app/
 COPY backend/server.py .
