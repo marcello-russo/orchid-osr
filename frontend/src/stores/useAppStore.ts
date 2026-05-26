@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { AuthUser } from "../types";
 
 type Theme = "light" | "dark";
 
@@ -19,9 +20,13 @@ function applyTheme(theme: Theme) {
 interface AppState {
   theme: Theme;
   sidebarOpen: boolean;
+  token: string | null;
+  user: AuthUser | null;
   toggleTheme: () => void;
   setSidebarOpen: (open: boolean) => void;
   toggleSidebar: () => void;
+  setAuth: (token: string, user: AuthUser) => void;
+  logout: () => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -29,6 +34,8 @@ export const useAppStore = create<AppState>()(
     (set, get) => ({
       theme: getSystemTheme(),
       sidebarOpen: false,
+      token: null,
+      user: null,
 
       toggleTheme: () => {
         const next = get().theme === "dark" ? "light" : "dark";
@@ -39,10 +46,18 @@ export const useAppStore = create<AppState>()(
       setSidebarOpen: (open) => set({ sidebarOpen: open }),
 
       toggleSidebar: () => set({ sidebarOpen: !get().sidebarOpen }),
+
+      setAuth: (token: string, user: AuthUser) => set({ token, user }),
+
+      logout: () => set({ token: null, user: null }),
     }),
     {
       name: "orchid-app-store",
-      partialize: (state) => ({ theme: state.theme }),
+      partialize: (state) => ({
+        theme: state.theme,
+        token: state.token,
+        user: state.user,
+      }),
       onRehydrateStorage: () => (state) => {
         if (state) applyTheme(state.theme);
       },
