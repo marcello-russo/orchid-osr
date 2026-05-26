@@ -1,4 +1,23 @@
 {
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "inviteCode": "Invite code",
+    "username": "Username",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "loginButton": "Sign in",
+    "registerButton": "Sign up",
+    "noAccount": "Don't have an account? Register",
+    "hasAccount": "Already have an account? Sign in",
+    "logout": "Logout",
+    "errors": {
+      "passwordsDontMatch": "Passwords do not match",
+      "invalidInvite": "Invalid or expired invite code",
+      "usernameTaken": "Username already taken",
+      "invalidCredentials": "Invalid username or password"
+    }
+  },
   "common": {
     "loading": "Loading...",
     "retry": "Retry",
