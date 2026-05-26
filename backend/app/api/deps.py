@@ -6,7 +6,6 @@ HuggingFace Hub on demand and cached locally.
 """
 import json
 import logging
-import os
 import threading
 from collections import OrderedDict
 from pathlib import Path
@@ -232,12 +231,11 @@ def _resolve_weights(model_id: str) -> tuple[Path, str] | None:
         logger.error(f"Cannot resolve HF path for {model_id}")
         return None
 
-    token = os.environ.get("HF_TOKEN") or _read_hf_token_secret()
     try:
         downloaded = hf_hub_download(
             repo_id=HF_MODELS_REPO,
             filename=hf_path,
-            token=token,
+            token=settings.hf_token or None,
         )
         # Copy to cache
         cache_pt = _get_cache_dir() / f"{model_id}_{pt_name}"
@@ -249,14 +247,6 @@ def _resolve_weights(model_id: str) -> tuple[Path, str] | None:
     except Exception as e:
         logger.error(f"Failed to download weights from HF: {e}")
         return None
-
-
-def _read_hf_token_secret() -> str | None:
-    secret_path = "/run/secrets/HF_TOKEN"
-    if os.path.exists(secret_path):
-        with open(secret_path) as f:
-            return f.read().strip()
-    return None
 
 
 # ── LRU model cache ──────────────────────────────────────────

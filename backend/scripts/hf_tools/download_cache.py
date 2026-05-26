@@ -5,7 +5,7 @@ from huggingface_hub import snapshot_download
 DATASET_REPO = "marcellorusso/orchid-ncd-dataset"
 MODELS_REPO = "marcellorusso/orchid-ncd-models"
 
-EXP_PATHS = ["exp6_ce", "exp7_supcon", "exp8_sphor", "exp9_ncd"]
+EXP_PATHS = ["exp6_ce", "exp7_supcon", "exp8_sphor", "exp9_ncd", "exp10_mgh_ncd"]
 
 
 def _download_and_flatten_models(local_base, token):
@@ -52,14 +52,25 @@ def _download_and_flatten_models(local_base, token):
     print("Models synced successfully.")
 
 
-def main():
-    token = None
+def _load_token() -> str | None:
+    """Load HF_TOKEN from Docker secret, env, or .env file."""
     secret_path = "/run/secrets/HF_TOKEN"
     if os.path.exists(secret_path):
-        with open(secret_path, "r") as f:
-            token = f.read().strip()
-    else:
-        token = os.environ.get("HF_TOKEN")
+        with open(secret_path) as f:
+            return f.read().strip()
+    token = os.environ.get("HF_TOKEN")
+    if token:
+        return token
+    from dotenv import load_dotenv
+    env_path = Path(__file__).resolve().parent.parent.parent / ".env"
+    if env_path.exists():
+        load_dotenv(env_path)
+        return os.environ.get("HF_TOKEN")
+    return None
+
+
+def main():
+    token = _load_token()
 
     if not token:
         print("Warning: HF_TOKEN not found. Downloads might hit rate limits or fail if repos are private.")
