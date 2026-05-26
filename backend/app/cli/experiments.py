@@ -86,6 +86,14 @@ Examples:
     parser.add_argument("--ncd-comparison", action="store_true",
                         help="Generate ncd_comparison.json: cross-model NCD comparison table.")
 
+    # Auth management
+    parser.add_argument("--add-user", nargs="?", const=None, help="Create user directly (use with --username --password --role)")
+    parser.add_argument("--username", help="Username for --add-user")
+    parser.add_argument("--password", help="Password for --add-user")
+    parser.add_argument("--role", default="user", choices=["user", "admin"], help="Role for --add-user")
+    parser.add_argument("--gen-invites", nargs="?", type=int, const=1, help="Generate N invite tokens")
+    parser.add_argument("--list-users", action="store_true", help="List users and invites")
+
     # Pipeline parameters
     parser.add_argument("--cropper-model", type=str,
                         default="models/cropper/fasterrcnn_orchid3.pth",
@@ -130,6 +138,46 @@ def main():
     if args.model not in valid_models:
         print(f"Error: Unknown model '{args.model}'. Available: {', '.join(valid_models)}")
         return 1
+
+    # Auth commands — early return, no logging/training
+    if args.list_users or args.gen_invites is not None or args.add_user is not None:
+        from app.core.auth import generate_invite, list_users_and_invites, hash_password, _load_data, _save_data, ensure_admin_exists
+        ensure_admin_exists()
+        if args.list_users:
+            data = list_users_and_invites()
+            print("=== Users ===")
+            for u in data["users"]:
+                print(f"  {u['username']} ({u['role']})")
+            print("\n=== Invites ===")
+            for i in data["invites"]:
+                status = "used" if i["used"] else "available"
+                print(f"  {i['code']} [{status}] ({i['role']})")
+            return 0
+        if args.gen_invites is not None:
+            codes = generate_invite(count=args.gen_invites)
+            for c in codes:
+                print(c)
+            return 0
+        if args.add_user is not None:
+            if not args.password:
+                print("--password is required with --add-user")
+                return 1
+            username = args.add_user or args.username
+            if not username:
+                print("Specify username with --add-user <name> or --username")
+                return 1
+            data = _load_data()
+            if any(u["username"] == username for u in data["users"]):
+                print(f"User '{username}' already exists")
+                return 1
+            data["users"].append({
+                "username": username,
+                "password_hash": hash_password(args.password),
+                "role": args.role,
+            })
+            _save_data(data)
+            print(f"User '{username}' created with role '{args.role}'")
+            return 0
 
     # Status check - no logging setup needed
     if args.status:
