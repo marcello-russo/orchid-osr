@@ -70,7 +70,7 @@ class ConvNeXtClassifier(ClassifierModel):
         # Forward through stages
         for i, stage in enumerate(feats):
             x = stage(x)
-            if i == 2:
+            if i == 4:
                 stage3_out = x
         stage4_out = x
 
@@ -97,7 +97,7 @@ class ConvNeXtClassifier(ClassifierModel):
         feats = self._backbone.features
         for i, stage in enumerate(feats):
             x = stage(x)
-            if i == 2:
+            if i == 4:
                 stage3_out = x
         stage4_out = x
 
