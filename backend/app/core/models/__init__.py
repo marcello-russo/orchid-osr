@@ -41,7 +41,7 @@ register_model("convnext_tiny", ModelRegistryEntry(
     norm_mean=[0.485, 0.456, 0.406],
     norm_std=[0.229, 0.224, 0.225],
     embedding_dim=768,
-    optimizer="adamw", weight_decay=0.05, learning_rate=0.0001,
+    optimizer="adamw", weight_decay=0.05, learning_rate=0.0003,
 ))
 register_model("convnext_small", ModelRegistryEntry(
     config_cls=_convnext_mod.ConvNeXtConfig,
@@ -50,7 +50,7 @@ register_model("convnext_small", ModelRegistryEntry(
     norm_mean=[0.485, 0.456, 0.406],
     norm_std=[0.229, 0.224, 0.225],
     embedding_dim=768,
-    optimizer="adamw", weight_decay=0.05, learning_rate=0.0001,
+    optimizer="adamw", weight_decay=0.05, learning_rate=0.0003,
 ))
 
 # Register DINOv2 variants (LoRA fine-tuning, AdamW)

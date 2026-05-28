@@ -3,6 +3,7 @@ from typing import Literal
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torchvision import models
 
 from app.core.models.base import ClassifierModel, ModelConfig
@@ -77,9 +78,7 @@ class ConvNeXtClassifier(ClassifierModel):
         stage3_gap = stage3_out.mean([-2, -1])
         stage4_gap = stage4_out.mean([-2, -1])
         emb = torch.cat([stage3_gap, stage4_gap], dim=1)
-        # Forward through classifier (LayerNorm, Flatten, Linear)
-        emb = self._backbone.classifier[0](emb)
-        # classifier[1] is Flatten - skip for already flattened
+        emb = F.layer_norm(emb, [emb.shape[-1]])
         return self._backbone.classifier[2](emb)
 
     def get_embeddings(self, x: torch.Tensor) -> torch.Tensor:
@@ -103,7 +102,8 @@ class ConvNeXtClassifier(ClassifierModel):
 
         stage3_gap = stage3_out.mean([-2, -1])
         stage4_gap = stage4_out.mean([-2, -1])
-        return torch.cat([stage3_gap, stage4_gap], dim=1)
+        emb = torch.cat([stage3_gap, stage4_gap], dim=1)
+        return F.layer_norm(emb, [emb.shape[-1]])
 
     def load_weights(self, path: str) -> None:
         state_dict = torch.load(path, map_location="cpu")
