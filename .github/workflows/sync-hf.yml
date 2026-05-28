@@ -34,9 +34,18 @@ jobs:
           from huggingface_hub import HfApi
           import os
           api = HfApi(token=os.environ['HF_TOKEN'])
+          repo = 'marcellorusso/orchid-ncd'
+
+          # Remove stale directory that causes TS build error
+          try:
+              api.delete_folder(path_in_repo='frontend/src/stores', repo_id=repo, repo_type='space')
+              print('Deleted stale frontend/src/stores/')
+          except Exception:
+              pass
+
           api.upload_folder(
               folder_path='.',
-              repo_id='marcellorusso/orchid-ncd',
+              repo_id=repo,
               repo_type='space',
               commit_message=f'Sync from GitHub: {os.environ.get(\"GITHUB_SHA\", \"manual\")[:7]}',
               ignore_patterns=[
@@ -45,7 +54,6 @@ jobs:
                   'backend/models/*',
                   '*.pt',
                   '*.safetensors',
-                  'frontend/src/stores/*',
               ],
           )
           print('Space sync complete')
