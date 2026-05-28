@@ -45,6 +45,7 @@ jobs:
                   'backend/models/*',
                   '*.pt',
                   '*.safetensors',
+                  'frontend/src/stores/*',
               ],
           )
           print('Space sync complete')

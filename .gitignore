@@ -36,6 +36,7 @@ inference*/
 *.log
 models*/
 *.npy
+frontend/src/stores/
 ProjectDocker/
 *.pt
 __pycache__/
