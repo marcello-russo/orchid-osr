@@ -1,58 +1,48 @@
 
-# Data and Models
-dataset*/
-models*/
-!app/core/models/
-!backend/app/core/models/
-inference*/
-documents/
-archive/
-*.pt
-*.safetensors
-*_done
-*_adapter/
-
-# Generated outputs
+*$py.class
 *_1/
 *_2/
-embeddings.npy
-
+*_adapter/
+!app/core/models/
+archive/
+!backend/app/core/models/
 # Backend data dirs
 backend/dataset*/
-backend/models*/
-!backend/app/core/models/
 backend/inference*/
-backend/test_dataset/
 backend/logs*/
+backend/models*/
+backend/orchid-ncd-models/
 backend/temp_kfold/
-
-# Environment and Secrets
-.env
-
+backend/test_dataset/
+.coverage
+.coverage.*
+# Coverage
+# Data and Models
+dataset*/
 # Docker artifacts
+documents/
+*_done
+.DS_Store
+embeddings.npy
+.env
+# Environment and Secrets
+# Generated outputs
+htmlcov/
+.idea/
+# IDEs
+inference*/
+.ipynb_checkpoints/
+# K-fold temporary directories
+*.log
+models*/
+*.npy
 ProjectDocker/
-
-# Python
+*.pt
 __pycache__/
 *.py[cod]
-*$py.class
-.ipynb_checkpoints/
-*.log
-
-# IDEs
-.vscode/
-.idea/
-
-# System
-.DS_Store
-
-# Coverage
-.coverage
-htmlcov/
-.coverage.*
-
-# K-fold temporary directories
-temp_kfold/
-
+# Python
+*.safetensors
 superpowers/
-backend/orchid-ncd-models/
+# System
+temp_kfold/
+.vscode/
