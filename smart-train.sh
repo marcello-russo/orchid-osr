@@ -136,9 +136,14 @@ start_fold() {
                 BS=4
                 ACC=8
                 ;;
-            convnext_tiny|convnext_small|resnet18|resnet50)
+            convnext_tiny|convnext_small|resnet18)
                 BS=8
                 ACC=4
+                ;;
+            resnet50)
+                BS=8
+                ACC=4
+                EXTRA="$EXTRA --proj-dim 384"
                 ;;
         esac
     fi
