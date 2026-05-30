@@ -22,7 +22,7 @@ pinned: false
   <img src="https://img.shields.io/badge/ConvNeXt-Tiny|Small-FF6F00?style=flat&logo=pytorch&logoColor=white" alt="ConvNeXt"/>
   <img src="https://img.shields.io/badge/DINOv2-Small|Base-8B5CF6?style=flat&logo=pytorch&logoColor=white" alt="DINOv2"/>
   <br/>
-  <img src="https://img.shields.io/badge/HuggingFace-Spaces|Datasets-FFD21E?style=flat&logo=huggingface&logoColor=black" alt="HuggingFace"/>
+  <img src="https://img.shields.io/badge/HuggingFace_Spaces-FFD21E?style=flat&logo=huggingface&logoColor=000" alt="HuggingFace"/>
   <img src="https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white" alt="Docker"/>
   <img src="https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat&logo=githubactions&logoColor=white" alt="GitHub Actions"/>
   <img src="https://img.shields.io/badge/CUDA-12.4-76B900?style=flat&logo=nvidia&logoColor=white" alt="CUDA"/>
