@@ -9,9 +9,8 @@ if [ -d /data ]; then
     fi
     [ ! -L dataset ] && ln -sfn /data/dataset dataset 2>/dev/null || true
 
-    # Persistent users.json (auth) — scarica da dataset privato se non presente
-    if [ ! -f /data/users.json ]; then
-        echo "Scarico users.json da dataset privato..."
+    # Persistent users.json (auth) — scarica/sincronizza da dataset privato
+    echo "Sincronizzo users.json da dataset privato..."
         python3 -c "
 from huggingface_hub import hf_hub_download
 import os
