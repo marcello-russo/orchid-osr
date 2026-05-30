@@ -1,8 +1,7 @@
-from fastapi import APIRouter, Request
-from fastapi import HTTPException, status
+from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel
 
-from app.core.auth import register_user, login_user, create_jwt, decode_jwt
+from app.core.auth import create_jwt, decode_jwt, login_user, register_user
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 

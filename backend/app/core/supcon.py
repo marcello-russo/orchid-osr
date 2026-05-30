@@ -160,7 +160,6 @@ def train_supcon(
     from app.core.models.registry import get_registry_entry
 
     model = model.to(device)
-    entry = get_registry_entry(model.model_name)
     proj_head = ProjectionHead(model.embedding_dim, proj_dim).to(device)
 
     criterion = SupConLoss(temperature=temperature, pair_weights=pair_weights)

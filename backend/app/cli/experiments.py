@@ -87,7 +87,8 @@ Examples:
                         help="Generate ncd_comparison.json: cross-model NCD comparison table.")
 
     # Auth management
-    parser.add_argument("--add-user", nargs="?", const=None, help="Create user directly (use with --username --password --role)")
+    parser.add_argument("--add-user", nargs="?", const=None,
+                        help="Create user directly (use --username --password --role)")
     parser.add_argument("--username", help="Username for --add-user")
     parser.add_argument("--password", help="Password for --add-user")
     parser.add_argument("--role", default="user", choices=["user", "admin"], help="Role for --add-user")
@@ -141,7 +142,11 @@ def main():
 
     # Auth commands — early return, no logging/training
     if args.list_users or args.gen_invites is not None or args.add_user is not None:
-        from app.core.auth import generate_invite, list_users_and_invites, hash_password, _load_data, _save_data, ensure_admin_exists
+        from app.core.auth import (
+            generate_invite, list_users_and_invites,
+            hash_password, _load_data, _save_data,
+            ensure_admin_exists,
+        )
         ensure_admin_exists()
         if args.list_users:
             data = list_users_and_invites()
@@ -392,7 +397,7 @@ def main():
                 use_prototypes=args.sphor,
                 repulse_weight=args.repulse_weight,
                 pair_weights={
-                    (3, 4): args.hard_weight,  # (majellensis, sphegodes) 
+                    (3, 4): args.hard_weight,  # (majellensis, sphegodes)
                     (4, 3): args.hard_weight,
                     (4, 5): args.hard_weight * 0.6,  # (sphegodes, sphegodes_Palena)
                     (5, 4): args.hard_weight * 0.6,
