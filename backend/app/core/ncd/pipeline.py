@@ -174,12 +174,22 @@ def run_ncd_pipeline(
                 from app.core.models import get_registry_entry, create_model
 
                 import torch
-                model = load_trained_model(model_variant, num_classes, None, torch.device("cpu"))
+                import json
+                results_path = os.path.join(exp_dir, "results.json")
+                best_fold = 0
+                if os.path.exists(results_path):
+                    with open(results_path) as f:
+                        best_fold = json.load(f).get("best_fold", 0)
+                best_model_path = os.path.join(exp_dir, f"best_fold_{best_fold}.pt")
+                if not os.path.exists(best_model_path):
+                    logger.error(f"Best model not found: {best_model_path}")
+                    return
+                model = load_trained_model(model_variant, num_classes, best_model_path, torch.device("cpu"))
                 train_emb, train_labels, _ = extract_embeddings(
-                    model_variant, data_dir, None, num_classes, batch_size, torch.device("cpu")
+                    model_variant, data_dir, best_model_path, num_classes, batch_size, torch.device("cpu")
                 )
                 test_emb, test_labels, _ = extract_embeddings(
-                    model_variant, test_dir, None, num_classes, batch_size, torch.device("cpu")
+                    model_variant, test_dir, best_model_path, num_classes, batch_size, torch.device("cpu")
                 )
                 train_norm = train_emb / (np.linalg.norm(train_emb, axis=1, keepdims=True) + 1e-12)
                 test_norm = test_emb / (np.linalg.norm(test_emb, axis=1, keepdims=True) + 1e-12)
