@@ -14,7 +14,7 @@ from app.core.ncd.reporting import (
 def test_plot_tsne_known_vs_unknown_creates_file():
     np.random.seed(57)
     embeddings = np.random.randn(30, 10)
-    labels = np.array([0]*15 + [1]*15)
+    labels = np.array([0] * 15 + [1] * 15)
     class_names = ["Class A", "Class B"]
     with tempfile.TemporaryDirectory() as tmp:
         path = plot_tsne_known_vs_unknown(embeddings, labels, class_names, output_dir=tmp)

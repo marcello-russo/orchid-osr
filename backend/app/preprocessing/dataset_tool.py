@@ -14,6 +14,7 @@ import app.preprocessing.rotation as rotation
 
 config = dotenv_values(".env")
 
+
 # Used during preprocessing to save data to a file while preserving file names
 class TensorDatasetWithName(Dataset):
     def __init__(self, tensors, file_paths, classes=None):
@@ -27,6 +28,7 @@ class TensorDatasetWithName(Dataset):
 
     def __len__(self):
         return len(self.tensors[0])
+
 
 # Loads images from a specific path
 # Extends ImageFolder to include file names
@@ -48,11 +50,9 @@ class ImageFolderWithName(ImageFolder):
         return original_tuple[0], original_tuple[1], file_name
 
 
-
-
 def getDatasetFromFile(file_path):
     processed_data_dict = torch.load(file_path, weights_only=False)
-    processed_dataset = processed_data_dict['data']
+    processed_dataset = processed_data_dict["data"]
     return processed_dataset
 
 
@@ -74,7 +74,7 @@ def augmentDataPath(data_path, output_path, max_images_per_class, width, height,
             img = Image.open(os.path.join(data_path, foto))
             img = preprocessImage(img, width, height)
             original_name = os.path.splitext(foto)[0]
-            output_file_path = os.path.join(output_path, f'{function.__name__}_{original_name}_{idx}.jpg')
+            output_file_path = os.path.join(output_path, f"{function.__name__}_{original_name}_{idx}.jpg")
             os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
             img = function(img)
             img.save(output_file_path)
@@ -90,7 +90,7 @@ def CalculateBalancedTargets(raw_data_path, class_names, augmentation_functions)
     for class_name in class_names:
         class_path = os.path.join(raw_data_path, class_name)
         if os.path.exists(class_path):
-            num_files = len([f for f in os.listdir(class_path) if f.lower().endswith(('.jpg', '.png', '.jpeg'))])
+            num_files = len([f for f in os.listdir(class_path) if f.lower().endswith((".jpg", ".png", ".jpeg"))])
             class_sizes[class_name] = num_files
         else:
             class_sizes[class_name] = 0
@@ -107,14 +107,14 @@ def _process_single_image(args):
     img = Image.open(os.path.join(data_path, foto))
     img = preprocessImage(img, width, height)
     original_name = os.path.splitext(foto)[0]
-    output_file_path = os.path.join(output_path, f'{func_name}_{original_name}_{idx}.jpg')
+    output_file_path = os.path.join(output_path, f"{func_name}_{original_name}_{idx}.jpg")
 
     # Map function name -> function
     func_map = {
-        'identity': rotation.identity,
-        'horizontal_flip': rotation.horizontal_flip,
-        'vertical_flip': rotation.vertical_flip,
-        'horizontal_and_vertical_flip': rotation.horizontal_and_vertical_flip
+        "identity": rotation.identity,
+        "horizontal_flip": rotation.horizontal_flip,
+        "vertical_flip": rotation.vertical_flip,
+        "horizontal_and_vertical_flip": rotation.horizontal_and_vertical_flip,
     }
     func = func_map.get(func_name, rotation.identity)
     img = func(img)
@@ -122,7 +122,9 @@ def _process_single_image(args):
     return True
 
 
-def augmentDataPathBalanced(data_path, output_path, target_images, width, height, augmentation_functions, current_count):
+def augmentDataPathBalanced(
+    data_path, output_path, target_images, width, height, augmentation_functions, current_count
+):
     """
     Augments images until target_images is reached.
     Parallelized with ProcessPoolExecutor.
@@ -134,7 +136,7 @@ def augmentDataPathBalanced(data_path, output_path, target_images, width, height
         shutil.rmtree(output_path)
     os.makedirs(output_path, exist_ok=True)
 
-    images = [f for f in os.listdir(data_path) if f.lower().endswith(('.jpg', '.png', '.jpeg'))]
+    images = [f for f in os.listdir(data_path) if f.lower().endswith((".jpg", ".png", ".jpeg"))]
     num_workers = min(multiprocessing.cpu_count(), 4)  # Reduced for stability
 
     # If we have more originals than target, undersample
@@ -142,8 +144,7 @@ def augmentDataPathBalanced(data_path, output_path, target_images, width, height
         images = images[:target_images]
 
     # Copy originals with identity (parallelized)
-    identity_args = [(data_path, foto, output_path, 'identity', idx, width, height)
-                     for idx, foto in enumerate(images)]
+    identity_args = [(data_path, foto, output_path, "identity", idx, width, height) for idx, foto in enumerate(images)]
 
     with ProcessPoolExecutor(max_workers=num_workers) as executor:
         list(executor.map(_process_single_image, identity_args))
@@ -162,8 +163,10 @@ def augmentDataPathBalanced(data_path, output_path, target_images, width, height
         func_name = func.__name__
 
         images_needed = min(needed, len(images))
-        aug_args = [(data_path, images[idx % len(images)], output_path, func_name, idx, width, height)
-                    for idx in range(count, count + images_needed)]
+        aug_args = [
+            (data_path, images[idx % len(images)], output_path, func_name, idx, width, height)
+            for idx in range(count, count + images_needed)
+        ]
 
         with ProcessPoolExecutor(max_workers=num_workers) as executor:
             list(executor.map(_process_single_image, aug_args))
@@ -173,4 +176,3 @@ def augmentDataPathBalanced(data_path, output_path, target_images, width, height
         aug_idx += 1
 
     return count
-

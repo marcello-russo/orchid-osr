@@ -22,7 +22,6 @@ def _make_fake_dataset():
 
 
 class TestSpeciesEndpoint:
-
     def test_species_returns_200(self):
         fake = _make_fake_dataset()
         with patch("app.api.routes.species._get_dataset_dir", return_value=fake):

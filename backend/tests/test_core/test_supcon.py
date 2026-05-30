@@ -97,4 +97,5 @@ def test_train_supcon_resume():
         assert len(metrics2.get("train_loss", [])) >= 2
     finally:
         import shutil
+
         shutil.rmtree(tmp)

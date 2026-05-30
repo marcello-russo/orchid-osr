@@ -4,6 +4,7 @@ Flower cropper using Faster R-CNN.
 Loads a pretrained Faster R-CNN detector, runs inference on raw images,
 and crops to the detected flower bounding box.
 """
+
 import logging
 from pathlib import Path
 
@@ -85,8 +86,7 @@ def crop_to_bbox(image, bbox, padding=0):
     return image.crop((x_min, y_min, x_max, y_max))
 
 
-def crop_single_image(model, image_path, score_threshold=DEFAULT_SCORE_THRESHOLD,
-                      padding=0, fallback="full"):
+def crop_single_image(model, image_path, score_threshold=DEFAULT_SCORE_THRESHOLD, padding=0, fallback="full"):
     """Crop a single image using the detector.
 
     Args:
@@ -112,9 +112,16 @@ def crop_single_image(model, image_path, score_threshold=DEFAULT_SCORE_THRESHOLD
         return None, metadata
 
 
-def crop_dataset(input_dir, output_dir, model_path,
-                 score_threshold=DEFAULT_SCORE_THRESHOLD, padding=0,
-                 fallback="full", device=None, num_classes=2):
+def crop_dataset(
+    input_dir,
+    output_dir,
+    model_path,
+    score_threshold=DEFAULT_SCORE_THRESHOLD,
+    padding=0,
+    fallback="full",
+    device=None,
+    num_classes=2,
+):
     """Crop all images in input_dir and save to output_dir.
 
     Preserves class subdirectory structure. Processes all jpg/jpeg/png files.
@@ -138,16 +145,13 @@ def crop_dataset(input_dir, output_dir, model_path,
         out_class_dir = output_dir / class_name
         out_class_dir.mkdir(parents=True, exist_ok=True)
 
-        files = sorted([f for f in class_dir.iterdir()
-                        if f.suffix.lower() in (".jpg", ".jpeg", ".png")])
+        files = sorted([f for f in class_dir.iterdir() if f.suffix.lower() in (".jpg", ".jpeg", ".png")])
         class_stats = {"total": len(files), "cropped": 0, "fallback": 0, "failed": 0}
 
         for i, img_path in enumerate(files):
             summary["total"] += 1
             try:
-                cropped, meta = crop_single_image(
-                    model, str(img_path), score_threshold, padding, fallback
-                )
+                cropped, meta = crop_single_image(model, str(img_path), score_threshold, padding, fallback)
                 if cropped is None:
                     class_stats["failed"] += 1
                     summary["failed"] += 1
@@ -172,9 +176,13 @@ def crop_dataset(input_dir, output_dir, model_path,
                 logger.info(f"  {class_name}: {i + 1}/{len(files)}")
 
         summary["classes"][class_name] = class_stats
-        logger.info(f"{class_name}: {class_stats['cropped']} cropped, "
-                     f"{class_stats['fallback']} fallback, {class_stats['failed']} failed")
+        logger.info(
+            f"{class_name}: {class_stats['cropped']} cropped, "
+            f"{class_stats['fallback']} fallback, {class_stats['failed']} failed"
+        )
 
-    logger.info(f"Total: {summary['total']} → {summary['cropped']} cropped, "
-                 f"{summary['fallback']} fallback, {summary['failed']} failed")
+    logger.info(
+        f"Total: {summary['total']} → {summary['cropped']} cropped, "
+        f"{summary['fallback']} fallback, {summary['failed']} failed"
+    )
     return summary

@@ -53,18 +53,22 @@ async def list_experiments():
         config_type = (config or {}).get("type", "")
         exp_type = "kfold" if has_folds else ("kfold" if config_type == "kfold" else "baseline")
 
-        experiments.append({
-            "id": d.name,
-            "name": config.get("name", d.name),
-            "model_variant": config.get("model_variant"),
-            "type": exp_type,
-            "status": "completed" if (results or exp_type == "baseline") else "partial",
-            "num_folds": len(fold_files) if has_folds else None,
-            "test_accuracy": results.get("test_metrics", {}).get("accuracy") if results else None,
-            "mean_f1": (results.get("mean_f1") or results.get("test_metrics", {}).get("f1_macro")) if results else None,
-            "std_f1": results.get("std_f1") if results else None,
-            "timestamp": config.get("timestamp"),
-        })
+        experiments.append(
+            {
+                "id": d.name,
+                "name": config.get("name", d.name),
+                "model_variant": config.get("model_variant"),
+                "type": exp_type,
+                "status": "completed" if (results or exp_type == "baseline") else "partial",
+                "num_folds": len(fold_files) if has_folds else None,
+                "test_accuracy": results.get("test_metrics", {}).get("accuracy") if results else None,
+                "mean_f1": (results.get("mean_f1") or results.get("test_metrics", {}).get("f1_macro"))
+                if results
+                else None,
+                "std_f1": results.get("std_f1") if results else None,
+                "timestamp": config.get("timestamp"),
+            }
+        )
 
     return experiments
 

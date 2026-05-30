@@ -1,4 +1,5 @@
 """Plotting functions for k-fold experiment results."""
+
 import os
 
 import matplotlib
@@ -23,10 +24,8 @@ def plot_loss_curves(data, output_dir):
         epochs = range(1, len(fold["history"]["train_loss"]) + 1)
         label = f"Fold {fold.get('fold', i + 1)}"
 
-        axes[0].plot(epochs, fold["history"]["train_loss"], color=color,
-                     label=label, linestyle="--")
-        axes[1].plot(epochs, fold["history"]["val_loss"], color=color,
-                     label=label)
+        axes[0].plot(epochs, fold["history"]["train_loss"], color=color, label=label, linestyle="--")
+        axes[1].plot(epochs, fold["history"]["val_loss"], color=color, label=label)
 
         # Best epoch marker (best_epoch is 1-based, x-axis is 1-based)
         best_ep = fold["best_epoch"]
@@ -65,13 +64,12 @@ def plot_metric_curves(data, output_dir):
         epochs = range(1, len(fold["history"]["val_f1"]) + 1)
         label = f"Fold {fold.get('fold', i + 1)}"
 
-        axes[0].plot(epochs, fold["history"]["val_f1"], color=color,
-                     label=label, marker="o", markevery=5, markersize=4)
-        axes[1].plot(epochs, fold["history"]["val_accuracy"], color=color,
-                     label=label, marker="o", markevery=5, markersize=4)
+        axes[0].plot(epochs, fold["history"]["val_f1"], color=color, label=label, marker="o", markevery=5, markersize=4)
+        axes[1].plot(
+            epochs, fold["history"]["val_accuracy"], color=color, label=label, marker="o", markevery=5, markersize=4
+        )
 
-    axes[0].axhline(y=mean_best_f1, color="gray", linestyle="--",
-                    alpha=0.7, label=f"Mean best F1: {mean_best_f1:.3f}")
+    axes[0].axhline(y=mean_best_f1, color="gray", linestyle="--", alpha=0.7, label=f"Mean best F1: {mean_best_f1:.3f}")
     axes[0].set_title("Validation F1 Score")
     axes[0].set_xlabel("Epoch")
     axes[0].set_ylabel("F1 Score")
@@ -108,12 +106,10 @@ def plot_fold_summary(data, output_dir):
     # Annotate values on bars
     for bar in bars1:
         width = bar.get_width()
-        ax.text(width + 0.005, bar.get_y() + bar.get_height() / 2,
-                f"{width:.3f}", va="center", fontsize=9)
+        ax.text(width + 0.005, bar.get_y() + bar.get_height() / 2, f"{width:.3f}", va="center", fontsize=9)
     for bar in bars2:
         width = bar.get_width()
-        ax.text(width + 0.005, bar.get_y() + bar.get_height() / 2,
-                f"{width:.3f}", va="center", fontsize=9)
+        ax.text(width + 0.005, bar.get_y() + bar.get_height() / 2, f"{width:.3f}", va="center", fontsize=9)
 
     # Mean +/- std annotation
     if results and "mean_f1" in results:
@@ -144,8 +140,7 @@ def plot_confusion_matrix(data, output_dir):
         return
 
     cm = np.array(results["test_metrics"]["confusion_matrix"])
-    labels = results["test_metrics"].get("confusion_matrix_labels",
-                                          [str(i) for i in range(len(cm))])
+    labels = results["test_metrics"].get("confusion_matrix_labels", [str(i) for i in range(len(cm))])
 
     fig, ax = plt.subplots(figsize=(7, 6))
     im = ax.imshow(cm, cmap="Blues", interpolation="nearest")
@@ -154,8 +149,7 @@ def plot_confusion_matrix(data, output_dir):
     for i in range(len(cm)):
         for j in range(len(cm[i])):
             color = "white" if cm[i, j] > cm.max() / 2 else "black"
-            ax.text(j, i, str(cm[i, j]), ha="center", va="center",
-                    color=color, fontsize=11)
+            ax.text(j, i, str(cm[i, j]), ha="center", va="center", color=color, fontsize=11)
 
     ax.set_xticks(range(len(labels)))
     ax.set_yticks(range(len(labels)))
@@ -192,8 +186,7 @@ def plot_overfitting_proxy(data, output_dir):
         label = f"Fold {fold.get('fold', i + 1)}"
         ax.plot(epochs, ratio, color=color, label=label)
 
-    ax.axhline(y=1.0, color="red", linestyle="--", alpha=0.7,
-               label="Overfitting threshold")
+    ax.axhline(y=1.0, color="red", linestyle="--", alpha=0.7, label="Overfitting threshold")
     ax.set_xlabel("Epoch")
     ax.set_ylabel("val_loss / train_loss")
     ax.set_title("Overfitting Proxy (val_loss / train_loss)")

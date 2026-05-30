@@ -94,15 +94,13 @@ class Settings(BaseSettings):
     def hf_configured(self) -> bool:
         return bool(self.hf_token) and self.hf_token.startswith("hf_")
 
-
     def _check_env_exists(self):
         """Warn if the .env file is missing."""
         env_path = Path(__file__).resolve().parent.parent.parent / ".env"
         if not env_path.exists():
             import warnings
-            warnings.warn(
-                f".env not found at {env_path}. Create it from .env.example with your HF_TOKEN."
-            )
+
+            warnings.warn(f".env not found at {env_path}. Create it from .env.example with your HF_TOKEN.")
 
     def model_post_init(self, __context):
         self._check_env_exists()

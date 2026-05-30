@@ -65,25 +65,13 @@ class TinyDataset(Dataset):
 @pytest.fixture
 def class_names_6():
     """Standard 6 orchid class names."""
-    return [
-        "O. exaltata",
-        "O. garganica",
-        "O. incubacea",
-        "O. majellensis",
-        "O. sphegodes",
-        "O. sphegodes_Palena"
-    ]
+    return ["O. exaltata", "O. garganica", "O. incubacea", "O. majellensis", "O. sphegodes", "O. sphegodes_Palena"]
 
 
 @pytest.fixture
 def class_names_4():
     """Internet dataset class names (4 classes)."""
-    return [
-        "O. exaltata",
-        "O. garganica",
-        "O. incubacea",
-        "O. sphegodes"
-    ]
+    return ["O. exaltata", "O. garganica", "O. incubacea", "O. sphegodes"]
 
 
 @pytest.fixture

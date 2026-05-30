@@ -20,9 +20,7 @@ class TestTraining:
         optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
         criterion = nn.CrossEntropyLoss()
 
-        avg_loss = train_one_epoch(
-            model, tiny_dataloader, criterion, optimizer, device
-        )
+        avg_loss = train_one_epoch(model, tiny_dataloader, criterion, optimizer, device)
 
         assert torch.isfinite(torch.tensor(avg_loss))
         assert avg_loss > 0
@@ -35,9 +33,7 @@ class TestTraining:
         model = ResNetClassifier(config).to(device)
         criterion = nn.CrossEntropyLoss()
 
-        avg_loss, accuracy, f1 = validate_one_epoch(
-            model, tiny_dataloader, criterion, device, num_classes=2
-        )
+        avg_loss, accuracy, f1 = validate_one_epoch(model, tiny_dataloader, criterion, device, num_classes=2)
 
         assert torch.isfinite(torch.tensor(avg_loss))
         assert 0.0 <= accuracy <= 1.0
@@ -88,12 +84,10 @@ class TestTraining:
             final_acc = (preds == y).float().mean().item()
 
         # Loss should decrease significantly (allow tolerance)
-        assert final_loss < initial_loss * 0.5, \
-            f"Model failed to overfit: {initial_loss:.4f} -> {final_loss:.4f}"
+        assert final_loss < initial_loss * 0.5, f"Model failed to overfit: {initial_loss:.4f} -> {final_loss:.4f}"
 
         # Accuracy should improve
-        assert final_acc > initial_acc, \
-            f"Accuracy did not improve: {initial_acc:.2%} -> {final_acc:.2%}"
+        assert final_acc > initial_acc, f"Accuracy did not improve: {initial_acc:.2%} -> {final_acc:.2%}"
 
     def test_train_returns_history(self, tiny_dataset, device):
         """Test full training loop returns history."""

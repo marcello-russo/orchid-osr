@@ -3,11 +3,13 @@ import torch
 
 def get_mean():
     from app.config import settings
+
     return settings.get_norm_mean()
 
 
 def get_std():
     from app.config import settings
+
     return settings.get_norm_std()
 
 

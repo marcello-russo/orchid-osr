@@ -111,16 +111,13 @@ async def classify_image(request: ClassifyRequest):
         confidence = probabilities[0, predicted_idx].item()
 
     # Build response
-    probs_dict = {
-        CLASS_NAMES[i]: probabilities[0, i].item()
-        for i in range(len(CLASS_NAMES))
-    }
+    probs_dict = {CLASS_NAMES[i]: probabilities[0, i].item() for i in range(len(CLASS_NAMES))}
 
     return ClassifyResponse(
         predicted_class=CLASS_NAMES[predicted_idx],
         predicted_class_id=predicted_idx,
         confidence=confidence,
-        probabilities=probs_dict
+        probabilities=probs_dict,
     )
 
 
@@ -175,6 +172,7 @@ async def cache_download_all(admin=Depends(require_role("admin"))):
 async def cache_download_one(model_id: str, admin=Depends(require_role("admin"))):
     """Download a single model's weights."""
     from app.api.deps import _resolve_weights
+
     result = _resolve_weights(model_id)
     if result is None:
         raise HTTPException(404, f"Model {model_id} not found")
@@ -204,6 +202,7 @@ async def explain_image(file: UploadFile = File(...), model_id: str = Form(None)
 
     import matplotlib
     import numpy as np
+
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
@@ -234,9 +233,7 @@ async def explain_image(file: UploadFile = File(...), model_id: str = Form(None)
     # Occlusion attribution (coarse for CPU performance)
     sliding_window_size = 30
     stride = 20
-    global_attribution = compute_occlusion(
-        model, image_tensor.squeeze(0), sliding_window_size, stride
-    )
+    global_attribution = compute_occlusion(model, image_tensor.squeeze(0), sliding_window_size, stride)
 
     label_attributions = global_attribution[predicted_idx].squeeze(0).cpu().numpy()
     del global_attribution
@@ -245,12 +242,13 @@ async def explain_image(file: UploadFile = File(...), model_id: str = Form(None)
     del label_attributions
 
     entry = get_registry_entry(model_type)
-    image_np = denormalize_image(
-        image_tensor.squeeze(0), entry.norm_mean, entry.norm_std
-    ).cpu().numpy().transpose(1, 2, 0)
+    image_np = (
+        denormalize_image(image_tensor.squeeze(0), entry.norm_mean, entry.norm_std).cpu().numpy().transpose(1, 2, 0)
+    )
     del image_tensor
 
     from matplotlib.colors import LinearSegmentedColormap
+
     cmap = LinearSegmentedColormap.from_list("RdWhGn", ["red", "white", "green"])
 
     fig, ax = plt.subplots(figsize=(5, 10))

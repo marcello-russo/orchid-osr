@@ -4,6 +4,7 @@ Produce architecture-specific resized datasets from cropped images.
 Reads from a cropped directory and produces letterbox-resized versions
 for each target architecture size, derived from the model registry.
 """
+
 import logging
 from pathlib import Path
 
@@ -37,8 +38,7 @@ def resize_dataset(input_dir, output_dir, target_width, target_height):
         out_class = output_dir / class_dir.name
         out_class.mkdir(parents=True, exist_ok=True)
 
-        files = sorted([f for f in class_dir.iterdir()
-                        if f.suffix.lower() in (".jpg", ".jpeg", ".png")])
+        files = sorted([f for f in class_dir.iterdir() if f.suffix.lower() in (".jpg", ".jpeg", ".png")])
 
         for img_path in files:
             summary["total"] += 1
@@ -55,8 +55,7 @@ def resize_dataset(input_dir, output_dir, target_width, target_height):
 
         logger.info(f"{class_dir.name}: {len(files)} → {out_class}")
 
-    logger.info(f"Resize {target_width}×{target_height}: "
-                 f"{summary['resized']}/{summary['total']}")
+    logger.info(f"Resize {target_width}×{target_height}: {summary['resized']}/{summary['total']}")
     return summary
 
 

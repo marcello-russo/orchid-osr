@@ -24,5 +24,5 @@ async def health_check():
         status="healthy" if model_loaded else "degraded",
         model_loaded=model_loaded,
         model_type=model_type,
-        timestamp=datetime.now()
+        timestamp=datetime.now(),
     )

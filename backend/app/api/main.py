@@ -25,21 +25,24 @@ async def _startup_sync_weights():
     """Pre-download all model weights from HuggingFace Hub in background."""
     from app.api.deps import download_all_weights
     from app.core.auth import ensure_admin_exists
+
     ensure_admin_exists()
+
     def _sync():
         try:
             download_all_weights(background=False)
         except Exception as e:
             logger.error(f"Weight sync failed: {e}")
+
     thread = threading.Thread(target=_sync, daemon=True)
     thread.start()
     logger.info("Background weight sync started")
 
+
 # CORS — allow Vite dev server
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173",
-                   "http://localhost:5175", "http://127.0.0.1:5175"],
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:5175", "http://127.0.0.1:5175"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

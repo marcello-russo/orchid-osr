@@ -1,5 +1,6 @@
 # tests/test_core/test_kfold.py
 """Test per il modulo k-fold cross validation."""
+
 import os
 import shutil
 
@@ -98,9 +99,7 @@ class TestCopyFoldImages:
         train_idx, val_idx = folds[0]
 
         fold_dir = str(tmp_path / "fold_0")
-        train_dir, val_dir = _copy_fold_images(
-            all_paths, all_labels, classes, train_idx, val_idx, fold_dir
-        )
+        train_dir, val_dir = _copy_fold_images(all_paths, all_labels, classes, train_idx, val_idx, fold_dir)
 
         # Verifica che le directory esistano
         assert os.path.exists(train_dir)
@@ -122,9 +121,7 @@ class TestCopyFoldImages:
         train_idx, val_idx = folds[0]
 
         fold_dir = str(tmp_path / "fold_0")
-        train_dir, val_dir = _copy_fold_images(
-            all_paths, all_labels, classes, train_idx, val_idx, fold_dir
-        )
+        train_dir, val_dir = _copy_fold_images(all_paths, all_labels, classes, train_idx, val_idx, fold_dir)
 
         for cls in classes:
             train_files = set(os.listdir(os.path.join(train_dir, cls)))
@@ -258,6 +255,7 @@ class TestConfigJson:
         config_path = os.path.join(kfold_dir, "config.json")
 
         from datetime import datetime
+
         config = {
             "type": "kfold",
             "model_variant": "resnet18",
@@ -270,6 +268,7 @@ class TestConfigJson:
         }
         with open(config_path, "w") as f:
             import json
+
             json.dump(config, f)
 
         assert os.path.exists(config_path)
@@ -286,6 +285,7 @@ class TestConfigJson:
 
         original_timestamp = "2026-03-30T14:14:39"
         import json
+
         with open(config_path, "w") as f:
             json.dump({"timestamp": original_timestamp}, f)
 
@@ -348,12 +348,9 @@ class TestGenerateReport:
             "learning_rate": 0.001,
             "seed": 57,
             "fold_results": [
-                {"fold": 0, "best_accuracy": 0.85, "best_f1": 0.83,
-                 "final_val_loss": 0.45, "best_epoch": 20},
-                {"fold": 1, "best_accuracy": 0.88, "best_f1": 0.87,
-                 "final_val_loss": 0.40, "best_epoch": 22},
-                {"fold": 2, "best_accuracy": 0.85, "best_f1": 0.82,
-                 "final_val_loss": 0.48, "best_epoch": 18},
+                {"fold": 0, "best_accuracy": 0.85, "best_f1": 0.83, "final_val_loss": 0.45, "best_epoch": 20},
+                {"fold": 1, "best_accuracy": 0.88, "best_f1": 0.87, "final_val_loss": 0.40, "best_epoch": 22},
+                {"fold": 2, "best_accuracy": 0.85, "best_f1": 0.82, "final_val_loss": 0.48, "best_epoch": 18},
             ],
             "test_metrics": {
                 "accuracy": 0.95,
@@ -361,10 +358,24 @@ class TestGenerateReport:
                 "precision_macro": 0.95,
                 "recall_macro": 0.93,
                 "per_class_metrics": {
-                    "O. exaltata": {"precision": 0.96, "recall": 0.95, "f1": 0.955,
-                                   "support": 20, "tp": 19, "fp": 1, "fn": 1},
-                    "O. garganica": {"precision": 0.94, "recall": 0.90, "f1": 0.92,
-                                    "support": 15, "tp": 14, "fp": 2, "fn": 1},
+                    "O. exaltata": {
+                        "precision": 0.96,
+                        "recall": 0.95,
+                        "f1": 0.955,
+                        "support": 20,
+                        "tp": 19,
+                        "fp": 1,
+                        "fn": 1,
+                    },
+                    "O. garganica": {
+                        "precision": 0.94,
+                        "recall": 0.90,
+                        "f1": 0.92,
+                        "support": 15,
+                        "tp": 14,
+                        "fp": 2,
+                        "fn": 1,
+                    },
                 },
                 "confusion_matrix": [[19, 1], [2, 13]],
                 "confusion_matrix_labels": ["O. exaltata", "O. garganica"],
@@ -407,6 +418,7 @@ class TestGenerateReport:
         """Simula la sequenza reale: report salvato anche se upload fallisce."""
         output_dir = str(tmp_path)
         from app.core.kfold.reporting import generate_report
+
         report_path = tmp_path / "REPORT_KFOLD_resnet18.txt"
 
         generate_report(sample_results, "resnet18", output_dir)
@@ -423,8 +435,7 @@ class TestGenerateReport:
             "std_f1": 0.03,
             "best_fold": 0,
             "fold_results": [
-                {"fold": 0, "best_accuracy": 0.85, "best_f1": 0.83,
-                 "final_val_loss": 0.5, "best_epoch": 10},
+                {"fold": 0, "best_accuracy": 0.85, "best_f1": 0.83, "final_val_loss": 0.5, "best_epoch": 10},
             ],
         }
         report = generate_report(results, "resnet18", str(tmp_path))
@@ -501,8 +512,12 @@ class TestFinalTest:
                 img.save(cls_dir / f"img_{i}.jpg")
 
         all_classes = [
-            "O. exaltata", "O. garganica", "O. incubacea",
-            "O. majellensis", "O. sphegodes", "O. sphegodes_Palena",
+            "O. exaltata",
+            "O. garganica",
+            "O. incubacea",
+            "O. majellensis",
+            "O. sphegodes",
+            "O. sphegodes_Palena",
         ]
 
         config = ResNetConfig(num_classes=6, pretrained=False)

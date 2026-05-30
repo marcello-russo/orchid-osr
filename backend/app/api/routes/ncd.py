@@ -10,8 +10,7 @@ from app.config import settings
 
 router = APIRouter(prefix="/api/ncd", tags=["ncd"])
 
-_ALLOWED_MODELS = {"dinov2_small", "dinov2_base", "resnet18", "resnet50",
-                   "convnext_tiny", "convnext_small"}
+_ALLOWED_MODELS = {"dinov2_small", "dinov2_base", "resnet18", "resnet50", "convnext_tiny", "convnext_small"}
 
 
 def _get_exp_dir(model_variant: str, exp_num: int = 8) -> str | None:

@@ -1,6 +1,7 @@
 """
 K-Fold Cross-Validation con augmentation bilanciata per fold.
 """
+
 import json
 import logging
 import os
@@ -27,8 +28,6 @@ logger = logging.getLogger(__name__)
 _split_raw_images = split_raw_images
 _copy_fold_images = copy_fold_images
 _aggregate_results = aggregate_results
-
-
 
 
 def kfold_experiment(
@@ -64,6 +63,7 @@ def kfold_experiment(
 
     if class_names is None:
         from app.config import settings as _s
+
         class_names = _s.class_names
 
     if kfold_dir is None:
@@ -73,15 +73,24 @@ def kfold_experiment(
     config_path = os.path.join(kfold_dir, "config.json")
     if not os.path.exists(config_path):
         from app.core.models import get_registry_entry as _get_entry
+
         _entry = _get_entry(model_variant)
         config = {
-            "type": "kfold", "model_variant": model_variant, "num_folds": num_folds,
-            "num_epochs": num_epochs, "batch_size": batch_size, "learning_rate": learning_rate,
-            "seed": seed, "num_classes": num_classes, "class_names": class_names,
-            "raw_dataset_dir": raw_dataset_dir, "test_dataset_dir": test_dataset_dir,
+            "type": "kfold",
+            "model_variant": model_variant,
+            "num_folds": num_folds,
+            "num_epochs": num_epochs,
+            "batch_size": batch_size,
+            "learning_rate": learning_rate,
+            "seed": seed,
+            "num_classes": num_classes,
+            "class_names": class_names,
+            "raw_dataset_dir": raw_dataset_dir,
+            "test_dataset_dir": test_dataset_dir,
             "patience": patience,
             "gradient_accumulation_steps": gradient_accumulation_steps,
-            "optimizer": _entry.optimizer, "weight_decay": _entry.weight_decay,
+            "optimizer": _entry.optimizer,
+            "weight_decay": _entry.weight_decay,
             "effective_learning_rate": _entry.learning_rate or learning_rate,
             "loss_type": loss_type,
             "proj_dim": proj_dim if loss_type == "supcon" else None,
@@ -99,10 +108,14 @@ def kfold_experiment(
     if os.path.exists(config_path):
         with open(config_path) as f:
             saved = json.load(f)
-        for param, cli_val in [("num_epochs", num_epochs), ("batch_size", batch_size),
-                                ("learning_rate", learning_rate), ("seed", seed),
-                                ("patience", patience),
-                                ("gradient_accumulation_steps", gradient_accumulation_steps)]:
+        for param, cli_val in [
+            ("num_epochs", num_epochs),
+            ("batch_size", batch_size),
+            ("learning_rate", learning_rate),
+            ("seed", seed),
+            ("patience", patience),
+            ("gradient_accumulation_steps", gradient_accumulation_steps),
+        ]:
             saved_val = saved.get(param)
             if saved_val is not None and saved_val != cli_val:
                 logger.warning(f"Config {param}: {saved_val} → {cli_val} (CLI override)")
@@ -116,10 +129,16 @@ def kfold_experiment(
 
     if aggregate_only:
         return aggregate_and_test(
-            output_dir=kfold_dir, model_variant=model_variant, num_folds=num_folds,
-            num_epochs=num_epochs, batch_size=batch_size, learning_rate=learning_rate,
-            seed=seed, test_dataset_dir=test_dataset_dir,
-            num_classes=num_classes, class_names=class_names,
+            output_dir=kfold_dir,
+            model_variant=model_variant,
+            num_folds=num_folds,
+            num_epochs=num_epochs,
+            batch_size=batch_size,
+            learning_rate=learning_rate,
+            seed=seed,
+            test_dataset_dir=test_dataset_dir,
+            num_classes=num_classes,
+            class_names=class_names,
         )
 
     set_seed(seed)
@@ -150,9 +169,11 @@ def kfold_experiment(
         fold_indices = list(range(num_folds))
 
     import shutil
+
     base_temp_dir = None
     try:
         from app.core.models import get_registry_entry
+
         entry = get_registry_entry(model_variant)
         w, h = entry.input_size
 
@@ -181,24 +202,27 @@ def kfold_experiment(
 
             try:
                 train_dir, val_dir = copy_fold_images(
-                    all_paths, all_labels, train_class_names,
-                    train_idx, val_idx, fold_dir
+                    all_paths, all_labels, train_class_names, train_idx, val_idx, fold_dir
                 )
-                augmented_dir = augment_fold_train(
-                    train_dir, train_class_names, w, h,
-                    cache_dir=aug_cache_dir
-                )
-                train_loader, val_loader = prepare_fold_data(
-                    augmented_dir, val_dir, batch_size, seed, model_variant
-                )
+                augmented_dir = augment_fold_train(train_dir, train_class_names, w, h, cache_dir=aug_cache_dir)
+                train_loader, val_loader = prepare_fold_data(augmented_dir, val_dir, batch_size, seed, model_variant)
                 checkpoint_path = os.path.join(kfold_dir, f"best_fold_{fold_idx}.pt")
                 if loss_type == "supcon":
                     from app.core.kfold.training import train_fold_supcon
+
                     model, fold_metrics = train_fold_supcon(
-                        model_variant, num_classes, train_loader, val_loader,
-                        num_epochs, learning_rate, device, checkpoint_path,
-                        proj_dim=proj_dim, temperature=temperature,
-                        ce_epochs=ce_epochs, ce_patience=patience,
+                        model_variant,
+                        num_classes,
+                        train_loader,
+                        val_loader,
+                        num_epochs,
+                        learning_rate,
+                        device,
+                        checkpoint_path,
+                        proj_dim=proj_dim,
+                        temperature=temperature,
+                        ce_epochs=ce_epochs,
+                        ce_patience=patience,
                         patience=patience,
                         gradient_accumulation_steps=gradient_accumulation_steps,
                         resume=True,
@@ -209,8 +233,14 @@ def kfold_experiment(
                     )
                 else:
                     model, fold_metrics = train_fold(
-                        model_variant, num_classes, train_loader, val_loader,
-                        num_epochs, learning_rate, device, checkpoint_path,
+                        model_variant,
+                        num_classes,
+                        train_loader,
+                        val_loader,
+                        num_epochs,
+                        learning_rate,
+                        device,
+                        checkpoint_path,
                         patience=patience,
                         gradient_accumulation_steps=gradient_accumulation_steps,
                         resume=True,
@@ -225,6 +255,7 @@ def kfold_experiment(
                 del model
                 del train_loader, val_loader
                 from app.core.training import cleanup_gpu
+
                 cleanup_gpu()
 
                 fold_json_path = os.path.join(kfold_dir, f"fold_{fold_idx}.json")
@@ -251,8 +282,14 @@ def kfold_experiment(
         return {"fold_completed": fold_index, "fold_metrics": fold_metrics}
 
     return aggregate_and_test(
-        output_dir=kfold_dir, model_variant=model_variant, num_folds=num_folds,
-        num_epochs=num_epochs, batch_size=batch_size, learning_rate=learning_rate,
-        seed=seed, test_dataset_dir=test_dataset_dir,
-        num_classes=num_classes, class_names=class_names,
+        output_dir=kfold_dir,
+        model_variant=model_variant,
+        num_folds=num_folds,
+        num_epochs=num_epochs,
+        batch_size=batch_size,
+        learning_rate=learning_rate,
+        seed=seed,
+        test_dataset_dir=test_dataset_dir,
+        num_classes=num_classes,
+        class_names=class_names,
     )

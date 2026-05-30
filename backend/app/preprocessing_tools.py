@@ -12,13 +12,13 @@ import sys
 from app import preprocessing
 
 # Alias the module so pickle can find it when loading old .pt files
-sys.modules['app.preprocessing_tools'] = preprocessing
+sys.modules["app.preprocessing_tools"] = preprocessing
 
 # Alias submodules
-sys.modules['app.preprocessing_tools.rotation'] = preprocessing.rotation
-sys.modules['app.preprocessing_tools.resizing'] = preprocessing.resizing
-sys.modules['app.preprocessing_tools.normalization'] = preprocessing.normalization
-sys.modules['app.preprocessing_tools.reproducibility'] = preprocessing.reproducibility
-sys.modules['app.preprocessing_tools.dataset_tool'] = preprocessing.dataset_tool
+sys.modules["app.preprocessing_tools.rotation"] = preprocessing.rotation
+sys.modules["app.preprocessing_tools.resizing"] = preprocessing.resizing
+sys.modules["app.preprocessing_tools.normalization"] = preprocessing.normalization
+sys.modules["app.preprocessing_tools.reproducibility"] = preprocessing.reproducibility
+sys.modules["app.preprocessing_tools.dataset_tool"] = preprocessing.dataset_tool
 
 # Re-export common items for direct import

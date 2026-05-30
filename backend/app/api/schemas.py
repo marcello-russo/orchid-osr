@@ -7,12 +7,14 @@ from pydantic import BaseModel
 
 class ClassifyRequest(BaseModel):
     """Request for image classification."""
+
     image_base64: str
     model_type: str = "resnet18"
 
 
 class ClassifyResponse(BaseModel):
     """Response for image classification."""
+
     predicted_class: str
     predicted_class_id: int
     confidence: float
@@ -21,6 +23,7 @@ class ClassifyResponse(BaseModel):
 
 class HealthResponse(BaseModel):
     """Health check response."""
+
     status: str
     model_loaded: bool
     model_type: str
@@ -29,6 +32,7 @@ class HealthResponse(BaseModel):
 
 class ExperimentInfo(BaseModel):
     """Experiment information."""
+
     id: int
     name: str
     train_dataset: str
@@ -38,11 +42,13 @@ class ExperimentInfo(BaseModel):
 
 class ExperimentListResponse(BaseModel):
     """List of experiments."""
+
     experiments: list[ExperimentInfo]
 
 
 class ExperimentSummary(BaseModel):
     """Summary of an experiment for list view."""
+
     id: str
     name: str
     model_variant: Optional[str] = None
@@ -57,6 +63,7 @@ class ExperimentSummary(BaseModel):
 
 class ExperimentDetailResponse(BaseModel):
     """Full experiment detail."""
+
     id: str
     config: dict
     folds: list[dict]
@@ -66,6 +73,7 @@ class ExperimentDetailResponse(BaseModel):
 
 class FoldHistory(BaseModel):
     """Training history arrays for a fold."""
+
     train_loss: list[float]
     val_loss: list[float]
     val_accuracy: list[float]
@@ -74,6 +82,7 @@ class FoldHistory(BaseModel):
 
 class FoldDataResponse(BaseModel):
     """Full fold detail with training history."""
+
     fold: int
     best_f1: float
     best_accuracy: float
@@ -87,12 +96,14 @@ class FoldDataResponse(BaseModel):
 
 class TopPrediction(BaseModel):
     """A single species prediction with confidence."""
+
     species: str
     confidence: float
 
 
 class ClassifyUploadResponse(BaseModel):
     """Response for file-upload classification."""
+
     top_predictions: list[TopPrediction]
     predicted_species: str
     confidence: float
@@ -100,6 +111,7 @@ class ClassifyUploadResponse(BaseModel):
 
 class ExplainResponse(BaseModel):
     """Response for explainability heatmap."""
+
     heatmap_base64: str
     predicted_species: str
     confidence: float
@@ -107,12 +119,14 @@ class ExplainResponse(BaseModel):
 
 class SpeciesInfo(BaseModel):
     """Info about a single species in the dataset."""
+
     name: str
     image_count: int
 
 
 class SpeciesListResponse(BaseModel):
     """List of species with dataset statistics."""
+
     species: list[SpeciesInfo]
     total_images: int
     total_species: int
@@ -120,6 +134,7 @@ class SpeciesListResponse(BaseModel):
 
 class ModelOption(BaseModel):
     """A trained model available for classification."""
+
     id: str
     name: str
     model_variant: str
@@ -134,11 +149,13 @@ class ModelOption(BaseModel):
 
 class ModelListResponse(BaseModel):
     """List of available classification models."""
+
     models: list[ModelOption]
 
 
 class CacheStatus(BaseModel):
     """Status of locally cached model weights."""
+
     total_models: int = 0
     cached_models: int = 0
     total_size_mb: float = 0
@@ -150,6 +167,7 @@ class CacheStatus(BaseModel):
 
 class DatasetClassInfo(BaseModel):
     """A single class in the dataset with train/test counts."""
+
     name: str
     train_count: int
     test_count: int
@@ -158,6 +176,7 @@ class DatasetClassInfo(BaseModel):
 
 class DatasetClassesResponse(BaseModel):
     """List of dataset classes with distribution stats."""
+
     classes: list[DatasetClassInfo]
     total_train: int
     total_test: int
@@ -165,12 +184,14 @@ class DatasetClassesResponse(BaseModel):
 
 class DatasetImage(BaseModel):
     """A single image reference in the dataset."""
+
     filename: str
     url: str
 
 
 class ClassImagesResponse(BaseModel):
     """Images for a specific class and split."""
+
     class_name: str
     split: str
     total: int
@@ -179,6 +200,7 @@ class ClassImagesResponse(BaseModel):
 
 class FoldSnapshot(BaseModel):
     """Single fold result in the comparison view."""
+
     fold: int
     best_f1: float | None = None
     best_accuracy: float | None = None
@@ -187,6 +209,7 @@ class FoldSnapshot(BaseModel):
 
 class ModelComparisonEntry(BaseModel):
     """One model's full comparison data."""
+
     name: str
     model_variant: str
     folds_completed: int
@@ -203,11 +226,13 @@ class ModelComparisonEntry(BaseModel):
 
 class ModelComparisonResponse(BaseModel):
     """Full comparison of all models in the active experiment."""
+
     models: list[ModelComparisonEntry]
 
 
 class ExperimentModelEntry(BaseModel):
     """One model's result within an experiment comparison group."""
+
     variant: str
     display_name: str
     mean_f1: float | None = None
@@ -218,6 +243,7 @@ class ExperimentModelEntry(BaseModel):
 
 class ExperimentGroup(BaseModel):
     """A group of model results from one experiment."""
+
     slug: str
     label: str
     description: str
@@ -227,6 +253,7 @@ class ExperimentGroup(BaseModel):
 
 class SeriesModelEntry(BaseModel):
     """One model's comparison between experiments."""
+
     variant: str
     display_name: str
     f1_ce: float | None = None
@@ -237,6 +264,7 @@ class SeriesModelEntry(BaseModel):
 
 class ExperimentComparisonResponse(BaseModel):
     """Comparison across all experiments."""
+
     exp6: list[ModelComparisonEntry]
     exp7: list[ModelComparisonEntry]
     exp8: list[ModelComparisonEntry]
@@ -245,6 +273,7 @@ class ExperimentComparisonResponse(BaseModel):
 
 class EmbeddingPoint(BaseModel):
     """A single point in the embedding space."""
+
     idx: int
     x: float
     y: float
@@ -257,6 +286,7 @@ class EmbeddingPoint(BaseModel):
 
 class ServingInfo(BaseModel):
     """Metadata about how embeddings are served."""
+
     note: str = ""
     repo: str = ""
     path: str = ""
@@ -264,6 +294,7 @@ class ServingInfo(BaseModel):
 
 class EmbeddingResponse(BaseModel):
     """Embedding space data for visualization."""
+
     experiment: str
     method: str
     dimension: int

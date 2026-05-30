@@ -2,11 +2,11 @@
 """
 Report generation for experiment results.
 """
+
 from datetime import datetime
 
 
-def _generate_experiment_report(results, model_variant, exp, epochs, batch_size,
-                                learning_rate, output_path):
+def _generate_experiment_report(results, model_variant, exp, epochs, batch_size, learning_rate, output_path):
     """Genera un report testuale per l'esperimento standard."""
     lines = []
     lines.append("=" * 80)

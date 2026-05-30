@@ -19,14 +19,17 @@ router = APIRouter(prefix="/api/comparison", tags=["comparison"])
 _CACHE: dict[str, tuple[float, object]] = {}
 _CACHE_TTL = 30
 
+
 def _cache_get(key: str):
     now = time.time()
     if key in _CACHE and now - _CACHE[key][0] < _CACHE_TTL:
         return _CACHE[key][1]
     return None
 
+
 def _cache_set(key: str, value: object):
     _CACHE[key] = (time.time(), value)
+
 
 _KNOWN_MODELS = ["resnet18", "resnet50", "convnext_tiny", "convnext_small", "dinov2_small", "dinov2_base"]
 
@@ -105,27 +108,32 @@ async def get_comparison():
         for ff in sorted(d.glob("fold_*.json")):
             fdata = _load_json(ff)
             if fdata:
-                fold_snapshots.append(FoldSnapshot(
-                    fold=fdata.get("fold", 0),
-                    best_f1=fdata.get("best_f1"),
-                    best_accuracy=fdata.get("best_accuracy"),
-                    best_epoch=fdata.get("best_epoch"),
-                ))
+                fold_snapshots.append(
+                    FoldSnapshot(
+                        fold=fdata.get("fold", 0),
+                        best_f1=fdata.get("best_f1"),
+                        best_accuracy=fdata.get("best_accuracy"),
+                        best_epoch=fdata.get("best_epoch"),
+                    )
+                )
 
-        models.append(ModelComparisonEntry(
-            name=display_name,
-            model_variant=variant,
-            folds_completed=len(fold_snapshots),
-            num_folds=config.get("num_folds", 5),
-            mean_f1=results.get("mean_f1") if results.get("mean_f1") is not None
-                     else results.get("test_metrics", {}).get("f1_macro"),
-            std_f1=results.get("std_f1"),
-            mean_accuracy=results.get("mean_accuracy"),
-            test_accuracy=results.get("test_metrics", {}).get("accuracy"),
-            test_f1=results.get("test_metrics", {}).get("f1_macro"),
-            best_fold=results.get("best_fold"),
-            fold_results=fold_snapshots,
-        ))
+        models.append(
+            ModelComparisonEntry(
+                name=display_name,
+                model_variant=variant,
+                folds_completed=len(fold_snapshots),
+                num_folds=config.get("num_folds", 5),
+                mean_f1=results.get("mean_f1")
+                if results.get("mean_f1") is not None
+                else results.get("test_metrics", {}).get("f1_macro"),
+                std_f1=results.get("std_f1"),
+                mean_accuracy=results.get("mean_accuracy"),
+                test_accuracy=results.get("test_metrics", {}).get("accuracy"),
+                test_f1=results.get("test_metrics", {}).get("f1_macro"),
+                best_fold=results.get("best_fold"),
+                fold_results=fold_snapshots,
+            )
+        )
 
     models.sort(key=lambda m: (-(m.mean_f1 if m.mean_f1 is not None else 0), m.model_variant))
     for i, m in enumerate(models):
@@ -152,19 +160,22 @@ def _build_exp_group(prefix: str) -> list[ModelComparisonEntry]:
         variant = config.get("model_variant", d.name.replace(prefix + "_", ""))
         display_name = _DISPLAY_NAMES.get(variant, variant)
 
-        models.append(ModelComparisonEntry(
-            name=display_name,
-            model_variant=variant,
-            folds_completed=0,
-            num_folds=config.get("num_folds", 5),
-            mean_f1=results.get("mean_f1") if results.get("mean_f1") is not None
-                     else results.get("test_metrics", {}).get("f1_macro"),
-            std_f1=results.get("std_f1"),
-            mean_accuracy=results.get("mean_accuracy"),
-            test_accuracy=results.get("test_metrics", {}).get("accuracy"),
-            test_f1=results.get("test_metrics", {}).get("f1_macro"),
-            best_fold=results.get("best_fold"),
-        ))
+        models.append(
+            ModelComparisonEntry(
+                name=display_name,
+                model_variant=variant,
+                folds_completed=0,
+                num_folds=config.get("num_folds", 5),
+                mean_f1=results.get("mean_f1")
+                if results.get("mean_f1") is not None
+                else results.get("test_metrics", {}).get("f1_macro"),
+                std_f1=results.get("std_f1"),
+                mean_accuracy=results.get("mean_accuracy"),
+                test_accuracy=results.get("test_metrics", {}).get("accuracy"),
+                test_f1=results.get("test_metrics", {}).get("f1_macro"),
+                best_fold=results.get("best_fold"),
+            )
+        )
 
     models.sort(key=lambda m: (-(m.mean_f1 if m.mean_f1 is not None else 0), m.model_variant))
     for i, m in enumerate(models):
@@ -188,13 +199,15 @@ async def compare_experiments():
         m6 = next((m for m in exp6 if m.model_variant == variant), None)
         m7 = next((m for m in exp7 if m.model_variant == variant), None)
         m8 = next((m for m in exp8 if m.model_variant == variant), None)
-        delta.append(SeriesModelEntry(
-            variant=variant,
-            display_name=_DISPLAY_NAMES.get(variant, variant),
-            f1_ce=m6.mean_f1 if m6 else None,
-            f1_supcon=m7.mean_f1 if m7 else None,
-            f1_sphor=m8.mean_f1 if m8 else None,
-        ))
+        delta.append(
+            SeriesModelEntry(
+                variant=variant,
+                display_name=_DISPLAY_NAMES.get(variant, variant),
+                f1_ce=m6.mean_f1 if m6 else None,
+                f1_supcon=m7.mean_f1 if m7 else None,
+                f1_sphor=m8.mean_f1 if m8 else None,
+            )
+        )
 
     result = ExperimentComparisonResponse(
         exp6=exp6,
@@ -204,9 +217,6 @@ async def compare_experiments():
     )
     _cache_set("experiments", result)
     return result
-
-
-
 
 
 @router.get("/{model_variant}/fold/{fold_number}")

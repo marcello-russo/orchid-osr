@@ -1,4 +1,5 @@
 """NCD pipeline orchestrator: extraction + clustering + OSR evaluation."""
+
 import logging
 import os
 
@@ -134,11 +135,13 @@ def run_ncd_pipeline(
     if embeddings.shape[1] > 2:
         try:
             from sklearn.manifold import TSNE
+
             logger.info("Computing t-SNE for figure...")
-            tsne = TSNE(n_components=2, random_state=57, perplexity=max(5, min(30, len(embeddings)//5)))
+            tsne = TSNE(n_components=2, random_state=57, perplexity=max(5, min(30, len(embeddings) // 5)))
             emb_2d = tsne.fit_transform(embeddings)
             known_mask = np.ones(len(true_labels), dtype=bool)
             from app.core.ncd.reporting import plot_tsne_known_vs_unknown
+
             plot_tsne_known_vs_unknown(emb_2d, true_labels, class_names, known_mask, figures_dir)
         except Exception as e:
             logger.warning(f"t-SNE figure failed: {e}")
@@ -146,6 +149,7 @@ def run_ncd_pipeline(
     # Clustering comparison figure
     try:
         from app.core.ncd.reporting import plot_clustering_comparison
+
         algo_data = {}
         for algo_name in ["kmeans", "dbscan", "spectral"]:
             if algo_name in results["clustering"]:
@@ -176,6 +180,7 @@ def run_ncd_pipeline(
                     compute_mahalanobis_scores,
                     compute_osr_metrics,
                 )
+
                 results_path = os.path.join(exp_dir, "results.json")
                 best_fold = 0
                 if os.path.exists(results_path):
@@ -218,19 +223,24 @@ def run_ncd_pipeline(
                     "per_class_metrics": all_metrics,
                     "method": "ensemble",
                     "ensemble_scores": {
-                        "mahalanobis": float(np.mean([
-                        compute_osr_metrics(
-                            maha,
-                            np.full(len(test_labels), -1) if _ else test_labels,
-                            list(range(num_classes)),
-                        )["auroc"]
-                        for _ in [0]
-                    ])),
+                        "mahalanobis": float(
+                            np.mean(
+                                [
+                                    compute_osr_metrics(
+                                        maha,
+                                        np.full(len(test_labels), -1) if _ else test_labels,
+                                        list(range(num_classes)),
+                                    )["auroc"]
+                                    for _ in [0]
+                                ]
+                            )
+                        ),
                     },
                 }
                 logger.info(f"Ensemble OSR complete. Mean AUROC: {osr_results['mean_auroc']:.4f}")
             else:
                 from app.core.ncd.openset import run_openset_evaluation
+
                 osr_results = run_openset_evaluation(
                     exp_dir=exp_dir,
                     model_variant=model_variant,
@@ -245,6 +255,7 @@ def run_ncd_pipeline(
             # OSR figures
             try:
                 from app.core.ncd.reporting import plot_auroc_per_class, plot_oscr_curve
+
                 per_class = osr_results.get("per_class_metrics", [])
                 if per_class:
                     plot_auroc_per_class(per_class, osr_results.get("mean_auroc", 0.0), figures_dir)

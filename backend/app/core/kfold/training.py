@@ -1,5 +1,6 @@
 # app/core/kfold/training.py
 """Training functions for k-fold cross-validation."""
+
 import json
 import logging
 import os
@@ -12,8 +13,6 @@ from sklearn.model_selection import StratifiedKFold
 from torch.utils.data import DataLoader
 
 logger = logging.getLogger(__name__)
-
-
 
 
 def split_raw_images(raw_dataset_dir, class_names, num_folds, seed, exclude_classes=None):
@@ -36,7 +35,7 @@ def split_raw_images(raw_dataset_dir, class_names, num_folds, seed, exclude_clas
             logger.warning(f"Classe {class_name} non trovata in {raw_dataset_dir}")
             continue
         for fname in sorted(os.listdir(class_dir)):
-            if fname.lower().endswith(('.jpg', '.png', '.jpeg')):
+            if fname.lower().endswith((".jpg", ".png", ".jpeg")):
                 all_paths.append(os.path.join(class_dir, fname))
                 all_labels.append(class_idx)
 
@@ -123,8 +122,7 @@ def augment_fold_train(fold_train_dir, class_names, width, height, cache_dir=Non
                 cp = os.path.join(fold_train_dir, cn)
                 if os.path.exists(cp):
                     current_sizes[cn] = len(
-                        [f for f in os.listdir(cp)
-                         if f.lower().endswith(('.jpg', '.png', '.jpeg'))]
+                        [f for f in os.listdir(cp) if f.lower().endswith((".jpg", ".png", ".jpeg"))]
                     )
                 else:
                     current_sizes[cn] = 0
@@ -145,8 +143,7 @@ def augment_fold_train(fold_train_dir, class_names, width, height, cache_dir=Non
     for class_name in class_names:
         class_path = os.path.join(fold_train_dir, class_name)
         if os.path.exists(class_path):
-            num_files = len([f for f in os.listdir(class_path)
-                           if f.lower().endswith(('.jpg', '.png', '.jpeg'))])
+            num_files = len([f for f in os.listdir(class_path) if f.lower().endswith((".jpg", ".png", ".jpeg"))])
             class_sizes[class_name] = num_files
         else:
             class_sizes[class_name] = 0
@@ -155,8 +152,10 @@ def augment_fold_train(fold_train_dir, class_names, width, height, cache_dir=Non
     min_size = min(non_zero_sizes) if non_zero_sizes else 0
     target_per_class = min_size * len(aug_functions)
 
-    logger.info(f"  Augmentation target: {target_per_class} immagini/classe "
-                f"(min_class={min_size}, {len(aug_functions)} augmentation)")
+    logger.info(
+        f"  Augmentation target: {target_per_class} immagini/classe "
+        f"(min_class={min_size}, {len(aug_functions)} augmentation)"
+    )
 
     # Augmenta ogni classe al target
     for class_name in class_names:
@@ -230,10 +229,21 @@ def prepare_fold_data(augmented_train_dir, val_dir, batch_size, seed, model_vari
     return train_loader, val_loader
 
 
-def train_fold(model_variant, num_classes, train_loader, val_loader,
-               num_epochs, learning_rate, device, checkpoint_path, patience=0,
-               gradient_accumulation_steps=1, resume=False,
-               optimizer_type="adam", weight_decay=0.0):
+def train_fold(
+    model_variant,
+    num_classes,
+    train_loader,
+    val_loader,
+    num_epochs,
+    learning_rate,
+    device,
+    checkpoint_path,
+    patience=0,
+    gradient_accumulation_steps=1,
+    resume=False,
+    optimizer_type="adam",
+    weight_decay=0.0,
+):
     """
     Train di un singolo fold. Riutilizza train() da app.core.training.
 
@@ -310,8 +320,15 @@ def train_fold(model_variant, num_classes, train_loader, val_loader,
 
 
 def _train_head_only(
-    model, head_params, train_loader, val_loader,
-    num_epochs, learning_rate, device, num_classes, patience=0,
+    model,
+    head_params,
+    train_loader,
+    val_loader,
+    num_epochs,
+    learning_rate,
+    device,
+    num_classes,
+    patience=0,
 ):
     """Train only the classifier head with backbone frozen. Lightweight loop for SupCon Phase 2."""
     from torcheval.metrics import MulticlassAccuracy, MulticlassF1Score
@@ -365,7 +382,7 @@ def _train_head_only(
         history["val_f1"].append(f1)
 
         logger.info(
-            f"[CE Head] Epoch {epoch+1}/{num_epochs} | "
+            f"[CE Head] Epoch {epoch + 1}/{num_epochs} | "
             f"Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f} | Acc: {accuracy:.4f} | F1: {f1:.4f}"
         )
 
@@ -381,7 +398,7 @@ def _train_head_only(
             epochs_no_improve += 1
 
         if patience > 0 and epochs_no_improve >= patience:
-            logger.info(f"[CE Head] Early stopping at epoch {epoch+1}")
+            logger.info(f"[CE Head] Early stopping at epoch {epoch + 1}")
             break
 
     model.load_state_dict(best_wts)
@@ -390,14 +407,27 @@ def _train_head_only(
 
 
 def train_fold_supcon(
-    model_variant, num_classes, train_loader, val_loader,
-    num_epochs, learning_rate, device, checkpoint_path,
-    proj_dim=128, temperature=0.07,
-    ce_epochs=50, ce_patience=15,
-    patience=0, gradient_accumulation_steps=1, resume=False,
-    optimizer_type="adam", weight_decay=0.0,
-    use_prototypes=False, repulse_weight=0.05,
-    pair_weights=None, full_finetune=False,
+    model_variant,
+    num_classes,
+    train_loader,
+    val_loader,
+    num_epochs,
+    learning_rate,
+    device,
+    checkpoint_path,
+    proj_dim=128,
+    temperature=0.07,
+    ce_epochs=50,
+    ce_patience=15,
+    patience=0,
+    gradient_accumulation_steps=1,
+    resume=False,
+    optimizer_type="adam",
+    weight_decay=0.0,
+    use_prototypes=False,
+    repulse_weight=0.05,
+    pair_weights=None,
+    full_finetune=False,
 ):
     """Two-phase training for SupCon: Phase 1 (contrastive) + Phase 2 (CE fine-tune).
 
@@ -519,7 +549,9 @@ def train_fold_supcon(
         },
     }
 
-    logger.info(f"  Fold completato (SupCon+CE): F1={best_f1:.4f}, Acc={best_acc:.4f}, "
-                f"Best epoch={best_epoch}, SupCon KNN={supcon_metrics['best_knn_acc']:.4f}")
+    logger.info(
+        f"  Fold completato (SupCon+CE): F1={best_f1:.4f}, Acc={best_acc:.4f}, "
+        f"Best epoch={best_epoch}, SupCon KNN={supcon_metrics['best_knn_acc']:.4f}"
+    )
 
     return model, fold_metrics

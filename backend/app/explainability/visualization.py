@@ -1,4 +1,5 @@
 """Visualization functions for model explainability."""
+
 import logging
 import os
 from collections import defaultdict
@@ -34,29 +35,27 @@ def _normalize_attr(attr, sign="all", outlier_perc=2, reduction_axis=None):
 
 def display_image(ax, image, predicted, label, class_names):
     """Display the original image with predicted and true labels."""
-    image = normalization.denormalize_image(
-        image, normalization.get_mean(), normalization.get_std()
-    ).cpu()
+    image = normalization.denormalize_image(image, normalization.get_mean(), normalization.get_std()).cpu()
     ax.clear()
     ax.imshow(image.permute(1, 2, 0).numpy())
-    ax.axis('off')
-    predicted_text = f'Predicted: {class_names[predicted.item() if isinstance(predicted, torch.Tensor) else predicted]}'
-    label_text = f'Label: {class_names[label]}' if label is not None else 'Label: Undefined'
-    ax.set_title(f'{predicted_text}\n{label_text}', fontsize=12)
+    ax.axis("off")
+    predicted_text = f"Predicted: {class_names[predicted.item() if isinstance(predicted, torch.Tensor) else predicted]}"
+    label_text = f"Label: {class_names[label]}" if label is not None else "Label: Undefined"
+    ax.set_title(f"{predicted_text}\n{label_text}", fontsize=12)
 
 
 def display_confidence(text, values, class_names):
     """Display class confidence percentages in a text element."""
-    confidence_text = 'Attributions:\n'
+    confidence_text = "Attributions:\n"
     percentages = get_percentages(values)
     for i, percentage in enumerate(percentages.squeeze()):
-        confidence_text += f'{class_names[i]}: {percentage:.2f}%\n'
+        confidence_text += f"{class_names[i]}: {percentage:.2f}%\n"
     text.set_text(confidence_text)
 
 
 def _display_filename(text, filename):
     """Display filename in a text element."""
-    text.set_text(f'Filename: {filename}' if filename else '')
+    text.set_text(f"Filename: {filename}" if filename else "")
 
 
 def display_integrated_gradients(ax, image, ig, label, class_names):
@@ -64,10 +63,10 @@ def display_integrated_gradients(ax, image, ig, label, class_names):
     attributions = ig.attribute(image.unsqueeze(0), target=label)
     attribution_map = np.sum(np.abs(attributions.squeeze(0).cpu().numpy()), axis=0)
     ax.clear()
-    im = ax.imshow(attribution_map, cmap='hot')
-    ax.set_title(f'IntegratedGradients attributions\nfor class {class_names[label]}')
-    ax.axis('off')
-    if not hasattr(ax, 'colorbar') or ax.colorbar is None:
+    im = ax.imshow(attribution_map, cmap="hot")
+    ax.set_title(f"IntegratedGradients attributions\nfor class {class_names[label]}")
+    ax.axis("off")
+    if not hasattr(ax, "colorbar") or ax.colorbar is None:
         cbar = plt.colorbar(im, ax=ax)
         ax.colorbar = cbar
 
@@ -81,26 +80,29 @@ def get_attribution_class_map(global_attribution):
 
 def _add_occlusion_hover_text(fig, ax, class_map, global_attribution, occlusion_text, class_names):
     """Attach a hover handler that shows per-class occlusion scores."""
+
     def update_occlusion_text(x, y):
         if 0 <= x < class_map.shape[2] and 0 <= y < class_map.shape[1]:
             actual_class_vector = global_attribution[:, 0, y, x].cpu().detach().numpy()
             ordered_classes = np.argsort(actual_class_vector)[::-1]
-            occlusion_text_str = ''
+            occlusion_text_str = ""
             for i in range(len(class_names)):
-                occlusion_text_str += f'{class_names[ordered_classes[i]]}: {actual_class_vector[ordered_classes[i]]:.2f}\n'
+                occlusion_text_str += (
+                    f"{class_names[ordered_classes[i]]}: {actual_class_vector[ordered_classes[i]]:.2f}\n"
+                )
             occlusion_text.set_text(occlusion_text_str)
         else:
-            occlusion_text.set_text('')
+            occlusion_text.set_text("")
 
     def on_hover(event):
         if event.inaxes == ax:
             x, y = int(event.xdata), int(event.ydata)
             update_occlusion_text(x, y)
 
-    previous_cid = getattr(fig.canvas, '_occlusion_hover_cid', None)
+    previous_cid = getattr(fig.canvas, "_occlusion_hover_cid", None)
     if previous_cid is not None:
         fig.canvas.mpl_disconnect(previous_cid)
-    fig.canvas._occlusion_hover_cid = fig.canvas.mpl_connect('motion_notify_event', on_hover)
+    fig.canvas._occlusion_hover_cid = fig.canvas.mpl_connect("motion_notify_event", on_hover)
 
 
 def compute_occlusion(model, image, sliding_window_size, stride):
@@ -109,11 +111,13 @@ def compute_occlusion(model, image, sliding_window_size, stride):
     return occlusion.attribute(
         image.unsqueeze(0),
         sliding_window_shapes=(3, sliding_window_size, sliding_window_size),
-        strides=(3, stride, stride)
+        strides=(3, stride, stride),
     )
 
 
-def display_occlusion(fig, ax, image, model, label, occlusion_text, sliding_window_size, stride, class_names, global_attribution=None):
+def display_occlusion(
+    fig, ax, image, model, label, occlusion_text, sliding_window_size, stride, class_names, global_attribution=None
+):
     """Display occlusion attribution heatmap with interactive hover."""
     if global_attribution is None:
         global_attribution = compute_occlusion(model, image, sliding_window_size, stride)
@@ -124,21 +128,22 @@ def display_occlusion(fig, ax, image, model, label, occlusion_text, sliding_wind
     label_attributions = label_attributions.squeeze(0).cpu().detach().numpy()
     label_attributions = np.transpose(label_attributions, (1, 2, 0))
 
-    image_np = normalization.denormalize_image(
-        image, normalization.get_mean(), normalization.get_std()
-    ).cpu().numpy().transpose(1, 2, 0)
+    image_np = (
+        normalization.denormalize_image(image, normalization.get_mean(), normalization.get_std())
+        .cpu()
+        .numpy()
+        .transpose(1, 2, 0)
+    )
 
     norm_attr = _normalize_attr(label_attributions, sign="all", outlier_perc=2, reduction_axis=2)
-    cmap = LinearSegmentedColormap.from_list(
-        "RdWhGn", ["red", "white", "green"]
-    )
+    cmap = LinearSegmentedColormap.from_list("RdWhGn", ["red", "white", "green"])
     vmin, vmax = -1, 1
 
     ax.clear()
     ax.imshow(np.mean(image_np, axis=2), cmap="gray")
     ax.imshow(norm_attr, cmap=cmap, vmin=vmin, vmax=vmax, alpha=0.5)
-    ax.set_title('Occlusion attributions\nfor class ' + class_names[label], fontsize=8)
-    ax.axis('off')
+    ax.set_title("Occlusion attributions\nfor class " + class_names[label], fontsize=8)
+    ax.axis("off")
 
     _add_occlusion_hover_text(fig, ax, class_map, global_attribution, occlusion_text, class_names)
 
@@ -151,29 +156,30 @@ def display_occlusion_for_save(ax, image, model, label, sliding_window_size, str
         image.unsqueeze(0),
         target=label,
         sliding_window_shapes=(3, sliding_window_size, sliding_window_size),
-        strides=(3, stride, stride)
+        strides=(3, stride, stride),
     )
 
     attributions = attributions.squeeze(0).cpu().detach().numpy()
     attributions = np.transpose(attributions, (1, 2, 0))
 
-    image_np = normalization.denormalize_image(
-        image, normalization.get_mean(), normalization.get_std()
-    ).cpu().numpy().transpose(1, 2, 0)
+    image_np = (
+        normalization.denormalize_image(image, normalization.get_mean(), normalization.get_std())
+        .cpu()
+        .numpy()
+        .transpose(1, 2, 0)
+    )
 
     norm_attr = _normalize_attr(attributions, sign="all", outlier_perc=2, reduction_axis=2)
-    cmap = LinearSegmentedColormap.from_list(
-        "RdWhGn", ["red", "white", "green"]
-    )
+    cmap = LinearSegmentedColormap.from_list("RdWhGn", ["red", "white", "green"])
     vmin, vmax = -1, 1
 
     ax.clear()
     ax.imshow(np.mean(image_np, axis=2), cmap="gray")
     im_attr = ax.imshow(norm_attr, cmap=cmap, vmin=vmin, vmax=vmax, alpha=0.5)
-    ax.set_title(f'Occlusion attributions\nfor class {class_names[label]}')
-    ax.axis('off')
+    ax.set_title(f"Occlusion attributions\nfor class {class_names[label]}")
+    ax.axis("off")
 
-    if not hasattr(ax, 'colorbar') or ax.colorbar is None:
+    if not hasattr(ax, "colorbar") or ax.colorbar is None:
         cbar = plt.colorbar(im_attr, ax=ax)
         ax.colorbar = cbar
 
@@ -228,12 +234,20 @@ def generate_output_images(dataset, model, device, class_names, output_dir, slid
         fig, ax = plt.subplots(1, 3, figsize=(12, 6))
         plt.subplots_adjust(bottom=0.2)
         display_image(ax[0], image, predicted, model_label, class_names)
-        display_occlusion_for_save(ax[1], image, model, predicted if model_label is None else model_label, sliding_window_size, stride, class_names)
+        display_occlusion_for_save(
+            ax[1],
+            image,
+            model,
+            predicted if model_label is None else model_label,
+            sliding_window_size,
+            stride,
+            class_names,
+        )
         display_integrated_gradients(ax[2], image, ig, predicted if model_label is None else model_label, class_names)
-        display_confidence(fig.text(0.01, 0.1, '', ha='left', va='center', fontsize=9), prediction_values, class_names)
-        _display_filename(fig.text(0.95, 0.02, '', ha='right', va='center', fontsize=9), filename)
+        display_confidence(fig.text(0.01, 0.1, "", ha="left", va="center", fontsize=9), prediction_values, class_names)
+        _display_filename(fig.text(0.95, 0.02, "", ha="right", va="center", fontsize=9), filename)
 
-        bg_color = 'white' if model_label is not None and predicted == model_label else 'lightcoral'
+        bg_color = "white" if model_label is not None and predicted == model_label else "lightcoral"
         fig.patch.set_facecolor(bg_color)
 
         base_filename = os.path.splitext(filename)[0] if filename else "image"

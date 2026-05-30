@@ -1,4 +1,5 @@
 """Embedding extraction + t-SNE/UMAP dimensionality reduction."""
+
 import json
 import logging
 import os
@@ -18,6 +19,7 @@ def load_trained_model(
 ):
     """Load a trained model from best fold weights."""
     from app.core.models import create_model
+
     model = create_model(model_variant, num_classes=num_classes, pretrained=False)
     model.load_weights(best_model_path)
     model = model.to(device)
@@ -70,6 +72,7 @@ def compute_tsne(
     random_state: int = 57,
 ) -> np.ndarray:
     from sklearn.manifold import TSNE
+
     n_samples = embeddings.shape[0]
     effective_perp = min(perplexity, max(30, n_samples // 5 - 1))
     logger.info(f"Computing t-SNE {n_components}D (perplexity={effective_perp})...")
@@ -128,14 +131,16 @@ def save_embeddings(
     points = []
     for i in range(len(paths)):
         filename = os.path.basename(paths[i])
-        points.append({
-            "idx": i,
-            "species": species[i] if i < len(species) else "",
-            "label": int(labels[i]) if i < len(labels) else -1,
-            "filename": filename,
-            "image_url": f"/api/dataset/images/train/{species[i]}/{filename}" if species[i] else "",
-            "split": "train",
-        })
+        points.append(
+            {
+                "idx": i,
+                "species": species[i] if i < len(species) else "",
+                "label": int(labels[i]) if i < len(labels) else -1,
+                "filename": filename,
+                "image_url": f"/api/dataset/images/train/{species[i]}/{filename}" if species[i] else "",
+                "split": "train",
+            }
+        )
 
     metadata = {
         "num_points": len(points),

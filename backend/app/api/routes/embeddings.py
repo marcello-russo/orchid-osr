@@ -18,6 +18,7 @@ def _load_allowed_experiments():
             _ALLOWED_EXPERIMENTS = {d.name for d in exp_dir.iterdir() if d.is_dir() and d.name.startswith("exp")}
     return _ALLOWED_EXPERIMENTS
 
+
 router = APIRouter(prefix="/api/embeddings", tags=["embeddings"])
 
 
@@ -45,8 +46,9 @@ async def get_embeddings(
     else:
         dirs = sorted(exp_dir.glob("exp*/embeddings/metadata.json"))
         if not dirs:
-            raise HTTPException(status_code=404,
-                detail="No embeddings found. Train a model first or specify an experiment.")
+            raise HTTPException(
+                status_code=404, detail="No embeddings found. Train a model first or specify an experiment."
+            )
         exp_dir = dirs[-1].parent
 
     emb_dir = exp_dir / "embeddings" if exp_dir.name != "embeddings" else exp_dir
@@ -67,6 +69,7 @@ async def get_embeddings(
         raise HTTPException(status_code=404, detail=f"{coord_file} not found")
 
     import numpy as np
+
     try:
         coords = np.load(coord_path)
     except (FileNotFoundError, ValueError):
@@ -80,18 +83,18 @@ async def get_embeddings(
     species_list = sorted(set(p.get("species", "") for p in points_list))
 
     points = [
-            EmbeddingPoint(
-                idx=p.get("idx", i),
-                x=float(coords[i, 0]),
-                y=float(coords[i, 1]),
-                z=float(coords[i, 2]) if dim >= 3 else 0.0,
-                species=p.get("species", ""),
-                filename=p.get("filename", ""),
-                image_url=p.get("image_url", ""),
-                split=p.get("split", ""),
-            )
-            for i, p in enumerate(points_list)
-        ]
+        EmbeddingPoint(
+            idx=p.get("idx", i),
+            x=float(coords[i, 0]),
+            y=float(coords[i, 1]),
+            z=float(coords[i, 2]) if dim >= 3 else 0.0,
+            species=p.get("species", ""),
+            filename=p.get("filename", ""),
+            image_url=p.get("image_url", ""),
+            split=p.get("split", ""),
+        )
+        for i, p in enumerate(points_list)
+    ]
 
     display = "tsne_3d" if dim >= 3 else "tsne_2d"
 
