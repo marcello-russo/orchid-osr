@@ -113,35 +113,6 @@ async def list_class_images(
     return ClassImagesResponse(class_name=class_name, split=split, total=total, images=images)
 
 
-@router.get("/image/{class_name}/{filename}")
-async def serve_image_legacy(
-    class_name: str, filename: str,
-    size: int = Query(None, gt=0, le=1024),
-    admin=Depends(require_role("admin")),
-):
-    """Serve a dataset image from any split (backward-compatible URL used by embeddings metadata)."""
-    class_name = _validate_segment(class_name)
-    filename = _validate_segment(filename)
-    if class_name not in _VALID_CLASSES:
-        raise HTTPException(status_code=400, detail=f"Unknown class: {class_name}")
-
-    base = _get_dataset_base()
-    for split in _VALID_SPLITS:
-        file_path = base / split / class_name / filename
-        try:
-            file_path.resolve().relative_to(base.resolve())
-        except ValueError:
-            raise HTTPException(status_code=403, detail="Path traversal denied")
-        if file_path.is_file():
-            if size is None:
-                media_type = mimetypes.guess_type(str(file_path))[0] or "image/jpeg"
-                return FileResponse(file_path, media_type=media_type)
-            return await _serve_resized(file_path, size, base, split, class_name, filename)
-
-    # Fallback: proxy from HuggingFace dataset
-    return await _hf_proxy(class_name, filename)
-
-
 async def _hf_proxy(class_name: str, filename: str) -> Response:
     """Proxy image from the HuggingFace dataset CDN via the backend."""
     token = _hf_token()
