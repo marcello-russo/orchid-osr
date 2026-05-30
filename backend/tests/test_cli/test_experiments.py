@@ -15,7 +15,7 @@ class TestCLI:
 
     def test_experiments_defined(self):
         """Test that only valid experiments are defined."""
-        assert len(EXPERIMENTS) == 4
+        assert len(EXPERIMENTS) == 5
         assert all(i in EXPERIMENTS for i in [6, 7, 8, 9])
 
     def test_experiment_structure(self):
