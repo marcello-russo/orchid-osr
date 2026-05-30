@@ -39,6 +39,7 @@ models*/
 frontend/src/stores/
 docs/
 backend/users.json
+backend/data/users.json
 ProjectDocker/
 *.pt
 __pycache__/

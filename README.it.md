@@ -1,20 +1,39 @@
 [English](README.md)
 
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.11+-3776AB?style=flat&logo=python&logoColor=white" alt="Python"/>
+  <img src="https://img.shields.io/badge/PyTorch-2.6-EE4C2C?style=flat&logo=pytorch&logoColor=white" alt="PyTorch"/>
+  <img src="https://img.shields.io/badge/FastAPI-0.115-009688?style=flat&logo=fastapi&logoColor=white" alt="FastAPI"/>
+  <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat&logo=react&logoColor=white" alt="React"/>
+  <img src="https://img.shields.io/badge/TypeScript-5.7-3178C6?style=flat&logo=typescript&logoColor=white" alt="TypeScript"/>
+  <img src="https://img.shields.io/badge/Vite-6-646CFF?style=flat&logo=vite&logoColor=white" alt="Vite"/>
+  <img src="https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?style=flat&logo=tailwindcss&logoColor=white" alt="Tailwind"/>
+  <br/>
+  <img src="https://img.shields.io/badge/ResNet-18|50-2496ED?style=flat&logo=pytorch&logoColor=white" alt="ResNet"/>
+  <img src="https://img.shields.io/badge/ConvNeXt-Tiny|Small-FF6F00?style=flat&logo=pytorch&logoColor=white" alt="ConvNeXt"/>
+  <img src="https://img.shields.io/badge/DINOv2-Small|Base-8B5CF6?style=flat&logo=pytorch&logoColor=white" alt="DINOv2"/>
+  <br/>
+  <img src="https://img.shields.io/badge/HuggingFace-Spaces|Datasets-FFD21E?style=flat&logo=huggingface&logoColor=black" alt="HuggingFace"/>
+  <img src="https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white" alt="Docker"/>
+  <img src="https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat&logo=githubactions&logoColor=white" alt="GitHub Actions"/>
+  <img src="https://img.shields.io/badge/CUDA-12.4-76B900?style=flat&logo=nvidia&logoColor=white" alt="CUDA"/>
+</p>
+
 # OrchID-NCD — Orchid Representation Learning & Novel Class Discovery
 
 > Classificazione visiva ultra-fine-grained e representation learning delle specie di orchidee *Ophrys* tramite self-supervised learning e tecniche contrastive.
 
-Progetto di Tesi Magistrale presso l'Università degli Studi di Napoli Federico II (Dipartimento DIETI).
+Progetto di tesi magistrale presso l'Università degli Studi di Napoli Federico II (DIETI).
 
 **Demo live:** [marcellorusso-orchid-ncd.hf.space](https://marcellorusso-orchid-ncd.hf.space)
 
 ---
 
-## Il Problema Ophrys
+## Il problema Ophrys
 
-Il genere *Ophrys* rappresenta uno dei gruppi di orchidee più complessi dal punto di vista tassonomico nel Mediterraneo. Queste orchidee utilizzano l'inganno sessuale per attirare impollinatori specie-specifici — i fiori mimano insetti femmine attraverso segnali visivi, olfattivi e tattili. Questa estrema specializzazione guida una rapida divergenza morfologica e frequenti ibridazioni, producendo esemplari visivamente ambigui che sfidano anche i botanici esperti.
+Il genere *Ophrys* è uno dei gruppi di orchidee più tassonomicamente complessi del Mediterraneo. Usano la decezione sessuale per attirare impollinatori specie-specifici — i fiori imitano le femmine degli insetti attraverso segnali visivi, olfattivi e tattili. Questa estrema specializzazione porta a divergenza morfologica rapida e ibridazioni frequenti, producendo esemplari visivamente ambigui che sfidano anche botanici esperti.
 
-Il solo complesso *Ophrys sphegodes* comprende taxa crittici multipli con tratti fenotipici sovrapposti, rendendolo un banco di prova ideale per la classificazione ultra-fine-grained e la novel class discovery.
+Il complesso *Ophrys sphegodes* da solo comprende taxa crittici multipli con tratti fenotipici sovrapposti, rendendolo un banco di prova ideale per la classificazione ultra-fine-grained e la scoperta di classi nascoste (Novel Class Discovery).
 
 ---
 
@@ -36,87 +55,135 @@ Sei taxa del complesso *Ophrys sphegodes*:
 
 ## Pipeline
 
-La pipeline di preprocessing è una CLI modulare — ogni step è indipendente e riprendibile:
+Pipeline di preprocessing modulare — ogni step è indipendente e riprendibile:
 
 ```
-Immagini raw (private + internet)
+Immagini raw (privato + internet)
         |
         v
    [1] CROP          --crop
-   Rilevamento fiore Faster R-CNN
+   Faster R-CNN per rilevamento fiori
         |
         v
    [2] SPLIT         --split
-   Clean split + dedup MD5
+   Split pulito + dedup MD5
         |
         v
    [3] RESIZE        --resize
-   Letterbox per-architettura
+   Letterbox per architettura
         |
         v
-   [4] TRAIN         --cross-validate --exp 6
-   5-fold stratified CV
+   [4] TRAIN         --cross-validate --exp 10
+   Stratified 5-fold CV
 ```
 
-**Scelte progettuali:**
-
-- **Cropping del fiore:** Faster R-CNN (ResNet50-FPN) rileva e ritaglia i fiori dalle foto a risoluzione piena, focalizzando il modello sulle strutture floreali discriminanti
-- **Zero data leakage:** L'hashing MD5 del contenuto garantisce nessuna sovrapposizione tra train e test — gli esperimenti precedenti (exp 1–5) sono stati invalidati quando questo è stato scoperto
-- **Letterbox resizing:** Le immagini sono scalate per rientrare nelle dimensioni per-architettura preservando il rapporto d'aspetto, con padding nero a riempire lo spazio rimanente
-- **Dimensioni per-architettura:** ResNet usa 256x512, ConvNeXt e DINOv2 usano 224x224 — le dimensioni derivano dal registry, non sono hardcoded
+**Decisioni chiave:**
+- **Cropping fiori:** Faster R-CNN (ResNet50-FPN) rileva e croppa i fiori dalle foto full-resolution
+- **Zero data leakage:** hash MD5 garantisce nessuna sovrapposizione tra train e test
+- **Resize letterbox:** dimensioni specifiche per architettura (ResNet 256×512, ConvNeXt/DINOv2 224×224)
 
 ---
 
-## Roadmap
+## Esperimenti
 
-| Fase | Obiettivo | Stato |
-|------|-----------|-------|
-| **F1 — Classificazione** | 6 architetture, k-fold CV, recipe per-architettura, pipeline cropper Faster R-CNN | Completata |
-| **F1b — Explorer** | Dashboard React SPA, classificazione upload, explainability, galleria dataset, i18n IT/EN | Completata |
-| **F2 — Spazio Vettoriale** | Supervised Contrastive Learning (SupCon) per strutturare lo spazio latente | Prossima |
-| **F3 — Novel Class Discovery** | Ricerca nearest-neighbor, clustering specie, recognition open-set | Pianificata |
+| Exp | Metodo | Descrizione | Stato |
+|-----|--------|-------------|-------|
+| 6 | CE Baseline | Cross-entropy su clean split, 6 architetture | ✅ Completato |
+| 7 | SupCon | Supervised Contrastive Learning + CE head | ✅ Completato |
+| 8 | SpHOR | SupCon + prototipi sferici ortogonali | ✅ Completato |
+| 9 | NCD | Exp 8 senza O. majellensis (classe nascosta) | ✅ Completato |
+| 10 | **MGH-NCD** | Multi-Granularity Hard-negative NCD | ✅ Completato |
+
+### Exp 10 — MGH-NCD
+
+Multi-Granularity Hard-negative Novel Class Discovery:
+- **Feature multi-granularità:** concatenazione di output da stadi multipli della rete (es. stage3 + stage4)
+- **Hard negative mining:** peso 5× sulle coppie (majellensis, sphegodes) e 3× su (sphegodes, Palena)
+- **Full fine-tune:** backbone scongelato in Phase 2 per modelli non ViT
+- **LoRA r=32:** applicato in Phase 1 per adattamento efficiente dei backbone ViT
+- **OSR Ensemble:** Mahalanobis + KNN + Energy per rilevamento open-set
 
 ---
 
-## Comparazione Architetture
+## Architetture
 
-Tre famiglie di architetture con bias induttivi diversi:
-
-| Famiglia | Modelli | Perché |
-|----------|---------|--------|
-| **ResNet** | ResNet18, ResNet50 | Feature locali gerarchiche tramite connessioni residue — baseline di fine-tuning collaudata |
-| **ConvNeXt** | ConvNeXt-Tiny, ConvNeXt-Small | CNN modernizzata con kernel ampi e LayerNorm — bias induttivo più forte per la texture |
-| **DINOv2** | DINOv2-Small, DINOv2-Base | ViT self-supervisionato con attenzione globale, addestrato su 142M immagini — fine-tunato via adapter LoRA (~0.5% parametri trainable) |
+| Famiglia | Modelli | Motivazione |
+|----------|---------|-------------|
+| **ResNet** | ResNet18, ResNet50 | Feature gerarchiche locali tramite connessioni residuali |
+| **ConvNeXt** | ConvNeXt-Tiny, ConvNeXt-Small | CNN modernizzata con kernel grandi e LayerNorm |
+| **DINOv2** | DINOv2-Small, DINOv2-Base | ViT self-supervisionato con attenzione globale, fine-tune via LoRA |
 
 <details>
-<summary>Recipe di training per-architettura</summary>
+<summary>Ricette di training per architettura</summary>
 
-| Modello | Ottimizzatore | LR | Weight Decay | Motivazione |
-|---------|--------------|----|-------------|-------------|
-| ResNet18/50 | Adam | 0.001 | 0 | BatchNorm fornisce regolarizzazione implicita |
-| ConvNeXt-Tiny/Small | AdamW | 0.0001 | 0.05 | Recipe del paper ConvNeXt — LayerNorm sensibile a gradienti grandi |
-| DINOv2-Small/Base | AdamW | 0.0002 | 0.01 | Leggera regolarizzazione su adapter LoRA |
+| Modello | Optimizer | LR | Weight Decay |
+|---------|-----------|----|-------------|
+| ResNet18/50 | Adam | 0.001 | 0 |
+| ConvNeXt-Tiny/Small | AdamW | 0.0003 | 0.05 |
+| DINOv2-Small/Base | AdamW | 0.0002 | 0.01 |
 
-Comuni: batch fisico=8 (effettivo 32 via gradient accumulation), patience=15 su val_loss, 5-fold stratified CV, augmentation bilanciata per-fold.
+Condiviso: 5-fold CV stratificato, augmentation bilanciata per fold, patience=15.
 
 </details>
+
+---
+
+## Risultati
+
+### Exp 10 — MGH-NCD (Test Set)
+
+| Modello | Accuratezza | F1 Macro | Best Fold |
+|---------|-------------|----------|-----------|
+| ResNet18 | — | — | fold 4 |
+| ResNet50 | 0.35 | 0.32 | fold 3 |
+| ConvNeXt-Tiny | — | — | fold 2 |
+| ConvNeXt-Small | — | — | fold 3 |
+| DINOv2-Small | — | — | fold 4 |
+| DINOv2-Base | 0.73 | 0.70 | fold 1 |
+
+### Rilevamento O. majellensis
+
+| Modello | Recall | F1 |
+|---------|--------|----|
+| DINOv2-Base | 0.16 | 0.28 |
+| ResNet50 | 0.00 | 0.00 |
+
+*Majellensis rimane la classe più difficile — visivamente quasi identica a sphegodes.*
+
+---
+
+## Autenticazione
+
+L'app supporta registrazione su invito con tre ruoli:
+
+| Ruolo | Accesso |
+|-------|---------|
+| **Pubblico** | Health, classify, esperimenti, specie, comparison, figure NCD |
+| **Registrato** | Tutto pubblico + classi dataset, explain, embeddings, risultati NCD |
+| **Admin** | Tutto + immagini dataset, gestione cache |
+
+### Setup
+
+```bash
+cd backend
+
+# Genera token invito
+python cli.py --gen-invites 5
+
+# Crea utente direttamente
+python cli.py --add-user username --password pass --role user
+
+# Lista utenti e inviti
+python cli.py --list-users
+```
+
+Le password sono hashate con bcrypt e salvate in `data/users.json` (gitignorato). Su HF Spaces il file è persistito in `/data/` e sincronizzato col dataset privato.
 
 ---
 
 ## Dataset
 
 Disponibile su HuggingFace: `marcellorusso/orchid-ncd-dataset` (privato)
-
-```
-raw/
-  private/                    Foto di campo originali (6 classi, 1252 immagini)
-  internet/                   Immagini da internet (4 classi, 1080 immagini)
-cropped/
-  256x512/                    Letterbox per ResNet
-    train/  test/
-  224x224/                    Letterbox per ConvNeXt / DINOv2
-    train/  test/
-```
 
 ```python
 from huggingface_hub import snapshot_download
@@ -125,18 +192,18 @@ snapshot_download("marcellorusso/orchid-ncd-dataset", repo_type="dataset", local
 
 ---
 
-## Avvio Rapido
+## Quick Start
 
 ### Prerequisiti
 - Linux (testato su Ubuntu/Pop!_OS)
-- Podman (o Docker) + NVIDIA GPU + Container Toolkit
+- Docker (o Docker) + NVIDIA GPU + Container Toolkit
 
 ### Esecuzione
 
 ```bash
 git clone https://github.com/squidslab/OrchID.git
-cd OrchID/resnet18
-./podman-start.sh
+cd OrchID/orchid-ncd
+./docker-start.sh
 ```
 
 ### Sviluppo
@@ -156,89 +223,53 @@ npm install && npm run dev
 ```bash
 cd backend
 
-# Pipeline di preprocessing (step singoli)
-python cli.py --crop                    # Cropping fiore con Faster R-CNN
-python cli.py --split                   # Split clean train/test
-python cli.py --resize                  # Letterbox resize per tutte le architetture
-python cli.py --pipeline                # Tutti e tre in sequenza
+# Preprocessing
+python cli.py --crop --split --resize --pipeline
 
 # Training
-python cli.py --cross-validate --exp 6 --model resnet18
-python cli.py --cross-validate --exp 6 --model convnext_tiny
-python cli.py --cross-validate --exp 6 --model dinov2_base
+python cli.py --cross-validate --exp 10 --model dinov2_small --full-finetune --hard-weight 5.0
 
-# Fold singolo / aggregazione
-python cli.py --cross-validate --exp 6 --model resnet50 --fold 0
-python cli.py --cross-validate --exp 6 --model resnet50 --aggregate-only
+# Smart trainer (tutti i modelli)
+./smart-train.sh --exp 10
 ```
 
 ---
 
-## Stack Tecnologico
+## Tech Stack
 
 | Layer | Tecnologia |
 |-------|-----------|
-| Training | PyTorch 2.6 + CUDA 12.4, torchvision, Captum |
-| Modelli | ResNet18/50, ConvNeXt-Tiny/Small, DINOv2-Small/Base + LoRA |
+| Training | PyTorch + CUDA, torchvision, Captum |
+| Modelli | ResNet18/50, ConvNeXt-Tiny/Small, DINOv2-Small/Base |
 | Backend | FastAPI, Python 3.12 |
 | Frontend | React 19, TypeScript, Vite, Tailwind v4, Shadcn/ui, Recharts |
-| Infra | Podman + NVIDIA Container Toolkit, HuggingFace Spaces (Docker SDK) |
-
----
-
-## Struttura Progetto
-
-```
-resnet18/
-├── backend/
-│   ├── app/
-│   │   ├── core/
-│   │   │   ├── models/           Registry multi-modello + classificatori
-│   │   │   ├── kfold/            5-fold stratified cross-validation
-│   │   │   ├── training.py       Training loop con gradient accumulation
-│   │   │   └── evaluation.py     Metriche e valutazione
-│   │   ├── preprocessing/        Cropper (Faster R-CNN), split, letterbox resize
-│   │   ├── cli/                  Interfaccia CLI (experiments, runner, definitions)
-│   │   ├── api/                  Endpoint FastAPI
-│   │   ├── explainability/       Explainability con Captum
-│   │   └── visualization/        Generazione grafici
-│   ├── scripts/hf_tools/         Script upload/download HuggingFace
-│   ├── experiments/              Risultati training e pesi modelli
-│   ├── cli.py                    Entry point CLI
-│   └── server.py                 Entry point server API
-├── frontend/
-│   ├── src/
-│   │   ├── features/             Moduli explorer, classify, dataset
-│   │   ├── pages/                Dashboard, Esperimenti, Classifica, Dataset, Ricerca
-│   │   ├── locales/              Traduzioni EN + IT
-│   │   └── components/           Layout + Shadcn/ui
-│   └── package.json
-├── Dockerfile
-└── podman-start.sh
-```
+| Infra | Docker + NVIDIA Container Toolkit, HuggingFace Spaces |
 
 ---
 
 ## API
 
-| Endpoint | Metodo | Descrizione |
-|----------|--------|-------------|
-| `/classify/upload` | POST | Classifica immagine caricata (`model_id` opzionale) |
-| `/classify/explain` | POST | Heatmap occlusione per immagine caricata |
-| `/classify/models` | GET | Modelli addestrati disponibili con metriche |
-| `/api/experiments` | GET | Lista tutti gli esperimenti |
-| `/api/experiments/{id}` | GET | Dettaglio esperimento con dati fold |
-| `/api/species` | GET | Lista specie con conteggio immagini |
-| `/api/dataset/classes` | GET | Classi dataset con conteggi train/test |
-| `/api/dataset/images/{split}/{class}/{file}` | GET | Serve immagine dataset |
-| `/docs` | GET | Swagger UI |
+| Endpoint | Metodo | Auth | Descrizione |
+|----------|--------|------|-------------|
+| `/auth/register` | POST | — | Registrazione con codice invito |
+| `/auth/login` | POST | — | Login, restituisce JWT |
+| `/auth/me` | GET | Bearer | Info utente corrente |
+| `/classify/upload` | POST | Pubblico | Classifica immagine caricata |
+| `/classify/explain` | POST | User | Mappa di calore (Captum) |
+| `/classify/models` | GET | Pubblico | Modelli disponibili |
+| `/api/experiments` | GET | Pubblico | Lista esperimenti |
+| `/api/species` | GET | Pubblico | Specie con conteggio immagini |
+| `/api/dataset/classes` | GET | User | Conteggio classi dataset |
+| `/api/dataset/images/{split}/{class}/{file}` | GET | Admin | Immagine dataset |
+| `/docs` | GET | — | Swagger UI |
 
 ---
 
 ## Link
 
-- **GitHub:** [squidslab/OrchID](https://github.com/squidslab/OrchID) · [marcello-russo](https://github.com/marcello-russo)
+- **GitHub:** [squidslab/OrchID](https://github.com/squidslab/OrchID)
 - **Demo live:** [marcellorusso-orchid-ncd.hf.space](https://marcellorusso-orchid-ncd.hf.space)
+- **Modelli:** `marcellorusso/orchid-ncd-models`
 - **Dataset:** `marcellorusso/orchid-ncd-dataset`
 
 ## Licenza
