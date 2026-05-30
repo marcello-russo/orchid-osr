@@ -83,21 +83,21 @@ def main():
             repo_type="dataset",
             local_dir="dataset",
             allow_patterns=[
-                "cropped/256x512/train_clean/*",
-                "cropped/256x512/test_clean/*",
-                "cropped/224x224/train_clean/*",
-                "cropped/224x224/test_clean/*",
+                "cropped/*/train/*",
+                "cropped/*/test/*",
+                "cropped/*/test_clean/*",
             ],
             token=token,
         )
 
         for size in ["256x512", "224x224"]:
-            src = os.path.join("dataset", "cropped", size)
-            dst = os.path.join("dataset", f"cropped_{size}")
-            if os.path.isdir(src) and not os.path.isdir(dst):
-                os.makedirs(os.path.dirname(dst), exist_ok=True)
-                shutil.move(src, dst)
-                print(f"  cropped/{size} -> cropped_{size}")
+            for hf_split, local_split in [("train", "train_clean"), ("test", "test_clean")]:
+                src = os.path.join("dataset", "cropped", size, hf_split)
+                dst = os.path.join("dataset", f"cropped_{size}", local_split)
+                if os.path.isdir(src) and not os.path.isdir(dst):
+                    os.makedirs(os.path.dirname(dst), exist_ok=True)
+                    shutil.move(src, dst)
+                    print(f"  cropped/{size}/{hf_split} -> cropped_{size}/{local_split}")
 
         print("Dataset downloaded successfully.")
     except Exception as e:
