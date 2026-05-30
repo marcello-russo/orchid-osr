@@ -43,6 +43,7 @@ def show_status():
     print(experiment_status_table())
 
     from app.core.models import available_models
+
     models = available_models()
     if models:
         print(f"\n  Registered models: {', '.join(models)}")
@@ -108,13 +109,15 @@ def run_experiment(
     exp_log_name = f"{config['name']}_{model_variant}.log"
     exp_log = os.path.join(output_dir, exp_log_name)
     exp_handler = logging.FileHandler(exp_log)
-    exp_handler.setFormatter(logging.Formatter('%(asctime)s | %(levelname)s | %(message)s'))
+    exp_handler.setFormatter(logging.Formatter("%(asctime)s | %(levelname)s | %(message)s"))
     logging.getLogger().addHandler(exp_handler)
     # Force flush dopo ogni log
     orig_emit = exp_handler.emit
+
     def flushing_emit(record):
         orig_emit(record)
         exp_handler.flush()
+
     exp_handler.emit = flushing_emit
 
     logger.info(f"Log file: {exp_log}")
@@ -126,6 +129,7 @@ def run_experiment(
         logger.info(f"Extracting embeddings for {model_variant}...")
         from app.core.models import get_registry_entry
         from app.core.ncd.extract import run_embedding_extraction
+
         entry = get_registry_entry(model_variant)
         w, h = entry.input_size
         cropped_train = str(PROJECT_ROOT / "dataset" / f"cropped_{w}x{h}" / "train_clean")
@@ -147,6 +151,7 @@ def run_experiment(
         logger.info(f"Running NCD pipeline for {model_variant}...")
         from app.core.models import get_registry_entry
         from app.core.ncd.pipeline import run_ncd_pipeline
+
         entry = get_registry_entry(model_variant)
         w, h = entry.input_size
         cropped_train = str(PROJECT_ROOT / "dataset" / f"cropped_{w}x{h}" / "train_clean")
@@ -199,8 +204,7 @@ def run_experiment(
         class_names = config.get("test_classes", ALL_CLASSES)
 
         test_metrics = final_test(
-            best_model_path, model_variant, num_classes_val, test_dir,
-            class_names, batch_size, get_device()
+            best_model_path, model_variant, num_classes_val, test_dir, class_names, batch_size, get_device()
         )
 
         # Save combined results
@@ -213,6 +217,7 @@ def run_experiment(
 
         # Upload to HF
         from app.core.kfold.testing import _upload_to_hf
+
         _upload_to_hf(output_dir, model_variant)
         return
 
@@ -226,6 +231,7 @@ def run_experiment(
     if is_supcon:
         from app.core.kfold import kfold_experiment
         from app.core.models import get_registry_entry
+
         entry = get_registry_entry(model_variant)
         w, h = entry.input_size
         cropped_train = str(PROJECT_ROOT / "dataset" / f"cropped_{w}x{h}" / "train_clean")
@@ -267,6 +273,7 @@ def run_experiment(
         )
     else:
         from app.core.kfold import kfold_experiment
+
         kfold_experiment(
             raw_dataset_dir=train_path,
             test_dataset_dir=test_path,

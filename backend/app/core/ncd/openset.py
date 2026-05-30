@@ -1,4 +1,5 @@
 """Open-Set Recognition: OpenMax (EVT-based) + OSR metrics."""
+
 import logging
 
 import numpy as np
@@ -109,9 +110,7 @@ def compute_openmax_scores(
         for cls in top_alpha:
             cm = class_models[int(cls)]
             dist = np.linalg.norm(emb - cm["mean"])
-            wscore = exponweib.cdf(
-                dist, 1, cm["weibull_shape"], loc=0, scale=cm["weibull_scale"]
-            )
+            wscore = exponweib.cdf(dist, 1, cm["weibull_shape"], loc=0, scale=cm["weibull_scale"])
             revised[cls] = activations[cls] * (1 - wscore)
 
         denom = np.sum(revised)

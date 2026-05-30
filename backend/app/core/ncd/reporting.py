@@ -3,6 +3,7 @@
 All figures are 1200x800 PNGs suitable for thesis inclusion.
 Uses matplotlib with a clean, publication-ready style.
 """
+
 import logging
 import os
 
@@ -19,13 +20,15 @@ _DPI = 150
 
 # One-time style setup
 plt.style.use("ggplot")
-plt.rcParams.update({
-    "font.size": 14,
-    "axes.titlesize": 16,
-    "axes.labelsize": 14,
-    "legend.fontsize": 12,
-    "figure.dpi": _DPI,
-})
+plt.rcParams.update(
+    {
+        "font.size": 14,
+        "axes.titlesize": 16,
+        "axes.labelsize": 14,
+        "legend.fontsize": 12,
+        "figure.dpi": _DPI,
+    }
+)
 
 
 def _save(fig, name: str, output_dir: str) -> str:
@@ -54,10 +57,14 @@ def plot_tsne_known_vs_unknown(
         mask = labels == cls
         marker = "o" if known_mask is None or known_mask[mask].any() else "x"
         ax.scatter(
-            embeddings_2d[mask, 0], embeddings_2d[mask, 1],
+            embeddings_2d[mask, 0],
+            embeddings_2d[mask, 1],
             c=[colors[idx]],
             label=class_names[int(cls)] if int(cls) < len(class_names) else str(cls),
-            marker=marker, s=30, alpha=0.7, edgecolors="none",
+            marker=marker,
+            s=30,
+            alpha=0.7,
+            edgecolors="none",
         )
 
     ax.set_title("t-SNE: Known vs Unknown Species")
@@ -110,8 +117,7 @@ def plot_auroc_per_class(
     colors = plt.cm.viridis(np.linspace(0.2, 0.9, len(names)))
 
     bars = ax.bar(range(len(names)), values, color=colors, width=0.6)
-    ax.axhline(y=mean_auroc, color="red", linestyle="--", linewidth=2,
-               label=f"Mean AUROC = {mean_auroc:.3f}")
+    ax.axhline(y=mean_auroc, color="red", linestyle="--", linewidth=2, label=f"Mean AUROC = {mean_auroc:.3f}")
 
     ax.set_xticks(range(len(names)))
     ax.set_xticklabels(names, rotation=30, ha="right")
@@ -121,8 +127,14 @@ def plot_auroc_per_class(
     ax.legend()
 
     for bar, val in zip(bars, values):
-        ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.01,
-                f"{val:.3f}", ha="center", va="bottom", fontsize=10)
+        ax.text(
+            bar.get_x() + bar.get_width() / 2,
+            bar.get_height() + 0.01,
+            f"{val:.3f}",
+            ha="center",
+            va="bottom",
+            fontsize=10,
+        )
 
     fig.tight_layout()
     return _save(fig, "auroc_per_class", output_dir)
@@ -145,7 +157,7 @@ def plot_clustering_comparison(
 
     for i, (algo, metrics) in enumerate(algo_metrics.items()):
         values = [metrics.get(m, 0) for m in metrics_names]
-        offset = (i - len(algo_names)/2 + 0.5) * width
+        offset = (i - len(algo_names) / 2 + 0.5) * width
         bars = ax.bar(x + offset, values, width, label=algo, color=colors[i])
 
     ax.set_xticks(x)

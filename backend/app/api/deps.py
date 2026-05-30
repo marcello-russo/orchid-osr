@@ -4,6 +4,7 @@ JSON metadata (results.json, config.json) is always available in the
 Docker image (tracked in git). Model weights (.pt) are downloaded from
 HuggingFace Hub on demand and cached locally.
 """
+
 import json
 import logging
 import threading
@@ -119,6 +120,7 @@ def _estimate_pt_size(dir_name: str) -> float:
 
 # ── Model discovery ──────────────────────────────────────────
 
+
 def _discover_models() -> list[ModelOption]:
     """Discover all trained models from local JSON metadata.
 
@@ -163,18 +165,20 @@ def _discover_models() -> list[ModelOption]:
             orig_pt = parent / pt_name
             is_cached = orig_pt.exists()
 
-        options.append(ModelOption(
-            id=dir_name,
-            name=_format_model_name(dir_name, mv),
-            model_variant=mv,
-            mean_f1=_get_mean_f1(results),
-            test_accuracy=test_metrics.get("accuracy"),
-            num_folds=results.get("num_folds"),
-            is_cached=is_cached,
-            size_mb=_estimate_pt_size(dir_name),
-            exp_num=exp_num,
-            exp_label=exp_label,
-        ))
+        options.append(
+            ModelOption(
+                id=dir_name,
+                name=_format_model_name(dir_name, mv),
+                model_variant=mv,
+                mean_f1=_get_mean_f1(results),
+                test_accuracy=test_metrics.get("accuracy"),
+                num_folds=results.get("num_folds"),
+                is_cached=is_cached,
+                size_mb=_estimate_pt_size(dir_name),
+                exp_num=exp_num,
+                exp_label=exp_label,
+            )
+        )
 
     options.sort(key=lambda m: (-m.exp_num, -(m.mean_f1 or 0)))
     return options
@@ -185,6 +189,7 @@ def get_model_options() -> list[ModelOption]:
 
 
 # ── Weight loading with HF fallback ──────────────────────────
+
 
 def _validate_model_id(model_id: str) -> str:
     if ".." in model_id or "/" in model_id or "\\" in model_id:
@@ -243,6 +248,7 @@ def _resolve_weights(model_id: str) -> tuple[Path, str] | None:
         cache_pt = _get_cache_dir() / f"{model_id}_{pt_name}"
         if not cache_pt.exists():
             import shutil
+
             shutil.copy2(downloaded, cache_pt)
         logger.info(f"Downloaded weights from HF: {hf_path} ({downloaded})")
         return cache_pt, variant
@@ -383,9 +389,9 @@ def _sync_all_weights() -> None:
                 _resolve_weights(model.id)
                 with _download_lock:
                     _download_progress = (i + 1) / total * 100
-                logger.info(f"  [{i+1}/{total}] {model.name} — OK")
+                logger.info(f"  [{i + 1}/{total}] {model.name} — OK")
             except Exception as e:
-                logger.error(f"  [{i+1}/{total}] {model.name} — FAILED: {e}")
+                logger.error(f"  [{i + 1}/{total}] {model.name} — FAILED: {e}")
 
         logger.info("Download complete")
     finally:
@@ -436,12 +442,16 @@ async def get_current_user(request: Request) -> dict:
 
 def require_role(min_role: str):
     if min_role == "admin":
+
         async def _check(user: dict = Depends(get_current_user)):
             if user["role"] != "admin":
                 raise HTTPException(status.HTTP_403_FORBIDDEN, "Admin access required")
             return user
+
         return _check
     else:
+
         async def _check(user: dict = Depends(get_current_user)):
             return user
+
         return _check

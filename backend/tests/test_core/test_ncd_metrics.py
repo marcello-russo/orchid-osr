@@ -34,7 +34,7 @@ def test_compute_f_measure_some_error():
 def test_compute_silhouette():
     np.random.seed(57)
     embeddings = np.random.randn(20, 5)
-    labels = np.array([0]*10 + [1]*10)
+    labels = np.array([0] * 10 + [1] * 10)
     s = compute_silhouette(embeddings, labels)
     assert isinstance(s, float)
     assert -1.0 <= s <= 1.0

@@ -2,6 +2,7 @@
 """
 Constants and experiment definitions for the CLI orchestrator.
 """
+
 from pathlib import Path
 
 from app.config import settings
@@ -57,7 +58,7 @@ EXPERIMENTS = {
         "test_dataset": "clean",
         "num_classes": 6,
         "test_classes": ALL_CLASSES,
-        "description": "Clean split: no data leakage, balanced test (50/class), all 6 classes"
+        "description": "Clean split: no data leakage, balanced test (50/class), all 6 classes",
     },
     7: {
         "name": "exp7_supcon",

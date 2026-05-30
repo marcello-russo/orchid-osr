@@ -1,4 +1,5 @@
 """NCD evaluation metrics: ACC, NMI, ARI, AMI, F-measure, Silhouette."""
+
 import numpy as np
 from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
 from sklearn.metrics.cluster import (
@@ -15,6 +16,7 @@ def hungarian_accuracy(true_labels: np.ndarray, pred_labels: np.ndarray) -> floa
     then computes accuracy = correct / total.
     """
     from scipy.optimize import linear_sum_assignment
+
     assert true_labels.shape == pred_labels.shape
     true = true_labels.astype(np.int64)
     pred = pred_labels.astype(np.int64)

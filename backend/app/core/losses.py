@@ -103,5 +103,5 @@ class SphericalPrototypes(nn.Module):
         prots = F.normalize(self.prototypes, dim=1)
         sim = torch.mm(prots, prots.T)
         off_diag = sim - torch.eye(self.num_classes, device=sim.device)
-        loss = (off_diag ** 2).sum() / (self.num_classes * (self.num_classes - 1))
+        loss = (off_diag**2).sum() / (self.num_classes * (self.num_classes - 1))
         return loss

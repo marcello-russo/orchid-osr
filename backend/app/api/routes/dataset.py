@@ -61,10 +61,7 @@ async def list_classes(user=Depends(require_role("user"))):
         if not class_dir.is_dir():
             continue
         class_name = class_dir.name
-        train_count = sum(
-            1 for f in class_dir.iterdir()
-            if f.is_file() and f.suffix.lower() in _IMAGE_EXTS
-        )
+        train_count = sum(1 for f in class_dir.iterdir() if f.is_file() and f.suffix.lower() in _IMAGE_EXTS)
         test_class_dir = test_dir / class_name
         test_count = (
             sum(1 for f in test_class_dir.iterdir() if f.is_file() and f.suffix.lower() in _IMAGE_EXTS)
@@ -72,10 +69,14 @@ async def list_classes(user=Depends(require_role("user"))):
             else 0
         )
         if train_count + test_count > 0:
-            classes.append(DatasetClassInfo(
-                name=class_name, train_count=train_count,
-                test_count=test_count, total=train_count + test_count,
-            ))
+            classes.append(
+                DatasetClassInfo(
+                    name=class_name,
+                    train_count=train_count,
+                    test_count=test_count,
+                    total=train_count + test_count,
+                )
+            )
             total_train += train_count
             total_test += test_count
 
@@ -84,8 +85,10 @@ async def list_classes(user=Depends(require_role("user"))):
 
 @router.get("/classes/{class_name}/images", response_model=ClassImagesResponse)
 async def list_class_images(
-    class_name: str, split: str = "train",
-    limit: int = 12, offset: int = 0,
+    class_name: str,
+    split: str = "train",
+    limit: int = 12,
+    offset: int = 0,
     user=Depends(require_role("user")),
 ):
     """List images for a class in a given split."""
@@ -99,17 +102,11 @@ async def list_class_images(
     base = _get_dataset_base()
     class_dir = base / split / class_name
 
-    all_files = sorted(
-        f.name for f in class_dir.iterdir()
-        if f.is_file() and f.suffix.lower() in _IMAGE_EXTS
-    )
+    all_files = sorted(f.name for f in class_dir.iterdir() if f.is_file() and f.suffix.lower() in _IMAGE_EXTS)
     total = len(all_files)
-    page = all_files[offset: offset + limit]
+    page = all_files[offset : offset + limit]
 
-    images = [
-        DatasetImage(filename=f, url=f"/api/dataset/images/{split}/{class_name}/{f}")
-        for f in page
-    ]
+    images = [DatasetImage(filename=f, url=f"/api/dataset/images/{split}/{class_name}/{f}") for f in page]
     return ClassImagesResponse(class_name=class_name, split=split, total=total, images=images)
 
 
@@ -133,6 +130,7 @@ async def _serve_resized(file_path: Path, size: int, base: Path, split: str, cla
     cache_path = cache_dir / f"{file_path.stem}.webp"
     if cache_path.is_file():
         return FileResponse(cache_path, media_type="image/webp")
+
     def _generate():
         try:
             cache_dir.mkdir(parents=True, exist_ok=True)
@@ -146,6 +144,7 @@ async def _serve_resized(file_path: Path, size: int, base: Path, split: str, cla
         except Exception as e:
             print(f"Thumbnail generation failed: {e}")
             return False
+
     success = await run_in_threadpool(_generate)
     if success and cache_path.is_file():
         return FileResponse(cache_path, media_type="image/webp")
@@ -155,7 +154,9 @@ async def _serve_resized(file_path: Path, size: int, base: Path, split: str, cla
 
 @router.get("/images/{split}/{class_name}/{filename}")
 async def serve_image(
-    split: str, class_name: str, filename: str,
+    split: str,
+    class_name: str,
+    filename: str,
     size: int = Query(None, gt=0, le=1024),
     admin=Depends(require_role("admin")),
 ):

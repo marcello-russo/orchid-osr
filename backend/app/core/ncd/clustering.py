@@ -1,4 +1,5 @@
 """Clustering algorithms for Novel Class Discovery."""
+
 import logging
 
 import numpy as np
@@ -14,6 +15,7 @@ def kmeans_clustering(
 ) -> tuple[np.ndarray, dict]:
     """K-means clustering."""
     from sklearn.cluster import KMeans
+
     logger.info(f"K-means: k={n_clusters}, n_init={n_init}")
     km = KMeans(n_clusters=n_clusters, n_init=n_init, random_state=random_state)
     labels = km.fit_predict(embeddings)
@@ -32,6 +34,7 @@ def dbscan_clustering(
 ) -> tuple[np.ndarray, dict]:
     """DBSCAN clustering (discovers number of clusters automatically)."""
     from sklearn.cluster import DBSCAN
+
     logger.info(f"DBSCAN: eps={eps}, min_samples={min_samples}")
     db = DBSCAN(eps=eps, min_samples=min_samples, n_jobs=-1)
     labels = db.fit_predict(embeddings)
@@ -54,6 +57,7 @@ def spectral_clustering(
 ) -> tuple[np.ndarray, dict]:
     """Spectral clustering."""
     from sklearn.cluster import SpectralClustering
+
     logger.info(f"Spectral clustering: k={n_clusters}")
     sc = SpectralClustering(
         n_clusters=n_clusters,
@@ -94,10 +98,7 @@ def grid_search_kmeans(
         else:
             sil = float(silhouette_score(embeddings, pred))
         sup_metrics = compute_all_metrics(true_labels, pred)
-        logger.info(
-            f"  k={k}: silhouette={sil:.4f}  ACC={sup_metrics['acc']:.4f}"
-            f"  NMI={sup_metrics['nmi']:.4f}"
-        )
+        logger.info(f"  k={k}: silhouette={sil:.4f}  ACC={sup_metrics['acc']:.4f}  NMI={sup_metrics['nmi']:.4f}")
         all_results.append({**sup_metrics, "k": k, "silhouette": sil})
         if sil > best["silhouette"]:
             best = {"k": k, "labels": pred, "silhouette": sil, **sup_metrics}

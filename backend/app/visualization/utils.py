@@ -1,4 +1,5 @@
 """Load experiment data from JSON files."""
+
 import json
 import os
 from glob import glob

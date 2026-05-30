@@ -102,9 +102,7 @@ class TestResNetClassifier:
         model2.load_weights(str(weights_path))
 
         # Verify weights are identical
-        for (name1, param1), (name2, param2) in zip(
-            model.named_parameters(), model2.named_parameters()
-        ):
+        for (name1, param1), (name2, param2) in zip(model.named_parameters(), model2.named_parameters()):
             assert torch.allclose(param1, param2), f"Parameters {name1} differ"
 
     def test_resnet50_embedding_dimension(self, tiny_dataloader, device):

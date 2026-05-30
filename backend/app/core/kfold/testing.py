@@ -1,11 +1,13 @@
 # app/core/kfold/testing.py
 """Testing and aggregation functions for k-fold cross-validation."""
+
 import logging
 import os
 from pathlib import Path
 
 try:
     from dotenv import load_dotenv
+
     _env = Path(__file__).resolve().parent.parent.parent.parent / ".env"
     load_dotenv(_env)
 except ImportError:
@@ -51,6 +53,7 @@ def _upload_to_hf(output_dir, model_variant):
     best_fold = None
     if os.path.exists(results_path):
         import json
+
         with open(results_path) as f:
             results = json.load(f)
         best_fold = results.get("best_fold")
@@ -92,8 +95,6 @@ def _upload_to_hf(output_dir, model_variant):
         logger.warning(f"HF upload failed: {e}")
 
 
-
-
 def aggregate_results(fold_results):
     """
     Aggrega i risultati dei fold: mean +- std.
@@ -118,8 +119,7 @@ def aggregate_results(fold_results):
     }
 
 
-def final_test(best_model_path, model_variant, num_classes, test_dataset_dir,
-               class_names, batch_size, device):
+def final_test(best_model_path, model_variant, num_classes, test_dataset_dir, class_names, batch_size, device):
     """
     Valutazione finale del modello migliore sul test set.
 
@@ -188,9 +188,7 @@ def final_test(best_model_path, model_variant, num_classes, test_dataset_dir,
 
     # Filtra campioni con classe non mappata e remappa le label
     valid_mask = np.isin(all_labels_raw, list(test_to_model.keys()))
-    all_labels_mapped = np.array(
-        [test_to_model[label] for label in all_labels_raw[valid_mask]]
-    )
+    all_labels_mapped = np.array([test_to_model[label] for label in all_labels_raw[valid_mask]])
     all_predictions = all_predictions[valid_mask]
     if valid_mask.sum() < len(all_labels_raw):
         logger.warning(f"Filtrati {len(all_labels_raw) - valid_mask.sum()} campioni con classe non mappata")
@@ -200,12 +198,13 @@ def final_test(best_model_path, model_variant, num_classes, test_dataset_dir,
 
     # Calcola metriche aggregate solo sulle classi presenti nel test
     accuracy = accuracy_score(all_labels_mapped, all_predictions)
-    f1_macro = f1_score(all_labels_mapped, all_predictions, average="macro",
-                        zero_division=0.0, labels=present_indices)
-    precision_macro = precision_score(all_labels_mapped, all_predictions, average="macro",
-                                      zero_division=0.0, labels=present_indices)
-    recall_macro = recall_score(all_labels_mapped, all_predictions, average="macro",
-                                zero_division=0.0, labels=present_indices)
+    f1_macro = f1_score(all_labels_mapped, all_predictions, average="macro", zero_division=0.0, labels=present_indices)
+    precision_macro = precision_score(
+        all_labels_mapped, all_predictions, average="macro", zero_division=0.0, labels=present_indices
+    )
+    recall_macro = recall_score(
+        all_labels_mapped, all_predictions, average="macro", zero_division=0.0, labels=present_indices
+    )
 
     # Confusion matrix completa: righe = tutte le classi del modello, colonne = tutte le classi del modello
     all_model_indices = list(range(num_classes))
@@ -329,8 +328,7 @@ def aggregate_and_test(
 
     logger.info(f"\nTest finale con modello fold {best_fold} su {test_dataset_dir}")
     test_metrics = final_test(
-        best_model_path, model_variant, num_classes, test_dataset_dir,
-        class_names, effective_batch_size, device
+        best_model_path, model_variant, num_classes, test_dataset_dir, class_names, effective_batch_size, device
     )
 
     logger.info(f"Test Accuracy: {test_metrics['accuracy']:.4f}")

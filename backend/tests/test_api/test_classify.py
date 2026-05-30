@@ -12,11 +12,11 @@ client = TestClient(app)
 
 def create_test_image_base64() -> str:
     """Create a simple test image encoded as base64."""
-    img = Image.new('RGB', (224, 224), color='red')
+    img = Image.new("RGB", (224, 224), color="red")
     buffer = BytesIO()
-    img.save(buffer, format='PNG')
+    img.save(buffer, format="PNG")
     buffer.seek(0)
-    return base64.b64encode(buffer.read()).decode('utf-8')
+    return base64.b64encode(buffer.read()).decode("utf-8")
 
 
 class TestClassifyEndpoint:
@@ -26,10 +26,7 @@ class TestClassifyEndpoint:
         """Test classify endpoint returns 200 with valid image."""
         image_base64 = create_test_image_base64()
 
-        response = client.post(
-            "/classify",
-            json={"image_base64": image_base64, "model_type": "resnet18"}
-        )
+        response = client.post("/classify", json={"image_base64": image_base64, "model_type": "resnet18"})
 
         assert response.status_code == 200
 
@@ -37,10 +34,7 @@ class TestClassifyEndpoint:
         """Test classify response has required fields."""
         image_base64 = create_test_image_base64()
 
-        response = client.post(
-            "/classify",
-            json={"image_base64": image_base64}
-        )
+        response = client.post("/classify", json={"image_base64": image_base64})
         data = response.json()
 
         assert "predicted_class" in data
@@ -52,10 +46,7 @@ class TestClassifyEndpoint:
         """Test confidence is between 0 and 1."""
         image_base64 = create_test_image_base64()
 
-        response = client.post(
-            "/classify",
-            json={"image_base64": image_base64}
-        )
+        response = client.post("/classify", json={"image_base64": image_base64})
         data = response.json()
 
         assert 0.0 <= data["confidence"] <= 1.0
@@ -64,10 +55,7 @@ class TestClassifyEndpoint:
         """Test probabilities sum to approximately 1."""
         image_base64 = create_test_image_base64()
 
-        response = client.post(
-            "/classify",
-            json={"image_base64": image_base64}
-        )
+        response = client.post("/classify", json={"image_base64": image_base64})
         data = response.json()
 
         probs = list(data["probabilities"].values())
@@ -75,9 +63,6 @@ class TestClassifyEndpoint:
 
     def test_classify_invalid_base64_returns_400(self):
         """Test invalid base64 returns 400."""
-        response = client.post(
-            "/classify",
-            json={"image_base64": "not_valid_base64!!!"}
-        )
+        response = client.post("/classify", json={"image_base64": "not_valid_base64!!!"})
 
         assert response.status_code == 400

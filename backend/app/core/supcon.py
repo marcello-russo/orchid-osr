@@ -1,5 +1,6 @@
 # app/core/supcon.py
 """Supervised Contrastive Learning utilities: projection head, training loop, embedding extraction."""
+
 import copy
 import logging
 import os
@@ -166,6 +167,7 @@ def train_supcon(
 
     if use_prototypes:
         from app.core.losses import SphericalPrototypes
+
         prototypes = SphericalPrototypes(model.num_classes, proj_dim).to(device)
         criterion.prototypes = prototypes
         criterion._repulse_weight = repulse_weight
@@ -215,9 +217,7 @@ def train_supcon(
         history["val_knn_acc"].append(knn_acc)
         history["val_embedding_norm"].append(avg_norm)
 
-        logger.info(
-            f"[SupCon] Train Loss: {train_loss:.4f} | Val KNN Acc: {knn_acc:.4f} | Emb Norm: {avg_norm:.4f}"
-        )
+        logger.info(f"[SupCon] Train Loss: {train_loss:.4f} | Val KNN Acc: {knn_acc:.4f} | Emb Norm: {avg_norm:.4f}")
 
         if knn_acc >= best_knn:
             best_knn = knn_acc

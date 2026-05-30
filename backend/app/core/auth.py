@@ -21,6 +21,7 @@ def _sync_to_hf() -> None:
         return
     try:
         from huggingface_hub import HfApi
+
         api = HfApi(token=settings.hf_token)
         api.upload_file(
             path_or_fileobj=str(USERS_PATH),
@@ -30,6 +31,7 @@ def _sync_to_hf() -> None:
         )
     except Exception as e:
         import logging
+
         logging.getLogger(__name__).warning(f"HF sync failed: {e}")
 
 
@@ -77,11 +79,13 @@ def register_user(invite_code: str, username: str, password: str) -> dict:
 
     invite["used"] = True
     role = invite["role"]
-    data["users"].append({
-        "username": username,
-        "password_hash": hash_password(password),
-        "role": role,
-    })
+    data["users"].append(
+        {
+            "username": username,
+            "password_hash": hash_password(password),
+            "role": role,
+        }
+    )
     _save_data(data)
     return {"username": username, "role": role}
 
@@ -97,11 +101,13 @@ def login_user(username: str, password: str) -> dict:
 def ensure_admin_exists() -> None:
     data = _load_data()
     if not any(u["role"] == "admin" for u in data["users"]):
-        data["users"].append({
-            "username": settings.admin_username,
-            "password_hash": hash_password(settings.admin_password),
-            "role": "admin",
-        })
+        data["users"].append(
+            {
+                "username": settings.admin_username,
+                "password_hash": hash_password(settings.admin_password),
+                "role": "admin",
+            }
+        )
         _save_data(data)
 
 
@@ -110,12 +116,14 @@ def generate_invite(role: str = "user", count: int = 1) -> list[str]:
     codes = []
     for _ in range(count):
         code = f"INV-{secrets.token_urlsafe(9).upper()}"
-        data["invites"].append({
-            "code": code,
-            "used": False,
-            "role": role,
-            "created_at": datetime.now(timezone.utc).isoformat(),
-        })
+        data["invites"].append(
+            {
+                "code": code,
+                "used": False,
+                "role": role,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            }
+        )
         codes.append(code)
     _save_data(data)
     return codes

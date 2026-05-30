@@ -36,10 +36,7 @@ async def list_species():
         for species_dir in sorted(dataset_dir.iterdir()):
             if not species_dir.is_dir():
                 continue
-            count = sum(
-                1 for f in species_dir.iterdir()
-                if f.is_file() and f.suffix.lower() in _IMAGE_EXTS
-            )
+            count = sum(1 for f in species_dir.iterdir() if f.is_file() and f.suffix.lower() in _IMAGE_EXTS)
             if count > 0:
                 species_list.append(SpeciesInfo(name=species_dir.name, image_count=count))
                 total_images += count

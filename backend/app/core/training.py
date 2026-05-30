@@ -87,18 +87,18 @@ def validate_one_epoch(
 
     with torch.no_grad():
         for inputs, labels, _ in val_loader:
-                inputs, labels = inputs.to(device, non_blocking=True), labels.to(device, non_blocking=True)
+            inputs, labels = inputs.to(device, non_blocking=True), labels.to(device, non_blocking=True)
 
-                outputs = model(inputs)
-                loss = criterion(outputs, labels)
+            outputs = model(inputs)
+            loss = criterion(outputs, labels)
 
-                _, predicted = torch.max(outputs, 1)
+            _, predicted = torch.max(outputs, 1)
 
-                running_loss += loss.item()
-                num_batches += 1
+            running_loss += loss.item()
+            num_batches += 1
 
-                accuracy_metric.update(predicted, labels)
-                f1_metric.update(predicted, labels)
+            accuracy_metric.update(predicted, labels)
+            f1_metric.update(predicted, labels)
 
     avg_loss = running_loss / max(num_batches, 1)
     accuracy = accuracy_metric.compute().item()
@@ -110,19 +110,21 @@ def validate_one_epoch(
     return avg_loss, accuracy, f1
 
 
-def save_checkpoint(model, optimizer, scheduler, epoch, best_f1, best_val_loss,
-                    epochs_no_improve, history, path):
+def save_checkpoint(model, optimizer, scheduler, epoch, best_f1, best_val_loss, epochs_no_improve, history, path):
     """Save training checkpoint for resume."""
-    torch.save({
-        "epoch": epoch,
-        "model_state_dict": model.state_dict(),
-        "optimizer_state_dict": optimizer.state_dict(),
-        "scheduler_state_dict": scheduler.state_dict(),
-        "best_f1": best_f1,
-        "best_val_loss": best_val_loss,
-        "epochs_no_improve": epochs_no_improve,
-        "history": history,
-    }, path)
+    torch.save(
+        {
+            "epoch": epoch,
+            "model_state_dict": model.state_dict(),
+            "optimizer_state_dict": optimizer.state_dict(),
+            "scheduler_state_dict": scheduler.state_dict(),
+            "best_f1": best_f1,
+            "best_val_loss": best_val_loss,
+            "epochs_no_improve": epochs_no_improve,
+            "history": history,
+        },
+        path,
+    )
 
 
 def load_checkpoint(path, model, optimizer, scheduler, device):
@@ -218,24 +220,23 @@ def train(
 
         # Train
         train_loss = train_one_epoch(
-            model, train_loader, criterion, optimizer, device,
+            model,
+            train_loader,
+            criterion,
+            optimizer,
+            device,
             gradient_accumulation_steps=gradient_accumulation_steps,
         )
         history["train_loss"].append(train_loss)
 
         # Validate
-        val_loss, accuracy, f1 = validate_one_epoch(
-            model, val_loader, criterion, device, num_classes
-        )
+        val_loss, accuracy, f1 = validate_one_epoch(model, val_loader, criterion, device, num_classes)
         history["val_loss"].append(val_loss)
         history["val_accuracy"].append(accuracy)
         history["val_f1"].append(f1)
 
         logger.info(
-            f"Train Loss: {train_loss:.4f} | "
-            f"Val Loss: {val_loss:.4f} | "
-            f"Val Acc: {accuracy:.4f} | "
-            f"Val F1: {f1:.4f}"
+            f"Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f} | Val Acc: {accuracy:.4f} | Val F1: {f1:.4f}"
         )
 
         # Save best model (based on val_f1)
@@ -254,12 +255,11 @@ def train(
         # Save checkpoint (overwrite — only keep latest)
         if ckpt_path:
             save_checkpoint(
-                model, optimizer, scheduler, epoch, best_f1, best_val_loss,
-                epochs_no_improve, history, ckpt_path
+                model, optimizer, scheduler, epoch, best_f1, best_val_loss, epochs_no_improve, history, ckpt_path
             )
 
         if patience > 0 and epochs_no_improve >= patience:
-            logger.info(f"Early stopping at epoch {epoch+1} (no val_loss improvement for {patience} epochs)")
+            logger.info(f"Early stopping at epoch {epoch + 1} (no val_loss improvement for {patience} epochs)")
             break
 
         scheduler.step(val_loss)
@@ -307,9 +307,9 @@ def cross_validate(
     fold_results = []
 
     for fold_idx, (train_idx, val_idx) in enumerate(skf.split(np.zeros(len(labels)), labels)):
-        logger.info(f"\n{'='*50}")
+        logger.info(f"\n{'=' * 50}")
         logger.info(f"FOLD {fold_idx}/{num_folds}")
-        logger.info(f"{'='*50}")
+        logger.info(f"{'=' * 50}")
 
         # Create new model for this fold using config's factory method
         model = model_config.create_model()
@@ -337,12 +337,14 @@ def cross_validate(
         best_f1 = max(history["val_f1"])
         best_acc = max(history["val_accuracy"])
 
-        fold_results.append({
-            "fold": fold_idx,
-            "best_f1": best_f1,
-            "best_accuracy": best_acc,
-            "history": history,
-        })
+        fold_results.append(
+            {
+                "fold": fold_idx,
+                "best_f1": best_f1,
+                "best_accuracy": best_acc,
+                "history": history,
+            }
+        )
 
         logger.info(f"Fold {fold_idx} - Best F1: {best_f1:.4f}, Best Acc: {best_acc:.4f}")
 
@@ -362,9 +364,9 @@ def cross_validate(
         "std_accuracy": np.std(all_acc),
     }
 
-    logger.info(f"\n{'='*50}")
+    logger.info(f"\n{'=' * 50}")
     logger.info(f"CROSS-VALIDATION RESULTS ({num_folds} folds)")
-    logger.info(f"{'='*50}")
+    logger.info(f"{'=' * 50}")
     logger.info(f"F1 Score: {summary['mean_f1']:.4f} ± {summary['std_f1']:.4f}")
     logger.info(f"Accuracy: {summary['mean_accuracy']:.4f} ± {summary['std_accuracy']:.4f}")
 

@@ -40,7 +40,7 @@ def test_oscr_from_scores():
     np.random.seed(57)
     scores = np.random.dirichlet(np.ones(4), size=20)
     # 3 known classes + 1 unknown column
-    true_labels = np.array([0, 1, 2, -1]*5)
+    true_labels = np.array([0, 1, 2, -1] * 5)
     curve = compute_oscr_from_scores(scores, true_labels, known_classes=[0, 1, 2], n_thresholds=10)
     assert len(curve) == 10
     for pt in curve:

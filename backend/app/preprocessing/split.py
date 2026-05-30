@@ -7,6 +7,7 @@ Creates a deduplicated split with:
 
 MD5 hashing ensures zero content overlap between train and test.
 """
+
 import hashlib
 import json
 import logging
@@ -28,8 +29,7 @@ def _md5(path):
 def _list_images(directory):
     if not os.path.exists(directory):
         return []
-    return sorted([f for f in os.listdir(directory)
-                   if f.lower().endswith((".jpg", ".jpeg", ".png"))])
+    return sorted([f for f in os.listdir(directory) if f.lower().endswith((".jpg", ".jpeg", ".png"))])
 
 
 def _split_class(source_dir, n_test, rng):
@@ -43,9 +43,9 @@ def _split_class(source_dir, n_test, rng):
     return train_files, test_files
 
 
-def create_clean_split(cropped_dir, internet_dir, output_dir,
-                       class_names, internet_classes,
-                       test_per_class=50, seed=42):
+def create_clean_split(
+    cropped_dir, internet_dir, output_dir, class_names, internet_classes, test_per_class=50, seed=42
+):
     """Create a clean train/test split from cropped images.
 
     Args:
@@ -166,9 +166,11 @@ def create_clean_split(cropped_dir, internet_dir, output_dir,
         total_test += cls_manifest["test_count"]
         manifest["classes"][cls] = cls_manifest
 
-        logger.info(f"{cls}: train={cls_manifest['train_count']}, "
-                     f"test={cls_manifest['test_count']} "
-                     f"(from {cls_manifest['test_source']})")
+        logger.info(
+            f"{cls}: train={cls_manifest['train_count']}, "
+            f"test={cls_manifest['test_count']} "
+            f"(from {cls_manifest['test_source']})"
+        )
 
     manifest["total_train"] = total_train
     manifest["total_test"] = total_test
@@ -196,7 +198,6 @@ def create_clean_split(cropped_dir, internet_dir, output_dir,
     with open(manifest_path, "w") as f:
         json.dump(manifest, f, indent=2)
     logger.info(f"Manifest saved: {manifest_path}")
-    logger.info(f"Total: {total_train} train + {total_test} test = "
-                 f"{total_train + total_test} images")
+    logger.info(f"Total: {total_train} train + {total_test} test = {total_train + total_test} images")
 
     return manifest
