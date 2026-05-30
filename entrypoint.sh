@@ -1,13 +1,35 @@
 #!/bin/bash
 set -e
 
-# Use persistent storage on HF Spaces (/data) — dataset e cache HF tra rebuild
+# Use persistent storage on HF Spaces (/data) — dataset, cache HF, users
 if [ -d /data ]; then
     export HF_HOME=/data/.hf_cache
     if [ ! -d /data/dataset ]; then
         mkdir -p /data/dataset
     fi
     [ ! -L dataset ] && ln -sfn /data/dataset dataset 2>/dev/null || true
+
+    # Persistent users.json (auth) — scarica da dataset privato se non presente
+    if [ ! -f /data/users.json ]; then
+        echo "Scarico users.json da dataset privato..."
+        python3 -c "
+from huggingface_hub import hf_hub_download
+import os
+try:
+    path = hf_hub_download(
+        repo_id='marcellorusso/orchid-ncd-dataset',
+        filename='users.json',
+        repo_type='dataset',
+        token=os.environ.get('HF_TOKEN')
+    )
+    import shutil
+    shutil.copy2(path, '/data/users.json')
+    print('users.json scaricato')
+except Exception as e:
+    print(f'users.json non disponibile: {e}')
+" 2>&1
+    fi
+    export USERS_PATH=/data/users.json
 fi
 
 # Download dataset if not present (uses HF_TOKEN from Secrets at runtime)

@@ -1,4 +1,5 @@
 import json
+import os
 import secrets
 from datetime import datetime, timezone
 from pathlib import Path
@@ -9,8 +10,27 @@ from fastapi import HTTPException, status
 
 from app.config import settings
 
-USERS_PATH = Path("users.json")
+USERS_PATH = Path(os.environ.get("USERS_PATH", "users.json"))
+_HF_DATASET_REPO = "marcellorusso/orchid-ncd-dataset"
 JWT_ALGORITHM = "HS256"
+
+
+def _sync_to_hf() -> None:
+    """Upload users.json to private HF dataset repo as backup."""
+    if not settings.hf_configured:
+        return
+    try:
+        from huggingface_hub import HfApi
+        api = HfApi(token=settings.hf_token)
+        api.upload_file(
+            path_or_fileobj=str(USERS_PATH),
+            path_in_repo="users.json",
+            repo_id=_HF_DATASET_REPO,
+            repo_type="dataset",
+        )
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning(f"HF sync failed: {e}")
 
 
 def _load_data() -> dict:
@@ -21,6 +41,7 @@ def _load_data() -> dict:
 
 def _save_data(data: dict) -> None:
     USERS_PATH.write_text(json.dumps(data, indent=2, default=str))
+    _sync_to_hf()
 
 
 def hash_password(password: str) -> str:
