@@ -20,7 +20,15 @@ jobs:
           cache: "pip"
       - run: pip install -r requirements.txt -r requirements-dev.txt
       - run: ruff check app/ tests/
+      - run: ruff format --check app/ tests/ --diff
       - run: pytest -x -q
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash -n entrypoint.sh
+      - run: docker build -t orchid-ncd .
 
   frontend:
     runs-on: ubuntu-latest
