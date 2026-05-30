@@ -1,5 +1,4 @@
 """NCD pipeline orchestrator: extraction + clustering + OSR evaluation."""
-import json
 import logging
 import os
 
@@ -164,17 +163,19 @@ def run_ncd_pipeline(
             logger.info(f"\n--- Open-Set Recognition (method={osr_method}) ---")
 
             if osr_method == "ensemble":
-                from app.core.ncd.openset import (
-                    compute_ensemble_scores, compute_energy_scores,
-                    compute_knn_scores, compute_mahalanobis_scores,
-                    compute_osr_metrics, fit_weibull,
-                )
-                from app.core.ncd.extract import extract_embeddings, load_trained_model
-                from app.core.ncd.metrics import compute_all_metrics
-                from app.core.models import get_registry_entry, create_model
+                import json
 
                 import torch
-                import json
+
+                from app.core.ncd.extract import extract_embeddings, load_trained_model
+                from app.core.ncd.metrics import compute_all_metrics
+                from app.core.ncd.openset import (
+                    compute_energy_scores,
+                    compute_ensemble_scores,
+                    compute_knn_scores,
+                    compute_mahalanobis_scores,
+                    compute_osr_metrics,
+                )
                 results_path = os.path.join(exp_dir, "results.json")
                 best_fold = 0
                 if os.path.exists(results_path):
@@ -217,7 +218,14 @@ def run_ncd_pipeline(
                     "per_class_metrics": all_metrics,
                     "method": "ensemble",
                     "ensemble_scores": {
-                        "mahalanobis": float(np.mean([compute_osr_metrics(maha, np.full(len(test_labels), -1) if _ else test_labels, list(range(num_classes)))["auroc"] for _ in [0]])),
+                        "mahalanobis": float(np.mean([
+                        compute_osr_metrics(
+                            maha,
+                            np.full(len(test_labels), -1) if _ else test_labels,
+                            list(range(num_classes)),
+                        )["auroc"]
+                        for _ in [0]
+                    ])),
                     },
                 }
                 logger.info(f"Ensemble OSR complete. Mean AUROC: {osr_results['mean_auroc']:.4f}")

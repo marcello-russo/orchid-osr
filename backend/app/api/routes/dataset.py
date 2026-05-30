@@ -83,7 +83,11 @@ async def list_classes(user=Depends(require_role("user"))):
 
 
 @router.get("/classes/{class_name}/images", response_model=ClassImagesResponse)
-async def list_class_images(class_name: str, split: str = "train", limit: int = 12, offset: int = 0, user=Depends(require_role("user"))):
+async def list_class_images(
+    class_name: str, split: str = "train",
+    limit: int = 12, offset: int = 0,
+    user=Depends(require_role("user")),
+):
     """List images for a class in a given split."""
     class_name = _validate_segment(class_name)
     if class_name not in _VALID_CLASSES:
@@ -110,7 +114,11 @@ async def list_class_images(class_name: str, split: str = "train", limit: int = 
 
 
 @router.get("/image/{class_name}/{filename}")
-async def serve_image_legacy(class_name: str, filename: str, size: int = Query(None, gt=0, le=1024), admin=Depends(require_role("admin"))):
+async def serve_image_legacy(
+    class_name: str, filename: str,
+    size: int = Query(None, gt=0, le=1024),
+    admin=Depends(require_role("admin")),
+):
     """Serve a dataset image from any split (backward-compatible URL used by embeddings metadata)."""
     class_name = _validate_segment(class_name)
     filename = _validate_segment(filename)
@@ -175,7 +183,11 @@ async def _serve_resized(file_path: Path, size: int, base: Path, split: str, cla
 
 
 @router.get("/images/{split}/{class_name}/{filename}")
-async def serve_image(split: str, class_name: str, filename: str, size: int = Query(None, gt=0, le=1024), admin=Depends(require_role("admin"))):
+async def serve_image(
+    split: str, class_name: str, filename: str,
+    size: int = Query(None, gt=0, le=1024),
+    admin=Depends(require_role("admin")),
+):
     """Serve a dataset image file, optionally resized and converted to WebP."""
     split = _validate_segment(split)
     class_name = _validate_segment(class_name)

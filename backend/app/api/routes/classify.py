@@ -7,8 +7,14 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from PIL import Image
 
 from app.api.deps import (
-    CLASS_NAMES, get_device, get_model, get_model_options,
-    get_cache_status, download_all_weights, delete_cached_weight, clear_cache,
+    CLASS_NAMES,
+    clear_cache,
+    delete_cached_weight,
+    download_all_weights,
+    get_cache_status,
+    get_device,
+    get_model,
+    get_model_options,
     require_role,
 )
 from app.api.schemas import (

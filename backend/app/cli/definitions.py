@@ -94,7 +94,11 @@ EXPERIMENTS = {
         "num_classes": 6,
         "test_classes": ALL_CLASSES,
         "loss_type": "supcon",
-        "description": "MGH-NCD: Multi-Granularity Hard-negative Novel Class Discovery. All 6 species known during training; for NCD evaluation, a novel species will be treated as unknown.",
+        "description": (
+            "MGH-NCD: Multi-Granularity Hard-negative Novel Class Discovery. "
+            "All 6 species known during training; for NCD evaluation, "
+            "a novel species will be treated as unknown."
+        ),
     },
 }
 

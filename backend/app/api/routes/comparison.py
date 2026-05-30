@@ -6,10 +6,10 @@ from pathlib import Path
 from fastapi import APIRouter, HTTPException
 
 from app.api.schemas import (
+    ExperimentComparisonResponse,
     FoldSnapshot,
     ModelComparisonEntry,
     ModelComparisonResponse,
-    ExperimentComparisonResponse,
     SeriesModelEntry,
 )
 from app.config import settings

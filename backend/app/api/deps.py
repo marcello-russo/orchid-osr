@@ -11,13 +11,12 @@ from collections import OrderedDict
 from pathlib import Path
 
 import torch
-from fastapi import Depends, HTTPException, status, Request
+from fastapi import Depends, HTTPException, Request, status
 from huggingface_hub import hf_hub_download
-
-from app.core.auth import decode_jwt
 
 from app.api.schemas import CacheStatus, ModelOption
 from app.config import settings
+from app.core.auth import decode_jwt
 from app.core.models import ClassifierModel, available_models, create_model
 
 logger = logging.getLogger(__name__)
