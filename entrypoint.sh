@@ -27,7 +27,6 @@ try:
 except Exception as e:
     print(f'users.json non disponibile: {e}')
 " 2>&1
-    fi
     export USERS_PATH=/data/users.json
 fi
 
