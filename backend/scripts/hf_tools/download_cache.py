@@ -83,27 +83,21 @@ def main():
             repo_type="dataset",
             local_dir="dataset",
             allow_patterns=[
-                "cropped/256x512/train/*",
-                "cropped/256x512/test/*",
-                "cropped/224x224/train/*",
-                "cropped/224x224/test/*",
-                "split_manifest.json",
+                "cropped/256x512/train_clean/*",
+                "cropped/256x512/test_clean/*",
+                "cropped/224x224/train_clean/*",
+                "cropped/224x224/test_clean/*",
             ],
             token=token,
         )
 
         for size in ["256x512", "224x224"]:
-            for hf_split, local_split in [("train", "train_clean"), ("test", "test_clean")]:
-                src = os.path.join("dataset", "cropped", size, hf_split)
-                dst = os.path.join("dataset", f"cropped_{size}", local_split)
-                if os.path.isdir(src) and not os.path.isdir(dst):
-                    os.makedirs(os.path.dirname(dst), exist_ok=True)
-                    shutil.move(src, dst)
-                    print(f"  {size}/{hf_split} -> cropped_{size}/{local_split}")
-
-        cropped_dir = os.path.join("dataset", "cropped")
-        if os.path.isdir(cropped_dir) and not os.listdir(cropped_dir):
-            shutil.rmtree(cropped_dir)
+            src = os.path.join("dataset", "cropped", size)
+            dst = os.path.join("dataset", f"cropped_{size}")
+            if os.path.isdir(src) and not os.path.isdir(dst):
+                os.makedirs(os.path.dirname(dst), exist_ok=True)
+                shutil.move(src, dst)
+                print(f"  cropped/{size} -> cropped_{size}")
 
         print("Dataset downloaded successfully.")
     except Exception as e:
