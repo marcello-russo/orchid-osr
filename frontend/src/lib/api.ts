@@ -23,7 +23,7 @@ async function apiFetch(url: string, options: RequestInit = {}): Promise<Respons
 }
 
 export async function fetchApi<T>(path: string, opts?: { method?: string; body?: BodyInit }): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await apiFetch(`${API_BASE}${path}`, {
     method: opts?.method ?? "GET",
     body: opts?.body,
   });
