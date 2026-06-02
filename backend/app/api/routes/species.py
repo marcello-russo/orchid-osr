@@ -18,7 +18,7 @@ _COUNTS_FILE = Path(__file__).resolve().parent.parent.parent / "data" / "species
 def _get_dataset_dir() -> Path:
     """Resolve dataset directory at runtime (not import time)."""
     base = Path(settings.dataset_dir)
-    for subdir in ["combined", "train_clean", "train"]:
+    for subdir in ["combined", "train_clean", "train", "cropped_224x224/train_clean", "cropped_256x512/train_clean"]:
         candidate = base / subdir
         if candidate.is_dir():
             return candidate
