@@ -60,6 +60,8 @@ export function DashboardPage() {
         <img
           src="/assets/images/banner.png"
           alt="OrchID NCD"
+          decoding="async"
+          loading="lazy"
           className="w-full rounded-2xl"
         />
       </div>
