@@ -55,6 +55,15 @@ export function DashboardPage() {
         </div>
       </div>
 
+      {/* Banner */}
+      <div className="-mx-4 md:-mx-12">
+        <img
+          src="/assets/images/banner.png"
+          alt="OrchID NCD"
+          className="w-full rounded-2xl"
+        />
+      </div>
+
       {/* Navigation Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <NavCard
