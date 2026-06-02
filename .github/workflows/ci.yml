@@ -18,8 +18,7 @@ jobs:
         with:
           python-version: "3.11"
           cache: "pip"
-      - run: pip install -r requirements.txt
-      - run: grep -v 'jupyter\|notebook\|^#' requirements-dev.txt | xargs pip install
+      - run: pip install ".[dev]"
       - run: ruff check app/ tests/
       - run: ruff format --check app/ tests/ --diff
       - run: pytest -x -q
@@ -29,7 +28,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: bash -n backend/scripts/entrypoint.sh
-      - run: docker build -t orchid-ncd .
+      - run: docker build --target=cpu -t orchid-ncd .
+      - name: Smoke test — avvio container
+        run: |
+          docker run -d --name smoke-test orchid-ncd
+          sleep 5
+          if docker ps -q --filter name=smoke-test | grep -q .; then
+            echo "OK: container vivo dopo 5s"
+            docker rm -f smoke-test || true
+          else
+            echo "FAIL: container morto all'avvio"
+            exit 1
+          fi
 
   frontend:
     runs-on: ubuntu-latest
