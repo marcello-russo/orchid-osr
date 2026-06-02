@@ -1,3 +1,51 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[project]
+name = "orchid-ncd"
+version = "0.1.0"
+description = "Ultra-fine-grained classification of Ophrys orchids via deep learning"
+requires-python = ">=3.10"
+dependencies = [
+    "bcrypt==4.2.1",
+    "captum",
+    "flask",
+    "fastapi",
+    "httpx",
+    "matplotlib",
+    "numpy",
+    "opencv-python",
+    "pandas",
+    "peft>=0.10.0",
+    "pillow",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "pyjwt==2.10.1",
+    "python-dotenv",
+    "python-multipart",
+    "scikit-learn",
+    "torch",
+    "torcheval",
+    "torchvision",
+    "transformers>=4.40.0",
+    "uvicorn",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "ruff>=0.5.0",
+]
+ml = [
+    "jupyter",
+    "notebook",
+]
+
 [tool.ruff]
 line-length = 120
 target-version = "py311"
