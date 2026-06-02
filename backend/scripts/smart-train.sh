@@ -80,7 +80,7 @@ fi
 
 # --- Paths ---
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-BACKEND_DIR="$SCRIPT_DIR/backend"
+BACKEND_DIR="$(dirname "$SCRIPT_DIR")"
 
 model_dir() { echo "$BACKEND_DIR/experiments/${EXP_PREFIX}_${1}"; }
 model_done()  { test -f "$(model_dir "$1")/results.json"; }

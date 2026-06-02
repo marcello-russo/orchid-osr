@@ -69,7 +69,7 @@ Master's thesis project at the University of Naples Federico II (DIETI Departmen
 ```bash
 git clone https://github.com/squidslab/OrchID.git
 cd OrchID/orchid-ncd
-./docker-start.sh
+./backend/scripts/docker-start.sh
 ```
 
 ### Development

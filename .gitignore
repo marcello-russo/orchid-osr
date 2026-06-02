@@ -40,6 +40,12 @@ frontend/src/stores/
 docs/
 backend/users.json
 backend/data/users.json
+backend/*.egg-info/
+smart-train.log
+.pytest_cache/
+.ruff_cache/
+__pycache__/
+*.pyc
 ProjectDocker/
 *.pt
 __pycache__/
@@ -50,3 +56,4 @@ superpowers/
 # System
 temp_kfold/
 .vscode/
+backend/build/
