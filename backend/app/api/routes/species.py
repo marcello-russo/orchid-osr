@@ -19,9 +19,17 @@ def _get_dataset_dirs() -> list[Path]:
     """Resolve all dataset directories at runtime (not import time)."""
     base = Path(settings.dataset_dir)
     dirs = []
-    for subdir in ["combined", "train_clean", "test_clean", "train", "test",
-                    "cropped_224x224/train_clean", "cropped_224x224/test_clean",
-                    "cropped_256x512/train_clean", "cropped_256x512/test_clean"]:
+    for subdir in [
+        "combined",
+        "train_clean",
+        "test_clean",
+        "train",
+        "test",
+        "cropped_224x224/train_clean",
+        "cropped_224x224/test_clean",
+        "cropped_256x512/train_clean",
+        "cropped_256x512/test_clean",
+    ]:
         candidate = base / subdir
         if candidate.is_dir():
             dirs.append(candidate)
