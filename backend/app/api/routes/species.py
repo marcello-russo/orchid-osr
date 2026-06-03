@@ -15,35 +15,37 @@ _IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
 _COUNTS_FILE = Path(__file__).resolve().parent.parent.parent / "data" / "species_counts.json"
 
 
-def _get_dataset_dir() -> Path:
-    """Resolve dataset directory at runtime (not import time)."""
+def _get_dataset_dirs() -> list[Path]:
+    """Resolve all dataset directories at runtime (not import time)."""
     base = Path(settings.dataset_dir)
-    for subdir in ["combined", "train_clean", "train", "cropped_224x224/train_clean", "cropped_256x512/train_clean"]:
+    dirs = []
+    for subdir in ["combined", "train_clean", "test_clean", "train", "test",
+                    "cropped_224x224/train_clean", "cropped_224x224/test_clean",
+                    "cropped_256x512/train_clean", "cropped_256x512/test_clean"]:
         candidate = base / subdir
         if candidate.is_dir():
-            return candidate
-    return base
+            dirs.append(candidate)
+    return dirs
 
 
 @router.get("/api/species", response_model=SpeciesListResponse)
 async def list_species():
     """List all species in the dataset with image counts."""
-    # Try filesystem first (local dev with full dataset)
-    dataset_dir = _get_dataset_dir()
-    if dataset_dir.is_dir():
-        species_list: list[SpeciesInfo] = []
-        total_images = 0
-        for species_dir in sorted(dataset_dir.iterdir()):
-            if not species_dir.is_dir():
-                continue
-            count = sum(1 for f in species_dir.iterdir() if f.is_file() and f.suffix.lower() in _IMAGE_EXTS)
-            if count > 0:
-                species_list.append(SpeciesInfo(name=species_dir.name, image_count=count))
-                total_images += count
+    dataset_dirs = _get_dataset_dirs()
+    if dataset_dirs:
+        all_species: dict[str, int] = {}
+        for d in dataset_dirs:
+            for species_dir in sorted(d.iterdir()):
+                if not species_dir.is_dir():
+                    continue
+                count = sum(1 for f in species_dir.iterdir() if f.is_file() and f.suffix.lower() in _IMAGE_EXTS)
+                if count > 0:
+                    all_species[species_dir.name] = all_species.get(species_dir.name, 0) + count
+        total_images = sum(all_species.values())
         return SpeciesListResponse(
-            species=species_list,
+            species=[SpeciesInfo(name=k, image_count=v) for k, v in sorted(all_species.items())],
             total_images=total_images,
-            total_species=len(species_list),
+            total_species=len(all_species),
         )
 
     # Fallback: pre-computed counts (deployed environments)

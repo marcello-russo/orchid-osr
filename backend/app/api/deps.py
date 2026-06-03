@@ -12,7 +12,7 @@ from collections import OrderedDict
 from pathlib import Path
 
 import torch
-from fastapi import Depends, HTTPException, Request, status
+from fastapi import Depends, Header, HTTPException, Query, Request, status
 from huggingface_hub import hf_hub_download
 
 from app.api.schemas import CacheStatus, ModelOption
@@ -455,3 +455,20 @@ def require_role(min_role: str):
             return user
 
         return _check
+
+
+async def user_from_header_or_query(
+    authorization: str = Header(""),
+    token: str = Query(""),
+) -> dict:
+    """Extract user from Authorization header or ?token= query param."""
+    jwt_token = authorization.removeprefix("Bearer ")
+    if not jwt_token:
+        jwt_token = token
+    if not jwt_token:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Missing token")
+    try:
+        payload = decode_jwt(jwt_token)
+        return {"username": payload["sub"], "role": payload["role"]}
+    except Exception:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid token")

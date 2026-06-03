@@ -91,13 +91,19 @@ def main():
         )
 
         for size in ["256x512", "224x224"]:
-            for hf_split, local_split in [("train", "train_clean"), ("test", "test_clean")]:
+            # Merge each HF split into the local directory (union of train + test + test_clean species)
+            for hf_split in ["train", "test", "test_clean"]:
                 src = os.path.join("dataset", "cropped", size, hf_split)
-                dst = os.path.join("dataset", f"cropped_{size}", local_split)
-                if os.path.isdir(src) and not os.path.isdir(dst):
-                    os.makedirs(os.path.dirname(dst), exist_ok=True)
-                    shutil.move(src, dst)
-                    print(f"  cropped/{size}/{hf_split} -> cropped_{size}/{local_split}")
+                dst = os.path.join("dataset", f"cropped_{size}", "test_clean" if hf_split in ("test", "test_clean") else "train_clean")
+                if os.path.isdir(src):
+                    os.makedirs(dst, exist_ok=True)
+                    for item in os.listdir(src):
+                        s = os.path.join(src, item)
+                        t = os.path.join(dst, item)
+                        if os.path.isdir(s):
+                            shutil.copytree(s, t, dirs_exist_ok=True)
+                    shutil.rmtree(src)
+                    print(f"  cropped/{size}/{hf_split} merged into cropped_{size}/{'test_clean' if hf_split in ('test', 'test_clean') else 'train_clean'}")
 
         print("Dataset downloaded successfully.")
     except Exception as e:
