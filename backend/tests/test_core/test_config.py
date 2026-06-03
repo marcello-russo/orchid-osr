@@ -7,7 +7,7 @@ def test_settings_defaults():
     settings = Settings()
 
     assert settings.model_type == "resnet18"
-    assert settings.num_classes == 6
+    assert settings.num_classes == 7
     assert settings.epochs == 26
     assert settings.batch_size == 8
     assert settings.learning_rate == 0.001

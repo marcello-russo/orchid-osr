@@ -10,7 +10,7 @@ def test_model_config_defaults():
     """Test ModelConfig default values."""
     config = ModelConfig()
 
-    assert config.num_classes == 6
+    assert config.num_classes == 7
     assert config.pretrained is True
 
 
@@ -36,7 +36,7 @@ class TestResNetClassifier:
         config = ResNetConfig()
 
         assert config.variant == "resnet18"
-        assert config.num_classes == 6
+        assert config.num_classes == 7
         assert config.pretrained is True
 
     def test_resnet_config_resnet50(self):
