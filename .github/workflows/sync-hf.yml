@@ -15,13 +15,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Sync to HF Spaces via git push
+      - name: Sync to HF Spaces (shallow clone to avoid large files in history)
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
+          git clone --depth 1 https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/squidslab/OrchID.git /tmp/hf-sync
+          cd /tmp/hf-sync
           git remote add space https://marcellorusso:${HF_TOKEN}@huggingface.co/spaces/marcellorusso/orchid-ncd
           git push --force space main
           echo "Space sync complete"
