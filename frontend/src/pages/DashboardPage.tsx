@@ -56,9 +56,9 @@ export function DashboardPage() {
       </div>
 
       {/* Banner */}
-      <div className="-mx-4 md:-mx-12">
+      <div>
         <img
-          src="/assets/images/banner.png"
+          src="/assets/images/banner.webp"
           alt="OrchID NCD"
           decoding="async"
           loading="eager"
