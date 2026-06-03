@@ -16,24 +16,33 @@ _COUNTS_FILE = Path(__file__).resolve().parent.parent.parent / "data" / "species
 
 
 def _get_dataset_dirs() -> list[Path]:
-    """Resolve all dataset directories at runtime (not import time)."""
+    """Resolve dataset directories at runtime (not import time).
+
+    Returns [train_dir, test_dir] from the first complete directory set found.
+    Priority: cropped_256x512 > cropped_224x224 > flat train_clean/test_clean.
+    Only ONE crop size is returned to avoid double-counting the same images.
+    """
     base = Path(settings.dataset_dir)
-    dirs = []
-    for subdir in [
-        "combined",
-        "train_clean",
-        "test_clean",
-        "train",
-        "test",
-        "cropped_224x224/train_clean",
-        "cropped_224x224/test_clean",
-        "cropped_256x512/train_clean",
-        "cropped_256x512/test_clean",
+    for train_candidate, test_candidate in [
+        ("cropped_256x512/train_clean", "cropped_256x512/test_clean"),
+        ("cropped_224x224/train_clean", "cropped_224x224/test_clean"),
+        ("train_clean", "test_clean"),
+        ("train", "test"),
     ]:
-        candidate = base / subdir
-        if candidate.is_dir():
-            dirs.append(candidate)
-    return dirs
+        train_dir = base / train_candidate
+        test_dir = base / test_candidate
+        if train_dir.is_dir() or test_dir.is_dir():
+            dirs = []
+            if train_dir.is_dir():
+                dirs.append(train_dir)
+            if test_dir.is_dir():
+                dirs.append(test_dir)
+            return dirs
+    # Legacy: combined directory (single-dir format)
+    combined = base / "combined"
+    if combined.is_dir():
+        return [combined]
+    return []
 
 
 @router.get("/api/species", response_model=SpeciesListResponse)
