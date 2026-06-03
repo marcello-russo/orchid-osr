@@ -18,46 +18,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install huggingface_hub
-        run: pip install huggingface_hub
-
-      - name: Sync to HF Spaces
+      - name: Sync to HF Spaces via git push
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          python3 -c "
-          from huggingface_hub import HfApi
-          import os
-          api = HfApi(token=os.environ['HF_TOKEN'])
-          repo = 'marcellorusso/orchid-ncd'
-
-          # Remove stale directory that causes TS build error
-          try:
-              api.delete_folder(path_in_repo='frontend/src/stores', repo_id=repo, repo_type='space')
-              print('Deleted stale frontend/src/stores/')
-          except Exception:
-              pass
-
-          api.upload_folder(
-              folder_path='.',
-              repo_id=repo,
-              repo_type='space',
-              commit_message=f'Sync from GitHub: {os.environ.get(\"GITHUB_SHA\", \"manual\")[:7]}',
-              ignore_patterns=[
-                  '.git/*',
-                  'backend/dataset/*',
-                  'backend/models/*',
-                  '*.pt',
-                  '*.safetensors',
-              ],
-          )
-          print('Space sync complete')
-          "
+          git remote add space https://marcellorusso:${HF_TOKEN}@huggingface.co/spaces/marcellorusso/orchid-ncd
+          git push --force space main
+          echo "Space sync complete"
 
   sync-models:
     runs-on: ubuntu-latest
