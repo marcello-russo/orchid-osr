@@ -24,13 +24,13 @@ def _make_fake_dataset():
 class TestSpeciesEndpoint:
     def test_species_returns_200(self):
         fake = _make_fake_dataset()
-        with patch("app.api.routes.species._get_dataset_dir", return_value=fake):
+        with patch("app.api.routes.species._get_dataset_dirs", return_value=[fake]):
             response = client.get("/api/species")
             assert response.status_code == 200
 
     def test_species_response_structure(self):
         fake = _make_fake_dataset()
-        with patch("app.api.routes.species._get_dataset_dir", return_value=fake):
+        with patch("app.api.routes.species._get_dataset_dirs", return_value=[fake]):
             data = client.get("/api/species").json()
 
             assert "species" in data
@@ -40,7 +40,7 @@ class TestSpeciesEndpoint:
 
     def test_species_items_have_fields(self):
         fake = _make_fake_dataset()
-        with patch("app.api.routes.species._get_dataset_dir", return_value=fake):
+        with patch("app.api.routes.species._get_dataset_dirs", return_value=[fake]):
             data = client.get("/api/species").json()
             first = data["species"][0]
 
@@ -50,7 +50,7 @@ class TestSpeciesEndpoint:
 
     def test_species_totals_consistent(self):
         fake = _make_fake_dataset()
-        with patch("app.api.routes.species._get_dataset_dir", return_value=fake):
+        with patch("app.api.routes.species._get_dataset_dirs", return_value=[fake]):
             data = client.get("/api/species").json()
 
             assert data["total_species"] == 2
@@ -59,7 +59,7 @@ class TestSpeciesEndpoint:
 
     def test_species_sorted_alphabetically(self):
         fake = _make_fake_dataset()
-        with patch("app.api.routes.species._get_dataset_dir", return_value=fake):
+        with patch("app.api.routes.species._get_dataset_dirs", return_value=[fake]):
             data = client.get("/api/species").json()
             names = [s["name"] for s in data["species"]]
 

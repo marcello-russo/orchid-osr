@@ -10,7 +10,7 @@ from torch import nn
 class ModelConfig(BaseModel):
     """Base configuration for all models."""
 
-    num_classes: int = 6
+    num_classes: int = 7
     pretrained: bool = True
     seed: Optional[int] = 42
 
