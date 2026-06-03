@@ -17,7 +17,7 @@ interface ClassGalleryProps {
   totalImages: number;
 }
 
-import { useInView } from "@/hooks/useInView";
+import { useAppStore } from "@/lib/stores/appStore";
 
 export function ClassGallery({ classInfo, split, totalImages }: ClassGalleryProps) {
   const { t } = useTranslation();
@@ -98,7 +98,7 @@ export function ClassGallery({ classInfo, split, totalImages }: ClassGalleryProp
             {data.images.map((img) => (
                 <div key={img.filename} className="group relative aspect-[1/2] overflow-hidden rounded-md bg-muted/50">
                 <ImageWithFade 
-                  src={`${img.url}?size=300`} 
+                  src={`${img.url}?size=300&token=${useAppStore.getState().token}`} 
                   alt={img.filename} 
                 />
               </div>

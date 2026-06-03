@@ -7,7 +7,7 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, Response
 from PIL import Image
 
-from app.api.deps import require_role
+from app.api.deps import require_role, user_from_header_or_query
 from app.api.schemas import ClassImagesResponse, DatasetClassesResponse, DatasetClassInfo, DatasetImage
 from app.config import settings
 
@@ -54,31 +54,40 @@ async def list_classes(user=Depends(require_role("user"))):
     train_dir = base / "train_clean"
     test_dir = base / "test_clean"
 
-    if not train_dir.is_dir() or not test_dir.is_dir():
+    if not train_dir.is_dir() and not test_dir.is_dir():
         return DatasetClassesResponse(classes=[], total_train=0, total_test=0)
 
-    for class_dir in sorted(train_dir.iterdir()):
-        if not class_dir.is_dir():
+    # Discover classes from both train_clean and test_clean (a class may exist only in test, e.g. NCD novel class)
+    seen = set()
+    for base_dir in [train_dir, test_dir]:
+        if not base_dir.is_dir():
             continue
-        class_name = class_dir.name
-        train_count = sum(1 for f in class_dir.iterdir() if f.is_file() and f.suffix.lower() in _IMAGE_EXTS)
-        test_class_dir = test_dir / class_name
-        test_count = (
-            sum(1 for f in test_class_dir.iterdir() if f.is_file() and f.suffix.lower() in _IMAGE_EXTS)
-            if test_class_dir.is_dir()
-            else 0
-        )
-        if train_count + test_count > 0:
-            classes.append(
-                DatasetClassInfo(
-                    name=class_name,
-                    train_count=train_count,
-                    test_count=test_count,
-                    total=train_count + test_count,
-                )
+        for class_dir in sorted(base_dir.iterdir()):
+            if not class_dir.is_dir() or class_dir.name in seen:
+                continue
+            seen.add(class_dir.name)
+            class_name = class_dir.name
+            train_count = (
+                sum(1 for f in (train_dir / class_name).iterdir() if f.is_file() and f.suffix.lower() in _IMAGE_EXTS)
+                if (train_dir / class_name).is_dir()
+                else 0
             )
-            total_train += train_count
-            total_test += test_count
+            test_count = (
+                sum(1 for f in (test_dir / class_name).iterdir() if f.is_file() and f.suffix.lower() in _IMAGE_EXTS)
+                if (test_dir / class_name).is_dir()
+                else 0
+            )
+            if train_count + test_count > 0:
+                classes.append(
+                    DatasetClassInfo(
+                        name=class_name,
+                        train_count=train_count,
+                        test_count=test_count,
+                        total=train_count + test_count,
+                    )
+                )
+                total_train += train_count
+                total_test += test_count
 
     return DatasetClassesResponse(classes=classes, total_train=total_train, total_test=total_test)
 
@@ -114,8 +123,8 @@ async def _hf_proxy(class_name: str, filename: str) -> Response:
     """Proxy image from the HuggingFace dataset CDN via the backend."""
     token = _hf_token()
     headers = {"Authorization": f"Bearer {token}"} if token else {}
-    # Try both crop sizes; 224x224 first (DINOv2 default), fallback to 256x512
-    for crop in ["cropped/224x224/train", "cropped/256x512/train"]:
+    # Try all crop directories the image could live in
+    for crop in ["cropped/224x224/train_clean", "cropped/224x224/test_clean", "cropped/224x224/train", "cropped/224x224/test", "cropped/256x512/train", "cropped/256x512/test"]:
         hf_url = f"https://huggingface.co/datasets/{_HF_DATASET}/resolve/{_HF_BRANCH}/{crop}/{class_name}/{filename}"
         async with httpx.AsyncClient() as client:
             resp = await client.get(hf_url, headers=headers)
@@ -158,14 +167,12 @@ async def serve_image(
     class_name: str,
     filename: str,
     size: int = Query(None, gt=0, le=1024),
-    user=Depends(require_role("user")),
+    user=Depends(user_from_header_or_query),
 ):
     """Serve a dataset image file, optionally resized and converted to WebP."""
     split = _validate_segment(split)
     class_name = _validate_segment(class_name)
     filename = _validate_segment(filename)
-    if class_name not in _VALID_CLASSES:
-        raise HTTPException(status_code=400, detail=f"Unknown class: {class_name}")
     split = _SPLIT_ALIASES.get(split, split)
     if split not in _VALID_SPLITS:
         raise HTTPException(status_code=400, detail="Invalid split")
