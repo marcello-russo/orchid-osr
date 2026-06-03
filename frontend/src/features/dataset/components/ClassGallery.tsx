@@ -17,7 +17,8 @@ interface ClassGalleryProps {
   totalImages: number;
 }
 
-import { useAppStore } from "@/lib/stores/appStore";
+import { useInView } from "@/hooks/useInView";
+import { useAppStore } from "@/stores/useAppStore";
 
 export function ClassGallery({ classInfo, split, totalImages }: ClassGalleryProps) {
   const { t } = useTranslation();

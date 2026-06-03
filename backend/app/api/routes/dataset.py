@@ -124,7 +124,14 @@ async def _hf_proxy(class_name: str, filename: str) -> Response:
     token = _hf_token()
     headers = {"Authorization": f"Bearer {token}"} if token else {}
     # Try all crop directories the image could live in
-    for crop in ["cropped/224x224/train_clean", "cropped/224x224/test_clean", "cropped/224x224/train", "cropped/224x224/test", "cropped/256x512/train", "cropped/256x512/test"]:
+    for crop in [
+        "cropped/224x224/train_clean",
+        "cropped/224x224/test_clean",
+        "cropped/224x224/train",
+        "cropped/224x224/test",
+        "cropped/256x512/train",
+        "cropped/256x512/test",
+    ]:
         hf_url = f"https://huggingface.co/datasets/{_HF_DATASET}/resolve/{_HF_BRANCH}/{crop}/{class_name}/{filename}"
         async with httpx.AsyncClient() as client:
             resp = await client.get(hf_url, headers=headers)
