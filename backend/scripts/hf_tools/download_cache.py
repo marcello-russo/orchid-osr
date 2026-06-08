@@ -1,5 +1,6 @@
 import os
 import shutil
+from pathlib import Path
 from huggingface_hub import snapshot_download
 
 DATASET_REPO = "marcellorusso/orchid-ncd-dataset"
@@ -31,6 +32,10 @@ def _download_and_flatten_models(local_base, token):
             "exp9_ncd/**/*.json",
             "exp9_ncd/**/*.safetensors",
             "exp9_ncd/**/embeddings/*",
+            "exp10_mgh_ncd/**/*.pt",
+            "exp10_mgh_ncd/**/*.json",
+            "exp10_mgh_ncd/**/*.safetensors",
+            "exp10_mgh_ncd/**/embeddings/*",
         ],
         token=token,
     )
@@ -53,7 +58,6 @@ def _download_and_flatten_models(local_base, token):
 
 
 def _load_token() -> str | None:
-    """Load HF_TOKEN from Docker secret, env, or .env file."""
     secret_path = "/run/secrets/HF_TOKEN"
     if os.path.exists(secret_path):
         with open(secret_path) as f:
@@ -85,16 +89,16 @@ def main():
             allow_patterns=[
                 "cropped/*/train/*",
                 "cropped/*/test/*",
+                # Backward compat: still download test_clean/ during HF transition
                 "cropped/*/test_clean/*",
             ],
             token=token,
         )
 
         for size in ["256x512", "224x224"]:
-            # Merge each HF split into the local directory (union of train + test + test_clean species)
             for hf_split in ["train", "test", "test_clean"]:
                 src = os.path.join("dataset", "cropped", size, hf_split)
-                dst = os.path.join("dataset", f"cropped_{size}", "test_clean" if hf_split in ("test", "test_clean") else "train_clean")
+                dst = os.path.join("dataset", f"cropped_{size}", hf_split.replace("_clean", ""))
                 if os.path.isdir(src):
                     os.makedirs(dst, exist_ok=True)
                     for item in os.listdir(src):
@@ -103,7 +107,7 @@ def main():
                         if os.path.isdir(s):
                             shutil.copytree(s, t, dirs_exist_ok=True)
                     shutil.rmtree(src)
-                    print(f"  cropped/{size}/{hf_split} merged into cropped_{size}/{'test_clean' if hf_split in ('test', 'test_clean') else 'train_clean'}")
+                    print(f"  cropped/{size}/{hf_split} -> cropped_{size}/{hf_split.replace('_clean', '')}")
 
         print("Dataset downloaded successfully.")
     except Exception as e:

@@ -31,9 +31,15 @@ except Exception as e:
 fi
 
 # Download dataset if not present (uses HF_TOKEN from Secrets at runtime)
-if [ ! -d "dataset/cropped_256x512/train_clean" ] && [ ! -d "dataset/cropped_224x224/train_clean" ]; then
+if [ ! -d "dataset/cropped_256x512/train" ] && [ ! -d "dataset/cropped_224x224/train" ]; then
     echo "Dataset non trovato — download in corso..."
     python scripts/hf_tools/download_cache.py || echo "Download fallito (forse HF_TOKEN mancante)"
 fi
 
-exec python server.py
+# Avvia server (--reload in dev mode)
+EXTRA_ARGS=""
+if [ "$API_RELOAD" = "true" ]; then
+    EXTRA_ARGS=" --reload"
+fi
+
+exec python server.py$EXTRA_ARGS

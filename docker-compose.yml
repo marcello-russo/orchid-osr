@@ -1,0 +1,25 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: cpu
+    ports:
+      - "7860:7860"
+    env_file:
+      - .env
+    environment:
+      - API_PORT=7860
+      - API_RELOAD=true
+    volumes:
+      - ./backend/app:/workspace/backend/app
+      - ./backend/server.py:/workspace/backend/server.py
+      - ./backend/cli.py:/workspace/backend/cli.py
+      - dataset:/workspace/backend/dataset
+      - models:/workspace/backend/models
+      - experiments:/workspace/backend/experiments
+
+volumes:
+  dataset:
+  models:
+  experiments:

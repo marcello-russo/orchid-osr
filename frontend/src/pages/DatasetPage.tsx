@@ -10,7 +10,7 @@ import { DistributionChart } from "@/features/dataset/components/DistributionCha
 export function DatasetPage() {
   const { t } = useTranslation();
   const { data, isLoading, error } = useDatasetClasses();
-  const [split, setSplit] = useState<"train_clean" | "test_clean">("train_clean");
+  const [split, setSplit] = useState<"train" | "test">("train");
 
   if (isLoading) {
     return (
@@ -60,10 +60,10 @@ export function DatasetPage() {
       <DistributionChart classes={data.classes} />
 
       {/* Split toggle */}
-      <Tabs value={split} onValueChange={(v) => setSplit(v as "train_clean" | "test_clean")}>
+      <Tabs value={split} onValueChange={(v) => setSplit(v as "train" | "test")}>
         <TabsList>
-          <TabsTrigger value="train_clean">{t("dataset.tabs.train")} ({data.total_train})</TabsTrigger>
-          <TabsTrigger value="test_clean">{t("dataset.tabs.test")} ({data.total_test})</TabsTrigger>
+          <TabsTrigger value="train">{t("dataset.tabs.train")} ({data.total_train})</TabsTrigger>
+          <TabsTrigger value="test">{t("dataset.tabs.test")} ({data.total_test})</TabsTrigger>
         </TabsList>
       </Tabs>
 
