@@ -19,6 +19,31 @@ services:
       - models:/workspace/backend/models
       - experiments:/workspace/backend/experiments
 
+  gpu:
+    profiles: [gpu]
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: gpu
+    env_file:
+      - .env
+    environment:
+      - API_PORT=7860
+    volumes:
+      - ./backend:/workspace/backend
+      - dataset:/workspace/backend/dataset
+      - models:/workspace/backend/models
+      - experiments:/workspace/backend/experiments
+    stdin_open: true
+    tty: true
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
 volumes:
   dataset:
   models:
