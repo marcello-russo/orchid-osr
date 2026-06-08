@@ -132,7 +132,7 @@ def run_experiment(
 
         entry = get_registry_entry(model_variant)
         w, h = entry.input_size
-        cropped_train = str(PROJECT_ROOT / "dataset" / f"cropped_{w}x{h}" / "train_clean")
+        cropped_train = str(PROJECT_ROOT / "dataset" / f"cropped_{w}x{h}" / "train")
         if not os.path.exists(cropped_train):
             logger.error(f"Dataset not found: {cropped_train}")
             return
@@ -154,8 +154,8 @@ def run_experiment(
 
         entry = get_registry_entry(model_variant)
         w, h = entry.input_size
-        cropped_train = str(PROJECT_ROOT / "dataset" / f"cropped_{w}x{h}" / "train_clean")
-        cropped_test = str(PROJECT_ROOT / "dataset" / f"cropped_{w}x{h}" / "test_clean")
+        cropped_train = str(PROJECT_ROOT / "dataset" / f"cropped_{w}x{h}" / "train")
+        cropped_test = str(PROJECT_ROOT / "dataset" / f"cropped_{w}x{h}" / "test")
         if not os.path.exists(cropped_train):
             logger.error(f"Dataset not found: {cropped_train}")
             return
@@ -234,8 +234,8 @@ def run_experiment(
 
         entry = get_registry_entry(model_variant)
         w, h = entry.input_size
-        cropped_train = str(PROJECT_ROOT / "dataset" / f"cropped_{w}x{h}" / "train_clean")
-        cropped_test = str(PROJECT_ROOT / "dataset" / f"cropped_{w}x{h}" / "test_clean")
+        cropped_train = str(PROJECT_ROOT / "dataset" / f"cropped_{w}x{h}" / "train")
+        cropped_test = str(PROJECT_ROOT / "dataset" / f"cropped_{w}x{h}" / "test")
         if os.path.exists(cropped_train) and os.path.exists(cropped_test):
             raw_dir = cropped_train
             test_dir = cropped_test

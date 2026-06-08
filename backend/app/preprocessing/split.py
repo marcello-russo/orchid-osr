@@ -52,7 +52,7 @@ def create_clean_split(
         cropped_dir: Cropped private images root (dataset/cropped/).
         internet_dir: Cropped internet images root (parent of {class}_Int/ dirs).
                       Can be None if all classes are private-only.
-        output_dir: Output root. Creates train_clean/ and test_clean/ subdirs.
+        output_dir: Output root. Creates train/ and test/ subdirs.
         class_names: List of all class names.
         internet_classes: Set/list of class names that have internet images.
         test_per_class: Number of test images per class (default 50).
@@ -66,8 +66,8 @@ def create_clean_split(
     rng = np.random.default_rng(seed)
     internet_classes = set(internet_classes)
 
-    train_dir = output_dir / "train_clean"
-    test_dir = output_dir / "test_clean"
+    train_dir = output_dir / "train"
+    test_dir = output_dir / "test"
 
     manifest = {
         "seed": seed,

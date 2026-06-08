@@ -342,11 +342,11 @@ def main():
             logger.info("PIPELINE STEP 3: RESIZE")
             logger.info("=" * 60)
 
-            # Resize train_clean and test_clean
+            # Resize train and test
             cropped_base = str(PROJECT_ROOT / "dataset" / "cropped")
             dataset_base = str(PROJECT_ROOT / "dataset")
 
-            for split_name in ["train_clean", "test_clean"]:
+            for split_name in ["train", "test"]:
                 split_dir = os.path.join(cropped_base, split_name)
                 if not os.path.exists(split_dir):
                     logger.warning(f"Skipping {split_name} — directory not found")

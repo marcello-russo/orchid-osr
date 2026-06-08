@@ -63,11 +63,11 @@ def resize_for_all_architectures(input_dir, base_dir, split_name=None):
     """Produce resized datasets for all registered architecture sizes.
 
     Reads unique input sizes from the model registry and creates
-    one output directory per size. If split_name is given (e.g. "train_clean"),
+    one output directory per size. If split_name is given (e.g. "train"),
     output goes to cropped_{W}x{H}/{split_name}/{class}/.
 
     Args:
-        input_dir: Cropped dataset root (e.g. dataset/cropped/train_clean/).
+        input_dir: Cropped dataset root (e.g. dataset/cropped/train/).
         base_dir: Parent for output directories (e.g. dataset/).
         split_name: Optional split subdirectory name.
 
