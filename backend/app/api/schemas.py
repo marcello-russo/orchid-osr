@@ -2,13 +2,13 @@
 from datetime import datetime
 from typing import Dict, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ClassifyRequest(BaseModel):
     """Request for image classification."""
 
-    image_base64: str
+    image_base64: str = Field(..., max_length=50_000_000)
     model_type: str = "resnet18"
 
 

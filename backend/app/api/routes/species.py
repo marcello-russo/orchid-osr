@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 
 from fastapi import APIRouter
+from fastapi.concurrency import run_in_threadpool
 
 from app.api.schemas import SpeciesInfo, SpeciesListResponse
 from app.config import settings
@@ -13,6 +14,17 @@ _IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
 
 # Pre-computed species counts (shipped with the app)
 _COUNTS_FILE = Path(__file__).resolve().parent.parent.parent / "data" / "species_counts.json"
+
+
+def _count_species_files(data_dir: Path) -> dict[str, int]:
+    result: dict[str, int] = {}
+    for species_dir in sorted(data_dir.iterdir()):
+        if not species_dir.is_dir():
+            continue
+        count = sum(1 for f in species_dir.iterdir() if f.is_file() and f.suffix.lower() in _IMAGE_EXTS)
+        if count > 0:
+            result[species_dir.name] = count
+    return result
 
 
 def _get_dataset_dirs() -> list[Path]:
@@ -51,12 +63,9 @@ async def list_species():
     if dataset_dirs:
         all_species: dict[str, int] = {}
         for d in dataset_dirs:
-            for species_dir in sorted(d.iterdir()):
-                if not species_dir.is_dir():
-                    continue
-                count = sum(1 for f in species_dir.iterdir() if f.is_file() and f.suffix.lower() in _IMAGE_EXTS)
-                if count > 0:
-                    all_species[species_dir.name] = all_species.get(species_dir.name, 0) + count
+            species_counts = await run_in_threadpool(_count_species_files, d)
+            for name, count in species_counts.items():
+                all_species[name] = all_species.get(name, 0) + count
         total_images = sum(all_species.values())
         return SpeciesListResponse(
             species=[SpeciesInfo(name=k, image_count=v) for k, v in sorted(all_species.items())],

@@ -328,14 +328,23 @@ def _train_head_only(
     learning_rate,
     device,
     num_classes,
+    model_variant=None,
     patience=0,
 ):
     """Train only the classifier head with backbone frozen. Lightweight loop for SupCon Phase 2."""
     from torcheval.metrics import MulticlassAccuracy, MulticlassF1Score
 
+    from app.core.models.registry import get_registry_entry
+
     model = model.to(device)
     criterion = torch.nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(head_params, lr=learning_rate)
+    entry = get_registry_entry(model_variant) if model_variant else None
+    opt_type = entry.optimizer if entry else "adam"
+    wd = entry.weight_decay if entry else 0.0
+    if opt_type == "adamw":
+        optimizer = torch.optim.AdamW(head_params, lr=learning_rate, weight_decay=wd)
+    else:
+        optimizer = torch.optim.Adam(head_params, lr=learning_rate)
 
     best_f1 = 0.0
     best_wts = {k: v.cpu() for k, v in model.state_dict().items()}
@@ -501,9 +510,10 @@ def train_fold_supcon(
             train_loader=train_loader,
             val_loader=val_loader,
             num_epochs=ce_epochs,
-            learning_rate=0.01,
+            learning_rate=lr,
             device=device,
             num_classes=num_classes,
+            model_variant=model_variant,
             patience=ce_patience,
         )
     else:
@@ -521,9 +531,10 @@ def train_fold_supcon(
             train_loader=train_loader,
             val_loader=val_loader,
             num_epochs=ce_epochs,
-            learning_rate=0.01,
+            learning_rate=lr,
             device=device,
             num_classes=num_classes,
+            model_variant=model_variant,
             patience=ce_patience,
         )
 

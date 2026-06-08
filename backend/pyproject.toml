@@ -28,6 +28,7 @@ dependencies = [
     "python-dotenv",
     "python-multipart",
     "scikit-learn",
+    "slowapi>=0.1.9",
     "torch",
     "torcheval",
     "torchvision",

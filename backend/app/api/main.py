@@ -7,9 +7,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from app.api.routes import auth, classify, comparison, dataset, embeddings, experiments, health, species
 from app.api.routes import ncd as ncd_router
+from app.api.routes.auth import limiter
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +42,14 @@ async def _startup_sync_weights():
     logger.info("Background weight sync started")
 
 
+@app.on_event("shutdown")
+async def shutdown():
+    from app.api.routes.dataset import _http_client
+
+    if _http_client is not None:
+        await _http_client.aclose()
+
+
 # CORS — allow Vite dev server
 app.add_middleware(
     CORSMiddleware,
@@ -47,6 +58,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Rate limiting
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Include routers
 app.include_router(auth.router)
