@@ -35,8 +35,8 @@ DATASET_PATHS = {
         "test": "dataset/test_combined.pt",
     },
     "clean": {
-        "train": "dataset/train_clean/",
-        "test": "dataset/test_clean/",
+        "train": "dataset/train/",
+        "test": "dataset/test/",
     },
 }
 

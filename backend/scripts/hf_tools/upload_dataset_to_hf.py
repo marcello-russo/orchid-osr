@@ -81,7 +81,7 @@ def main():
         # --- cropped/{size}/train + test ---
         for size in SIZES:
             cropped_base = os.path.join(DATASET_DIR, f"cropped_{size}")
-            for split_src, split_dst in [("train_clean", "train"), ("test_clean", "test")]:
+            for split_src, split_dst in [("train", "train"), ("test", "test")]:
                 src = os.path.join(cropped_base, split_src)
                 dst = os.path.join(staging, "cropped", size, split_dst)
                 if not os.path.isdir(src):
