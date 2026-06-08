@@ -57,3 +57,4 @@ superpowers/
 temp_kfold/
 .vscode/
 backend/build/
+.worktrees/
