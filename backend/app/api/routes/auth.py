@@ -1,9 +1,12 @@
 from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from app.core.auth import create_jwt, decode_jwt, login_user, register_user
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+limiter = Limiter(key_func=get_remote_address)
 
 
 class RegisterRequest(BaseModel):
@@ -25,7 +28,8 @@ def register(body: RegisterRequest):
 
 
 @router.post("/login")
-def login(body: LoginRequest):
+@limiter.limit("10/minute")
+def login(request: Request, body: LoginRequest):
     user = login_user(body.username, body.password)
     token = create_jwt(user["username"], user["role"])
     return {"token": token, "user": user}

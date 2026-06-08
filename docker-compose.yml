@@ -44,6 +44,31 @@ services:
               count: all
               capabilities: [gpu]
 
+  train:
+    profiles: [train]
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: gpu
+    env_file:
+      - .env
+    environment:
+      - HF_HOME=/workspace/backend/.hf_cache
+      - TORCH_HOME=/workspace/backend/.torch_cache
+    volumes:
+      - ./backend:/workspace/backend
+      - dataset:/workspace/backend/dataset
+      - models:/workspace/backend/models
+      - experiments:/workspace/backend/experiments
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    command: ["./scripts/cloud-train.sh"]
+
 volumes:
   dataset:
   models:

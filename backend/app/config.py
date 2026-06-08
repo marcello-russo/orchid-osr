@@ -1,6 +1,7 @@
 # app/config.py
 from pathlib import Path
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -72,6 +73,18 @@ class Settings(BaseSettings):
 
     # JWT authentication (from .env)
     jwt_secret: str = ""
+
+    @model_validator(mode="after")
+    def _validate_jwt_secret(self):
+        if not self.jwt_secret:
+            import warnings
+
+            warnings.warn(
+                "JWT_SECRET is empty! Authentication tokens will be insecure. "
+                "Set a strong JWT_SECRET in your .env file."
+            )
+        return self
+
     admin_username: str = "admin"
     admin_password: str = "admin"
 

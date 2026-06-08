@@ -20,6 +20,27 @@ _CROPPED_DIR = "cropped_256x512"
 _HF_DATASET = "marcellorusso/orchid-ncd-dataset"
 _HF_BRANCH = "main"
 
+_http_client: httpx.AsyncClient | None = None
+
+
+async def _get_http_client() -> httpx.AsyncClient:
+    global _http_client
+    if _http_client is None:
+        _http_client = httpx.AsyncClient(timeout=30.0)
+    return _http_client
+
+
+def _count_images(directory: Path) -> int:
+    if not directory.is_dir():
+        return 0
+    return sum(1 for f in directory.iterdir() if f.is_file() and f.suffix.lower() in _IMAGE_EXTS)
+
+
+def _list_image_files(directory: Path) -> list[str]:
+    if not directory.is_dir():
+        return []
+    return sorted(f.name for f in directory.iterdir() if f.is_file() and f.suffix.lower() in _IMAGE_EXTS)
+
 
 def _hf_token() -> str | None:
     if settings.hf_token:
@@ -66,16 +87,8 @@ async def list_classes(user=Depends(require_role("user"))):
                 continue
             seen.add(class_dir.name)
             class_name = class_dir.name
-            train_count = (
-                sum(1 for f in (train_dir / class_name).iterdir() if f.is_file() and f.suffix.lower() in _IMAGE_EXTS)
-                if (train_dir / class_name).is_dir()
-                else 0
-            )
-            test_count = (
-                sum(1 for f in (test_dir / class_name).iterdir() if f.is_file() and f.suffix.lower() in _IMAGE_EXTS)
-                if (test_dir / class_name).is_dir()
-                else 0
-            )
+            train_count = await run_in_threadpool(_count_images, train_dir / class_name)
+            test_count = await run_in_threadpool(_count_images, test_dir / class_name)
             if train_count + test_count > 0:
                 classes.append(
                     DatasetClassInfo(
@@ -112,7 +125,7 @@ async def list_class_images(
     if not class_dir.is_dir():
         return ClassImagesResponse(class_name=class_name, split=split, total=0, images=[])
 
-    all_files = sorted(f.name for f in class_dir.iterdir() if f.is_file() and f.suffix.lower() in _IMAGE_EXTS)
+    all_files = await run_in_threadpool(_list_image_files, class_dir)
     total = len(all_files)
     page = all_files[offset : offset + limit]
 
@@ -132,10 +145,10 @@ async def _hf_proxy(class_name: str, filename: str) -> Response:
         "cropped/256x512/test",
     ]:
         hf_url = f"https://huggingface.co/datasets/{_HF_DATASET}/resolve/{_HF_BRANCH}/{crop}/{class_name}/{filename}"
-        async with httpx.AsyncClient() as client:
-            resp = await client.get(hf_url, headers=headers)
-            if resp.status_code == 200:
-                return Response(content=resp.content, media_type=resp.headers.get("content-type", "image/jpeg"))
+        client = await _get_http_client()
+        resp = await client.get(hf_url, headers=headers)
+        if resp.status_code == 200:
+            return Response(content=resp.content, media_type=resp.headers.get("content-type", "image/jpeg"))
     raise HTTPException(status_code=404, detail="Image not found locally or on HuggingFace")
 
 

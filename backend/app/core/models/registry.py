@@ -47,8 +47,10 @@ def create_model(
 ) -> ClassifierModel:
     entry = get_registry_entry(model_type)
     kwargs.setdefault("variant", model_type)
+    valid = entry.config_cls.model_fields.keys()
+    filtered = {k: v for k, v in kwargs.items() if k in valid}
     config = entry.config_cls(
-        num_classes=num_classes, pretrained=pretrained, **kwargs
+        num_classes=num_classes, pretrained=pretrained, **filtered
     )
     return config.create_model()
 

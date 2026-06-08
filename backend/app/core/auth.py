@@ -55,7 +55,14 @@ def verify_password(password: str, hashed: str) -> bool:
 
 
 def create_jwt(username: str, role: str) -> str:
-    payload = {"sub": username, "role": role}
+    import time
+
+    payload = {
+        "sub": username,
+        "role": role,
+        "iat": int(time.time()),
+        "exp": int(time.time()) + 86400,
+    }
     return jwt.encode(payload, settings.jwt_secret, algorithm=JWT_ALGORITHM)
 
 
