@@ -129,8 +129,8 @@ export function EmbeddingsPage() {
         <select value={split} onChange={(e) => setSplit(e.target.value)}
           className="text-xs bg-muted/30 border border-border/50 rounded-lg px-2 py-1.5 text-foreground">
           <option value="all">All data</option>
-          <option value="train_clean">Train only</option>
-          <option value="test_clean">Test only</option>
+          <option value="train">Train only</option>
+          <option value="test">Test only</option>
         </select>
         <Link to={`/experiments/${experiment}`}
           className="text-xs text-primary hover:underline px-2 py-1.5 font-medium">

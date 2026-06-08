@@ -14,8 +14,7 @@ from app.config import settings
 router = APIRouter(prefix="/api/dataset", tags=["dataset"])
 
 _IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
-_VALID_SPLITS = {"train_clean", "test_clean"}
-_SPLIT_ALIASES = {"train": "train_clean", "test": "test_clean"}
+_VALID_SPLITS = {"train", "test"}
 _VALID_CLASSES = set(settings.class_names)
 _CROPPED_DIR = "cropped_256x512"
 _HF_DATASET = "marcellorusso/orchid-ncd-dataset"
@@ -51,13 +50,13 @@ async def list_classes(user=Depends(require_role("user"))):
     total_train = 0
     total_test = 0
 
-    train_dir = base / "train_clean"
-    test_dir = base / "test_clean"
+    train_dir = base / "train"
+    test_dir = base / "test"
 
     if not train_dir.is_dir() and not test_dir.is_dir():
         return DatasetClassesResponse(classes=[], total_train=0, total_test=0)
 
-    # Discover classes from both train_clean and test_clean (a class may exist only in test, e.g. NCD novel class)
+    # Discover classes from both train and test (a class may exist only in test, e.g. NCD novel class)
     seen = set()
     for base_dir in [train_dir, test_dir]:
         if not base_dir.is_dir():
@@ -104,12 +103,14 @@ async def list_class_images(
     class_name = _validate_segment(class_name)
     if class_name not in _VALID_CLASSES:
         raise HTTPException(status_code=400, detail=f"Unknown class: {class_name}")
-    split = _SPLIT_ALIASES.get(split, split)
     if split not in _VALID_SPLITS:
-        raise HTTPException(status_code=400, detail="Invalid split. Use: train, test, train_clean, or test_clean")
+        raise HTTPException(status_code=400, detail="Invalid split. Use: train or test")
 
     base = _get_dataset_base()
     class_dir = base / split / class_name
+
+    if not class_dir.is_dir():
+        return ClassImagesResponse(class_name=class_name, split=split, total=0, images=[])
 
     all_files = sorted(f.name for f in class_dir.iterdir() if f.is_file() and f.suffix.lower() in _IMAGE_EXTS)
     total = len(all_files)
@@ -125,8 +126,6 @@ async def _hf_proxy(class_name: str, filename: str) -> Response:
     headers = {"Authorization": f"Bearer {token}"} if token else {}
     # Try all crop directories the image could live in
     for crop in [
-        "cropped/224x224/train_clean",
-        "cropped/224x224/test_clean",
         "cropped/224x224/train",
         "cropped/224x224/test",
         "cropped/256x512/train",
@@ -180,7 +179,6 @@ async def serve_image(
     split = _validate_segment(split)
     class_name = _validate_segment(class_name)
     filename = _validate_segment(filename)
-    split = _SPLIT_ALIASES.get(split, split)
     if split not in _VALID_SPLITS:
         raise HTTPException(status_code=400, detail="Invalid split")
 

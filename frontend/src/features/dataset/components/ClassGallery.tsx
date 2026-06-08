@@ -13,7 +13,7 @@ const PAGE_SIZE = 8;
 
 interface ClassGalleryProps {
   classInfo: DatasetClassInfo;
-  split: "train_clean" | "test_clean";
+  split: "train" | "test";
   totalImages: number;
 }
 
@@ -26,17 +26,16 @@ export function ClassGallery({ classInfo, split, totalImages }: ClassGalleryProp
   const { ref: cardRef, isInView } = useInView({ rootMargin: "200px" });
   
   useEffect(() => { setOffset(0); }, [split]);
-  const apiSplit = split === "train_clean" ? "train" : "test";
-  
+
   const { data, isLoading, isPlaceholderData } = useClassImages(
     classInfo.name, 
-    apiSplit, 
+    split, 
     PAGE_SIZE, 
     offset,
     isInView // Pass isInView to enable the query
   );
   
-  const total = split === "train_clean" ? classInfo.train_count : classInfo.test_count;
+  const total = split === "train" ? classInfo.train_count : classInfo.test_count;
   const totalPages = Math.ceil(total / PAGE_SIZE);
   const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
   const hasMore = offset + PAGE_SIZE < total;

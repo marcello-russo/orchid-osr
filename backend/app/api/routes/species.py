@@ -19,14 +19,13 @@ def _get_dataset_dirs() -> list[Path]:
     """Resolve dataset directories at runtime (not import time).
 
     Returns [train_dir, test_dir] from the first complete directory set found.
-    Priority: cropped_256x512 > cropped_224x224 > flat train_clean/test_clean.
+    Priority: cropped_256x512 > cropped_224x224 > flat train/test.
     Only ONE crop size is returned to avoid double-counting the same images.
     """
     base = Path(settings.dataset_dir)
     for train_candidate, test_candidate in [
-        ("cropped_256x512/train_clean", "cropped_256x512/test_clean"),
-        ("cropped_224x224/train_clean", "cropped_224x224/test_clean"),
-        ("train_clean", "test_clean"),
+        ("cropped_256x512/train", "cropped_256x512/test"),
+        ("cropped_224x224/train", "cropped_224x224/test"),
         ("train", "test"),
     ]:
         train_dir = base / train_candidate
