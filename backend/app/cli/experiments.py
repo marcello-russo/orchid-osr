@@ -13,11 +13,25 @@ import logging
 import os
 from pathlib import Path
 import sys
-from app.cli.definitions import DEFAULT_CONFIG, EXPERIMENTS, PROJECT_ROOT
+from app.cli.definitions import DEFAULT_CONFIG, EXPERIMENTS, PROJECT_ROOT, TRAIN_CLASSES
 from app.cli.runner import run_experiment, setup_logging, show_status
 from app.core.models import available_models
 
 logger = logging.getLogger(__name__)
+
+
+def _build_pair_weights(hard_weight: float) -> dict:
+    """Build pair_weights dict from class names (not hardcoded indices)."""
+    cls_map = {name: i for i, name in enumerate(TRAIN_CLASSES)}
+    result = {}
+    def _add(a, b, weight):
+        i, j = cls_map.get(a), cls_map.get(b)
+        if i is not None and j is not None:
+            result[(i, j)] = weight
+            result[(j, i)] = weight
+    _add("O. majellensis", "O. sphegodes", hard_weight)
+    _add("O. sphegodes", "O. sphegodes_Palena", hard_weight * 0.6)
+    return result
 
 
 def parse_args():
@@ -485,12 +499,7 @@ def main():
                 ce_epochs=args.ce_epochs,
                 use_prototypes=args.sphor,
                 repulse_weight=args.repulse_weight,
-                pair_weights={
-                    (3, 4): args.hard_weight,  # (majellensis, sphegodes)
-                    (4, 3): args.hard_weight,
-                    (4, 5): args.hard_weight * 0.6,  # (sphegodes, sphegodes_Palena)
-                    (5, 4): args.hard_weight * 0.6,
-                }
+                pair_weights=_build_pair_weights(args.hard_weight)
                 if args.hard_weight > 0
                 else None,
                 full_finetune=args.full_finetune,
