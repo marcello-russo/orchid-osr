@@ -44,6 +44,9 @@ DATASET_PATHS = {
 ALL_CLASSES = settings.class_names
 INTERNET_CLASSES = settings.internet_classes
 
+# Classes used for training (all 6 known, O. sphegodes_Napoli is only in test as novel class)
+TRAIN_CLASSES = [c for c in ALL_CLASSES if c != "O. sphegodes_Napoli"]
+
 # Experiment definitions
 # NOTE: Exp 1-5 have data leakage issues (confirmed for exp4 and exp5, likely for exp1-3).
 # Exp 4: combined contains internet_cropped images → test on internet_cropped = test on seen data.
@@ -57,7 +60,7 @@ EXPERIMENTS = {
         "train_dataset": "clean",
         "test_dataset": "clean",
         "num_classes": 6,
-        "test_classes": ALL_CLASSES,
+        "test_classes": TRAIN_CLASSES,
         "description": "Clean split: no data leakage, balanced test (50/class), all 6 classes",
     },
     7: {
@@ -65,7 +68,7 @@ EXPERIMENTS = {
         "train_dataset": "clean",
         "test_dataset": "clean",
         "num_classes": 6,
-        "test_classes": ALL_CLASSES,
+        "test_classes": TRAIN_CLASSES,
         "loss_type": "supcon",
         "description": "Supervised Contrastive pretraining + CE fine-tuning (Exp 7)",
     },
@@ -74,7 +77,7 @@ EXPERIMENTS = {
         "train_dataset": "clean",
         "test_dataset": "clean",
         "num_classes": 6,
-        "test_classes": ALL_CLASSES,
+        "test_classes": TRAIN_CLASSES,
         "loss_type": "supcon",
         "description": "SupCon + Spherical Orthogonal Prototypes (SpHOR-style, Exp 8)",
     },
@@ -82,23 +85,21 @@ EXPERIMENTS = {
         "name": "exp9_ncd",
         "train_dataset": "clean",
         "test_dataset": "clean",
-        "num_classes": 5,
-        "test_classes": ALL_CLASSES,
-        "exclude_classes": ["O. majellensis"],
+        "num_classes": 6,
+        "test_classes": TRAIN_CLASSES,
         "loss_type": "supcon",
-        "description": "SpHOR senza O. majellensis (hidden novel per NCD)",
+        "description": "SpHOR with O. sphegodes_Napoli as hidden novel class (NCD)",
     },
     10: {
         "name": "exp10_mgh_ncd",
         "train_dataset": "clean",
         "test_dataset": "clean",
         "num_classes": 6,
-        "test_classes": ALL_CLASSES,
+        "test_classes": TRAIN_CLASSES,
         "loss_type": "supcon",
         "description": (
             "MGH-NCD: Multi-Granularity Hard-negative Novel Class Discovery. "
-            "All 6 species known during training; for NCD evaluation, "
-            "a novel species will be treated as unknown."
+            "6 known species; O. sphegodes_Napoli is the novel class (test only)."
         ),
     },
 }

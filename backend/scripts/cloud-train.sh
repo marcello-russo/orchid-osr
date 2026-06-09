@@ -11,7 +11,7 @@ LOG_FILE="$LOG_DIR/cloud-train-$(date +%Y%m%d-%H%M).log"
 
 EXPERIMENTS=(7 8 9 10)
 MODELS=("resnet18" "resnet50" "convnext_tiny" "convnext_small" "dinov2_small" "dinov2_base")
-declare -A EXP_FLAGS=([7]="" [8]="--sphor" [9]="--sphor" [10]="--sphor")
+declare -A EXP_FLAGS=([7]="" [8]="--sphor" [9]="--sphor" [10]="--sphor --full-finetune --osr-ensemble")
 declare -A EXP_NAMES=([7]="exp7_supcon" [8]="exp8_sphor" [9]="exp9_ncd" [10]="exp10_mgh_ncd")
 RESUME=false
 FILTER_EXP=""

@@ -492,51 +492,30 @@ def train_fold_supcon(
         pair_weights=pair_weights,
     )
 
-    # --- Phase 2: CE fine-tuning ---
-    if full_finetune:
-        logger.info("  === Phase 2: CE Fine-tuning (head only) ===")
-        # Backbone kept frozen. Multi-grano features + hard negative mining
-        # (Phase 1) are the innovations. Full fine-tuning overfits on 2K images.
-        for param in model.parameters():
-            param.requires_grad = False
-        model._unfreeze_head()
+    # --- Phase 2: CE fine-tuning (head only) ---
+    # Both full_finetune and non-full_finetune branches use the same Phase 2 setup:
+    # backbone frozen, head-only training. The full_finetune flag only affects
+    # Phase 1 (LoRA rank: 32 vs 8) and NCD evaluation (ensemble OSR).
+    logger.info("  === Phase 2: CE Fine-tuning (head only) ===")
+    for param in model.parameters():
+        param.requires_grad = False
+    model._unfreeze_head()
 
-        head_params = [p for p in model.parameters() if p.requires_grad]
-        logger.info(f"  Trainable params (head only): {sum(p.numel() for p in head_params):,}")
+    head_params = [p for p in model.parameters() if p.requires_grad]
+    logger.info(f"  Trainable params (head only): {sum(p.numel() for p in head_params):,}")
 
-        model, ce_history = _train_head_only(
-            model=model,
-            head_params=head_params,
-            train_loader=train_loader,
-            val_loader=val_loader,
-            num_epochs=ce_epochs,
-            learning_rate=lr,
-            device=device,
-            num_classes=num_classes,
-            model_variant=model_variant,
-            patience=ce_patience,
-        )
-    else:
-        logger.info("  === Phase 2: CE Fine-tuning (head only) ===")
-        for param in model.parameters():
-            param.requires_grad = False
-        model._unfreeze_head()
-
-        head_params = [p for p in model.parameters() if p.requires_grad]
-        logger.info(f"  Trainable params (head only): {sum(p.numel() for p in head_params):,}")
-
-        model, ce_history = _train_head_only(
-            model=model,
-            head_params=head_params,
-            train_loader=train_loader,
-            val_loader=val_loader,
-            num_epochs=ce_epochs,
-            learning_rate=lr,
-            device=device,
-            num_classes=num_classes,
-            model_variant=model_variant,
-            patience=ce_patience,
-        )
+    model, ce_history = _train_head_only(
+        model=model,
+        head_params=head_params,
+        train_loader=train_loader,
+        val_loader=val_loader,
+        num_epochs=ce_epochs,
+        learning_rate=learning_rate,
+        device=device,
+        num_classes=num_classes,
+        model_variant=model_variant,
+        patience=ce_patience,
+    )
 
     # Save best weights
     model.save_weights(checkpoint_path)
