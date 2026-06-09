@@ -24,11 +24,13 @@ def _build_pair_weights(hard_weight: float) -> dict:
     """Build pair_weights dict from class names (not hardcoded indices)."""
     cls_map = {name: i for i, name in enumerate(TRAIN_CLASSES)}
     result = {}
+
     def _add(a, b, weight):
         i, j = cls_map.get(a), cls_map.get(b)
         if i is not None and j is not None:
             result[(i, j)] = weight
             result[(j, i)] = weight
+
     _add("O. majellensis", "O. sphegodes", hard_weight)
     _add("O. sphegodes", "O. sphegodes_Palena", hard_weight * 0.6)
     return result
@@ -499,9 +501,7 @@ def main():
                 ce_epochs=args.ce_epochs,
                 use_prototypes=args.sphor,
                 repulse_weight=args.repulse_weight,
-                pair_weights=_build_pair_weights(args.hard_weight)
-                if args.hard_weight > 0
-                else None,
+                pair_weights=_build_pair_weights(args.hard_weight) if args.hard_weight > 0 else None,
                 full_finetune=args.full_finetune,
                 osr_ensemble=args.osr_ensemble,
             )
