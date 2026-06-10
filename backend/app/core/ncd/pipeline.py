@@ -5,6 +5,8 @@ import os
 
 import numpy as np
 
+from app.core.ncd.openset import evaluate_osr_novel
+
 logger = logging.getLogger(__name__)
 
 
