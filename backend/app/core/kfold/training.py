@@ -537,7 +537,7 @@ def train_fold_supcon(
         best_f1 = supcon_best_knn
         best_epoch = supcon_metrics["val_knn_acc"].index(supcon_best_knn) + 1
         best_acc = 0.0
-        ce_history = {"train_loss": [], "val_loss": [], "val_accuracy": [], "val_f1": []}
+        ce_history = {"train_loss": [0.0], "val_loss": [0.0], "val_accuracy": [0.0], "val_f1": [0.0]}
 
     # --- SpHOR prototype probe (if using prototypes) ---
     sphor_probe_accuracy = None
@@ -584,8 +584,9 @@ def train_fold_supcon(
         },
     }
 
+    phase_label = "SupCon+NCD" if ncd_mode else "SupCon+CE"
     logger.info(
-        f"  Fold completato (SupCon+CE): F1={best_f1:.4f}, Acc={best_acc:.4f}, "
+        f"  Fold completato ({phase_label}): F1={best_f1:.4f}, Acc={best_acc:.4f}, "
         f"Best epoch={best_epoch}, SupCon KNN={supcon_metrics['best_knn_acc']:.4f}"
     )
 
