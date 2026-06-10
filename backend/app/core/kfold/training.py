@@ -9,6 +9,7 @@ import shutil
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from sklearn.model_selection import StratifiedKFold
 from torch.utils.data import DataLoader
 
@@ -330,6 +331,7 @@ def _train_head_only(
     num_classes,
     model_variant=None,
     patience=0,
+    gradient_accumulation_steps=1,
 ):
     """Train only the classifier head with backbone frozen. Lightweight loop for SupCon Phase 2."""
     from app.core.metrics import MulticlassAccuracy, MulticlassF1Score
@@ -357,12 +359,15 @@ def _train_head_only(
         model.train()
         running_loss = 0.0
         n = 0
-        for inputs, labels, _ in train_loader:
+        optimizer.zero_grad(set_to_none=True)
+        for batch_idx, (inputs, labels, _) in enumerate(train_loader):
             inputs, labels = inputs.to(device, non_blocking=True), labels.to(device, non_blocking=True)
-            optimizer.zero_grad(set_to_none=True)
             loss = criterion(model(inputs), labels)
             loss.backward()
-            optimizer.step()
+            if (batch_idx + 1) % gradient_accumulation_steps == 0 or (batch_idx + 1) == len(train_loader):
+                torch.nn.utils.clip_grad_norm_(head_params, max_norm=2.0)
+                optimizer.step()
+                optimizer.zero_grad(set_to_none=True)
             running_loss += loss.item() * inputs.size(0)
             n += inputs.size(0)
         train_loss = running_loss / max(n, 1)
@@ -515,6 +520,7 @@ def train_fold_supcon(
         num_classes=num_classes,
         model_variant=model_variant,
         patience=ce_patience,
+        gradient_accumulation_steps=gradient_accumulation_steps,
     )
 
     # Save best weights
