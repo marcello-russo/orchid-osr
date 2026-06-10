@@ -53,7 +53,7 @@ def kfold_experiment(
     temperature=0.07,
     ce_epochs=50,
     use_prototypes=False,
-    repulse_weight=0.05,
+    repulse_weight=0.01,
     exclude_classes=None,
     pair_weights=None,
     full_finetune=False,
