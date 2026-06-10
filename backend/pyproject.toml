@@ -29,9 +29,8 @@ dependencies = [
     "python-multipart",
     "scikit-learn",
     "slowapi>=0.1.9",
-    "torch",
-    "torcheval",
-    "torchvision",
+    "torch>=2.0.0,<2.2.0",
+    "torchvision>=0.15.0,<0.17.0",
     "transformers>=4.40.0",
     "uvicorn",
 ]
