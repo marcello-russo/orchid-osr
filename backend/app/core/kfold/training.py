@@ -539,9 +539,39 @@ def train_fold_supcon(
         best_acc = 0.0
         ce_history = {"train_loss": [], "val_loss": [], "val_accuracy": [], "val_f1": []}
 
+    # --- SpHOR prototype probe (if using prototypes) ---
+    sphor_probe_accuracy = None
+    sphor_probe_f1 = None
+
+    if use_prototypes and hasattr(model, 'prototypes') and model.prototypes is not None:
+        logger.info("  === SpHOR Prototype Probe ===")
+        model.eval()
+        all_preds = []
+        all_labels = []
+        with torch.no_grad():
+            for inputs, labels, _ in val_loader:
+                inputs = inputs.to(device, non_blocking=True)
+                labels = labels.to(device, non_blocking=True)
+                embeddings = model.get_embeddings(inputs)
+                embeddings = F.normalize(embeddings, p=2, dim=1)
+                sim = embeddings @ model.prototypes.T
+                preds = sim.argmax(dim=1)
+                all_preds.append(preds.cpu())
+                all_labels.append(labels.cpu())
+
+        all_preds = torch.cat(all_preds)
+        all_labels = torch.cat(all_labels)
+
+        from sklearn.metrics import accuracy_score, f1_score
+        sphor_probe_accuracy = accuracy_score(all_labels.numpy(), all_preds.numpy())
+        sphor_probe_f1 = f1_score(all_labels.numpy(), all_preds.numpy(), average="macro")
+        logger.info(f"  SpHOR Probe — Acc: {sphor_probe_accuracy:.4f}, F1: {sphor_probe_f1:.4f}")
+
     fold_metrics = {
         "best_f1": float(best_f1),
         "best_accuracy": float(best_acc),
+        "sphor_probe_accuracy": sphor_probe_accuracy,
+        "sphor_probe_f1": sphor_probe_f1,
         "best_epoch": best_epoch,
         "final_train_loss": float(ce_history["train_loss"][-1]),
         "final_val_loss": float(ce_history["val_loss"][-1]),
