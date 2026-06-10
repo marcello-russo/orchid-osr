@@ -510,7 +510,7 @@ def train_fold_supcon(
         train_loader=train_loader,
         val_loader=val_loader,
         num_epochs=ce_epochs,
-        learning_rate=learning_rate,
+        learning_rate=lr,
         device=device,
         num_classes=num_classes,
         model_variant=model_variant,
