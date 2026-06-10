@@ -216,7 +216,6 @@ def run_ncd_pipeline(
                             train_loader=train_loader,
                             test_loader=test_loader,
                             novel_label=novel_idx,
-                            known_labels=known_idxs,
                             device=device,
                         )
                         results["osr"] = osr_results

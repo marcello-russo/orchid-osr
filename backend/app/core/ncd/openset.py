@@ -533,7 +533,6 @@ def evaluate_osr_novel(
     train_loader,
     test_loader,
     novel_label,
-    known_labels,
     device="cuda",
 ):
     """Evaluate OSR detection of a single novel class.
@@ -543,7 +542,6 @@ def evaluate_osr_novel(
         train_loader: Training set (known classes only).
         test_loader: Test set (known + novel classes).
         novel_label: Label index of the novel class.
-        known_labels: List of label indices for known classes.
         device: torch device.
 
     Returns:
