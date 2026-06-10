@@ -270,6 +270,7 @@ def run_experiment(
             exclude_classes=config.get("exclude_classes"),
             pair_weights=pair_weights,
             full_finetune=full_finetune,
+            ncd_mode=config.get("ncd_mode", False),
         )
     else:
         from app.core.kfold import kfold_experiment

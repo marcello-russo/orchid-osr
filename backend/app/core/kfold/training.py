@@ -442,6 +442,7 @@ def train_fold_supcon(
     repulse_weight=0.05,
     pair_weights=None,
     full_finetune=False,
+    ncd_mode=False,
 ):
     """Two-phase training for SupCon: Phase 1 (contrastive) + Phase 2 (CE fine-tune).
 
@@ -501,34 +502,42 @@ def train_fold_supcon(
     # Both full_finetune and non-full_finetune branches use the same Phase 2 setup:
     # backbone frozen, head-only training. The full_finetune flag only affects
     # Phase 1 (LoRA rank: 32 vs 8) and NCD evaluation (ensemble OSR).
-    logger.info("  === Phase 2: CE Fine-tuning (head only) ===")
-    for param in model.parameters():
-        param.requires_grad = False
-    model._unfreeze_head()
+    if not ncd_mode:
+        logger.info("  === Phase 2: CE Fine-tuning (head only) ===")
+        for param in model.parameters():
+            param.requires_grad = False
+        model._unfreeze_head()
 
-    head_params = [p for p in model.parameters() if p.requires_grad]
-    logger.info(f"  Trainable params (head only): {sum(p.numel() for p in head_params):,}")
+        head_params = [p for p in model.parameters() if p.requires_grad]
+        logger.info(f"  Trainable params (head only): {sum(p.numel() for p in head_params):,}")
 
-    model, ce_history = _train_head_only(
-        model=model,
-        head_params=head_params,
-        train_loader=train_loader,
-        val_loader=val_loader,
-        num_epochs=ce_epochs,
-        learning_rate=lr,
-        device=device,
-        num_classes=num_classes,
-        model_variant=model_variant,
-        patience=ce_patience,
-        gradient_accumulation_steps=gradient_accumulation_steps,
-    )
+        model, ce_history = _train_head_only(
+            model=model,
+            head_params=head_params,
+            train_loader=train_loader,
+            val_loader=val_loader,
+            num_epochs=ce_epochs,
+            learning_rate=lr,
+            device=device,
+            num_classes=num_classes,
+            model_variant=model_variant,
+            patience=ce_patience,
+            gradient_accumulation_steps=gradient_accumulation_steps,
+        )
 
-    # Save best weights
-    model.save_weights(checkpoint_path)
+        # Save best weights
+        model.save_weights(checkpoint_path)
 
-    best_f1 = max(ce_history["val_f1"])
-    best_epoch = ce_history["val_f1"].index(best_f1) + 1
-    best_acc = ce_history["val_accuracy"][best_epoch - 1]
+        best_f1 = max(ce_history["val_f1"])
+        best_epoch = ce_history["val_f1"].index(best_f1) + 1
+        best_acc = ce_history["val_accuracy"][best_epoch - 1]
+    else:
+        logger.info("  === NCD Mode: skipping Phase 2 (CE head) ===")
+        supcon_best_knn = max(supcon_metrics["val_knn_acc"])
+        best_f1 = supcon_best_knn
+        best_epoch = supcon_metrics["val_knn_acc"].index(supcon_best_knn) + 1
+        best_acc = 0.0
+        ce_history = {"train_loss": [], "val_loss": [], "val_accuracy": [], "val_f1": []}
 
     fold_metrics = {
         "best_f1": float(best_f1),

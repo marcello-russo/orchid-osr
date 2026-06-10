@@ -81,13 +81,14 @@ EXPERIMENTS = {
         "loss_type": "supcon",
         "description": "SupCon + Spherical Orthogonal Prototypes (SpHOR-style, Exp 8)",
     },
-    9: {
+     9: {
         "name": "exp9_ncd",
         "train_dataset": "clean",
         "test_dataset": "clean",
         "num_classes": 6,
         "test_classes": TRAIN_CLASSES,
         "loss_type": "supcon",
+        "ncd_mode": True,
         "description": "SpHOR with O. sphegodes_Napoli as hidden novel class (NCD)",
     },
     10: {
@@ -97,6 +98,7 @@ EXPERIMENTS = {
         "num_classes": 6,
         "test_classes": TRAIN_CLASSES,
         "loss_type": "supcon",
+        "ncd_mode": True,
         "description": (
             "MGH-NCD: Multi-Granularity Hard-negative Novel Class Discovery. "
             "6 known species; O. sphegodes_Napoli is the novel class (test only)."
