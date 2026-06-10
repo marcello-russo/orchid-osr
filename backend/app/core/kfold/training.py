@@ -10,6 +10,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from sklearn.metrics import accuracy_score, f1_score
 from sklearn.model_selection import StratifiedKFold
 from torch.utils.data import DataLoader
 
@@ -562,7 +563,6 @@ def train_fold_supcon(
         all_preds = torch.cat(all_preds)
         all_labels = torch.cat(all_labels)
 
-        from sklearn.metrics import accuracy_score, f1_score
         sphor_probe_accuracy = accuracy_score(all_labels.numpy(), all_preds.numpy())
         sphor_probe_f1 = f1_score(all_labels.numpy(), all_preds.numpy(), average="macro")
         logger.info(f"  SpHOR Probe — Acc: {sphor_probe_accuracy:.4f}, F1: {sphor_probe_f1:.4f}")
