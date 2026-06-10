@@ -332,7 +332,7 @@ def _train_head_only(
     patience=0,
 ):
     """Train only the classifier head with backbone frozen. Lightweight loop for SupCon Phase 2."""
-    from torcheval.metrics import MulticlassAccuracy, MulticlassF1Score
+    from app.core.metrics import MulticlassAccuracy, MulticlassF1Score
 
     from app.core.models.registry import get_registry_entry
 
