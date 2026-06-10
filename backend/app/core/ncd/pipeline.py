@@ -22,6 +22,8 @@ def run_ncd_pipeline(
     test_dir: str | None = None,
     exclude_classes: list[str] | None = None,
     osr_method: str = "openmax",
+    ncd_mode: bool = False,
+    all_classes: list[str] | None = None,
 ):
     """Full NCD pipeline: extract embeddings → cluster → OSR evaluation.
 
@@ -166,7 +168,59 @@ def run_ncd_pipeline(
         else:
             logger.info(f"\n--- Open-Set Recognition (method={osr_method}) ---")
 
-            if osr_method == "ensemble":
+            if ncd_mode:
+                if all_classes is None:
+                    logger.warning("all_classes required for ncd_mode, skipping OSR")
+                else:
+                    import json
+
+                    import torch
+                    from torch.utils.data import DataLoader
+
+                    from app.core.models import create_transform
+                    from app.core.ncd.extract import load_trained_model
+                    from app.preprocessing.dataset_tool import ImageFolderWithName
+
+                    train_classes = class_names
+                    novel_classes = [c for c in all_classes if c not in train_classes]
+                    if not novel_classes:
+                        logger.warning("No novel class found — skipping OSR evaluation")
+                    else:
+                        novel_name = novel_classes[0]
+                        novel_idx = all_classes.index(novel_name)
+                        known_idxs = [all_classes.index(c) for c in train_classes]
+                        logger.info(f"Evaluating OSR for novel class: {novel_name}")
+
+                        results_path = os.path.join(exp_dir, "results.json")
+                        best_fold = 0
+                        if os.path.exists(results_path):
+                            with open(results_path) as f:
+                                best_fold = json.load(f).get("best_fold", 0)
+                        best_model_path = os.path.join(exp_dir, f"best_fold_{best_fold}.pt")
+                        if not os.path.exists(best_model_path):
+                            logger.error(f"Best model not found: {best_model_path}")
+                            return
+
+                        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+                        model = load_trained_model(model_variant, num_classes, best_model_path, device)
+                        transform = create_transform(model_variant)
+                        train_dataset = ImageFolderWithName(data_dir, transform=transform)
+                        test_dataset = ImageFolderWithName(test_dir, transform=transform)
+                        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
+                        test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+
+                        osr_results = evaluate_osr_novel(
+                            model=model,
+                            train_loader=train_loader,
+                            test_loader=test_loader,
+                            novel_label=novel_idx,
+                            known_labels=known_idxs,
+                            device=device,
+                        )
+                        results["osr"] = osr_results
+                        logger.info(f"NCD OSR complete. AUROC: {osr_results['auroc']:.4f}")
+
+            elif osr_method == "ensemble":
                 import json
 
                 import torch
