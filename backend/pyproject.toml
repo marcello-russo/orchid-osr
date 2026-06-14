@@ -31,7 +31,7 @@ dependencies = [
     "slowapi>=0.1.9",
     "torch>=2.0.0,<2.2.0",
     "torchvision>=0.15.0,<0.17.0",
-    "transformers>=4.40.0",
+    "transformers>=4.36.0,<4.38.0",
     "uvicorn",
 ]
 
