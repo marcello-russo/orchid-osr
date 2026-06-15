@@ -489,7 +489,7 @@ def train_fold_supcon(
         checkpoint_dir=ckpt_dir,
         proj_dim=proj_dim,
         temperature=temperature,
-        patience=patience,
+        patience=patience or 15,
         gradient_accumulation_steps=gradient_accumulation_steps,
         resume=resume,
         optimizer_type=opt_type,
