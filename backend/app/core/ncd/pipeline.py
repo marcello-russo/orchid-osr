@@ -190,7 +190,6 @@ def run_ncd_pipeline(
                     else:
                         novel_name = novel_classes[0]
                         novel_idx = all_classes.index(novel_name)
-                        known_idxs = [all_classes.index(c) for c in train_classes]
                         logger.info(f"Evaluating OSR for novel class: {novel_name}")
 
                         results_path = os.path.join(exp_dir, "results.json")
