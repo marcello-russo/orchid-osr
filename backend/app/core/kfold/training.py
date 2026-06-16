@@ -544,18 +544,36 @@ def train_fold_supcon(
     sphor_probe_accuracy = None
     sphor_probe_f1 = None
 
-    if use_prototypes and hasattr(model, 'prototypes') and model.prototypes is not None:
-        logger.info("  === SpHOR Prototype Probe ===")
+    if use_prototypes:
+        logger.info("  === SpHOR Prototype Probe (nearest centroid) ===")
         model.eval()
-        all_preds = []
-        all_labels = []
+        centroids = {}
         with torch.no_grad():
             for inputs, labels, _ in val_loader:
                 inputs = inputs.to(device, non_blocking=True)
                 labels = labels.to(device, non_blocking=True)
                 embeddings = model.get_embeddings(inputs)
                 embeddings = F.normalize(embeddings, p=2, dim=1)
-                sim = embeddings @ model.prototypes.T
+                for i in range(len(labels)):
+                    lbl = labels[i].item()
+                    if lbl not in centroids:
+                        centroids[lbl] = []
+                    centroids[lbl].append(embeddings[i])
+
+        proto = torch.zeros(num_classes, embeddings.shape[-1]).to(device)
+        for lbl in range(num_classes):
+            if lbl in centroids:
+                proto[lbl] = torch.stack(centroids[lbl]).mean(dim=0)
+        proto = F.normalize(proto, p=2, dim=1)
+
+        all_preds, all_labels = [], []
+        with torch.no_grad():
+            for inputs, labels, _ in val_loader:
+                inputs = inputs.to(device, non_blocking=True)
+                labels = labels.to(device, non_blocking=True)
+                embeddings = model.get_embeddings(inputs)
+                embeddings = F.normalize(embeddings, p=2, dim=1)
+                sim = embeddings @ proto.T
                 preds = sim.argmax(dim=1)
                 all_preds.append(preds.cpu())
                 all_labels.append(labels.cpu())
