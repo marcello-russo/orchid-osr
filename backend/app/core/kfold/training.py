@@ -534,11 +534,14 @@ def train_fold_supcon(
         best_acc = ce_history["val_accuracy"][best_epoch - 1]
     else:
         logger.info("  === NCD Mode: skipping Phase 2 (CE head) ===")
-        supcon_best_knn = max(supcon_metrics["val_knn_acc"])
+        supcon_history = supcon_metrics.get("supcon_history", {})
+        supcon_val_knn = supcon_history.get("val_knn_acc", [])
+        supcon_best_knn = supcon_metrics["best_knn_acc"]
         best_f1 = supcon_best_knn
-        best_epoch = supcon_metrics["val_knn_acc"].index(supcon_best_knn) + 1
+        best_epoch = supcon_val_knn.index(supcon_best_knn) + 1 if supcon_val_knn else 0
         best_acc = 0.0
         ce_history = {"train_loss": [0.0], "val_loss": [0.0], "val_accuracy": [0.0], "val_f1": [0.0]}
+        model.save_weights(checkpoint_path)
 
     # --- SpHOR prototype probe (if using prototypes) ---
     sphor_probe_accuracy = None
@@ -547,19 +550,23 @@ def train_fold_supcon(
     if use_prototypes:
         logger.info("  === SpHOR Prototype Probe (nearest centroid) ===")
         model.eval()
-        centroids, all_preds, all_labels = {}, [], []
+        centroids, all_preds, all_labels, embed_dim = {}, [], [], None
         with torch.no_grad():
             for inputs, labels, _ in val_loader:
                 inputs = inputs.to(device, non_blocking=True)
                 labels = labels.to(device, non_blocking=True)
                 embeddings = model.get_embeddings(inputs)
                 embeddings = F.normalize(embeddings, p=2, dim=1)
+                if embed_dim is None:
+                    embed_dim = embeddings.shape[-1]
 
                 for i in range(len(labels)):
                     lbl = labels[i].item()
                     centroids.setdefault(lbl, []).append(embeddings[i])
 
-        proto = torch.zeros(num_classes, max(v.mean(0).shape[0] for v in centroids.values())).to(device)
+        if embed_dim is None:
+            embed_dim = 768
+        proto = torch.zeros(num_classes, embed_dim).to(device)
         for lbl in range(num_classes):
             if lbl in centroids:
                 proto[lbl] = torch.stack(centroids[lbl]).mean(dim=0)
