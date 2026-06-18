@@ -65,6 +65,38 @@ def extract_embeddings(
     return embeddings, labels, all_paths, all_species
 
 
+def extract_logits(
+    model_variant: str,
+    data_dir: str,
+    best_model_path: str,
+    num_classes: int,
+    batch_size: int = 8,
+    device: torch.device | None = None,
+) -> np.ndarray:
+    """Extract classification logits (pre-softmax) from a trained model.
+
+    Unlike extract_embeddings which bypasses the classifier head, this
+    runs the full forward pass to get logits for energy-based OOD scoring.
+    """
+    device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = load_trained_model(model_variant, num_classes, best_model_path, device)
+    from app.core.models import create_transform
+    from app.preprocessing.dataset_tool import ImageFolderWithName
+
+    transform = create_transform(model_variant)
+    dataset = ImageFolderWithName(data_dir, transform=transform)
+    loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+
+    all_logits = []
+    with torch.no_grad():
+        for inputs, labels, paths in loader:
+            inputs = inputs.to(device, non_blocking=True)
+            logits = model(inputs)
+            all_logits.append(logits.cpu().numpy())
+
+    return np.concatenate(all_logits, axis=0)
+
+
 def compute_tsne(
     embeddings: np.ndarray,
     n_components: int = 2,

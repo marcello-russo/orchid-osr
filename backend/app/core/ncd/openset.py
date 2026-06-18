@@ -195,21 +195,35 @@ def compute_osr_metrics(
 ) -> dict:
     """Compute Open-Set Recognition metrics.
 
+    Supports both:
+    - 2D scores (N, num_classes + 1) from compute_openmax_scores.
+    - 1D scores (N,) from anomaly detectors (higher = more unknown).
+
     Args:
-        scores: (N, num_classes + 1) from compute_openmax_scores.
+        scores: (N,) or (N, num_classes + 1) anomaly/scores.
         true_labels: (N,) true integer labels (-1 for unknown).
         known_classes: list of known class indices.
 
     Returns:
-        dict with AUROC, OSCR, accuracy, unknown_recall.
+        dict with AUROC, known_accuracy, unknown_recall.
     """
     from sklearn.metrics import roc_auc_score
 
-    pred_labels = scores.argmax(axis=1)
     is_known_true = np.isin(true_labels, known_classes).astype(float)
-    is_known_pred = (pred_labels < scores.shape[1] - 1).astype(float)
 
-    unknown_score = scores[:, -1]
+    if scores.ndim == 1:
+        unknown_score = scores
+        known_acc = float("nan")
+        unknown_recall = float("nan")
+    else:
+        unknown_score = scores[:, -1]
+        pred_labels = scores.argmax(axis=1)
+        is_known_pred = (pred_labels < scores.shape[1] - 1).astype(float)
+        correct = (pred_labels == true_labels) & (is_known_true == 1)
+        valid_known = is_known_true == 1
+        known_acc = float(correct[valid_known].mean()) if valid_known.any() else float("nan")
+        valid_unknown = is_known_true == 0
+        unknown_recall = float((is_known_pred[valid_unknown] == 0).mean()) if valid_unknown.any() else float("nan")
 
     valid_known = is_known_true == 1
     valid_unknown = is_known_true == 0
@@ -217,11 +231,6 @@ def compute_osr_metrics(
         auroc = float(roc_auc_score(is_known_true, -unknown_score))
     else:
         auroc = float("nan")
-
-    correct = (pred_labels == true_labels) & (is_known_true == 1)
-    known_acc = float(correct[valid_known].mean()) if valid_known.any() else float("nan")
-
-    unknown_recall = float((is_known_pred[valid_unknown] == 0).mean()) if valid_unknown.any() else float("nan")
 
     return {
         "auroc": auroc,

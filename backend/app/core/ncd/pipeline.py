@@ -225,7 +225,7 @@ def run_ncd_pipeline(
 
                 import torch
 
-                from app.core.ncd.extract import extract_embeddings, load_trained_model
+                from app.core.ncd.extract import extract_embeddings, extract_logits, load_trained_model
                 from app.core.ncd.metrics import compute_all_metrics
                 from app.core.ncd.openset import (
                     compute_energy_scores,
@@ -245,10 +245,10 @@ def run_ncd_pipeline(
                     logger.error(f"Best model not found: {best_model_path}")
                     return
                 model = load_trained_model(model_variant, num_classes, best_model_path, torch.device("cpu"))
-                train_emb, train_labels, _ = extract_embeddings(
+                train_emb, train_labels, _, _ = extract_embeddings(
                     model_variant, data_dir, best_model_path, num_classes, batch_size, torch.device("cpu")
                 )
-                test_emb, test_labels, _ = extract_embeddings(
+                test_emb, test_labels, _, _ = extract_embeddings(
                     model_variant, test_dir, best_model_path, num_classes, batch_size, torch.device("cpu")
                 )
                 train_norm = train_emb / (np.linalg.norm(train_emb, axis=1, keepdims=True) + 1e-12)
@@ -256,7 +256,10 @@ def run_ncd_pipeline(
 
                 maha = compute_mahalanobis_scores(train_norm, train_labels, test_norm, num_classes)
                 knn = compute_knn_scores(train_norm, test_norm)
-                energy = compute_energy_scores(test_norm)
+                test_logits = extract_logits(
+                    model_variant, test_dir, best_model_path, num_classes, batch_size, torch.device("cpu")
+                )
+                energy = compute_energy_scores(test_logits)
                 ensemble = compute_ensemble_scores(maha, knn, energy)
 
                 unknown_labels = np.full(len(test_labels), -1)
