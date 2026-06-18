@@ -336,7 +336,6 @@ def _train_head_only(
 ):
     """Train only the classifier head with backbone frozen. Lightweight loop for SupCon Phase 2."""
     from app.core.metrics import MulticlassAccuracy, MulticlassF1Score
-
     from app.core.models.registry import get_registry_entry
 
     model = model.to(device)
