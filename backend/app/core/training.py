@@ -12,8 +12,8 @@ from sklearn.model_selection import StratifiedKFold
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
-from app.core.metrics import MulticlassAccuracy, MulticlassF1Score
 
+from app.core.metrics import MulticlassAccuracy, MulticlassF1Score
 from app.core.models.base import ClassifierModel, ModelConfig
 
 logger = logging.getLogger(__name__)
