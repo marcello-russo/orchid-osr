@@ -111,7 +111,8 @@ def validate_one_epoch(
 
 
 def save_checkpoint(model, optimizer, scheduler, epoch, best_f1, best_val_loss, epochs_no_improve, history, path):
-    """Save training checkpoint for resume."""
+    """Save training checkpoint for resume (atomic: write .tmp then rename)."""
+    tmp_path = path + ".tmp"
     torch.save(
         {
             "epoch": epoch,
@@ -123,8 +124,9 @@ def save_checkpoint(model, optimizer, scheduler, epoch, best_f1, best_val_loss, 
             "epochs_no_improve": epochs_no_improve,
             "history": history,
         },
-        path,
+        tmp_path,
     )
+    os.replace(tmp_path, path)
 
 
 def load_checkpoint(path, model, optimizer, scheduler, device):

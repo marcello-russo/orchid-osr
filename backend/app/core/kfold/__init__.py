@@ -266,7 +266,7 @@ def kfold_experiment(
                     json.dump(fold_metrics, f, indent=2, default=str)
                 logger.info(f"Fold {fold_idx} salvato in: {fold_json_path}")
 
-                for ckpt in ("last_ckpt.pt", "last_ckpt_supcon.pt"):
+                for ckpt in ("last_ckpt.pt", "last_ckpt_supcon.pt", "last_ckpt.pt.tmp", "last_ckpt_supcon.pt.tmp"):
                     path = os.path.join(kfold_dir, ckpt)
                     if os.path.exists(path):
                         os.remove(path)

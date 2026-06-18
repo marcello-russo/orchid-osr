@@ -4,6 +4,7 @@
 import copy
 import logging
 import os
+import os
 
 import numpy as np
 import torch
@@ -243,7 +244,9 @@ def train_supcon(
             }
             if use_prototypes:
                 ckpt_data["prototypes_state_dict"] = prototypes.state_dict()
-            torch.save(ckpt_data, ckpt_path)
+            tmp_path = ckpt_path + ".tmp"
+            torch.save(ckpt_data, tmp_path)
+            os.replace(tmp_path, ckpt_path)
 
         if patience > 0 and epochs_no_improve >= patience:
             logger.info(f"[SupCon] Early stopping at epoch {epoch + 1}")
