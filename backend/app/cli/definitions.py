@@ -81,7 +81,7 @@ EXPERIMENTS = {
         "loss_type": "supcon",
         "description": "SupCon + Spherical Orthogonal Prototypes (SpHOR-style, Exp 8)",
     },
-     9: {
+    9: {
         "name": "exp9_ncd",
         "train_dataset": "clean",
         "test_dataset": "clean",
