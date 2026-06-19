@@ -1,8 +1,0 @@
-{
-  "experiment": 5,
-  "name": "exp5_combined_privato",
-  "train": "combined",
-  "test": "privato",
-  "model_variant": "resnet18",
-  "timestamp": "2026-03-11T08:54:47.745150"
-}
