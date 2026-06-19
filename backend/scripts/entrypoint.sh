@@ -32,7 +32,8 @@ fi
 
 # Sync experiments/models to persistent storage
 if [ -d /data ]; then
-    if [ ! -d /data/experiments ]; then
+    if [ ! -f /data/.experiments_synced ]; then
+        [ -d /data/experiments ] && rm -rf /data/experiments
         echo "Download experiment results in corso..."
         python3 << 'PYEOF'
 from huggingface_hub import HfApi, hf_hub_download
@@ -67,6 +68,7 @@ except:
     pass
 
 print(f'Downloaded {len(file_paths)} files to flat structure')
+import pathlib; pathlib.Path('/data/.experiments_synced').touch()
 PYEOF
 " 2>&1 || echo "Download experiments fallito"
     else
