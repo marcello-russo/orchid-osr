@@ -5,6 +5,8 @@ import os
 
 import numpy as np
 
+from app.core.ncd.openset import evaluate_osr_novel
+
 logger = logging.getLogger(__name__)
 
 
@@ -22,6 +24,8 @@ def run_ncd_pipeline(
     test_dir: str | None = None,
     exclude_classes: list[str] | None = None,
     osr_method: str = "openmax",
+    ncd_mode: bool = False,
+    all_classes: list[str] | None = None,
 ):
     """Full NCD pipeline: extract embeddings → cluster → OSR evaluation.
 
@@ -166,12 +170,62 @@ def run_ncd_pipeline(
         else:
             logger.info(f"\n--- Open-Set Recognition (method={osr_method}) ---")
 
-            if osr_method == "ensemble":
+            if ncd_mode:
+                if all_classes is None:
+                    logger.warning("all_classes required for ncd_mode, skipping OSR")
+                else:
+                    import json
+
+                    import torch
+                    from torch.utils.data import DataLoader
+
+                    from app.core.models import create_transform
+                    from app.core.ncd.extract import load_trained_model
+                    from app.preprocessing.dataset_tool import ImageFolderWithName
+
+                    train_classes = class_names
+                    novel_classes = [c for c in all_classes if c not in train_classes]
+                    if not novel_classes:
+                        logger.warning("No novel class found — skipping OSR evaluation")
+                    else:
+                        novel_name = novel_classes[0]
+                        novel_idx = all_classes.index(novel_name)
+                        logger.info(f"Evaluating OSR for novel class: {novel_name}")
+
+                        results_path = os.path.join(exp_dir, "results.json")
+                        best_fold = 0
+                        if os.path.exists(results_path):
+                            with open(results_path) as f:
+                                best_fold = json.load(f).get("best_fold", 0)
+                        best_model_path = os.path.join(exp_dir, f"best_fold_{best_fold}.pt")
+                        if not os.path.exists(best_model_path):
+                            logger.error(f"Best model not found: {best_model_path}")
+                            return
+
+                        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+                        model = load_trained_model(model_variant, num_classes, best_model_path, device)
+                        transform = create_transform(model_variant)
+                        train_dataset = ImageFolderWithName(data_dir, transform=transform)
+                        test_dataset = ImageFolderWithName(test_dir, transform=transform)
+                        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
+                        test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+
+                        osr_results = evaluate_osr_novel(
+                            model=model,
+                            train_loader=train_loader,
+                            test_loader=test_loader,
+                            novel_label=novel_idx,
+                            device=device,
+                        )
+                        results["osr"] = osr_results
+                        logger.info(f"NCD OSR complete. AUROC: {osr_results['auroc']:.4f}")
+
+            elif osr_method == "ensemble":
                 import json
 
                 import torch
 
-                from app.core.ncd.extract import extract_embeddings, load_trained_model
+                from app.core.ncd.extract import extract_embeddings, extract_logits
                 from app.core.ncd.metrics import compute_all_metrics
                 from app.core.ncd.openset import (
                     compute_energy_scores,
@@ -190,11 +244,10 @@ def run_ncd_pipeline(
                 if not os.path.exists(best_model_path):
                     logger.error(f"Best model not found: {best_model_path}")
                     return
-                model = load_trained_model(model_variant, num_classes, best_model_path, torch.device("cpu"))
-                train_emb, train_labels, _ = extract_embeddings(
+                train_emb, train_labels, _, _ = extract_embeddings(
                     model_variant, data_dir, best_model_path, num_classes, batch_size, torch.device("cpu")
                 )
-                test_emb, test_labels, _ = extract_embeddings(
+                test_emb, test_labels, _, _ = extract_embeddings(
                     model_variant, test_dir, best_model_path, num_classes, batch_size, torch.device("cpu")
                 )
                 train_norm = train_emb / (np.linalg.norm(train_emb, axis=1, keepdims=True) + 1e-12)
@@ -202,7 +255,10 @@ def run_ncd_pipeline(
 
                 maha = compute_mahalanobis_scores(train_norm, train_labels, test_norm, num_classes)
                 knn = compute_knn_scores(train_norm, test_norm)
-                energy = compute_energy_scores(test_norm)
+                test_logits = extract_logits(
+                    model_variant, test_dir, best_model_path, num_classes, batch_size, torch.device("cpu")
+                )
+                energy = compute_energy_scores(test_logits)
                 ensemble = compute_ensemble_scores(maha, knn, energy)
 
                 unknown_labels = np.full(len(test_labels), -1)
@@ -222,20 +278,17 @@ def run_ncd_pipeline(
                     "mean_auroc": float(np.mean([m["auroc"] for m in all_metrics])),
                     "per_class_metrics": all_metrics,
                     "method": "ensemble",
-                    "ensemble_scores": {
-                        "mahalanobis": float(
-                            np.mean(
-                                [
-                                    compute_osr_metrics(
-                                        maha,
-                                        np.full(len(test_labels), -1) if _ else test_labels,
-                                        list(range(num_classes)),
-                                    )["auroc"]
-                                    for _ in [0]
+                    "ablation_maha_auroc": float(
+                        np.mean(
+                            [
+                                compute_osr_metrics(maha, val_labels, [c for c in range(num_classes) if c != lo])[
+                                    "auroc"
                                 ]
-                            )
-                        ),
-                    },
+                                for lo in range(num_classes)
+                                for val_labels in [np.where(test_labels != lo, test_labels, -1)]
+                            ]
+                        )
+                    ),
                 }
                 logger.info(f"Ensemble OSR complete. Mean AUROC: {osr_results['mean_auroc']:.4f}")
             else:

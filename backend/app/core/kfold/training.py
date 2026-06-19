@@ -9,6 +9,8 @@ import shutil
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
+from sklearn.metrics import accuracy_score, f1_score
 from sklearn.model_selection import StratifiedKFold
 from torch.utils.data import DataLoader
 
@@ -330,10 +332,10 @@ def _train_head_only(
     num_classes,
     model_variant=None,
     patience=0,
+    gradient_accumulation_steps=1,
 ):
     """Train only the classifier head with backbone frozen. Lightweight loop for SupCon Phase 2."""
-    from torcheval.metrics import MulticlassAccuracy, MulticlassF1Score
-
+    from app.core.metrics import MulticlassAccuracy, MulticlassF1Score
     from app.core.models.registry import get_registry_entry
 
     model = model.to(device)
@@ -357,12 +359,15 @@ def _train_head_only(
         model.train()
         running_loss = 0.0
         n = 0
-        for inputs, labels, _ in train_loader:
+        optimizer.zero_grad(set_to_none=True)
+        for batch_idx, (inputs, labels, _) in enumerate(train_loader):
             inputs, labels = inputs.to(device, non_blocking=True), labels.to(device, non_blocking=True)
-            optimizer.zero_grad(set_to_none=True)
             loss = criterion(model(inputs), labels)
             loss.backward()
-            optimizer.step()
+            if (batch_idx + 1) % gradient_accumulation_steps == 0 or (batch_idx + 1) == len(train_loader):
+                torch.nn.utils.clip_grad_norm_(head_params, max_norm=2.0)
+                optimizer.step()
+                optimizer.zero_grad(set_to_none=True)
             running_loss += loss.item() * inputs.size(0)
             n += inputs.size(0)
         train_loss = running_loss / max(n, 1)
@@ -437,6 +442,7 @@ def train_fold_supcon(
     repulse_weight=0.05,
     pair_weights=None,
     full_finetune=False,
+    ncd_mode=False,
 ):
     """Two-phase training for SupCon: Phase 1 (contrastive) + Phase 2 (CE fine-tune).
 
@@ -482,7 +488,7 @@ def train_fold_supcon(
         checkpoint_dir=ckpt_dir,
         proj_dim=proj_dim,
         temperature=temperature,
-        patience=patience,
+        patience=patience or 15,
         gradient_accumulation_steps=gradient_accumulation_steps,
         resume=resume,
         optimizer_type=opt_type,
@@ -496,37 +502,99 @@ def train_fold_supcon(
     # Both full_finetune and non-full_finetune branches use the same Phase 2 setup:
     # backbone frozen, head-only training. The full_finetune flag only affects
     # Phase 1 (LoRA rank: 32 vs 8) and NCD evaluation (ensemble OSR).
-    logger.info("  === Phase 2: CE Fine-tuning (head only) ===")
-    for param in model.parameters():
-        param.requires_grad = False
-    model._unfreeze_head()
+    if not ncd_mode:
+        logger.info("  === Phase 2: CE Fine-tuning (head only) ===")
+        for param in model.parameters():
+            param.requires_grad = False
+        model._unfreeze_head()
 
-    head_params = [p for p in model.parameters() if p.requires_grad]
-    logger.info(f"  Trainable params (head only): {sum(p.numel() for p in head_params):,}")
+        head_params = [p for p in model.parameters() if p.requires_grad]
+        logger.info(f"  Trainable params (head only): {sum(p.numel() for p in head_params):,}")
 
-    model, ce_history = _train_head_only(
-        model=model,
-        head_params=head_params,
-        train_loader=train_loader,
-        val_loader=val_loader,
-        num_epochs=ce_epochs,
-        learning_rate=learning_rate,
-        device=device,
-        num_classes=num_classes,
-        model_variant=model_variant,
-        patience=ce_patience,
-    )
+        model, ce_history = _train_head_only(
+            model=model,
+            head_params=head_params,
+            train_loader=train_loader,
+            val_loader=val_loader,
+            num_epochs=ce_epochs,
+            learning_rate=lr,
+            device=device,
+            num_classes=num_classes,
+            model_variant=model_variant,
+            patience=ce_patience,
+            gradient_accumulation_steps=gradient_accumulation_steps,
+        )
 
-    # Save best weights
-    model.save_weights(checkpoint_path)
+        # Save best weights
+        model.save_weights(checkpoint_path)
 
-    best_f1 = max(ce_history["val_f1"])
-    best_epoch = ce_history["val_f1"].index(best_f1) + 1
-    best_acc = ce_history["val_accuracy"][best_epoch - 1]
+        best_f1 = max(ce_history["val_f1"])
+        best_epoch = ce_history["val_f1"].index(best_f1) + 1
+        best_acc = ce_history["val_accuracy"][best_epoch - 1]
+    else:
+        logger.info("  === NCD Mode: skipping Phase 2 (CE head) ===")
+        supcon_history = supcon_metrics.get("supcon_history", {})
+        supcon_val_knn = supcon_history.get("val_knn_acc", [])
+        supcon_best_knn = supcon_metrics["best_knn_acc"]
+        best_f1 = supcon_best_knn
+        best_epoch = supcon_val_knn.index(supcon_best_knn) + 1 if supcon_val_knn else 0
+        best_acc = 0.0
+        ce_history = {"train_loss": [0.0], "val_loss": [0.0], "val_accuracy": [0.0], "val_f1": [0.0]}
+        model.save_weights(checkpoint_path)
+
+    # --- SpHOR prototype probe (if using prototypes) ---
+    sphor_probe_accuracy = None
+    sphor_probe_f1 = None
+
+    if use_prototypes:
+        logger.info("  === SpHOR Prototype Probe (nearest centroid) ===")
+        model.eval()
+        centroids, all_preds, all_labels, embed_dim = {}, [], [], None
+        with torch.no_grad():
+            for inputs, labels, _ in val_loader:
+                inputs = inputs.to(device, non_blocking=True)
+                labels = labels.to(device, non_blocking=True)
+                embeddings = model.get_embeddings(inputs)
+                embeddings = F.normalize(embeddings, p=2, dim=1)
+                if embed_dim is None:
+                    embed_dim = embeddings.shape[-1]
+
+                for i in range(len(labels)):
+                    lbl = labels[i].item()
+                    centroids.setdefault(lbl, []).append(embeddings[i])
+
+        if embed_dim is None:
+            embed_dim = 768
+        proto = torch.zeros(num_classes, embed_dim).to(device)
+        for lbl in range(num_classes):
+            if lbl in centroids:
+                proto[lbl] = torch.stack(centroids[lbl]).mean(dim=0)
+        proto = F.normalize(proto, p=2, dim=1)
+
+        with torch.no_grad():
+            for inputs, labels, _ in val_loader:
+                inputs = inputs.to(device, non_blocking=True)
+                labels = labels.to(device, non_blocking=True)
+                embeddings = model.get_embeddings(inputs)
+                embeddings = F.normalize(embeddings, p=2, dim=1)
+
+                sim = embeddings @ proto.T
+                preds = sim.argmax(dim=1)
+                all_preds.append(preds.cpu())
+                all_labels.append(labels.cpu())
+
+        all_preds = torch.cat(all_preds)
+        all_labels = torch.cat(all_labels)
+
+        sphor_probe_accuracy = accuracy_score(all_labels.numpy(), all_preds.numpy())
+        sphor_probe_f1 = f1_score(all_labels.numpy(), all_preds.numpy(), average="macro")
+        logger.info(f"  SpHOR Probe — Acc: {sphor_probe_accuracy:.4f}, F1: {sphor_probe_f1:.4f}")
 
     fold_metrics = {
         "best_f1": float(best_f1),
         "best_accuracy": float(best_acc),
+        "sphor_probe_accuracy": sphor_probe_accuracy,
+        "sphor_probe_f1": sphor_probe_f1,
         "best_epoch": best_epoch,
         "final_train_loss": float(ce_history["train_loss"][-1]),
         "final_val_loss": float(ce_history["val_loss"][-1]),
@@ -539,8 +607,9 @@ def train_fold_supcon(
         },
     }
 
+    phase_label = "SupCon+NCD" if ncd_mode else "SupCon+CE"
     logger.info(
-        f"  Fold completato (SupCon+CE): F1={best_f1:.4f}, Acc={best_acc:.4f}, "
+        f"  Fold completato ({phase_label}): F1={best_f1:.4f}, Acc={best_acc:.4f}, "
         f"Best epoch={best_epoch}, SupCon KNN={supcon_metrics['best_knn_acc']:.4f}"
     )
 

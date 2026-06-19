@@ -84,7 +84,7 @@ def run_experiment(
     temperature: float = 0.07,
     ce_epochs: int = 50,
     use_prototypes: bool = False,
-    repulse_weight: float = 0.05,
+    repulse_weight: float = 0.01,
     pair_weights: dict | None = None,
     full_finetune: bool = False,
     osr_ensemble: bool = False,
@@ -270,6 +270,7 @@ def run_experiment(
             exclude_classes=config.get("exclude_classes"),
             pair_weights=pair_weights,
             full_finetune=full_finetune,
+            ncd_mode=config.get("ncd_mode", False),
         )
     else:
         from app.core.kfold import kfold_experiment
