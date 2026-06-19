@@ -225,7 +225,7 @@ def run_ncd_pipeline(
 
                 import torch
 
-                from app.core.ncd.extract import extract_embeddings, extract_logits, load_trained_model
+                from app.core.ncd.extract import extract_embeddings, extract_logits
                 from app.core.ncd.metrics import compute_all_metrics
                 from app.core.ncd.openset import (
                     compute_energy_scores,
@@ -244,7 +244,6 @@ def run_ncd_pipeline(
                 if not os.path.exists(best_model_path):
                     logger.error(f"Best model not found: {best_model_path}")
                     return
-                model = load_trained_model(model_variant, num_classes, best_model_path, torch.device("cpu"))
                 train_emb, train_labels, _, _ = extract_embeddings(
                     model_variant, data_dir, best_model_path, num_classes, batch_size, torch.device("cpu")
                 )
@@ -279,20 +278,17 @@ def run_ncd_pipeline(
                     "mean_auroc": float(np.mean([m["auroc"] for m in all_metrics])),
                     "per_class_metrics": all_metrics,
                     "method": "ensemble",
-                    "ensemble_scores": {
-                        "mahalanobis": float(
-                            np.mean(
-                                [
-                                    compute_osr_metrics(
-                                        maha,
-                                        np.full(len(test_labels), -1) if _ else test_labels,
-                                        list(range(num_classes)),
-                                    )["auroc"]
-                                    for _ in [0]
+                    "ablation_maha_auroc": float(
+                        np.mean(
+                            [
+                                compute_osr_metrics(maha, val_labels, [c for c in range(num_classes) if c != lo])[
+                                    "auroc"
                                 ]
-                            )
-                        ),
-                    },
+                                for lo in range(num_classes)
+                                for val_labels in [np.where(test_labels != lo, test_labels, -1)]
+                            ]
+                        )
+                    ),
                 }
                 logger.info(f"Ensemble OSR complete. Mean AUROC: {osr_results['mean_auroc']:.4f}")
             else:

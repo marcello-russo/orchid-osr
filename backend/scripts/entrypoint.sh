@@ -42,7 +42,7 @@ snapshot_download(
     repo_type='model',
     token=os.environ.get('HF_TOKEN'),
     local_dir='/data/experiments',
-    allow_patterns=['*/results.json', '*/config.json', '*/ncd_results.json', '*/ncd_figures/*', 'ncd_comparison.json'],
+            allow_patterns=['**/results.json', '**/config.json', '**/ncd_results.json', '**/ncd_figures/*', 'ncd_comparison.json', '**/*.pt', '**/*_adapter/*'],
 )
 " 2>&1 || echo "Download experiments fallito"
     else

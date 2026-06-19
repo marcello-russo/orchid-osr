@@ -213,8 +213,17 @@ def compute_osr_metrics(
 
     if scores.ndim == 1:
         unknown_score = scores
-        known_acc = float("nan")
-        unknown_recall = float("nan")
+        from sklearn.metrics import roc_curve
+
+        fpr, tpr, thresholds = roc_curve(is_known_true, -scores)
+        youden = tpr - fpr
+        best_idx = youden.argmax()
+        best_thresh = thresholds[best_idx]
+        pred_known = (-scores >= best_thresh).astype(float)
+        valid_known = is_known_true == 1
+        known_acc = float((pred_known[valid_known] == 1).mean()) if valid_known.any() else float("nan")
+        valid_unknown = is_known_true == 0
+        unknown_recall = float((pred_known[valid_unknown] == 0).mean()) if valid_unknown.any() else float("nan")
     else:
         unknown_score = scores[:, -1]
         pred_labels = scores.argmax(axis=1)
