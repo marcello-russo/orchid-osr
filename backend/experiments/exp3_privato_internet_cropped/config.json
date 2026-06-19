@@ -1,8 +1,0 @@
-{
-  "experiment": 3,
-  "name": "exp3_privato_internet_cropped",
-  "train": "privato",
-  "test": "internet_cropped",
-  "model_variant": "resnet18",
-  "timestamp": "2026-03-10T22:10:10.526940"
-}

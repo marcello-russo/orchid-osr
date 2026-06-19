@@ -8,6 +8,7 @@ archive/
 !backend/app/core/models/
 # Backend data dirs
 backend/dataset*/
+backend/experiments/
 backend/inference*/
 backend/logs*/
 backend/models*/
