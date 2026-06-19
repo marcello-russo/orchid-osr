@@ -53,10 +53,11 @@ def kfold_experiment(
     temperature=0.07,
     ce_epochs=50,
     use_prototypes=False,
-    repulse_weight=0.05,
+    repulse_weight=0.01,
     exclude_classes=None,
     pair_weights=None,
     full_finetune=False,
+    ncd_mode=False,
 ):
     """K-fold cross-validation con augmentation bilanciata per fold."""
     from app.preprocessing.reproducibility import set_seed
@@ -98,6 +99,7 @@ def kfold_experiment(
             "ce_epochs": ce_epochs if loss_type == "supcon" else None,
             "use_prototypes": use_prototypes if loss_type == "supcon" else None,
             "full_finetune": full_finetune if loss_type == "supcon" else None,
+            "ncd_mode": ncd_mode if loss_type == "supcon" else None,
             "timestamp": datetime.now().isoformat(),
         }
         with open(config_path, "w") as f:
@@ -230,6 +232,7 @@ def kfold_experiment(
                         repulse_weight=repulse_weight,
                         pair_weights=pair_weights,
                         full_finetune=full_finetune,
+                        ncd_mode=ncd_mode,
                     )
                 else:
                     model, fold_metrics = train_fold(
@@ -263,7 +266,7 @@ def kfold_experiment(
                     json.dump(fold_metrics, f, indent=2, default=str)
                 logger.info(f"Fold {fold_idx} salvato in: {fold_json_path}")
 
-                for ckpt in ("last_ckpt.pt", "last_ckpt_supcon.pt"):
+                for ckpt in ("last_ckpt.pt", "last_ckpt_supcon.pt", "last_ckpt.pt.tmp", "last_ckpt_supcon.pt.tmp"):
                     path = os.path.join(kfold_dir, ckpt)
                     if os.path.exists(path):
                         os.remove(path)

@@ -6,10 +6,8 @@ EXP_BASE = os.path.abspath(EXP_BASE)
 OUTPUT = os.path.join(EXP_BASE, "ncd_comparison.json")
 
 EXPERIMENTS = [
-    ("exp6_clean_split", "Exp 6 (CE)"),
-    ("exp7_supcon", "Exp 7 (SupCon)"),
     ("exp8_sphor", "Exp 8 (SpHOR)"),
-    ("exp9_ncd", "Exp 9 (NCD)"),
+    ("exp10_mgh_ncd", "Exp 10 (MGH-NCD)"),
 ]
 
 MODELS = ["resnet18", "resnet50", "convnext_tiny", "convnext_small", "dinov2_small", "dinov2_base"]

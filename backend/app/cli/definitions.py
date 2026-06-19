@@ -88,6 +88,7 @@ EXPERIMENTS = {
         "num_classes": 6,
         "test_classes": TRAIN_CLASSES,
         "loss_type": "supcon",
+        "ncd_mode": True,
         "description": "SpHOR with O. sphegodes_Napoli as hidden novel class (NCD)",
     },
     10: {
@@ -97,6 +98,7 @@ EXPERIMENTS = {
         "num_classes": 6,
         "test_classes": TRAIN_CLASSES,
         "loss_type": "supcon",
+        "ncd_mode": True,
         "description": (
             "MGH-NCD: Multi-Granularity Hard-negative Novel Class Discovery. "
             "6 known species; O. sphegodes_Napoli is the novel class (test only)."

@@ -176,11 +176,11 @@ Examples:
         help="Tag suffix for output directory (e.g. --tag 100ep creates exp4_..._100ep/)",
     )
     parser.add_argument(
-        "--proj-dim", type=int, default=256, help="SupCon projection head dimension (exp 7+, default: 256)"
+        "--proj-dim", type=int, default=128, help="SupCon projection head dimension (exp 7+, default: 128)"
     )
     parser.add_argument("--temperature", type=float, default=0.07, help="SupCon temperature (exp 7+, default: 0.07)")
     parser.add_argument(
-        "--ce-epochs", type=int, default=150, help="CE fine-tune epochs after SupCon (exp 7+, default: 150)"
+        "--ce-epochs", type=int, default=50, help="CE fine-tune epochs after SupCon (exp 7+, default: 50)"
     )
     parser.add_argument(
         "--sphor",

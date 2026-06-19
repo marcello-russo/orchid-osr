@@ -200,7 +200,7 @@ export function ExperimentDetailPage() {
           >
             Charts
           </button>
-          {(expNum === 8 || expNum === 9) && (
+          {(expNum === 8 || expNum === 9 || expNum === 10) && (
             <button
               onClick={() => setActiveTab("ncd")}
               className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${
@@ -235,7 +235,7 @@ export function ExperimentDetailPage() {
         </div>
       ))}
 
-      {!isCompareMode && activeTab === "ncd" && (expNum === 8 || expNum === 9) && (
+      {!isCompareMode && activeTab === "ncd" && (expNum === 8 || expNum === 9 || expNum === 10) && (
         <NcdDetail modelVariant={summary.model_variant ?? config.model_variant ?? ""} exp={expNum} />
       )}
     </div>
@@ -437,21 +437,21 @@ function NcdDetail({ modelVariant, exp }: { modelVariant: string; exp?: number }
 
   return (
     <div className="space-y-8 p-4">
-      {/* NCD figures — only for exp9 */}
-      {isExp9 && (
+      {/* NCD figures */}
+      {(exp === 8 || exp === 9 || exp === 10) && (
         <section>
           <h3 className="text-lg font-bold mb-4">NCD Figures</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {["tsne_known_vs_unknown.png", "auroc_per_class.png"].map((fig) => (
               <div key={fig} className="rounded-xl border border-border/50 bg-background/50 p-4">
-                <img src={fetchNcdFigure(modelVariant, fig, 9)} alt={fig} className="w-full rounded-lg" />
+                <img src={fetchNcdFigure(modelVariant, fig, exp ?? 8)} alt={fig} className="w-full rounded-lg" />
               </div>
             ))}
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             {["oscr_curve.png", "clustering_comparison.png"].map((fig) => (
               <div key={fig} className="rounded-xl border border-border/50 bg-background/50 p-4">
-                <img src={fetchNcdFigure(modelVariant, fig, 9)} alt={fig} className="w-full rounded-lg" />
+                <img src={fetchNcdFigure(modelVariant, fig, exp ?? 8)} alt={fig} className="w-full rounded-lg" />
               </div>
             ))}
           </div>

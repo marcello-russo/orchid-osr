@@ -27,6 +27,18 @@ def load_trained_model(
     return model
 
 
+def _create_loader(model_variant: str, data_dir: str, batch_size: int = 8) -> tuple[DataLoader, dict[int, str]]:
+    """Create a DataLoader and class mapping for a dataset."""
+    from app.core.models import create_transform
+    from app.preprocessing.dataset_tool import ImageFolderWithName
+
+    transform = create_transform(model_variant)
+    dataset = ImageFolderWithName(data_dir, transform=transform)
+    loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
+    class_to_name = {v: k for k, v in dataset.class_to_idx.items()}
+    return loader, class_to_name
+
+
 def extract_embeddings(
     model_variant: str,
     data_dir: str,
@@ -37,13 +49,7 @@ def extract_embeddings(
 ) -> tuple[np.ndarray, np.ndarray, list[str], list[str]]:
     device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = load_trained_model(model_variant, num_classes, best_model_path, device)
-    from app.core.models import create_transform
-    from app.preprocessing.dataset_tool import ImageFolderWithName
-
-    transform = create_transform(model_variant)
-    dataset = ImageFolderWithName(data_dir, transform=transform)
-    loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
-    class_to_name = {v: k for k, v in dataset.class_to_idx.items()}
+    loader, class_to_name = _create_loader(model_variant, data_dir, batch_size)
 
     all_embeddings = []
     all_labels = []
@@ -63,6 +69,28 @@ def extract_embeddings(
     embeddings = np.concatenate(all_embeddings, axis=0)
     labels = np.array(all_labels)
     return embeddings, labels, all_paths, all_species
+
+
+def extract_logits(
+    model_variant: str,
+    data_dir: str,
+    best_model_path: str,
+    num_classes: int,
+    batch_size: int = 8,
+    device: torch.device | None = None,
+) -> np.ndarray:
+    device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = load_trained_model(model_variant, num_classes, best_model_path, device)
+    loader, _ = _create_loader(model_variant, data_dir, batch_size)
+
+    all_logits = []
+    with torch.no_grad():
+        for inputs, labels, paths in loader:
+            inputs = inputs.to(device, non_blocking=True)
+            logits = model(inputs)
+            all_logits.append(logits.cpu().numpy())
+
+    return np.concatenate(all_logits, axis=0)
 
 
 def compute_tsne(
