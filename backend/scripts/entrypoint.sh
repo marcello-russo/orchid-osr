@@ -34,16 +34,40 @@ fi
 if [ -d /data ]; then
     if [ ! -d /data/experiments ]; then
         echo "Download experiment results in corso..."
-        python3 -c "
-from huggingface_hub import snapshot_download
-import os
-snapshot_download(
-    repo_id='marcellorusso/orchid-ncd-models',
-    repo_type='model',
-    token=os.environ.get('HF_TOKEN'),
-    local_dir='/data/experiments',
-            allow_patterns=['**/results.json', '**/config.json', '**/ncd_results.json', '**/ncd_figures/*', 'ncd_comparison.json', '**/*.pt', '**/*_adapter/*'],
-)
+        python3 << 'PYEOF'
+from huggingface_hub import HfApi, hf_hub_download
+import os, shutil
+
+api = HfApi(token=os.environ.get('HF_TOKEN'))
+REPO = 'marcellorusso/orchid-ncd-models'
+DST = '/data/experiments'
+
+all_items = list(api.list_repo_tree(REPO, recursive=True))
+file_paths = [i.path for i in all_items if '.' in i.path.split('/')[-1]]
+
+for src in file_paths:
+    parts = src.split('/')
+    if len(parts) < 2:
+        continue
+    if parts[0] in ('old',):
+        continue
+    # Flat path: strip the first prefix directory
+    # e.g. 'exp7_supcon/exp7_supcon_dinov2_small/results.json' -> 'exp7_supcon_dinov2_small/results.json'
+    flat = '/'.join(parts[1:])
+    dst = os.path.join(DST, flat)
+    os.makedirs(os.path.dirname(dst), exist_ok=True)
+    downloaded = hf_hub_download(REPO, src, token=os.environ.get('HF_TOKEN'))
+    shutil.copy2(downloaded, dst)
+
+# ncd_comparison.json at root
+try:
+    p = hf_hub_download(REPO, 'ncd_comparison.json', token=os.environ.get('HF_TOKEN'))
+    shutil.copy2(p, os.path.join(DST, 'ncd_comparison.json'))
+except:
+    pass
+
+print(f'Downloaded {len(file_paths)} files to flat structure')
+PYEOF
 " 2>&1 || echo "Download experiments fallito"
     else
         echo "Experiments gia in /data"
