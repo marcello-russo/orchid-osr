@@ -2,10 +2,10 @@ import json
 import os
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 
-from app.api.deps import require_role
+
 from app.config import settings
 
 router = APIRouter(prefix="/api/ncd", tags=["ncd"])
@@ -27,7 +27,7 @@ def _get_exp_dir(model_variant: str, exp_num: int = 8) -> str | None:
 
 
 @router.get("/{model_variant}/results")
-async def get_ncd_results(model_variant: str, exp: int = 8, user=Depends(require_role("user"))):
+async def get_ncd_results(model_variant: str, exp: int = 8):
     exp_dir = _get_exp_dir(model_variant, exp)
     if not exp_dir:
         raise HTTPException(404, f"Exp {exp} model '{model_variant}' not found")
