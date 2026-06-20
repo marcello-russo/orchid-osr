@@ -8,7 +8,7 @@ on:
 
 jobs:
   backend:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: backend
@@ -24,7 +24,7 @@ jobs:
       - run: pytest -x -q
 
   docker:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: bash -n backend/scripts/entrypoint.sh
@@ -42,7 +42,7 @@ jobs:
           fi
 
   frontend:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: frontend
