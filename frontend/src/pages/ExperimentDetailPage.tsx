@@ -3,7 +3,10 @@ import { useParams, Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, ChevronLeft, ChevronRight, GitCompare } from "lucide-react";
-import { fetchNcdResults, fetchNcdFigure, fetchExperimentLog } from "@/lib/api";
+import { fetchNcdResults, fetchExperimentLog } from "@/lib/api";
+import { AblationChart, ClusteringComparisonChart, PerClassAurocChart } from "@/features/explorer/components/NcdCharts";
+import { Scatter2D } from "@/features/embeddings/Scatter2D";
+import { Scatter3D } from "@/features/embeddings/Scatter3D";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -462,42 +465,129 @@ function BaselineResults({ metrics }: { metrics: TestMetrics }) {
 
 /* ---- NCD Detail ---- */
 
+const _SPECIES_PALETTE: Record<string, string> = {
+  "O. exaltata": "#3B82F6", "O. garganica": "#D97706", "O. incubacea": "#10B981",
+  "O. majellensis": "#8B5CF6", "O. sphegodes": "#EF4444", "O. sphegodes_Palena": "#EC4899",
+  "O. sphegodes_Napoli": "#14B8A6", "unknown": "#666666",
+};
+
 function NcdDetail({ modelVariant, exp }: { modelVariant: string; exp?: number }) {
   const { t } = useTranslation();
+  const [tsneMode, setTsneMode] = useState<"2d" | "3d">("2d");
   const { data, isLoading, error } = useQuery({
     queryKey: ["ncd", modelVariant, exp ?? 8],
     queryFn: () => fetchNcdResults(modelVariant, exp ?? 8),
     staleTime: 5 * 60 * 1000,
     enabled: modelVariant.length > 0,
   });
-  const isExp9 = exp === 9;
-  const majellensis = data?.openset.per_class?.find((pc) => pc.left_out.toLowerCase().includes("majellensis"));
 
   if (isLoading) return <div className="flex justify-center py-8"><div className="size-5 rounded-full border-2 border-primary border-t-transparent animate-spin" /></div>;
   if (error || !data) return <p className="text-sm text-muted-foreground text-center py-8">{t("experiment_detail.ncd_no_data")}</p>;
 
+  const openset = data.openset ?? {};
+  const clustering = data.clustering ?? {};
+  const meanAuroc = openset.mean_auroc ?? 0;
+  const novelClass = openset.novel_class;
+  const napoliAuroc = novelClass?.auroc;
+  const ablation = openset.ablation;
+  const perClass = openset.per_class_metrics ?? [];
+  const tsne2d = data.tsne_2d as [number, number][] | undefined;
+  const tsne3d = data.tsne_3d as [number, number, number][] | undefined;
+  const labels = data.novel_class_label as number[] | undefined;
+
+  // Compute best clustering ACC
+  const bestClustering = Object.values(clustering).reduce(
+    (best: any, c: any) => (c.acc && c.acc > (best.acc ?? 0) ? c : best), {}
+  );
+  const silhouette = clustering.kmeans_best?.silhouette ?? null;
+
+  // Build scatter points for t-SNE
+  const scatterPoints = tsne2d?.map((p, i) => ({
+    x: p[0], y: p[1], species: labels?.[i] !== undefined ? `Class ${labels[i]}` : "unknown", idx: i,
+  })) ?? [];
+
+  const speciesColors = Object.fromEntries(
+    [...new Set(scatterPoints.map((p) => p.species))].map((s) => [s, _SPECIES_PALETTE[s] ?? "#666"])
+  );
+
   return (
     <div className="space-y-8 p-4">
-      {/* NCD figures */}
-      {(exp === 8 || exp === 9 || exp === 10) && (
-        <section>
-          <h3 className="text-lg font-bold mb-4">NCD Figures</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {["tsne_known_vs_unknown.png", "auroc_per_class.png"].map((fig) => (
-              <div key={fig} className="rounded-xl border border-border/50 bg-background/50 p-4">
-                <img src={fetchNcdFigure(modelVariant, fig, exp ?? 8)} alt={fig} className="w-full rounded-lg" />
-              </div>
-            ))}
+      {/* KPI Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="rounded-xl border border-border/40 bg-background p-4 text-center">
+          <div className="text-xs text-muted-foreground uppercase font-bold mb-1">{t("experiment_detail.ncd_auroc")}</div>
+          <div className={`text-2xl font-black ${meanAuroc < 0.5 ? "text-red-500" : "text-green-500"}`}>
+            {(meanAuroc * 100).toFixed(1)}%
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-            {["oscr_curve.png", "clustering_comparison.png"].map((fig) => (
-              <div key={fig} className="rounded-xl border border-border/50 bg-background/50 p-4">
-                <img src={fetchNcdFigure(modelVariant, fig, exp ?? 8)} alt={fig} className="w-full rounded-lg" />
-              </div>
-            ))}
+          <div className="text-[10px] text-muted-foreground mt-0.5">{t("experiment_detail.ncd_ensemble")}</div>
+        </div>
+        {napoliAuroc !== undefined && (
+          <div className="rounded-xl border-2 border-red-500/30 bg-red-500/5 p-4 text-center">
+            <div className="text-xs text-muted-foreground uppercase font-bold mb-1">
+              {t("experiment_detail.ncd_napoli_auroc")}
+              <span className="ml-1.5 inline-block bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
+                {t("experiment_detail.ncd_novel_label")}
+              </span>
+            </div>
+            <div className="text-2xl font-black text-red-500">{(napoliAuroc * 100).toFixed(1)}%</div>
+            <div className="text-[10px] text-muted-foreground mt-0.5">vs 50% random</div>
+          </div>
+        )}
+        <div className="rounded-xl border border-border/40 bg-background p-4 text-center">
+          <div className="text-xs text-muted-foreground uppercase font-bold mb-1">{t("experiment_detail.ncd_best_acc")}</div>
+          <div className="text-2xl font-black text-green-500">
+            {bestClustering.acc ? `${(bestClustering.acc * 100).toFixed(1)}%` : "—"}
+          </div>
+          <div className="text-[10px] text-muted-foreground mt-0.5">{bestClustering.k ? `k=${bestClustering.k}` : ""}</div>
+        </div>
+        <div className="rounded-xl border border-border/40 bg-background p-4 text-center">
+          <div className="text-xs text-muted-foreground uppercase font-bold mb-1">{t("experiment_detail.ncd_silhouette")}</div>
+          <div className={`text-2xl font-black ${(silhouette ?? 0) > 0.1 ? "text-yellow-500" : "text-muted-foreground"}`}>
+            {silhouette !== null ? silhouette.toFixed(3) : "—"}
+          </div>
+          <div className="text-[10px] text-muted-foreground mt-0.5">
+            {clustering.kmeans_best?.k ? `k=${clustering.kmeans_best.k}` : ""}
+          </div>
+        </div>
+      </div>
+
+      {/* Ablation chart */}
+      {ablation && <AblationChart ablation={ablation} />}
+
+      {/* t-SNE viewer */}
+      {scatterPoints.length > 0 && (
+        <section>
+          <h3 className="text-lg font-bold mb-4">
+            t-SNE
+            <div className="inline-flex ml-3 gap-1">
+              <button onClick={() => setTsneMode("2d")}
+                className={`px-2 py-0.5 text-xs rounded font-bold ${tsneMode === "2d" ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+                {t("experiment_detail.ncd_tsne_toggle_2d")}
+              </button>
+              <button onClick={() => setTsneMode("3d")}
+                className={`px-2 py-0.5 text-xs rounded font-bold ${tsneMode === "3d" ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+                {t("experiment_detail.ncd_tsne_toggle_3d")}
+              </button>
+            </div>
+          </h3>
+          <div className="rounded-xl border border-border/50 bg-background/50 p-4">
+            {tsneMode === "2d" ? (
+              <Scatter2D points={scatterPoints} speciesColors={speciesColors} />
+            ) : tsne3d ? (
+              <Scatter3D
+                points={scatterPoints.map((p, i) => ({ ...p, z: tsne3d[i]?.[2] ?? 0 }))}
+                species={[...new Set(scatterPoints.map((p) => p.species))]}
+                speciesColors={speciesColors}
+              />
+            ) : (
+              <p className="text-sm text-muted-foreground">3D t-SNE not available</p>
+            )}
           </div>
         </section>
       )}
+
+      {/* Clustering comparison chart */}
+      {Object.keys(clustering).length > 0 && <ClusteringComparisonChart clustering={clustering} />}
 
       {/* Clustering table */}
       <section>
@@ -516,7 +606,7 @@ function NcdDetail({ modelVariant, exp }: { modelVariant: string; exp?: number }
               </tr>
             </thead>
             <tbody className="divide-y divide-border/30">
-              {Object.entries(data.clustering).map(([key, val]) => (
+              {Object.entries(clustering).map(([key, val]: [string, any]) => (
                 <tr key={key}>
                   <td className="py-2 px-4 font-bold">{key}</td>
                   <td className="text-center py-2 px-2 font-mono">{val.acc?.toFixed(4) ?? "—"}</td>
@@ -536,52 +626,23 @@ function NcdDetail({ modelVariant, exp }: { modelVariant: string; exp?: number }
       <section>
         <h3 className="text-lg font-bold mb-4">{t("experiment_detail.ncd_osr")}</h3>
 
-        {/* Metric cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <div className="rounded-xl border border-border/40 bg-background p-4 text-center">
-            <div className="text-xs text-muted-foreground uppercase font-bold mb-1">{t("experiment_detail.ncd_auroc")}</div>
-            <div className="text-2xl font-black">{(data.openset.mean_auroc * 100).toFixed(1)}%</div>
-            {isExp9 && <div className="text-xs text-muted-foreground mt-1">Random chance: 50%</div>}
-          </div>
-          {data.openset.baselines?.softmax_threshold && (
-            <div className="rounded-xl border border-border/40 bg-background p-4 text-center">
-              <div className="text-xs text-muted-foreground uppercase font-bold mb-1">{t("experiment_detail.ncd_baseline_softmax")}</div>
-              <div className="text-2xl font-black">{(data.openset.baselines.softmax_threshold.mean_auroc * 100).toFixed(1)}%</div>
-            </div>
-          )}
-          {data.openset.baselines?.softmax_threshold && (
-            <div className="rounded-xl border border-border/40 bg-background p-4 text-center">
-              <div className="text-xs text-muted-foreground uppercase font-bold mb-1">{t("experiment_detail.ncd_improvement")}</div>
-              <div className="text-2xl font-black">{
-                ((data.openset.mean_auroc - data.openset.baselines.softmax_threshold.mean_auroc) * 100).toFixed(1)
-              }%</div>
-            </div>
-          )}
-          {isExp9 && majellensis && (
-            <div className="rounded-xl border-2 border-red-500/30 bg-red-500/5 p-4 text-center">
-              <div className="text-xs text-muted-foreground uppercase font-bold mb-1">O. majellensis AUROC</div>
-              <div className="text-2xl font-black">{(majellensis.auroc * 100).toFixed(1)}%</div>
-              <div className={`text-xs mt-1 ${majellensis.auroc > 0.5 ? "text-green-600" : "text-red-500"}`}>
-                {majellensis.auroc > 0.5 ? "Above random" : "Below random (inverted)"}
-              </div>
-            </div>
-          )}
-        </div>
+        {/* AUROC per class chart */}
+        <PerClassAurocChart perClass={perClass} napoliAuroc={napoliAuroc} />
 
         {/* Per-class table */}
-        {data.openset.per_class && data.openset.per_class.length > 0 && (
+        {perClass.length > 0 && (
           <div className="overflow-x-auto rounded-xl border border-border/50 mt-4">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border/50 text-xs uppercase text-muted-foreground font-bold">
-                  <th className="text-left py-3 px-4">Class</th>
+                  <th className="text-left py-3 px-4">{t("experiment_detail.ncd_class")}</th>
                   <th className="text-center py-3 px-2">AUROC</th>
-                  <th className="text-center py-3 px-2">Known Acc</th>
-                  <th className="text-center py-3 px-2">Unknown Recall</th>
+                  <th className="text-center py-3 px-2">{t("experiment_detail.ncd_known_acc")}</th>
+                  <th className="text-center py-3 px-2">{t("experiment_detail.ncd_unknown_recall")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/30">
-                {data.openset.per_class.map((pc) => (
+                {perClass.map((pc: any) => (
                   <tr key={pc.left_out}
                     className={pc.left_out.toLowerCase().includes("majellensis") ? "bg-red-500/10 font-bold" : ""}>
                     <td className="py-2 px-4 font-bold">{pc.left_out}</td>
@@ -590,6 +651,21 @@ function NcdDetail({ modelVariant, exp }: { modelVariant: string; exp?: number }
                     <td className="text-center py-2 px-2 font-mono">{(pc.unknown_recall * 100).toFixed(1)}%</td>
                   </tr>
                 ))}
+                {napoliAuroc !== undefined && (
+                  <tr className="bg-red-500/10 font-bold">
+                    <td className="py-2 px-4 font-bold">
+                      O. sphegodes_Napoli
+                      <span className="ml-1.5 inline-block bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
+                        {t("experiment_detail.ncd_novel_label")}
+                      </span>
+                    </td>
+                    <td className="text-center py-2 px-2 font-mono text-red-500">{(napoliAuroc * 100).toFixed(1)}%</td>
+                    <td className="text-center py-2 px-2 font-mono">—</td>
+                    <td className="text-center py-2 px-2 font-mono">
+                      {novelClass?.unknown_recall ? `${(novelClass.unknown_recall * 100).toFixed(1)}%` : "—"}
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -599,12 +675,40 @@ function NcdDetail({ modelVariant, exp }: { modelVariant: string; exp?: number }
   );
 }
 
-function MetricCard({ label, value }: { label: string; value: number }) {
+/* ---- Logs Panel ---- */
+function LogsPanel({ experimentId }: { experimentId: string }) {
+  const { t } = useTranslation();
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["log", experimentId],
+    queryFn: () => fetchExperimentLog(experimentId),
+    staleTime: 60 * 1000,
+  });
+
+  if (isLoading) return <div className="flex justify-center py-8"><div className="size-5 rounded-full border-2 border-primary border-t-transparent animate-spin" /></div>;
+  if (error) return <p className="text-sm text-muted-foreground text-center py-8">{t("experiment_detail.ncd_no_data")}</p>;
+  if (!data?.available) return (
+    <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+      <p className="text-sm">{t("experiment_detail.log_unavailable")}</p>
+    </div>
+  );
+
   return (
-    <Card>
-      <CardContent className="pt-4 pb-3 text-center">
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="text-xl font-bold text-primary">{(value * 100).toFixed(2)}%</p>
+    <div className="p-4">
+      <div className="flex justify-between items-center mb-2">
+        <p className="text-xs text-muted-foreground">{t("experiment_detail.log_size")} {(data.size / 1024).toFixed(1)} KB</p>
+        <button
+          onClick={() => navigator.clipboard.writeText(data.log ?? "")}
+          className="text-xs px-2 py-1 rounded bg-muted hover:bg-muted/80"
+        >
+          {t("experiment_detail.log_copy")}
+        </button>
+      </div>
+      <pre className="text-xs leading-relaxed bg-black/5 dark:bg-white/5 p-4 rounded-xl overflow-auto max-h-[600px] font-mono">
+        {data.log}
+      </pre>
+    </div>
+  );
+}
       </CardContent>
     </Card>
   );

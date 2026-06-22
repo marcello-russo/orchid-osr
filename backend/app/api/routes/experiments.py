@@ -126,15 +126,16 @@ async def get_experiment(experiment_id: str):
 
 @router.get("/{experiment_id}/log")
 async def get_experiment_log(experiment_id: str):
-    """Get the training log file for an experiment."""
+    """Get the training log file for an experiment.
+    On HF Space (no log files synced), returns available=false."""
     experiment_id = _validate_id(experiment_id)
     exp_dir = _get_experiments_dir() / experiment_id
     log_file = exp_dir / f"{experiment_id}.log"
     if not log_file.exists():
-        raise HTTPException(404, "Log file not found")
+        return {"log": None, "size": 0, "available": False}
     with open(log_file) as f:
         content = f.read()
-    return {"log": content, "size": len(content)}
+    return {"log": content, "size": len(content), "available": True}
 
 
 @router.get("/{experiment_id}/folds/{fold_number}", response_model=FoldDataResponse)
