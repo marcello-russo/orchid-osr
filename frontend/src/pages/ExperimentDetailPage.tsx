@@ -257,35 +257,6 @@ export function ExperimentDetailPage() {
   );
 }
 
-/* ---- Logs Panel ---- */
-function LogsPanel({ experimentId }: { experimentId: string }) {
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["log", experimentId],
-    queryFn: () => fetchExperimentLog(experimentId),
-    staleTime: 60 * 1000,
-  });
-
-  if (isLoading) return <div className="flex justify-center py-8"><div className="size-5 rounded-full border-2 border-primary border-t-transparent animate-spin" /></div>;
-  if (error || !data) return <p className="text-sm text-muted-foreground text-center py-8">Log non disponibile</p>;
-
-  return (
-    <div className="p-4">
-      <div className="flex justify-between items-center mb-2">
-        <p className="text-xs text-muted-foreground">Size: {(data.size / 1024).toFixed(1)} KB</p>
-        <button
-          onClick={() => navigator.clipboard.writeText(data.log)}
-          className="text-xs px-2 py-1 rounded bg-muted hover:bg-muted/80"
-        >
-          Copy
-        </button>
-      </div>
-      <pre className="text-xs leading-relaxed bg-black/5 dark:bg-white/5 p-4 rounded-xl overflow-auto max-h-[600px] font-mono">
-        {data.log}
-      </pre>
-    </div>
-  );
-}
-
 /* ---- Chart Carousel ---- */
 
 interface ChartCarouselProps {
@@ -502,11 +473,11 @@ function NcdDetail({ modelVariant, exp }: { modelVariant: string; exp?: number }
   const silhouette = clustering.kmeans_best?.silhouette ?? null;
 
   // Build scatter points for t-SNE — map known classes to species names
-  const CLASS_NAMES = ["O. exaltata", "O. garganica", "O. incubacea", "O. majellensis", "O. sphegodes", "O. sphegodes_Palena"];
+  const classNames: string[] = data.class_names ?? [];
   const scatterPoints = tsne2d?.map((p, i) => ({
     x: p[0], y: p[1],
-    species: labels?.[i] !== undefined && labels[i] >= 0 && labels[i] < CLASS_NAMES.length
-      ? CLASS_NAMES[labels[i]] : "O. sphegodes_Napoli",
+    species: labels?.[i] !== undefined && labels[i] >= 0 && labels[i] < classNames.length
+      ? classNames[labels[i]] : "O. sphegodes_Napoli",
     idx: i,
   })) ?? [];
 
