@@ -3,7 +3,7 @@ import { useParams, Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, ChevronLeft, ChevronRight, GitCompare } from "lucide-react";
-import { fetchNcdResults, fetchNcdFigure } from "@/lib/api";
+import { fetchNcdResults, fetchNcdFigure, fetchExperimentLog } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -210,6 +210,14 @@ export function ExperimentDetailPage() {
               {t("experiment_detail.ncd_tab")}
             </button>
           )}
+          <button
+            onClick={() => setActiveTab("logs")}
+            className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${
+              activeTab === "logs" ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"
+            }`}
+          >
+            Logs
+          </button>
         </div>
       )}
 
@@ -238,6 +246,39 @@ export function ExperimentDetailPage() {
       {!isCompareMode && activeTab === "ncd" && (expNum === 8 || expNum === 9 || expNum === 10) && (
         <NcdDetail modelVariant={summary.model_variant ?? config.model_variant ?? ""} exp={expNum} />
       )}
+
+      {!isCompareMode && activeTab === "logs" && id && (
+        <LogsPanel experimentId={id} />
+      )}
+    </div>
+  );
+}
+
+/* ---- Logs Panel ---- */
+function LogsPanel({ experimentId }: { experimentId: string }) {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["log", experimentId],
+    queryFn: () => fetchExperimentLog(experimentId),
+    staleTime: 60 * 1000,
+  });
+
+  if (isLoading) return <div className="flex justify-center py-8"><div className="size-5 rounded-full border-2 border-primary border-t-transparent animate-spin" /></div>;
+  if (error || !data) return <p className="text-sm text-muted-foreground text-center py-8">Log non disponibile</p>;
+
+  return (
+    <div className="p-4">
+      <div className="flex justify-between items-center mb-2">
+        <p className="text-xs text-muted-foreground">Size: {(data.size / 1024).toFixed(1)} KB</p>
+        <button
+          onClick={() => navigator.clipboard.writeText(data.log)}
+          className="text-xs px-2 py-1 rounded bg-muted hover:bg-muted/80"
+        >
+          Copy
+        </button>
+      </div>
+      <pre className="text-xs leading-relaxed bg-black/5 dark:bg-white/5 p-4 rounded-xl overflow-auto max-h-[600px] font-mono">
+        {data.log}
+      </pre>
     </div>
   );
 }
