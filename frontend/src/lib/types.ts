@@ -302,9 +302,12 @@ export interface NcdOsrResults {
   mean_auroc: number;
   oscr_curve: { reject_rate: number; known_acc: number }[];
   per_class: NcdOsrPerClass[];
+  per_class_metrics?: NcdOsrPerClass[];
   baselines?: {
     softmax_threshold: { mean_auroc: number };
   };
+  novel_class?: NcdOsrPerClass & { left_out: string };
+  ablation?: Record<string, number>;
 }
 
 export interface NcdResults {
@@ -312,6 +315,10 @@ export interface NcdResults {
   exp: number;
   clustering: Record<string, NcdClusteringResult>;
   openset: NcdOsrResults;
+  class_names?: string[];
+  tsne_2d?: number[][];
+  tsne_3d?: number[][];
+  novel_class_label?: number[];
 }
 
 export interface NcdComparisonEntry {
