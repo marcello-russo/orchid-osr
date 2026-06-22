@@ -1,4 +1,5 @@
 # backend/app/api/routes/experiments.py
+import datetime
 import json
 from pathlib import Path
 
@@ -98,11 +99,18 @@ async def get_experiment(experiment_id: str):
     if results_path.exists():
         results = _load_json(results_path)
 
+    last_modified = None
+    rp = exp_dir / "results.json"
+    if rp.exists():
+        mtime = rp.stat().st_mtime
+        last_modified = datetime.datetime.fromtimestamp(mtime).isoformat()
+
     return {
         "id": experiment_id,
         "config": config,
         "folds": folds,
         "results": results,
+        "last_modified": last_modified,
         "summary": {
             "model_variant": config.get("model_variant"),
             "type": "kfold" if folds else "baseline",
@@ -114,6 +122,20 @@ async def get_experiment(experiment_id: str):
             "test_f1": results.get("test_metrics", {}).get("f1_macro") if results else None,
         },
     }
+
+
+@router.get("/{experiment_id}/log")
+async def get_experiment_log(experiment_id: str):
+    """Get the training log file for an experiment.
+    On HF Space (no log files synced), returns available=false."""
+    experiment_id = _validate_id(experiment_id)
+    exp_dir = _get_experiments_dir() / experiment_id
+    log_file = exp_dir / f"{experiment_id}.log"
+    if not log_file.exists():
+        return {"log": None, "size": 0, "available": False}
+    with open(log_file) as f:
+        content = f.read()
+    return {"log": content, "size": len(content), "available": True}
 
 
 @router.get("/{experiment_id}/folds/{fold_number}", response_model=FoldDataResponse)
