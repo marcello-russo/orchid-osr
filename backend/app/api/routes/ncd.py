@@ -1,11 +1,12 @@
 import json
 import os
+from functools import lru_cache
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException
+import numpy as np
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 
-from app.api.deps import require_role
 from app.config import settings
 
 router = APIRouter(prefix="/api/ncd", tags=["ncd"])
@@ -26,8 +27,17 @@ def _get_exp_dir(model_variant: str, exp_num: int = 8) -> str | None:
     return None
 
 
+@lru_cache(maxsize=32)
+def _load_npy_or_none(path: str) -> list | None:
+    try:
+        arr = np.load(path)
+        return arr.tolist()
+    except Exception:
+        return None
+
+
 @router.get("/{model_variant}/results")
-async def get_ncd_results(model_variant: str, exp: int = 8, user=Depends(require_role("user"))):
+async def get_ncd_results(model_variant: str, exp: int = 8):
     exp_dir = _get_exp_dir(model_variant, exp)
     if not exp_dir:
         raise HTTPException(404, f"Exp {exp} model '{model_variant}' not found")
@@ -35,7 +45,36 @@ async def get_ncd_results(model_variant: str, exp: int = 8, user=Depends(require
     if not os.path.exists(ncd_path):
         raise HTTPException(404, "NCD results not found — run --ncd pipeline first")
     with open(ncd_path) as f:
-        return json.load(f)
+        data = json.load(f)
+
+    # Enrich with t-SNE coordinates
+    emb_dir = os.path.join(exp_dir, "embeddings")
+    tsne_2d = _load_npy_or_none(os.path.join(emb_dir, "tsne_2d.npy"))
+    tsne_3d = _load_npy_or_none(os.path.join(emb_dir, "tsne_3d.npy"))
+    labels_npy = _load_npy_or_none(os.path.join(emb_dir, "labels.npy"))
+    if tsne_2d is not None:
+        data["tsne_2d"] = tsne_2d
+    if tsne_3d is not None:
+        data["tsne_3d"] = tsne_3d
+
+    # Novel class detection: if ncd_results.json already has per_class with Napoli, use it
+    openset = data.get("openset", {})
+    per_class = openset.get("per_class_metrics", [])
+    napoli_metrics = next((p for p in per_class if "napoli" in p.get("left_out", "").lower()), None)
+    if napoli_metrics:
+        data["openset"]["novel_class"] = napoli_metrics
+
+    # Ablation: extract per-detector AUROC from ensemble_scores if present
+    es = openset.get("ensemble_scores", {})
+    if es.get("mahalanobis") is not None:
+        data["openset"]["ablation"] = {
+            "mahalanobis": es["mahalanobis"],
+            "knn": es.get("knn", 0),
+            "energy": es.get("energy", 0),
+            "ensemble": openset.get("mean_auroc", 0),
+        }
+
+    return data
 
 
 _ALLOWED_FIGURES = {

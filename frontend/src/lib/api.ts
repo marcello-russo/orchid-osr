@@ -86,6 +86,10 @@ export async function fetchFold(experimentId: string, foldNumber: number) {
   );
 }
 
+export async function fetchExperimentLog(experimentId: string) {
+  return fetchApi<{ log: string | null; size: number; available: boolean }>(`/api/experiments/${experimentId}/log`);
+}
+
 export async function classifyUpload(
   file: File,
   modelId?: string,
