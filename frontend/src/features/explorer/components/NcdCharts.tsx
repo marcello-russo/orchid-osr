@@ -14,17 +14,13 @@ interface AblationData {
   fill: string;
 }
 
-interface ClusterData {
-  algorithm: string;
-  acc: number;
-  nmi: number;
-  ari: number;
-  f_measure: number;
-}
-
 interface PerClassAUROC {
   left_out: string;
   auroc: number;
+}
+
+function shortLabel(species: string): string {
+  return species.replace(/^O\.\s*/, "").replace(/^sphegodes_/, "s.");
 }
 
 export function AblationChart({ ablation }: { ablation: Record<string, number> }) {
@@ -116,7 +112,7 @@ export function PerClassAurocChart({
   const { t } = useTranslation();
   const data = useMemo(() => {
     const items = perClass.map((p) => ({
-      name: p.left_out.replace("O. ", "").replace("O. sphegodes_", "s."),
+      name: shortLabel(p.left_out),
       auroc: p.auroc,
       isNovel: false,
     }));
