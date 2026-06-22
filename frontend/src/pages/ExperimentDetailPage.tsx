@@ -661,7 +661,7 @@ function LogsPanel({ experimentId }: { experimentId: string }) {
   });
 
   if (isLoading) return <div className="flex justify-center py-8"><div className="size-5 rounded-full border-2 border-primary border-t-transparent animate-spin" /></div>;
-  if (error) return <p className="text-sm text-muted-foreground text-center py-8">{t("experiment_detail.ncd_no_data")}</p>;
+  if (error) return <p className="text-sm text-muted-foreground text-center py-8">{t("experiment_detail.log_unavailable")}</p>;
   if (!data?.available) return (
     <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
       <p className="text-sm">{t("experiment_detail.log_unavailable")}</p>
@@ -683,9 +683,5 @@ function LogsPanel({ experimentId }: { experimentId: string }) {
         {data.log}
       </pre>
     </div>
-  );
-}
-      </CardContent>
-    </Card>
   );
 }
