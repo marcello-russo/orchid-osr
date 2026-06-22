@@ -1,4 +1,5 @@
 # backend/app/api/routes/experiments.py
+import datetime
 import json
 from pathlib import Path
 
@@ -98,7 +99,6 @@ async def get_experiment(experiment_id: str):
     if results_path.exists():
         results = _load_json(results_path)
 
-    import datetime
     last_modified = None
     rp = exp_dir / "results.json"
     if rp.exists():

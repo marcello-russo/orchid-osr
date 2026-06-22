@@ -1,5 +1,6 @@
 import json
 import os
+from functools import lru_cache
 from pathlib import Path
 
 import numpy as np
@@ -26,6 +27,7 @@ def _get_exp_dir(model_variant: str, exp_num: int = 8) -> str | None:
     return None
 
 
+@lru_cache(maxsize=32)
 def _load_npy_or_none(path: str) -> list | None:
     try:
         arr = np.load(path)

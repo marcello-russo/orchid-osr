@@ -87,7 +87,7 @@ export async function fetchFold(experimentId: string, foldNumber: number) {
 }
 
 export async function fetchExperimentLog(experimentId: string) {
-  return fetchApi<{ log: string; size: number }>(`/api/experiments/${experimentId}/log`);
+  return fetchApi<{ log: string | null; size: number; available: boolean }>(`/api/experiments/${experimentId}/log`);
 }
 
 export async function classifyUpload(

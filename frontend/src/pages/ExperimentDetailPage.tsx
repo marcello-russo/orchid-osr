@@ -501,14 +501,19 @@ function NcdDetail({ modelVariant, exp }: { modelVariant: string; exp?: number }
   );
   const silhouette = clustering.kmeans_best?.silhouette ?? null;
 
-  // Build scatter points for t-SNE
+  // Build scatter points for t-SNE — map known classes to species names
+  const CLASS_NAMES = ["O. exaltata", "O. garganica", "O. incubacea", "O. majellensis", "O. sphegodes", "O. sphegodes_Palena"];
   const scatterPoints = tsne2d?.map((p, i) => ({
-    x: p[0], y: p[1], species: labels?.[i] !== undefined ? `Class ${labels[i]}` : "unknown", idx: i,
+    x: p[0], y: p[1],
+    species: labels?.[i] !== undefined && labels[i] >= 0 && labels[i] < CLASS_NAMES.length
+      ? CLASS_NAMES[labels[i]] : "O. sphegodes_Napoli",
+    idx: i,
   })) ?? [];
 
-  const speciesColors = Object.fromEntries(
-    [...new Set(scatterPoints.map((p) => p.species))].map((s) => [s, _SPECIES_PALETTE[s] ?? "#666"])
-  );
+  const speciesSet = [...new Set(scatterPoints.map((p) => p.species))];
+  const speciesColors = speciesSet.length > 0
+    ? Object.fromEntries(speciesSet.map((s) => [s, _SPECIES_PALETTE[s] ?? "#666"]))
+    : {};
 
   return (
     <div className="space-y-8 p-4">

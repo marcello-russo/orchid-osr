@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Upload NCD results from volume to HF."""
+"""Upload NCD results from volume to HF.
+Utility script — NCD upload is now handled by the HF Space entrypoint.
+This script exists as a fallback for manual sync if needed."""
 
 import json
 import logging
