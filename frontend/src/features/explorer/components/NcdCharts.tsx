@@ -50,7 +50,7 @@ export function AblationChart({ ablation }: { ablation: Record<string, number> }
           </Bar>
           <Tooltip
             contentStyle={{ background: "#1a1a1a", border: "1px solid #333", borderRadius: 8 }}
-            formatter={(value: number) => [`${(value * 100).toFixed(1)}%`, "AUROC"]}
+            formatter={(value: any) => [`${(Number(value) * 100).toFixed(1)}%`, "AUROC"]}
           />
         </BarChart>
       </ResponsiveContainer>
@@ -93,7 +93,7 @@ export function ClusteringComparisonChart({ clustering }: { clustering: Record<s
           ))}
           <Tooltip
             contentStyle={{ background: "#1a1a1a", border: "1px solid #333", borderRadius: 8 }}
-            formatter={(value: number) => [(value * 100).toFixed(1) + "%"]}
+            formatter={(value: any) => [(Number(value) * 100).toFixed(1) + "%"]}
           />
           <Legend wrapperStyle={{ fontSize: 12 }} />
         </BarChart>
@@ -142,7 +142,7 @@ export function PerClassAurocChart({
           </Bar>
           <Tooltip
             contentStyle={{ background: "#1a1a1a", border: "1px solid #333", borderRadius: 8 }}
-            formatter={(value: number) => [`${(value * 100).toFixed(1)}%`]}
+            formatter={(value: any) => [`${(Number(value) * 100).toFixed(1)}%`]}
           />
         </BarChart>
       </ResponsiveContainer>

@@ -652,6 +652,17 @@ function NcdDetail({ modelVariant, exp }: { modelVariant: string; exp?: number }
 }
 
 /* ---- Logs Panel ---- */
+function MetricCard({ label, value }: { label: string; value: number }) {
+  return (
+    <Card>
+      <CardContent className="pt-4 pb-3 text-center">
+        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className="text-xl font-bold text-primary">{(value * 100).toFixed(2)}%</p>
+      </CardContent>
+    </Card>
+  );
+}
+
 function LogsPanel({ experimentId }: { experimentId: string }) {
   const { t } = useTranslation();
   const { data, isLoading, error } = useQuery({
