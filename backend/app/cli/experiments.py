@@ -132,6 +132,11 @@ Examples:
         help="Extract embeddings + t-SNE/UMAP from trained model and save for visualization.",
     )
     parser.add_argument(
+        "--embeddings-missing",
+        action="store_true",
+        help="Detect experiments with .pt weights but missing embeddings and generate them.",
+    )
+    parser.add_argument(
         "--ncd", action="store_true", help="Run Novel Class Discovery pipeline: cluster embeddings + evaluate."
     )
     parser.add_argument(
@@ -406,13 +411,15 @@ def main():
             args.resize,
             args.pipeline,
             args.embeddings,
+            args.embeddings_missing,
             args.ncd,
             args.ncd_comparison,
         ]
     ):
         print(
             "Error: Specify an action (--all, --train, --test, --cross-validate, --explain, "
-            "--crop, --split, --resize, --pipeline, --plot, --status, --embeddings, --ncd, --ncd-comparison)"
+            "--crop, --split, --resize, --pipeline, --plot, --status, --embeddings, "
+            "--embeddings-missing, --ncd, --ncd-comparison)"
         )
         return 1
 
@@ -424,6 +431,10 @@ def main():
         if any([args.train, args.test, args.cross_validate, args.explain]):
             logging.warning("--embeddings is standalone; other phase flags will be ignored")
         phases = ["embeddings"]
+    elif args.embeddings_missing:
+        if any([args.train, args.test, args.cross_validate, args.explain, args.embeddings, args.ncd, args.ncd_comparison]):
+            logging.warning("--embeddings-missing is standalone; other phase flags will be ignored")
+        phases = ["embeddings_missing"]
     elif args.ncd:
         if any([args.train, args.test, args.cross_validate, args.explain, args.embeddings, args.ncd_comparison]):
             logging.warning("--ncd is standalone; other phase flags will be ignored")
@@ -478,6 +489,112 @@ def main():
 
         _ncd_comp()
         return
+
+    # Embeddings-missing: scan all exp dirs, detect missing, generate
+    if "embeddings_missing" in phases:
+        from app.cli.definitions import ALL_CLASSES, PROJECT_ROOT, EXPERIMENTS
+        from app.core.models import get_registry_entry, available_models
+        from app.core.ncd.extract import run_embedding_extraction
+        import json as _json
+
+        exp_base = str(PROJECT_ROOT / "experiments")
+        skipped = 0
+        generated = 0
+        model_set = set(available_models())
+
+        for d in sorted(os.listdir(exp_base)):
+            full_path = os.path.join(exp_base, d)
+            if not os.path.isdir(full_path) or not d.startswith("exp"):
+                continue
+
+            # Parse exp_id and model_variant from dir name
+            # e.g. exp6_clean_split_resnet18 → 6, resnet18
+            #      exp10_mgh_ncd_convnext_small → 10, convnext_small
+            parts = d.split("_")
+            exp_num_str = ""
+            model_parts = []
+            found_num = False
+            for i, p in enumerate(parts):
+                if p.startswith("exp") and p[3:].isdigit():
+                    exp_num_str = p[3:]
+                    found_num = True
+                elif found_num and p in model_set:
+                    model_parts = parts[i:]
+                    break
+            if not exp_num_str or not model_parts:
+                logging.debug(f"Skipping {d}: could not parse exp/model")
+                skipped += 1
+                continue
+
+            exp_id = int(exp_num_str)
+            model_variant = "_".join(model_parts)
+
+            # Check if experiment is known
+            if exp_id not in EXPERIMENTS:
+                logging.debug(f"Skipping {d}: exp_id {exp_id} not in EXPERIMENTS")
+                skipped += 1
+                continue
+
+            # Check for results.json (needed for best_fold info)
+            results_path = os.path.join(full_path, "results.json")
+            if not os.path.exists(results_path):
+                logging.info(f"SKIP {d}: no results.json (run sync-local.sh first)")
+                skipped += 1
+                continue
+
+            # Check for best_fold_N.pt
+            with open(results_path) as f:
+                results = _json.load(f)
+            best_fold = results.get("best_fold")
+            if best_fold is None:
+                logging.info(f"SKIP {d}: no best_fold in results.json")
+                skipped += 1
+                continue
+
+            best_pt = os.path.join(full_path, f"best_fold_{best_fold}.pt")
+            if not os.path.exists(best_pt):
+                logging.info(f"SKIP {d}: best_fold_{best_fold}.pt not found")
+                skipped += 1
+                continue
+
+            # Check if embeddings already exist
+            emb_dir = os.path.join(full_path, "embeddings")
+            if os.path.exists(os.path.join(emb_dir, "embeddings.npy")):
+                logging.info(f"OK   {d}: embeddings already present")
+                continue
+
+            # Generate embeddings
+            logging.info(f"GEN  {d}: generating embeddings...")
+            try:
+                config = EXPERIMENTS[exp_id]
+                entry = get_registry_entry(model_variant)
+                w, h = entry.input_size
+                data_dir = str(PROJECT_ROOT / "dataset" / f"cropped_{w}x{h}" / "train")
+                if not os.path.exists(data_dir):
+                    logging.warning(f"Train dataset not found: {data_dir}, trying test dir...")
+                    data_dir = str(PROJECT_ROOT / "dataset" / f"cropped_{w}x{h}" / "test")
+                    if not os.path.exists(data_dir):
+                        logging.error(f"Dataset not found for {d}, skipping")
+                        skipped += 1
+                        continue
+
+                run_embedding_extraction(
+                    exp_dir=full_path,
+                    model_variant=model_variant,
+                    num_classes=config["num_classes"],
+                    class_names=config.get("test_classes", ALL_CLASSES),
+                    data_dir=data_dir,
+                    batch_size=8,
+                )
+                generated += 1
+            except Exception as e:
+                logging.error(f"FAIL {d}: {e}")
+                import traceback
+                traceback.print_exc()
+                skipped += 1
+
+        print(f"\nEmbeddings generated: {generated}, skipped: {skipped}")
+        return 0
 
     # Run experiments
     success_count = 0
