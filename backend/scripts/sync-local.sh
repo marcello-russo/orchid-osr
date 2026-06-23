@@ -28,7 +28,6 @@ import json, os, shutil, sys
 from pathlib import Path
 from huggingface_hub import HfApi, hf_hub_download
 
-SCRIPT_DIR = Path(os.path.dirname(os.path.abspath(__file__)))
 TOKEN = os.environ.get('HF_TOKEN', '')
 if not TOKEN:
     print("HF_TOKEN not available")
@@ -36,7 +35,7 @@ if not TOKEN:
 
 api = HfApi(token=TOKEN)
 REPO = 'marcellorusso/orchid-ncd-models'
-EXP_DIR = Path(os.environ.get('EXP_DIR', str(SCRIPT_DIR.parent / 'experiments')))
+EXP_DIR = Path(os.environ.get('EXP_DIR', str(Path(os.path.dirname(os.path.abspath(__file__))).parent / 'experiments')))
 
 if not EXP_DIR.is_dir():
     print(f"Experiment directory not found: {EXP_DIR}")
@@ -110,15 +109,14 @@ for d in local_dirs:
         if filename.startswith('fold_') and filename.endswith('.json') and not needs_results:
             continue
         
-        # Skip adapter directories, logs, embeddings (handled separately)
-        if '/' in hf_path and len(hf_path.split('/')) > 2:
-            sub = hf_path.split('/', 2)[2]
-            if sub.startswith('best_fold_') and '_adapter' in sub:
-                continue
-            if sub.startswith('embeddings'):
-                continue
-            if sub.startswith('logs'):
-                continue
+        # Skip adapter directories, logs, embeddings — check all path components
+        path_parts = hf_path.split('/')
+        if any(
+            p.startswith('embeddings') or p == 'logs'
+            or (p.startswith('best_fold_') and '_adapter' in p)
+            for p in path_parts
+        ):
+            continue
         
         dst = d / filename
         if dst.exists():
