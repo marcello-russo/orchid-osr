@@ -49,7 +49,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: gpu
+      target: training
     env_file:
       - .env
     environment:

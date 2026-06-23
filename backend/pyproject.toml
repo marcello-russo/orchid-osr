@@ -16,6 +16,7 @@ dependencies = [
     "flask",
     "fastapi",
     "httpx",
+    "huggingface_hub",
     "matplotlib",
     "numpy",
     "opencv-python",
