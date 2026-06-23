@@ -24,11 +24,11 @@ echo "Syncing experiments from marcellorusso/orchid-ncd-models..."
 echo "Experiment dir: $EXP_DIR"
 
 python3 << 'PYEOF'
-import json, os, sys
+import json, os, shutil, sys
 from pathlib import Path
 from huggingface_hub import HfApi, hf_hub_download
-from huggingface_hub.hf_api import RepoFile
 
+SCRIPT_DIR = Path(os.path.dirname(os.path.abspath(__file__)))
 TOKEN = os.environ.get('HF_TOKEN', '')
 if not TOKEN:
     print("HF_TOKEN not available")
@@ -36,10 +36,13 @@ if not TOKEN:
 
 api = HfApi(token=TOKEN)
 REPO = 'marcellorusso/orchid-ncd-models'
-EXP_DIR = Path(os.environ.get('EXP_DIR', '/workspace/backend/experiments'))
+EXP_DIR = Path(os.environ.get('EXP_DIR', str(SCRIPT_DIR.parent / 'experiments')))
 
 if not EXP_DIR.is_dir():
     print(f"Experiment directory not found: {EXP_DIR}")
+    sys.exit(1)
+if not EXP_DIR.parent.is_dir():
+    print(f"Backend directory not found: {EXP_DIR.parent}, check EXP_DIR")
     sys.exit(1)
 
 # List all files on HF
@@ -50,7 +53,7 @@ except Exception as e:
     print(f"Failed to list repo: {e}")
     sys.exit(1)
 
-hf_paths = [i.path for i in items if isinstance(i, RepoFile)]
+hf_paths = [i.path for i in items if '.' in i.path.split('/')[-1]]
 print(f"Found {len(hf_paths)} files on HF")
 
 # Build set of exp dirs on HF (e.g., exp8_sphor_resnet18)
@@ -122,8 +125,9 @@ for d in local_dirs:
             continue
         try:
             dl = hf_hub_download(REPO, hf_path, token=TOKEN)
-            import shutil
-            shutil.copy2(dl, dst)
+            tmp = str(dst) + '.tmp'
+            shutil.copy2(dl, tmp)
+            os.replace(tmp, str(dst))
             print(f"    Downloaded {filename}")
             synced += 1
         except Exception as e:
