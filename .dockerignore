@@ -10,7 +10,11 @@ logs_1/
 logs_2/
 backend/dataset/
 backend/models/
-backend/experiments/
+backend/experiments/**/*.pt
+backend/experiments/**/embeddings/
+backend/experiments/**/ncd_figures/
+backend/experiments/**/.cache/
+backend/experiments/**/*.log
 
 backend/test_dataset/
 
