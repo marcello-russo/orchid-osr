@@ -22,7 +22,9 @@ RUN pip install --no-cache-dir \
     --extra-index-url https://download.pytorch.org/whl/cpu
 
 COPY backend/pyproject.toml .
-RUN pip install --no-cache-dir --default-timeout=1000 .
+# KEEP IN SYNC with gpu/training targets
+RUN sed -i '/"torch",/d; /"torchvision",/d' pyproject.toml && \
+    pip install --no-cache-dir --default-timeout=1000 .
 
 COPY backend/scripts/ scripts/
 RUN chmod +x scripts/entrypoint.sh
@@ -45,6 +47,7 @@ FROM docker.io/pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime AS gpu
 WORKDIR /workspace/backend
 
 COPY backend/pyproject.toml .
+# KEEP IN SYNC with gpu/training targets
 RUN pip install --no-cache-dir --default-timeout=1000 .
 
 COPY backend/scripts/ scripts/
@@ -69,6 +72,8 @@ FROM docker.io/pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime AS training
 WORKDIR /workspace/backend
 
 COPY backend/pyproject.toml .
+# KEEP IN SYNC with gpu/training targets
+# Relax torch pinning for OVH/cloud env
 RUN sed -i 's/"torch",/"torch>=2.0.0,<2.2.0",/' pyproject.toml && \
     sed -i 's/"torchvision",/"torchvision>=0.15.0,<0.17.0",/' pyproject.toml && \
     pip install --no-cache-dir --default-timeout=1000 . && \
