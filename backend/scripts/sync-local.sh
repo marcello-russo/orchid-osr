@@ -7,11 +7,12 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 BACKEND_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 EXP_DIR="$BACKEND_DIR/experiments"
+export EXP_DIR
 
 # Check HF_TOKEN
 if [ -z "$HF_TOKEN" ]; then
     if [ -f "$BACKEND_DIR/../.env" ]; then
-        source <(grep HF_TOKEN "$BACKEND_DIR/../.env" | sed 's/ //g')
+        export HF_TOKEN="$(grep -oP '^HF_TOKEN=\K.*' "$BACKEND_DIR/../.env" | head -1)"
     fi
 fi
 if [ -z "$HF_TOKEN" ]; then
@@ -36,6 +37,10 @@ if not TOKEN:
 api = HfApi(token=TOKEN)
 REPO = 'marcellorusso/orchid-ncd-models'
 EXP_DIR = Path(os.environ.get('EXP_DIR', '/workspace/backend/experiments'))
+
+if not EXP_DIR.is_dir():
+    print(f"Experiment directory not found: {EXP_DIR}")
+    sys.exit(1)
 
 # List all files on HF
 print("Listing HF repo contents...")
@@ -108,6 +113,8 @@ for d in local_dirs:
             if sub.startswith('best_fold_') and '_adapter' in sub:
                 continue
             if sub.startswith('embeddings'):
+                continue
+            if sub.startswith('logs'):
                 continue
         
         dst = d / filename
