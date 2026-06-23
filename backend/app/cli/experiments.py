@@ -513,13 +513,15 @@ def main():
             parts = d.split("_")
             exp_num_str = ""
             model_parts = []
-            found_num = False
             for i, p in enumerate(parts):
                 if p.startswith("exp") and p[3:].isdigit():
                     exp_num_str = p[3:]
-                    found_num = True
-                elif found_num and p in model_set:
-                    model_parts = parts[i:]
+                    # Find longest suffix that matches a registered model name
+                    for j in range(len(parts) - 1, i, -1):
+                        candidate = "_".join(parts[j:])
+                        if candidate in model_set:
+                            model_parts = parts[j:]
+                            break
                     break
             if not exp_num_str or not model_parts:
                 logging.debug(f"Skipping {d}: could not parse exp/model")
