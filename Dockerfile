@@ -17,15 +17,13 @@ FROM docker.io/python:3.11-slim AS cpu
 
 WORKDIR /workspace/backend
 
-COPY entrypoint.sh .
-RUN chmod +x entrypoint.sh
-
 RUN pip install --no-cache-dir \
     torch torchvision \
     --extra-index-url https://download.pytorch.org/whl/cpu
 
 COPY backend/pyproject.toml .
 # KEEP IN SYNC with gpu/training targets
+# Rimuove torch/torchvision per evitare double-install (gia installati sopra via CPU index)
 RUN sed -i '/"torch",/d; /"torchvision",/d' pyproject.toml && \
     pip install --no-cache-dir --default-timeout=1000 .
 
@@ -34,6 +32,8 @@ RUN mkdir -p models dataset
 COPY backend/app/ app/
 COPY backend/server.py .
 COPY backend/cli.py .
+COPY entrypoint.sh .
+RUN chmod +x entrypoint.sh
 
 COPY --from=frontend-builder /workspace/frontend/dist /workspace/backend/frontend/dist
 
@@ -47,9 +47,6 @@ FROM docker.io/pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime AS gpu
 
 WORKDIR /workspace/backend
 
-COPY entrypoint.sh .
-RUN chmod +x entrypoint.sh
-
 COPY backend/pyproject.toml .
 # KEEP IN SYNC with gpu/training targets
 RUN pip install --no-cache-dir --default-timeout=1000 .
@@ -61,6 +58,8 @@ COPY backend/server.py .
 COPY backend/cli.py .
 # experiments/ conterra solo i metadata dal build context (vedi .dockerignore).
 COPY backend/experiments/ experiments/
+COPY entrypoint.sh .
+RUN chmod +x entrypoint.sh
 
 COPY --from=frontend-builder /workspace/frontend/dist /workspace/backend/frontend/dist
 
@@ -74,10 +73,6 @@ FROM docker.io/pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime AS training
 
 WORKDIR /workspace/backend
 
-COPY entrypoint.sh .
-RUN chmod +x entrypoint.sh
-CMD ["./entrypoint.sh"]
-
 COPY backend/pyproject.toml .
 # KEEP IN SYNC with gpu/training targets
 # Relax torch pinning for OVH/cloud env
@@ -86,12 +81,15 @@ RUN pip install --no-cache-dir --default-timeout=1000 . --constraint constraints
     pip install --no-cache-dir transformers==4.43.0 tokenizers==0.19.1
 
 COPY backend/data/ data/
-RUN mkdir -p models dataset logs && chmod 755 /workspace/backend
+RUN mkdir -p models dataset logs
 COPY backend/app/ app/
 COPY backend/server.py .
 COPY backend/cli.py .
 # experiments/ conterra solo i metadata dal build context (vedi .dockerignore).
 COPY backend/experiments/ experiments/
+COPY entrypoint.sh .
+RUN chmod +x entrypoint.sh
 
 ENV HF_HOME=/workspace/backend/.hf_cache
 ENV TORCH_HOME=/workspace/backend/.torch_cache
+CMD ["./entrypoint.sh"]
