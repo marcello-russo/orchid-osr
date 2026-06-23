@@ -7,7 +7,7 @@ FROM docker.io/node:22-slim AS frontend-builder
 WORKDIR /workspace/frontend
 
 COPY frontend/package.json frontend/package-lock.json ./
-RUN npm ci
+RUN npm ci || npm install
 
 COPY frontend/ ./
 RUN npm run build
@@ -16,6 +16,9 @@ RUN npm run build
 FROM docker.io/python:3.11-slim AS cpu
 
 WORKDIR /workspace/backend
+
+COPY entrypoint.sh .
+RUN chmod +x entrypoint.sh
 
 RUN pip install --no-cache-dir \
     torch torchvision \
@@ -26,8 +29,6 @@ COPY backend/pyproject.toml .
 RUN sed -i '/"torch",/d; /"torchvision",/d' pyproject.toml && \
     pip install --no-cache-dir --default-timeout=1000 .
 
-COPY backend/scripts/ scripts/
-RUN chmod +x scripts/entrypoint.sh
 COPY backend/data/ data/
 RUN mkdir -p models dataset
 COPY backend/app/ app/
@@ -39,24 +40,26 @@ COPY --from=frontend-builder /workspace/frontend/dist /workspace/backend/fronten
 ENV API_PORT=7860
 EXPOSE 7860
 
-CMD ["./scripts/entrypoint.sh"]
+CMD ["./entrypoint.sh"]
 
 # Stage 2b: GPU target — local training/inference
 FROM docker.io/pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime AS gpu
 
 WORKDIR /workspace/backend
 
+COPY entrypoint.sh .
+RUN chmod +x entrypoint.sh
+
 COPY backend/pyproject.toml .
 # KEEP IN SYNC with gpu/training targets
 RUN pip install --no-cache-dir --default-timeout=1000 .
 
-COPY backend/scripts/ scripts/
-RUN chmod +x scripts/entrypoint.sh
 COPY backend/data/ data/
 RUN mkdir -p models dataset
 COPY backend/app/ app/
 COPY backend/server.py .
 COPY backend/cli.py .
+# experiments/ conterra solo i metadata dal build context (vedi .dockerignore).
 COPY backend/experiments/ experiments/
 
 COPY --from=frontend-builder /workspace/frontend/dist /workspace/backend/frontend/dist
@@ -64,28 +67,30 @@ COPY --from=frontend-builder /workspace/frontend/dist /workspace/backend/fronten
 ENV API_PORT=7860
 EXPOSE 7860
 
-CMD ["./scripts/entrypoint.sh"]
+CMD ["./entrypoint.sh"]
 
 # Stage 2c: Training target — OVH/cloud GPU
 FROM docker.io/pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime AS training
 
 WORKDIR /workspace/backend
 
+COPY entrypoint.sh .
+RUN chmod +x entrypoint.sh
+CMD ["./entrypoint.sh"]
+
 COPY backend/pyproject.toml .
 # KEEP IN SYNC with gpu/training targets
 # Relax torch pinning for OVH/cloud env
-RUN sed -i 's/"torch",/"torch>=2.0.0,<2.2.0",/' pyproject.toml && \
-    sed -i 's/"torchvision",/"torchvision>=0.15.0,<0.17.0",/' pyproject.toml && \
-    pip install --no-cache-dir --default-timeout=1000 . && \
+COPY constraints-training.txt .
+RUN pip install --no-cache-dir --default-timeout=1000 . --constraint constraints-training.txt && \
     pip install --no-cache-dir transformers==4.43.0 tokenizers==0.19.1
 
-COPY backend/scripts/ scripts/
-RUN chmod +x scripts/entrypoint.sh
 COPY backend/data/ data/
-RUN mkdir -p models dataset logs && chmod -R 777 /workspace/backend
+RUN mkdir -p models dataset logs && chmod 755 /workspace/backend
 COPY backend/app/ app/
 COPY backend/server.py .
 COPY backend/cli.py .
+# experiments/ conterra solo i metadata dal build context (vedi .dockerignore).
 COPY backend/experiments/ experiments/
 
 ENV HF_HOME=/workspace/backend/.hf_cache
