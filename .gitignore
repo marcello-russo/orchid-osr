@@ -59,5 +59,4 @@ temp_kfold/
 .vscode/
 backend/build/
 .worktrees/
-frontend/public/assets/images/*.png
-frontend/public/assets/images/*.webp
+
