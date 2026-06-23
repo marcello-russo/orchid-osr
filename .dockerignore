@@ -10,8 +10,8 @@ logs_1/
 logs_2/
 backend/dataset/
 backend/models/
-backend/experiments/**/*.pt
-backend/experiments/**/figures/
+backend/experiments/
+
 backend/test_dataset/
 
 # Git
@@ -23,7 +23,7 @@ backend/test_dataset/
 .idea/
 
 # Python
-__pycache__/
+**/__pycache__/
 *.py[cod]
 *$py.class
 *.so
@@ -45,12 +45,13 @@ docs/
 .docker/
 
 # Frontend dev artifacts (not needed in build, dockerfile runs npm ci + build)
+node_modules/
 frontend/node_modules/
 frontend/dist/
 
 # Misc
 *.log
 *.tmp
-.DS_Store
+**/.DS_Store
 README*.md
 superpowers/
