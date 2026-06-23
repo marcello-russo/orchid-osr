@@ -538,7 +538,7 @@ def main():
 
             # Check if experiment is known
             if exp_id not in EXPERIMENTS:
-                logging.debug(f"Skipping {d}: exp_id {exp_id} not in EXPERIMENTS")
+                logging.info(f"Skipping {d}: exp_id {exp_id} not in EXPERIMENTS")
                 skipped += 1
                 continue
 
