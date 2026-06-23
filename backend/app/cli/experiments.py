@@ -495,7 +495,12 @@ def main():
         from app.cli.definitions import ALL_CLASSES, PROJECT_ROOT, EXPERIMENTS
         from app.core.models import get_registry_entry, available_models
         from app.core.ncd.extract import run_embedding_extraction
-        import json as _json
+        import json
+        import torch
+
+        if not torch.cuda.is_available():
+            logging.error("--embeddings-missing requires CUDA (GPU). Aborting.")
+            return 1
 
         exp_base = str(PROJECT_ROOT / "experiments")
         skipped = 0
@@ -524,7 +529,7 @@ def main():
                             break
                     break
             if not exp_num_str or not model_parts:
-                logging.debug(f"Skipping {d}: could not parse exp/model")
+                logging.warning(f"Skipping {d}: could not parse exp/model")
                 skipped += 1
                 continue
 
@@ -546,7 +551,7 @@ def main():
 
             # Check for best_fold_N.pt
             with open(results_path) as f:
-                results = _json.load(f)
+                results = json.load(f)
             best_fold = results.get("best_fold")
             if best_fold is None:
                 logging.info(f"SKIP {d}: no best_fold in results.json")
