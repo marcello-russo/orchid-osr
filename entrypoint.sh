@@ -32,48 +32,10 @@ fi
 
 # Sync experiments/models to persistent storage
 if [ -d /data ]; then
-    if [ ! -f /data/.experiments_synced ]; then
-        [ -d /data/experiments ] && rm -rf /data/experiments
-        echo "Download experiment results in corso..."
-        python3 << 'PYEOF'
-from huggingface_hub import HfApi, hf_hub_download
-import os, shutil
-
-api = HfApi(token=os.environ.get('HF_TOKEN'))
-REPO = 'marcellorusso/orchid-ncd-models'
-DST = '/data/experiments'
-
-all_items = list(api.list_repo_tree(REPO, recursive=True))
-file_paths = [i.path for i in all_items if '.' in i.path.split('/')[-1]]
-
-for src in file_paths:
-    parts = src.split('/')
-    if len(parts) < 2:
-        continue
-    if parts[0] in ('old',):
-        continue
-    # Flat path: strip the first prefix directory
-    # e.g. 'exp7_supcon/exp7_supcon_dinov2_small/results.json' -> 'exp7_supcon_dinov2_small/results.json'
-    flat = '/'.join(parts[1:])
-    dst = os.path.join(DST, flat)
-    os.makedirs(os.path.dirname(dst), exist_ok=True)
-    downloaded = hf_hub_download(REPO, src, token=os.environ.get('HF_TOKEN'))
-    shutil.copy2(downloaded, dst)
-
-# ncd_comparison.json at root
-try:
-    p = hf_hub_download(REPO, 'ncd_comparison.json', token=os.environ.get('HF_TOKEN'))
-    shutil.copy2(p, os.path.join(DST, 'ncd_comparison.json'))
-except:
-    pass
-
-print(f'Downloaded {len(file_paths)} files to flat structure')
-import pathlib; pathlib.Path('/data/.experiments_synced').touch()
-PYEOF
-" 2>&1 || echo "Download experiments fallito"
-    else
-        echo "Experiments gia in /data"
-    fi
+    [ -d /data/experiments ] && rm -rf /data/experiments
+    mkdir -p /data/experiments
+    echo "Download experiment results..."
+    python3 scripts/sync_experiments.py || echo "Experiment sync failed (non-fatal)"
     [ ! -L experiments ] && ln -sfn /data/experiments experiments 2>/dev/null || true
 fi
 
