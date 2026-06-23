@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: bash -n backend/scripts/entrypoint.sh
+      - run: bash -n entrypoint.sh
       - run: docker build --target=cpu -t orchid-ncd .
       - name: Smoke test — avvio container
         run: |
