@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
@@ -80,9 +80,13 @@ export default function AuthPage() {
   const location = useLocation();
 
   const from = (location.state as { from?: string })?.from || "/";
-  const schemas = createSchemas(t);
+  const schemas = useMemo(() => createSchemas(t), [t]);
   const fieldErrors = getFieldErrors(zodError);
   const strength = getPasswordStrength(password);
+  const firstErrorField = useMemo(() => {
+    const keys = Object.keys(fieldErrors);
+    return keys.length > 0 ? keys[0] : null;
+  }, [fieldErrors]);
 
   // Auto-dismiss error dopo 10s
   const setError = useCallback((msg: string) => {
@@ -131,11 +135,13 @@ export default function AuthPage() {
     } catch (err: unknown) {
       if (err instanceof Error) {
         const msg = err.message;
-        if (msg.includes("429") || msg.includes("locked")) {
+        const statusMatch = msg.match(/^API (\d+):/);
+        const status = statusMatch ? parseInt(statusMatch[1]) : 0;
+        if (status === 429) {
           setError(t("auth.errors.rateLimited"));
-        } else if (msg.includes("401") || msg.includes("Invalid username")) {
+        } else if (status === 401) {
           setError(t("auth.errors.invalidCredentials"));
-        } else if (msg.includes("409") || msg.includes("already taken")) {
+        } else if (status === 409) {
           setError(t("auth.errors.usernameTaken"));
         } else if (msg.includes("Failed to fetch") || msg.includes("NetworkError")) {
           setError(t("auth.errors.networkError"));
@@ -178,7 +184,7 @@ export default function AuthPage() {
           </div>
           <Input
             id={opts.id}
-            ref={errorMsg ? firstErrorRef : undefined}
+            ref={opts.id === firstErrorField ? firstErrorRef : undefined}
             type={opts.type || "text"}
             value={opts.value}
             onChange={(e) => opts.onChange(e.target.value)}
