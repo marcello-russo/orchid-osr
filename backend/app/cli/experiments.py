@@ -36,6 +36,320 @@ def _build_pair_weights(hard_weight: float) -> dict:
     return result
 
 
+def _handle_auth_commands(args) -> int | None:
+    """Handle user management commands. Returns exit code or None if not an auth command."""
+    if not any([args.list_users, args.gen_invites is not None, args.add_user is not None]):
+        return None
+    from app.core.auth import (
+        generate_invite, list_users_and_invites, hash_password,
+        _load_data, _save_data, ensure_admin_exists,
+    )
+    ensure_admin_exists()
+    if args.list_users:
+        data = list_users_and_invites()
+        print("=== Users ===")
+        for u in data["users"]:
+            print(f"  {u['username']} ({u['role']})")
+        print("\n=== Invites ===")
+        for i in data["invites"]:
+            status = "used" if i["used"] else "available"
+            print(f"  {i['code']} [{status}] ({i['role']})")
+        return 0
+    if args.gen_invites is not None:
+        codes = generate_invite(count=args.gen_invites)
+        for c in codes:
+            print(c)
+        return 0
+    if args.add_user is not None:
+        if not args.password:
+            print("--password is required with --add-user")
+            return 1
+        username = args.add_user or args.username
+        if not username:
+            print("Specify username with --add-user <name> or --username")
+            return 1
+        data = _load_data()
+        if any(u["username"] == username for u in data["users"]):
+            print(f"User '{username}' already exists")
+            return 1
+        data["users"].append({
+            "username": username,
+            "password_hash": hash_password(args.password),
+            "role": args.role,
+        })
+        _save_data(data)
+        print(f"User '{username}' created with role '{args.role}'")
+        return 0
+    return None
+
+
+def _run_pipeline(args) -> None:
+    """Run preprocessing pipeline (crop/split/resize)."""
+    from app.cli.definitions import PROJECT_ROOT
+    from app.config import settings as cfg
+
+    setup_logging()
+    cropped_dir = str(PROJECT_ROOT / "dataset" / "cropped")
+    internet_dir = os.path.join(str(PROJECT_ROOT), args.internet_dir)
+    cropper_model = os.path.join(str(PROJECT_ROOT), args.cropper_model)
+
+    if args.crop or args.pipeline:
+        from app.preprocessing.cropper import crop_dataset, crop_single_image, load_cropper_model
+
+        logger.info("=" * 60)
+        logger.info("PIPELINE STEP 1: CROP")
+        logger.info("=" * 60)
+
+        raw_private = str(PROJECT_ROOT / "dataset" / "raw")
+        if os.path.exists(raw_private):
+            logger.info("Cropping private raw images...")
+            crop_dataset(raw_private, cropped_dir, cropper_model, score_threshold=args.score_threshold)
+
+        if os.path.exists(internet_dir):
+            logger.info("Cropping internet raw images...")
+            model = load_cropper_model(cropper_model)
+            for inet_class_dir in sorted(Path(internet_dir).iterdir()):
+                if not inet_class_dir.is_dir():
+                    continue
+                inet_name = inet_class_dir.name
+                class_name = None
+                for cls in cfg.class_names:
+                    if cls.replace(" ", "") == inet_name:
+                        class_name = cls
+                        break
+                if class_name is None:
+                    logger.warning(f"Skipping {inet_name}: no matching class in config")
+                    continue
+                out_dir = os.path.join(cropped_dir, class_name)
+                os.makedirs(out_dir, exist_ok=True)
+                files = sorted(f for f in os.listdir(inet_class_dir) if f.lower().endswith((".jpg", ".jpeg", ".png")))
+                cropped_count = 0
+                for img_file in files:
+                    img_path = os.path.join(str(inet_class_dir), img_file)
+                    cropped_img, _ = crop_single_image(model, img_path, args.score_threshold, fallback="full")
+                    if cropped_img is not None:
+                        cropped_img.save(os.path.join(out_dir, img_file), quality=95)
+                        cropped_count += 1
+                logger.info(f"Internet {inet_name} → {class_name}: {cropped_count}/{len(files)}")
+
+    if args.split or args.pipeline:
+        from app.preprocessing.split import create_clean_split
+        logger.info("=" * 60)
+        logger.info("PIPELINE STEP 2: SPLIT")
+        logger.info("=" * 60)
+        create_clean_split(
+            cropped_dir=cropped_dir, internet_dir=internet_dir,
+            output_dir=os.path.join(str(PROJECT_ROOT), "dataset", "cropped"),
+            class_names=cfg.class_names, internet_classes=cfg.internet_classes,
+            test_per_class=cfg.test_per_class, seed=cfg.split_seed,
+        )
+
+    if args.resize or args.pipeline:
+        from app.preprocessing.resize_dataset import resize_for_all_architectures
+        logger.info("=" * 60)
+        logger.info("PIPELINE STEP 3: RESIZE")
+        logger.info("=" * 60)
+        cropped_base = str(PROJECT_ROOT / "dataset" / "cropped")
+        dataset_base = str(PROJECT_ROOT / "dataset")
+        for split_name in ["train", "test"]:
+            split_dir = os.path.join(cropped_base, split_name)
+            if not os.path.exists(split_dir):
+                logger.warning(f"Skipping {split_name} — directory not found")
+                continue
+            logger.info(f"Resizing {split_name}...")
+            resize_for_all_architectures(split_dir, dataset_base, split_name=split_name)
+
+
+def _run_plot_mode(args) -> None:
+    """Generate plots for experiment directories."""
+    from app.visualization import plot_experiment
+    from glob import glob
+
+    if args.plot.lower() == "all":
+        exp_base = os.path.join(os.path.dirname(__file__), "..", "..", "experiments")
+        exp_base = os.path.abspath(exp_base)
+        experiment_dirs = {os.path.dirname(f) for f in glob(os.path.join(exp_base, "*", "fold_*.json"))}
+        for exp_d in sorted(experiment_dirs):
+            print(f"\n{'=' * 50}")
+            plot_experiment(exp_d)
+    else:
+        plot_experiment(args.plot)
+
+
+def _resolve_phases(args) -> list[str]:
+    """Determine which phases to run based on args."""
+    if args.embeddings:
+        if any([args.train, args.test, args.cross_validate, args.explain]):
+            logging.warning("--embeddings is standalone; other phase flags will be ignored")
+        return ["embeddings"]
+    if args.embeddings_missing:
+        if any([args.train, args.test, args.cross_validate, args.explain, args.embeddings, args.ncd, args.ncd_comparison]):
+            logging.warning("--embeddings-missing is standalone; other phase flags will be ignored")
+        return ["embeddings_missing"]
+    if args.ncd:
+        if any([args.train, args.test, args.cross_validate, args.explain, args.embeddings, args.ncd_comparison]):
+            logging.warning("--ncd is standalone; other phase flags will be ignored")
+        return ["ncd"]
+    if args.ncd_comparison:
+        if any([args.train, args.test, args.cross_validate, args.explain, args.embeddings, args.ncd]):
+            logging.warning("--ncd-comparison is standalone; other phase flags will be ignored")
+        return ["ncd_comparison"]
+    if args.all:
+        return ["train", "test"]
+    phases = []
+    if args.train: phases.append("train")
+    if args.test: phases.append("test")
+    if args.cross_validate: phases.append("cross-validate")
+    if args.explain: phases.append("explain")
+    return phases
+
+
+def _resolve_experiments(args, phases: list[str]) -> list[int] | None:
+    """Determine which experiment IDs to run."""
+    if args.ncd_comparison:
+        return []
+    if args.exp:
+        return [args.exp]
+    if args.all:
+        from app.cli.definitions import EXPERIMENTS
+        return list(EXPERIMENTS.keys())
+    print("Error: Specify --exp ID or --all to run all experiments")
+    return None
+
+
+def _log_config(args, phases: list[str], exp_ids: list[int]) -> None:
+    """Log experiment configuration."""
+    logging.info("=" * 70)
+    logging.info("ORCHID CLASSIFICATION EXPERIMENTS")
+    logging.info("=" * 70)
+    logging.info(f"Model: {args.model.upper()}")
+    logging.info(f"Experiments: {exp_ids}")
+    logging.info(f"Phases: {phases}")
+    logging.info(f"Epochs: {args.epochs}")
+    logging.info(f"Batch size: {args.batch_size}")
+    logging.info(f"Learning rate: {args.lr}")
+    if args.patience > 0:
+        logging.info(f"Early stopping patience: {args.patience}")
+    if "cross-validate" in phases:
+        logging.info(f"K-Folds: {args.folds}")
+    logging.info("")
+
+
+def _run_embeddings_missing(args, valid_models: list[str]) -> int:
+    """Scan experiments and generate missing embeddings."""
+    from app.cli.definitions import ALL_CLASSES, PROJECT_ROOT, EXPERIMENTS
+    from app.core.models import get_registry_entry
+    from app.core.ncd.extract import run_embedding_extraction
+    from app.core.hf_sync import parse_exp_dir_name
+    import json, torch
+
+    if not torch.cuda.is_available():
+        logging.error("--embeddings-missing requires CUDA (GPU). Aborting.")
+        return 1
+
+    exp_base = str(PROJECT_ROOT / "experiments")
+    model_set = set(valid_models)
+    skipped = 0
+    generated = 0
+
+    for d in sorted(os.listdir(exp_base)):
+        full_path = os.path.join(exp_base, d)
+        if not os.path.isdir(full_path) or not d.startswith("exp"):
+            continue
+
+        exp_id, model_variant = parse_exp_dir_name(d, model_set)
+        if exp_id is None or model_variant is None:
+            logging.warning(f"Skipping {d}: could not parse exp/model")
+            skipped += 1
+            continue
+
+        if exp_id not in EXPERIMENTS:
+            logging.info(f"Skipping {d}: exp_id {exp_id} not in EXPERIMENTS")
+            skipped += 1
+            continue
+
+        results_path = os.path.join(full_path, "results.json")
+        if not os.path.exists(results_path):
+            logging.info(f"SKIP {d}: no results.json (run sync-local first)")
+            skipped += 1
+            continue
+
+        with open(results_path) as f:
+            results = json.load(f)
+        best_fold = results.get("best_fold")
+        if best_fold is None:
+            logging.info(f"SKIP {d}: no best_fold in results.json")
+            skipped += 1
+            continue
+
+        best_pt = os.path.join(full_path, f"best_fold_{best_fold}.pt")
+        if not os.path.exists(best_pt):
+            logging.info(f"SKIP {d}: best_fold_{best_fold}.pt not found")
+            skipped += 1
+            continue
+
+        emb_dir = os.path.join(full_path, "embeddings")
+        if os.path.exists(os.path.join(emb_dir, "embeddings.npy")):
+            logging.info(f"OK   {d}: embeddings already present")
+            continue
+
+        logging.info(f"GEN  {d}: generating embeddings...")
+        try:
+            config = EXPERIMENTS[exp_id]
+            entry = get_registry_entry(model_variant)
+            w, h = entry.input_size
+            data_dir = str(PROJECT_ROOT / "dataset" / f"cropped_{w}x{h}" / "train")
+            if not os.path.exists(data_dir):
+                logging.warning(f"Train dataset not found: {data_dir}, trying test dir...")
+                data_dir = str(PROJECT_ROOT / "dataset" / f"cropped_{w}x{h}" / "test")
+                if not os.path.exists(data_dir):
+                    logging.error(f"Dataset not found for {d}, skipping")
+                    skipped += 1
+                    continue
+            run_embedding_extraction(
+                exp_dir=full_path, model_variant=model_variant,
+                num_classes=config["num_classes"],
+                class_names=config.get("test_classes", ALL_CLASSES),
+                data_dir=data_dir, batch_size=8,
+            )
+            generated += 1
+        except Exception as e:
+            logging.error(f"FAIL {d}: {e}")
+            import traceback; traceback.print_exc()
+            skipped += 1
+
+    print(f"\nEmbeddings generated: {generated}, skipped: {skipped}")
+    return 0
+
+
+def _run_experiment_loop(args, phases: list[str], exp_ids: list[int]) -> int:
+    """Run the experiment loop for training/testing/cross-validation."""
+    success_count = 0
+    for exp_id in exp_ids:
+        try:
+            run_experiment(
+                exp_id=exp_id, phases=phases, model_variant=args.model,
+                epochs=args.epochs, batch_size=args.batch_size,
+                learning_rate=args.lr, num_folds=args.folds,
+                fold_index=args.fold, aggregate_only=args.aggregate_only,
+                patience=args.patience, tag=args.tag,
+                gradient_accumulation_steps=args.accumulation,
+                proj_dim=args.proj_dim, temperature=args.temperature,
+                ce_epochs=args.ce_epochs, use_prototypes=args.sphor,
+                repulse_weight=args.repulse_weight,
+                pair_weights=_build_pair_weights(args.hard_weight) if args.hard_weight > 0 else None,
+                full_finetune=args.full_finetune, osr_ensemble=args.osr_ensemble,
+            )
+            success_count += 1
+        except Exception as e:
+            logging.error(f"Failed to run experiment {exp_id}: {e}")
+            import traceback; traceback.print_exc()
+            if len(exp_ids) == 1:
+                return 1
+    logging.info(f"\nCOMPLETED: {success_count}/{len(exp_ids)} experiments")
+    return 0
+
+
 def parse_args():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(
@@ -217,432 +531,44 @@ def main():
     """Main CLI entrypoint."""
     args = parse_args()
 
-    # Validate model choice
     valid_models = available_models()
     if args.model not in valid_models:
         print(f"Error: Unknown model '{args.model}'. Available: {', '.join(valid_models)}")
         return 1
 
-    # Auth commands — early return, no logging/training
-    if args.list_users or args.gen_invites is not None or args.add_user is not None:
-        from app.core.auth import (
-            generate_invite,
-            list_users_and_invites,
-            hash_password,
-            _load_data,
-            _save_data,
-            ensure_admin_exists,
-        )
+    result = _handle_auth_commands(args)
+    if result is not None:
+        return result
 
-        ensure_admin_exists()
-        if args.list_users:
-            data = list_users_and_invites()
-            print("=== Users ===")
-            for u in data["users"]:
-                print(f"  {u['username']} ({u['role']})")
-            print("\n=== Invites ===")
-            for i in data["invites"]:
-                status = "used" if i["used"] else "available"
-                print(f"  {i['code']} [{status}] ({i['role']})")
-            return 0
-        if args.gen_invites is not None:
-            codes = generate_invite(count=args.gen_invites)
-            for c in codes:
-                print(c)
-            return 0
-        if args.add_user is not None:
-            if not args.password:
-                print("--password is required with --add-user")
-                return 1
-            username = args.add_user or args.username
-            if not username:
-                print("Specify username with --add-user <name> or --username")
-                return 1
-            data = _load_data()
-            if any(u["username"] == username for u in data["users"]):
-                print(f"User '{username}' already exists")
-                return 1
-            data["users"].append(
-                {
-                    "username": username,
-                    "password_hash": hash_password(args.password),
-                    "role": args.role,
-                }
-            )
-            _save_data(data)
-            print(f"User '{username}' created with role '{args.role}'")
-            return 0
-
-    # Status check - no logging setup needed
     if args.status:
         show_status()
         return 0
 
-    # Pipeline actions (crop / split / resize / pipeline)
-    has_pipeline_action = any([args.crop, args.split, args.resize, args.pipeline])
-    if has_pipeline_action:
-        setup_logging()
-        from app.cli.definitions import PROJECT_ROOT
-        from app.config import settings as cfg
-
-        cropped_dir = str(PROJECT_ROOT / "dataset" / "cropped")
-        internet_dir = os.path.join(str(PROJECT_ROOT), args.internet_dir)
-        cropper_model = os.path.join(str(PROJECT_ROOT), args.cropper_model)
-
-        # Step 1: Crop
-        if args.crop or args.pipeline:
-            from app.preprocessing.cropper import crop_dataset
-
-            logger.info("=" * 60)
-            logger.info("PIPELINE STEP 1: CROP")
-            logger.info("=" * 60)
-
-            # Crop private raw
-            raw_private = str(PROJECT_ROOT / "dataset" / "raw")
-            if os.path.exists(raw_private):
-                logger.info("Cropping private raw images...")
-                crop_dataset(raw_private, cropped_dir, cropper_model, score_threshold=args.score_threshold)
-
-            # Crop internet raw (append into same cropped dir)
-            if os.path.exists(internet_dir):
-                logger.info("Cropping internet raw images...")
-                from app.preprocessing.cropper import crop_single_image, load_cropper_model
-
-                model = load_cropper_model(cropper_model)
-                for inet_class_dir in sorted(Path(internet_dir).iterdir()):
-                    if not inet_class_dir.is_dir():
-                        continue
-                    inet_name = inet_class_dir.name  # e.g. "O.exaltata"
-                    # Map to config class name: "O.exaltata" → "O. exaltata"
-                    class_name = None
-                    for cls in cfg.class_names:
-                        if cls.replace(" ", "") == inet_name:
-                            class_name = cls
-                            break
-                    if class_name is None:
-                        logger.warning(f"Skipping {inet_name}: no matching class in config")
-                        continue
-
-                    out_dir = os.path.join(cropped_dir, class_name)
-                    os.makedirs(out_dir, exist_ok=True)
-
-                    files = sorted(
-                        [f for f in os.listdir(inet_class_dir) if f.lower().endswith((".jpg", ".jpeg", ".png"))]
-                    )
-                    cropped_count = 0
-                    for img_file in files:
-                        img_path = os.path.join(str(inet_class_dir), img_file)
-                        cropped, meta = crop_single_image(model, img_path, args.score_threshold, fallback="full")
-                        if cropped is not None:
-                            cropped.save(os.path.join(out_dir, img_file), quality=95)
-                            cropped_count += 1
-                    logger.info(f"Internet {inet_name} → {class_name}: {cropped_count}/{len(files)}")
-
-        # Step 2: Split
-        if args.split or args.pipeline:
-            from app.preprocessing.split import create_clean_split
-
-            logger.info("=" * 60)
-            logger.info("PIPELINE STEP 2: SPLIT")
-            logger.info("=" * 60)
-            create_clean_split(
-                cropped_dir=cropped_dir,
-                internet_dir=internet_dir,
-                output_dir=os.path.join(str(PROJECT_ROOT), "dataset", "cropped"),
-                class_names=cfg.class_names,
-                internet_classes=cfg.internet_classes,
-                test_per_class=cfg.test_per_class,
-                seed=cfg.split_seed,
-            )
-
-        # Step 3: Resize
-        if args.resize or args.pipeline:
-            from app.preprocessing.resize_dataset import resize_for_all_architectures
-
-            logger.info("=" * 60)
-            logger.info("PIPELINE STEP 3: RESIZE")
-            logger.info("=" * 60)
-
-            # Resize train and test
-            cropped_base = str(PROJECT_ROOT / "dataset" / "cropped")
-            dataset_base = str(PROJECT_ROOT / "dataset")
-
-            for split_name in ["train", "test"]:
-                split_dir = os.path.join(cropped_base, split_name)
-                if not os.path.exists(split_dir):
-                    logger.warning(f"Skipping {split_name} — directory not found")
-                    continue
-                logger.info(f"Resizing {split_name}...")
-                resize_for_all_architectures(split_dir, dataset_base, split_name=split_name)
-
+    if any([args.crop, args.split, args.resize, args.pipeline]):
+        _run_pipeline(args)
         if not any([args.all, args.train, args.test, args.cross_validate, args.explain]):
             return 0
 
-    # Plot mode
     if args.plot:
-        from app.visualization import plot_experiment
-
-        if args.plot.lower() == "all":
-            from glob import glob
-
-            exp_base = os.path.join(os.path.dirname(__file__), "..", "..", "experiments")
-            exp_base = os.path.abspath(exp_base)
-            experiment_dirs = {
-                os.path.dirname(fold_file) for fold_file in glob(os.path.join(exp_base, "*", "fold_*.json"))
-            }
-            for exp_d in sorted(experiment_dirs):
-                print(f"\n{'=' * 50}")
-                plot_experiment(exp_d)
-        else:
-            plot_experiment(args.plot)
+        _run_plot_mode(args)
         return 0
 
-    # Validate arguments
-    if not any(
-        [
-            args.all,
-            args.train,
-            args.test,
-            args.cross_validate,
-            args.explain,
-            args.plot,
-            args.crop,
-            args.split,
-            args.resize,
-            args.pipeline,
-            args.embeddings,
-            args.embeddings_missing,
-            args.ncd,
-            args.ncd_comparison,
-        ]
-    ):
-        print(
-            "Error: Specify an action (--all, --train, --test, --cross-validate, --explain, "
-            "--crop, --split, --resize, --pipeline, --plot, --status, --embeddings, "
-            "--embeddings-missing, --ncd, --ncd-comparison)"
-        )
-        return 1
-
-    # Setup logging
     setup_logging()
-
-    # Determine phases to run
-    if args.embeddings:
-        if any([args.train, args.test, args.cross_validate, args.explain]):
-            logging.warning("--embeddings is standalone; other phase flags will be ignored")
-        phases = ["embeddings"]
-    elif args.embeddings_missing:
-        if any([args.train, args.test, args.cross_validate, args.explain, args.embeddings, args.ncd, args.ncd_comparison]):
-            logging.warning("--embeddings-missing is standalone; other phase flags will be ignored")
-        phases = ["embeddings_missing"]
-    elif args.ncd:
-        if any([args.train, args.test, args.cross_validate, args.explain, args.embeddings, args.ncd_comparison]):
-            logging.warning("--ncd is standalone; other phase flags will be ignored")
-        phases = ["ncd"]
-    elif args.ncd_comparison:
-        if any([args.train, args.test, args.cross_validate, args.explain, args.embeddings, args.ncd]):
-            logging.warning("--ncd-comparison is standalone; other phase flags will be ignored")
-        phases = ["ncd_comparison"]
-    elif args.all:
-        phases = ["train", "test"]
-    else:
-        phases = []
-        if args.train:
-            phases.append("train")
-        if args.test:
-            phases.append("test")
-        if args.cross_validate:
-            phases.append("cross-validate")
-        if args.explain:
-            phases.append("explain")
-
-    # Determine which experiments to run
-    if args.ncd_comparison:
-        exp_ids = []
-    elif args.exp:
-        exp_ids = [args.exp]
-    elif args.all:
-        exp_ids = list(EXPERIMENTS.keys())
-    else:
-        print("Error: Specify --exp ID or --all to run all experiments")
+    phases = _resolve_phases(args)
+    exp_ids = _resolve_experiments(args, phases)
+    if exp_ids is None:
         return 1
+    _log_config(args, phases, exp_ids)
 
-    # Log configuration
-    logging.info("=" * 70)
-    logging.info("ORCHID CLASSIFICATION EXPERIMENTS")
-    logging.info("=" * 70)
-    logging.info(f"Model: {args.model.upper()}")
-    logging.info(f"Experiments: {exp_ids}")
-    logging.info(f"Phases: {phases}")
-    logging.info(f"Epochs: {args.epochs}")
-    logging.info(f"Batch size: {args.batch_size}")
-    logging.info(f"Learning rate: {args.lr}")
-    if args.patience > 0:
-        logging.info(f"Early stopping patience: {args.patience}")
-    if "cross-validate" in phases:
-        logging.info(f"K-Folds: {args.folds}")
-    logging.info("")
-
-    # NCD comparison: standalone, skip experiment loop
     if "ncd_comparison" in phases:
         from scripts.ncd_comparison import main as _ncd_comp
-
         _ncd_comp()
-        return
-
-    # Embeddings-missing: scan all exp dirs, detect missing, generate
-    if "embeddings_missing" in phases:
-        from app.cli.definitions import ALL_CLASSES, PROJECT_ROOT, EXPERIMENTS
-        from app.core.models import get_registry_entry, available_models
-        from app.core.ncd.extract import run_embedding_extraction
-        import json
-        import torch
-
-        if not torch.cuda.is_available():
-            logging.error("--embeddings-missing requires CUDA (GPU). Aborting.")
-            return 1
-
-        exp_base = str(PROJECT_ROOT / "experiments")
-        skipped = 0
-        generated = 0
-        model_set = set(available_models())
-
-        for d in sorted(os.listdir(exp_base)):
-            full_path = os.path.join(exp_base, d)
-            if not os.path.isdir(full_path) or not d.startswith("exp"):
-                continue
-
-            # Parse exp_id and model_variant from dir name
-            # e.g. exp6_clean_split_resnet18 → 6, resnet18
-            #      exp10_mgh_ncd_convnext_small → 10, convnext_small
-            parts = d.split("_")
-            exp_num_str = ""
-            model_parts = []
-            for i, p in enumerate(parts):
-                if p.startswith("exp") and p[3:].isdigit():
-                    exp_num_str = p[3:]
-                    # Find longest suffix that matches a registered model name
-                    for j in range(len(parts) - 1, i, -1):
-                        candidate = "_".join(parts[j:])
-                        if candidate in model_set:
-                            model_parts = parts[j:]
-                            break
-                    break
-            if not exp_num_str or not model_parts:
-                logging.warning(f"Skipping {d}: could not parse exp/model")
-                skipped += 1
-                continue
-
-            exp_id = int(exp_num_str)
-            model_variant = "_".join(model_parts)
-
-            # Check if experiment is known
-            if exp_id not in EXPERIMENTS:
-                logging.info(f"Skipping {d}: exp_id {exp_id} not in EXPERIMENTS")
-                skipped += 1
-                continue
-
-            # Check for results.json (needed for best_fold info)
-            results_path = os.path.join(full_path, "results.json")
-            if not os.path.exists(results_path):
-                logging.info(f"SKIP {d}: no results.json (run sync-local.sh first)")
-                skipped += 1
-                continue
-
-            # Check for best_fold_N.pt
-            with open(results_path) as f:
-                results = json.load(f)
-            best_fold = results.get("best_fold")
-            if best_fold is None:
-                logging.info(f"SKIP {d}: no best_fold in results.json")
-                skipped += 1
-                continue
-
-            best_pt = os.path.join(full_path, f"best_fold_{best_fold}.pt")
-            if not os.path.exists(best_pt):
-                logging.info(f"SKIP {d}: best_fold_{best_fold}.pt not found")
-                skipped += 1
-                continue
-
-            # Check if embeddings already exist
-            emb_dir = os.path.join(full_path, "embeddings")
-            if os.path.exists(os.path.join(emb_dir, "embeddings.npy")):
-                logging.info(f"OK   {d}: embeddings already present")
-                continue
-
-            # Generate embeddings
-            logging.info(f"GEN  {d}: generating embeddings...")
-            try:
-                config = EXPERIMENTS[exp_id]
-                entry = get_registry_entry(model_variant)
-                w, h = entry.input_size
-                data_dir = str(PROJECT_ROOT / "dataset" / f"cropped_{w}x{h}" / "train")
-                if not os.path.exists(data_dir):
-                    logging.warning(f"Train dataset not found: {data_dir}, trying test dir...")
-                    data_dir = str(PROJECT_ROOT / "dataset" / f"cropped_{w}x{h}" / "test")
-                    if not os.path.exists(data_dir):
-                        logging.error(f"Dataset not found for {d}, skipping")
-                        skipped += 1
-                        continue
-
-                run_embedding_extraction(
-                    exp_dir=full_path,
-                    model_variant=model_variant,
-                    num_classes=config["num_classes"],
-                    class_names=config.get("test_classes", ALL_CLASSES),
-                    data_dir=data_dir,
-                    batch_size=8,
-                )
-                generated += 1
-            except Exception as e:
-                logging.error(f"FAIL {d}: {e}")
-                import traceback
-                traceback.print_exc()
-                skipped += 1
-
-        print(f"\nEmbeddings generated: {generated}, skipped: {skipped}")
         return 0
 
-    # Run experiments
-    success_count = 0
-    for exp_id in exp_ids:
-        try:
-            run_experiment(
-                exp_id=exp_id,
-                phases=phases,
-                model_variant=args.model,
-                epochs=args.epochs,
-                batch_size=args.batch_size,
-                learning_rate=args.lr,
-                num_folds=args.folds,
-                fold_index=args.fold,
-                aggregate_only=args.aggregate_only,
-                patience=args.patience,
-                tag=args.tag,
-                gradient_accumulation_steps=args.accumulation,
-                proj_dim=args.proj_dim,
-                temperature=args.temperature,
-                ce_epochs=args.ce_epochs,
-                use_prototypes=args.sphor,
-                repulse_weight=args.repulse_weight,
-                pair_weights=_build_pair_weights(args.hard_weight) if args.hard_weight > 0 else None,
-                full_finetune=args.full_finetune,
-                osr_ensemble=args.osr_ensemble,
-            )
-            success_count += 1
-        except Exception as e:
-            logging.error(f"Failed to run experiment {exp_id}: {e}")
-            import traceback
+    if "embeddings_missing" in phases:
+        return _run_embeddings_missing(args, valid_models)
 
-            traceback.print_exc()
-            if len(exp_ids) == 1:
-                return 1
-
-    logging.info("\n" + "=" * 70)
-    logging.info(f"COMPLETED: {success_count}/{len(exp_ids)} experiments")
-    logging.info("=" * 70)
-
-    return 0
+    return _run_experiment_loop(args, phases, exp_ids)
 
 
 if __name__ == "__main__":
