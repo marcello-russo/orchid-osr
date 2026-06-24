@@ -58,4 +58,9 @@ temp_kfold/
 .vscode/
 backend/build/
 .worktrees/
+# Draft docs (non committati)
+docs/experiments-draft.md
+docs/plans/
+docs/specs/
+docs/training-status.md
 
