@@ -1,6 +1,7 @@
 # backend/app/api/routes/experiments.py
 import datetime
 import json
+import re
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
@@ -22,6 +23,13 @@ def _validate_id(value: str) -> str:
     return value
 
 
+def _parse_exp_num(name: str) -> int:
+    """Extract experiment number from directory name for sorting.
+    'exp10_mgh_ncd_resnet18' → 10, 'exp6_clean_split' → 6."""
+    m = re.search(r'exp(\d+)', name)
+    return int(m.group(1)) if m else 999
+
+
 def _load_json(path: Path) -> dict:
     with open(path) as f:
         return json.load(f)
@@ -35,7 +43,7 @@ async def list_experiments():
         return []
 
     experiments = []
-    for d in sorted(exp_dir.iterdir()):
+    for d in sorted(exp_dir.iterdir(), key=lambda p: _parse_exp_num(p.name)):
         if not d.is_dir():
             continue
 
