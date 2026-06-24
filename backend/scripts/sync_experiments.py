@@ -1,10 +1,8 @@
 """Download experiment results from HuggingFace models repo at container startup."""
 import os
-import sys
 
 from huggingface_hub import HfApi
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from app.core.hf_sync import download_file, list_repo_files
 
 
@@ -28,9 +26,12 @@ def main():
 
     for src in paths:
         parts = src.split("/")
-        if len(parts) < 2 or parts[0] in ("old",):
+        if parts[0] in ("old",):
             continue
-        flat = "/".join(parts[1:])
+        if len(parts) < 2:
+            flat = src  # root-level file (ncd_comparison.json)
+        else:
+            flat = "/".join(parts[1:])
         dst = os.path.join(DST, flat)
         os.makedirs(os.path.dirname(dst), exist_ok=True)
 
@@ -43,16 +44,6 @@ def main():
             count += 1
         except Exception as e:
             print(f"  WARN: failed to download {src}: {e}")
-
-    ncd_dst = os.path.join(DST, "ncd_comparison.json")
-    if not os.path.exists(ncd_dst):
-        try:
-            download_file(api, REPO, "ncd_comparison.json", ncd_dst, token)
-            count += 1
-        except Exception as e:
-            print(f"  WARN: failed to download ncd_comparison.json: {e}")
-    else:
-        skipped += 1
 
     print(f"Downloaded {count} files (skipped {skipped} existing)")
 

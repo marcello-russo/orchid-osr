@@ -10,7 +10,6 @@ from pathlib import Path
 from dotenv import load_dotenv
 from huggingface_hub import HfApi
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from app.core.hf_sync import download_file, list_repo_files
 
 

@@ -3,12 +3,11 @@ import os
 import shutil
 from pathlib import Path
 
-from huggingface_hub import HfApi
+from huggingface_hub import HfApi, hf_hub_download
 
 
 def download_file(api: HfApi, repo: str, src_path: str, dst_path: str | Path, token: str):
     """Download a single file from HF with atomic .tmp+os.replace."""
-    from huggingface_hub import hf_hub_download
 
     dl = hf_hub_download(repo, src_path, token=token)
     tmp = str(dst_path) + ".tmp"
