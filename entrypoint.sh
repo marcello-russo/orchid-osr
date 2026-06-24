@@ -32,7 +32,6 @@ fi
 
 # Sync experiments/models to persistent storage
 if [ -d /data ]; then
-    [ -d /data/experiments ] && rm -rf /data/experiments
     mkdir -p /data/experiments
     echo "Download experiment results..."
     python3 scripts/sync_experiments.py || echo "Experiment sync failed (non-fatal)"
