@@ -55,7 +55,7 @@ RUN mkdir -p models dataset
 COPY backend/app/ app/
 COPY backend/server.py .
 COPY backend/cli.py .
-# experiments/ conterra solo i metadata dal build context (vedi .dockerignore).
+# experiments/ contains only metadata from the build context (see .dockerignore).
 COPY backend/experiments/ experiments/
 COPY --from=frontend-builder /workspace/frontend/dist /workspace/backend/frontend/dist
 COPY entrypoint.sh .
@@ -83,7 +83,7 @@ RUN mkdir -p models dataset
 COPY backend/app/ app/
 COPY backend/server.py .
 COPY backend/cli.py .
-# experiments/ conterra solo i metadata dal build context (vedi .dockerignore).
+# experiments/ contains only metadata from the build context (see .dockerignore).
 COPY backend/experiments/ experiments/
 COPY entrypoint.sh .
 RUN chmod +x entrypoint.sh
