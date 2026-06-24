@@ -4,11 +4,13 @@ import threading
 from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.routes import auth, classify, comparison, dataset, embeddings, experiments, health, species
 from app.api.routes import ncd as ncd_router
@@ -21,6 +23,35 @@ app = FastAPI(
     description="API per classificare specie di orchidee Ophrys con modelli multi-architettura",
     version="1.0.0",
 )
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc):
+    return JSONResponse(
+        status_code=422,
+        content={
+            "error": "validation_error",
+            "detail": "Invalid request data",
+            "fields": {e["loc"][-1]: e["msg"] for e in exc.errors()},
+        },
+    )
+
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request, exc):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"error": "http_error", "detail": exc.detail},
+    )
+
+
+@app.exception_handler(Exception)
+async def general_exception_handler(request, exc):
+    logger.error(f"Errore non gestito: {exc}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"error": "internal_error", "detail": "Errore interno del server"},
+    )
 
 
 @app.on_event("startup")
