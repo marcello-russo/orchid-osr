@@ -14,7 +14,7 @@ def main():
 
     api = HfApi(token=token)
     REPO = "marcellorusso/orchid-ncd-models"
-    DST = "/data/experiments"
+    DST = os.environ.get("EXPERIMENTS_DIR", "/data/experiments")
 
     os.makedirs(DST, exist_ok=True)
 
@@ -26,6 +26,7 @@ def main():
 
     paths = [i.path for i in items if "." in i.path.split("/")[-1]]
     count = 0
+    skipped = 0
 
     for src in paths:
         parts = src.split("/")
@@ -34,20 +35,33 @@ def main():
         flat = "/".join(parts[1:])
         dst = os.path.join(DST, flat)
         os.makedirs(os.path.dirname(dst), exist_ok=True)
+
+        # Incremental: skip if exists (except JSON files which may be updated)
+        if not src.endswith(".json") and os.path.exists(dst):
+            skipped += 1
+            continue
+
         try:
             dl = hf_hub_download(REPO, src, token=token)
-            shutil.copy2(dl, dst)
+            tmp = str(dst) + ".tmp"
+            shutil.copy2(dl, tmp)
+            os.replace(tmp, dst)
             count += 1
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"  WARN: failed to download {src}: {e}")
 
+    # ncd_comparison.json at repo root (not under any exp dir)
     try:
+        ncd_dst = os.path.join(DST, "ncd_comparison.json")
         p = hf_hub_download(REPO, "ncd_comparison.json", token=token)
-        shutil.copy2(p, os.path.join(DST, "ncd_comparison.json"))
-    except Exception:
-        pass
+        tmp = ncd_dst + ".tmp"
+        shutil.copy2(p, tmp)
+        os.replace(tmp, ncd_dst)
+        count += 1
+    except Exception as e:
+        print(f"  WARN: failed to download ncd_comparison.json: {e}")
 
-    print(f"Downloaded {count} files")
+    print(f"Downloaded {count} files (skipped {skipped} existing)")
 
 
 if __name__ == "__main__":
