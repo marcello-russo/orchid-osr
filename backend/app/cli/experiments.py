@@ -83,10 +83,89 @@ def _handle_auth_commands(args) -> int | None:
     return None
 
 
+def _run_crop_step(args, cropped_dir: str, internet_dir: str, cropper_model: str) -> None:
+    """Run cropping step of preprocessing pipeline."""
+    from app.cli.definitions import PROJECT_ROOT
+    from app.config import settings as cfg
+    from app.preprocessing.cropper import crop_dataset, crop_single_image, load_cropper_model
+
+    logger.info("=" * 60)
+    logger.info("PIPELINE STEP 1: CROP")
+    logger.info("=" * 60)
+
+    raw_private = str(PROJECT_ROOT / "dataset" / "raw")
+    if os.path.exists(raw_private):
+        logger.info("Cropping private raw images...")
+        crop_dataset(raw_private, cropped_dir, cropper_model, score_threshold=args.score_threshold)
+
+    if os.path.exists(internet_dir):
+        logger.info("Cropping internet raw images...")
+        model = load_cropper_model(cropper_model)
+        for inet_class_dir in sorted(Path(internet_dir).iterdir()):
+            if not inet_class_dir.is_dir():
+                continue
+            inet_name = inet_class_dir.name
+            class_name = None
+            for cls in cfg.class_names:
+                if cls.replace(" ", "") == inet_name:
+                    class_name = cls
+                    break
+            if class_name is None:
+                logger.warning(f"Skipping {inet_name}: no matching class in config")
+                continue
+            out_dir = os.path.join(cropped_dir, class_name)
+            os.makedirs(out_dir, exist_ok=True)
+            files = sorted(f for f in os.listdir(inet_class_dir) if f.lower().endswith((".jpg", ".jpeg", ".png")))
+            cropped_count = 0
+            for img_file in files:
+                img_path = os.path.join(str(inet_class_dir), img_file)
+                cropped_img, _ = crop_single_image(model, img_path, args.score_threshold, fallback="full")
+                if cropped_img is not None:
+                    cropped_img.save(os.path.join(out_dir, img_file), quality=95)
+                    cropped_count += 1
+            logger.info(f"Internet {inet_name} → {class_name}: {cropped_count}/{len(files)}")
+
+
+def _run_split_step(cropped_dir: str, internet_dir: str) -> None:
+    """Run train/test split step."""
+    from app.cli.definitions import PROJECT_ROOT
+    from app.config import settings as cfg
+    from app.preprocessing.split import create_clean_split
+
+    logger.info("=" * 60)
+    logger.info("PIPELINE STEP 2: SPLIT")
+    logger.info("=" * 60)
+    create_clean_split(
+        cropped_dir=cropped_dir,
+        internet_dir=internet_dir,
+        output_dir=os.path.join(str(PROJECT_ROOT), "dataset", "cropped"),
+        class_names=cfg.class_names, internet_classes=cfg.internet_classes,
+        test_per_class=cfg.test_per_class, seed=cfg.split_seed,
+    )
+
+
+def _run_resize_step() -> None:
+    """Run resize step for all architectures."""
+    from app.cli.definitions import PROJECT_ROOT
+    from app.preprocessing.resize_dataset import resize_for_all_architectures
+
+    logger.info("=" * 60)
+    logger.info("PIPELINE STEP 3: RESIZE")
+    logger.info("=" * 60)
+    cropped_base = str(PROJECT_ROOT / "dataset" / "cropped")
+    dataset_base = str(PROJECT_ROOT / "dataset")
+    for split_name in ["train", "test"]:
+        split_dir = os.path.join(cropped_base, split_name)
+        if not os.path.exists(split_dir):
+            logger.warning(f"Skipping {split_name} — directory not found")
+            continue
+        logger.info(f"Resizing {split_name}...")
+        resize_for_all_architectures(split_dir, dataset_base, split_name=split_name)
+
+
 def _run_pipeline(args) -> None:
     """Run preprocessing pipeline (crop/split/resize)."""
     from app.cli.definitions import PROJECT_ROOT
-    from app.config import settings as cfg
 
     setup_logging()
     cropped_dir = str(PROJECT_ROOT / "dataset" / "cropped")
@@ -94,70 +173,13 @@ def _run_pipeline(args) -> None:
     cropper_model = os.path.join(str(PROJECT_ROOT), args.cropper_model)
 
     if args.crop or args.pipeline:
-        from app.preprocessing.cropper import crop_dataset, crop_single_image, load_cropper_model
-
-        logger.info("=" * 60)
-        logger.info("PIPELINE STEP 1: CROP")
-        logger.info("=" * 60)
-
-        raw_private = str(PROJECT_ROOT / "dataset" / "raw")
-        if os.path.exists(raw_private):
-            logger.info("Cropping private raw images...")
-            crop_dataset(raw_private, cropped_dir, cropper_model, score_threshold=args.score_threshold)
-
-        if os.path.exists(internet_dir):
-            logger.info("Cropping internet raw images...")
-            model = load_cropper_model(cropper_model)
-            for inet_class_dir in sorted(Path(internet_dir).iterdir()):
-                if not inet_class_dir.is_dir():
-                    continue
-                inet_name = inet_class_dir.name
-                class_name = None
-                for cls in cfg.class_names:
-                    if cls.replace(" ", "") == inet_name:
-                        class_name = cls
-                        break
-                if class_name is None:
-                    logger.warning(f"Skipping {inet_name}: no matching class in config")
-                    continue
-                out_dir = os.path.join(cropped_dir, class_name)
-                os.makedirs(out_dir, exist_ok=True)
-                files = sorted(f for f in os.listdir(inet_class_dir) if f.lower().endswith((".jpg", ".jpeg", ".png")))
-                cropped_count = 0
-                for img_file in files:
-                    img_path = os.path.join(str(inet_class_dir), img_file)
-                    cropped_img, _ = crop_single_image(model, img_path, args.score_threshold, fallback="full")
-                    if cropped_img is not None:
-                        cropped_img.save(os.path.join(out_dir, img_file), quality=95)
-                        cropped_count += 1
-                logger.info(f"Internet {inet_name} → {class_name}: {cropped_count}/{len(files)}")
+        _run_crop_step(args, cropped_dir, internet_dir, cropper_model)
 
     if args.split or args.pipeline:
-        from app.preprocessing.split import create_clean_split
-        logger.info("=" * 60)
-        logger.info("PIPELINE STEP 2: SPLIT")
-        logger.info("=" * 60)
-        create_clean_split(
-            cropped_dir=cropped_dir, internet_dir=internet_dir,
-            output_dir=os.path.join(str(PROJECT_ROOT), "dataset", "cropped"),
-            class_names=cfg.class_names, internet_classes=cfg.internet_classes,
-            test_per_class=cfg.test_per_class, seed=cfg.split_seed,
-        )
+        _run_split_step(cropped_dir, internet_dir)
 
     if args.resize or args.pipeline:
-        from app.preprocessing.resize_dataset import resize_for_all_architectures
-        logger.info("=" * 60)
-        logger.info("PIPELINE STEP 3: RESIZE")
-        logger.info("=" * 60)
-        cropped_base = str(PROJECT_ROOT / "dataset" / "cropped")
-        dataset_base = str(PROJECT_ROOT / "dataset")
-        for split_name in ["train", "test"]:
-            split_dir = os.path.join(cropped_base, split_name)
-            if not os.path.exists(split_dir):
-                logger.warning(f"Skipping {split_name} — directory not found")
-                continue
-            logger.info(f"Resizing {split_name}...")
-            resize_for_all_architectures(split_dir, dataset_base, split_name=split_name)
+        _run_resize_step()
 
 
 def _run_plot_mode(args) -> None:
