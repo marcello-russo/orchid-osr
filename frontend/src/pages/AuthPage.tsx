@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
@@ -95,13 +95,6 @@ export default function AuthPage() {
     errorTimer.current = setTimeout(() => setApiError(""), 10000);
   }, []);
 
-  // Focus sul primo campo con errore
-  useEffect(() => {
-    if (firstErrorRef.current) {
-      firstErrorRef.current.focus();
-    }
-  }, [fieldErrors]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setZodError(null);
@@ -184,7 +177,12 @@ export default function AuthPage() {
           </div>
           <Input
             id={opts.id}
-            ref={opts.id === firstErrorField ? firstErrorRef : undefined}
+            ref={(el) => {
+              if (opts.id === firstErrorField && el) {
+                firstErrorRef.current = el;
+                el.focus();
+              }
+            }}
             type={opts.type || "text"}
             value={opts.value}
             onChange={(e) => opts.onChange(e.target.value)}
