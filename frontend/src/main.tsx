@@ -13,7 +13,7 @@ const initialTheme = useAppStore.getState().theme;
 document.documentElement.classList.toggle("dark", initialTheme === "dark");
 
 window.addEventListener("unhandledrejection", (event) => {
-    console.error("Promessa non gestita:", event.reason);
+    console.error("Unhandled promise rejection:", event.reason);
 });
 
 createRoot(document.getElementById("root")!).render(
