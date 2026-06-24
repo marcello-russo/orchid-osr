@@ -1,6 +1,7 @@
 import json
 import os
 import secrets
+from collections import OrderedDict
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -13,6 +14,9 @@ from app.config import settings
 USERS_PATH = Path(os.environ.get("USERS_PATH", "data/users.json"))
 _HF_DATASET_REPO = "marcellorusso/orchid-ncd-dataset"
 JWT_ALGORITHM = "HS256"
+_LOGIN_ATTEMPTS: OrderedDict[str, int] = OrderedDict()
+MAX_LOGIN_ATTEMPTS = 5
+_MAX_TRACKED_USERS = 1000
 
 
 def _sync_to_hf() -> None:
@@ -98,10 +102,18 @@ def register_user(invite_code: str, username: str, password: str) -> dict:
 
 
 def login_user(username: str, password: str) -> dict:
+    if _LOGIN_ATTEMPTS.get(username, 0) >= MAX_LOGIN_ATTEMPTS:
+        raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, "Account temporarily locked. Try again later.")
+
     data = _load_data()
     user = next((u for u in data["users"] if u["username"] == username), None)
     if not user or not verify_password(password, user["password_hash"]):
+        if len(_LOGIN_ATTEMPTS) >= _MAX_TRACKED_USERS:
+            _LOGIN_ATTEMPTS.popitem(last=False)
+        _LOGIN_ATTEMPTS[username] = _LOGIN_ATTEMPTS.get(username, 0) + 1
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid username or password")
+
+    _LOGIN_ATTEMPTS.pop(username, None)
     return {"username": user["username"], "role": user["role"]}
 
 

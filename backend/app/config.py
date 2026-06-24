@@ -77,10 +77,8 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def _validate_jwt_secret(self):
         if not self.jwt_secret:
-            import warnings
-
-            warnings.warn(
-                "JWT_SECRET is empty! Authentication tokens will be insecure. "
+            raise ValueError(
+                "JWT_SECRET is empty! Authentication tokens would be forgeable. "
                 "Set a strong JWT_SECRET in your .env file."
             )
         return self
