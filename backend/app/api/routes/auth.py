@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Request, status
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
@@ -11,17 +11,18 @@ limiter = Limiter(key_func=get_remote_address)
 
 class RegisterRequest(BaseModel):
     invite_code: str
-    username: str
-    password: str
+    username: str = Field(min_length=3, max_length=32, pattern=r"^[a-zA-Z0-9_]+$")
+    password: str = Field(min_length=8, max_length=128)
 
 
 class LoginRequest(BaseModel):
-    username: str
-    password: str
+    username: str = Field(min_length=1)
+    password: str = Field(min_length=1)
 
 
 @router.post("/register")
-def register(body: RegisterRequest):
+@limiter.limit("10/minute")
+def register(request: Request, body: RegisterRequest):  # noqa: ARG001 — required by slowapi
     user = register_user(body.invite_code, body.username, body.password)
     token = create_jwt(user["username"], user["role"])
     return {"token": token, "user": user}
