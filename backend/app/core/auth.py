@@ -1,6 +1,7 @@
 import json
 import os
 import secrets
+from collections import OrderedDict
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -13,8 +14,9 @@ from app.config import settings
 USERS_PATH = Path(os.environ.get("USERS_PATH", "data/users.json"))
 _HF_DATASET_REPO = "marcellorusso/orchid-ncd-dataset"
 JWT_ALGORITHM = "HS256"
-_LOGIN_ATTEMPTS: dict[str, int] = {}
+_LOGIN_ATTEMPTS: OrderedDict[str, int] = OrderedDict()
 MAX_LOGIN_ATTEMPTS = 5
+_MAX_TRACKED_USERS = 1000
 
 
 def _sync_to_hf() -> None:
@@ -106,6 +108,8 @@ def login_user(username: str, password: str) -> dict:
     data = _load_data()
     user = next((u for u in data["users"] if u["username"] == username), None)
     if not user or not verify_password(password, user["password_hash"]):
+        if len(_LOGIN_ATTEMPTS) >= _MAX_TRACKED_USERS:
+            _LOGIN_ATTEMPTS.popitem(last=False)
         _LOGIN_ATTEMPTS[username] = _LOGIN_ATTEMPTS.get(username, 0) + 1
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid username or password")
 

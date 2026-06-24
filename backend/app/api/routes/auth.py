@@ -22,7 +22,7 @@ class LoginRequest(BaseModel):
 
 @router.post("/register")
 @limiter.limit("10/minute")
-def register(request: Request, body: RegisterRequest):
+def register(request: Request, body: RegisterRequest):  # noqa: ARG001 — required by slowapi
     user = register_user(body.invite_code, body.username, body.password)
     token = create_jwt(user["username"], user["role"])
     return {"token": token, "user": user}
