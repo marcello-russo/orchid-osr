@@ -79,7 +79,7 @@ RUN pip install --no-cache-dir --default-timeout=1000 . --constraint constraints
     pip install --no-cache-dir transformers==4.43.0 tokenizers==0.19.1
 
 COPY backend/data/ data/
-RUN mkdir -p models dataset logs
+RUN mkdir -p models dataset
 COPY backend/app/ app/
 COPY backend/server.py .
 COPY backend/cli.py .
