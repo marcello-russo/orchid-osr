@@ -11,14 +11,27 @@
     "noAccount": "Non hai un account? Registrati",
     "hasAccount": "Hai già un account? Accedi",
     "logout": "Esci",
+    "passwordStrength": {
+      "weak": "Almeno 8 caratteri",
+      "good": "Password buona",
+      "strong": "Password forte"
+    },
     "errors": {
       "passwordsDontMatch": "Le password non coincidono",
       "invalidInvite": "Codice invito non valido o scaduto",
       "usernameTaken": "Username già in uso",
-      "invalidCredentials": "Username o password non validi"
+      "invalidCredentials": "Username o password non validi",
+      "usernameRequired": "Username obbligatorio",
+      "passwordRequired": "Password obbligatoria",
+      "inviteRequired": "Codice invito obbligatorio",
+      "usernameLength": "Username deve essere 3-32 caratteri",
+      "passwordLength": "Password deve essere 8-128 caratteri",
+      "rateLimited": "Troppi tentativi. Aspetta qualche minuto.",
+      "networkError": "Errore di connessione. Controlla Internet."
     }
   },
   "common": {
+    "success": "Operazione completata!",
     "loading": "Caricamento...",
     "retry": "Riprova",
     "error": "Si è verificato un errore",

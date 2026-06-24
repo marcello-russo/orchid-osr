@@ -11,14 +11,27 @@
     "noAccount": "Don't have an account? Register",
     "hasAccount": "Already have an account? Sign in",
     "logout": "Logout",
+    "passwordStrength": {
+      "weak": "At least 8 characters",
+      "good": "Good password",
+      "strong": "Strong password"
+    },
     "errors": {
       "passwordsDontMatch": "Passwords do not match",
       "invalidInvite": "Invalid or expired invite code",
       "usernameTaken": "Username already taken",
-      "invalidCredentials": "Invalid username or password"
+      "invalidCredentials": "Invalid username or password",
+      "usernameRequired": "Username is required",
+      "passwordRequired": "Password is required",
+      "inviteRequired": "Invite code is required",
+      "usernameLength": "Username must be 3-32 characters",
+      "passwordLength": "Password must be 8-128 characters",
+      "rateLimited": "Too many attempts. Please wait a few minutes.",
+      "networkError": "Connection error. Check your internet."
     }
   },
   "common": {
+    "success": "Success!",
     "loading": "Loading...",
     "retry": "Retry",
     "error": "An error occurred",
