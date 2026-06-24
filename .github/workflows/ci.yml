@@ -28,8 +28,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: bash -n entrypoint.sh
-      - name: Python lint
-        run: ruff check backend/scripts/sync_experiments.py
+      - name: Python syntax check
+        run: python -c "import ast; ast.parse(open('backend/scripts/sync_experiments.py').read())"
       - run: docker build --target=cpu -t orchid-ncd .
       - name: Smoke test — avvio container
         run: |

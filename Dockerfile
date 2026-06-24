@@ -23,7 +23,7 @@ RUN pip install --no-cache-dir \
 
 COPY backend/pyproject.toml .
 # KEEP IN SYNC with gpu/training targets
-# Rimuove torch/torchvision per evitare double-install (gia installati sopra via CPU index)
+# Remove torch/torchvision to avoid double install (already installed above via CPU index)
 RUN sed -i '/"torch",/d; /"torchvision",/d' pyproject.toml && \
     pip install --no-cache-dir --default-timeout=1000 .
 
@@ -32,10 +32,9 @@ RUN mkdir -p models dataset
 COPY backend/app/ app/
 COPY backend/server.py .
 COPY backend/cli.py .
+COPY --from=frontend-builder /workspace/frontend/dist /workspace/backend/frontend/dist
 COPY entrypoint.sh .
 RUN chmod +x entrypoint.sh
-
-COPY --from=frontend-builder /workspace/frontend/dist /workspace/backend/frontend/dist
 
 ENV API_PORT=7860
 EXPOSE 7860
@@ -58,10 +57,9 @@ COPY backend/server.py .
 COPY backend/cli.py .
 # experiments/ conterra solo i metadata dal build context (vedi .dockerignore).
 COPY backend/experiments/ experiments/
+COPY --from=frontend-builder /workspace/frontend/dist /workspace/backend/frontend/dist
 COPY entrypoint.sh .
 RUN chmod +x entrypoint.sh
-
-COPY --from=frontend-builder /workspace/frontend/dist /workspace/backend/frontend/dist
 
 ENV API_PORT=7860
 EXPOSE 7860
