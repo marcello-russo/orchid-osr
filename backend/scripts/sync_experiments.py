@@ -51,15 +51,18 @@ def main():
             print(f"  WARN: failed to download {src}: {e}")
 
     # ncd_comparison.json at repo root (not under any exp dir)
-    try:
-        ncd_dst = os.path.join(DST, "ncd_comparison.json")
-        p = hf_hub_download(REPO, "ncd_comparison.json", token=token)
-        tmp = ncd_dst + ".tmp"
-        shutil.copy2(p, tmp)
-        os.replace(tmp, ncd_dst)
-        count += 1
-    except Exception as e:
-        print(f"  WARN: failed to download ncd_comparison.json: {e}")
+    ncd_dst = os.path.join(DST, "ncd_comparison.json")
+    if not os.path.exists(ncd_dst):
+        try:
+            p = hf_hub_download(REPO, "ncd_comparison.json", token=token)
+            tmp = ncd_dst + ".tmp"
+            shutil.copy2(p, tmp)
+            os.replace(tmp, ncd_dst)
+            count += 1
+        except Exception as e:
+            print(f"  WARN: failed to download ncd_comparison.json: {e}")
+    else:
+        skipped += 1
 
     print(f"Downloaded {count} files (skipped {skipped} existing)")
 
