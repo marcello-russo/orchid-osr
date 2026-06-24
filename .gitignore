@@ -38,7 +38,6 @@ inference*/
 models*/
 *.npy
 frontend/src/stores/
-docs/
 backend/users.json
 backend/data/users.json
 backend/*.egg-info/
