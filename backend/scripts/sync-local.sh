@@ -35,7 +35,7 @@ if not TOKEN:
 
 api = HfApi(token=TOKEN)
 REPO = 'marcellorusso/orchid-ncd-models'
-EXP_DIR = Path(os.environ.get('EXP_DIR', str(Path(os.path.dirname(os.path.abspath(__file__))).parent / 'experiments')))
+EXP_DIR = Path(os.environ.get('EXP_DIR', '/workspace/backend/experiments'))
 
 if not EXP_DIR.is_dir():
     print(f"Experiment directory not found: {EXP_DIR}")
@@ -76,7 +76,10 @@ for d in local_dirs:
     name = d.name
     has_config = (d / 'config.json').exists()
     has_results = (d / 'results.json').exists()
-    has_best_pt = any(f.name.startswith('best_fold_') and f.name.endswith('.pt') for f in d.iterdir())
+    has_best_pt = any(
+        f.name.startswith('best_fold_') and (f.name.endswith('.pt') or f.name.endswith('.safetensors'))
+        for f in d.iterdir()
+    )
 
     needs_config = not has_config
     needs_results = not has_results
@@ -130,6 +133,20 @@ for d in local_dirs:
             synced += 1
         except Exception as e:
             print(f"    FAILED {filename}: {e}")
+
+# ncd_comparison.json at repo root (not under any exp dir)
+try:
+    comp_src = "ncd_comparison.json"
+    comp_dst = EXP_DIR / "ncd_comparison.json"
+    if not comp_dst.exists():
+        p = hf_hub_download(REPO, comp_src, token=TOKEN)
+        shutil.copy2(p, str(comp_dst))
+        synced += 1
+        print(f"    Downloaded ncd_comparison.json")
+    else:
+        skipped += 1
+except Exception as e:
+    print(f"    FAILED ncd_comparison.json: {e}")
 
 print(f"\nSynced {synced} files, skipped {skipped} experiments")
 PYEOF
