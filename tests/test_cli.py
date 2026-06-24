@@ -1,23 +1,5 @@
 import pytest
-
-
-def _parse_exp_dir(dir_name):
-    """Replicate the parsing logic from cli.py embeddings-missing block."""
-    model_set = {"resnet18", "resnet50", "convnext_tiny", "convnext_small",
-                  "dinov2_small", "dinov2_base"}
-    parts = dir_name.split("_")
-    exp_num_str = ""
-    model_parts = []
-    for i, p in enumerate(parts):
-        if p.startswith("exp") and p[3:].isdigit():
-            exp_num_str = p[3:]
-            for j in range(len(parts) - 1, i, -1):
-                candidate = "_".join(parts[j:])
-                if candidate in model_set:
-                    model_parts = parts[j:]
-                    break
-            break
-    return int(exp_num_str) if exp_num_str else None, "_".join(model_parts) if model_parts else None
+from app.core.hf_sync import parse_exp_dir_name
 
 
 @pytest.mark.parametrize("dir_name,expected_exp,expected_model", [
@@ -54,6 +36,6 @@ def _parse_exp_dir(dir_name):
 ])
 def test_parse_exp_dir(dir_name, expected_exp, expected_model):
     """Verify exp directory name parsing matches expected exp_id and model."""
-    exp_id, model = _parse_exp_dir(dir_name)
+    exp_id, model = parse_exp_dir_name(dir_name)
     assert exp_id == expected_exp, f"{dir_name}: expected exp {expected_exp}, got {exp_id}"
     assert model == expected_model, f"{dir_name}: expected model {expected_model}, got {model}"
