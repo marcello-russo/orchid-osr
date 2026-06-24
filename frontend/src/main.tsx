@@ -12,6 +12,10 @@ import "./lib/i18n";
 const initialTheme = useAppStore.getState().theme;
 document.documentElement.classList.toggle("dark", initialTheme === "dark");
 
+window.addEventListener("unhandledrejection", (event) => {
+    console.error("Unhandled promise rejection:", event.reason);
+});
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <QueryProvider>

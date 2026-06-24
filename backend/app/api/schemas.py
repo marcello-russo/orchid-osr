@@ -302,3 +302,9 @@ class EmbeddingResponse(BaseModel):
     species: list[str]
     points: list[EmbeddingPoint]
     serving: ServingInfo = ServingInfo()
+
+
+class ErrorResponse(BaseModel):
+    error: str
+    detail: str
+    fields: dict[str, str] | None = None

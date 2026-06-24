@@ -4,6 +4,7 @@ import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { Toaster } from "sonner";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { ExperimentsPage } from "@/pages/ExperimentsPage";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -38,6 +39,7 @@ function PageFallback() {
 function App() {
   return (
     <BrowserRouter>
+      <Toaster position="top-right" richColors />
       <Routes>
         <Route path="/auth" element={<AuthPage />} />
 
