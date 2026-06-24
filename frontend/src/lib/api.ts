@@ -30,6 +30,18 @@ export async function fetchApi<T>(path: string, opts?: { method?: string; body?:
   if (!res.ok) {
     const body = await res.text();
     const snippet = body.length > 200 ? body.slice(0, 200) + "..." : body;
+    if (res.status === 401) {
+        const { useAppStore } = await import("../stores/useAppStore");
+        useAppStore.getState().logout();
+        window.location.href = "/auth";
+        return;
+    }
+    if (res.status >= 400 && res.status < 500 && res.status !== 401) {
+        try {
+            const { toast } = await import("sonner");
+            toast.error(`Errore ${res.status}: ${snippet}`);
+        } catch {}
+    }
     throw new Error(`API ${res.status}: ${snippet}`);
   }
   return res.json();
