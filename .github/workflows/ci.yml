@@ -19,15 +19,28 @@ jobs:
           python-version: "3.11"
           cache: "pip"
       - run: pip install ".[dev]"
-      - run: ruff check app/ tests/
-      - run: ruff format --check app/ tests/ --diff
+      - run: ruff check app/ tests/ scripts/
+      - run: ruff format --check app/ tests/ scripts/ --diff
       - run: pytest -x -q
 
   docker:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: bash -n backend/scripts/entrypoint.sh
+      - run: bash -n entrypoint.sh
+      - name: Python syntax check
+        run: python -c "
+import ast, pathlib
+errors = 0
+for f in sorted(pathlib.Path('backend/scripts').rglob('*.py')):
+    try:
+        ast.parse(f.read_text())
+        print(f'  OK  {f}')
+    except SyntaxError as e:
+        print(f'  FAIL {f}: {e}')
+        errors += 1
+exit(errors)
+"
       - run: docker build --target=cpu -t orchid-ncd .
       - name: Smoke test — avvio container
         run: |

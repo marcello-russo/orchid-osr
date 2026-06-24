@@ -1,0 +1,54 @@
+#!/bin/bash
+set -e
+
+# Use persistent storage on HF Spaces (/data) — dataset, cache HF, users
+DATA_DIR="${DATA_DIR:-/data}"
+if [ -d "$DATA_DIR" ]; then
+    export HF_HOME="$DATA_DIR/.hf_cache"
+    if [ ! -d "$DATA_DIR/dataset" ]; then
+        mkdir -p "$DATA_DIR/dataset"
+    fi
+    [ ! -L dataset ] && ln -sfn "$DATA_DIR/dataset" dataset 2>/dev/null || true
+
+    # Persistent users.json (auth) — scarica/sincronizza da dataset privato
+    echo "Sincronizzo users.json da dataset privato..."
+        python3 -c "
+from huggingface_hub import hf_hub_download
+import os
+try:
+    path = hf_hub_download(
+        repo_id='marcellorusso/orchid-ncd-dataset',
+        filename='users.json',
+        repo_type='dataset',
+        token=os.environ.get('HF_TOKEN')
+    )
+    import shutil
+    shutil.copy2(path, \"$DATA_DIR/users.json\")
+    print('users.json scaricato')
+except Exception as e:
+    print(f'users.json non disponibile: {e}')
+" 2>&1
+    export USERS_PATH="$DATA_DIR/users.json"
+fi
+
+# Sync experiments/models to persistent storage
+if [ -d "$DATA_DIR" ]; then
+    mkdir -p "$DATA_DIR/experiments"
+    echo "Download experiment results..."
+    python3 scripts/sync_experiments.py || echo "Experiment sync failed (non-fatal)"
+    [ ! -L experiments ] && ln -sfn "$DATA_DIR/experiments" experiments 2>/dev/null || true
+fi
+
+# Download dataset if not present (uses HF_TOKEN from Secrets at runtime)
+if [ ! -d "dataset/cropped_256x512/train" ] || [ ! -d "dataset/cropped_224x224/train" ]; then
+    echo "Dataset non trovato — download in corso..."
+    python scripts/hf_tools/download_cache.py || echo "Download fallito (forse HF_TOKEN mancante)"
+fi
+
+# Avvia server (--reload in dev mode)
+EXTRA_ARGS=""
+if [ "$API_RELOAD" = "true" ]; then
+    EXTRA_ARGS=" --reload"
+fi
+
+exec python server.py$EXTRA_ARGS
