@@ -28,8 +28,19 @@ export async function fetchApi<T>(path: string, opts?: { method?: string; body?:
     body: opts?.body,
   });
   if (!res.ok) {
+    if (res.status === 401) {
+        const { useAppStore } = await import("../stores/useAppStore");
+        useAppStore.getState().logout();
+        window.location.href = "/auth";
+        throw new Error("Sessione scaduta");
+    }
     const body = await res.text();
     const snippet = body.length > 200 ? body.slice(0, 200) + "..." : body;
+    if (res.status >= 400 && res.status < 500) {
+        const { toast } = await import("sonner");
+        toast.error(`Errore ${res.status}: ${snippet}`);
+        throw new Error(`API ${res.status}: ${snippet}`);
+    }
     throw new Error(`API ${res.status}: ${snippet}`);
   }
   return res.json();
