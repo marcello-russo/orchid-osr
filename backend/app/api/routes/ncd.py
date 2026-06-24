@@ -1,6 +1,5 @@
 import json
 import os
-from functools import lru_cache
 from pathlib import Path
 
 import logging
@@ -35,7 +34,6 @@ def _get_exp_dir(model_variant: str, exp_num: int = 8) -> str | None:
     return None
 
 
-@lru_cache(maxsize=32)
 def _load_npy_or_none(path: str) -> list | None:
     if not _NP_AVAILABLE:
         return None
@@ -44,7 +42,8 @@ def _load_npy_or_none(path: str) -> list | None:
         return arr.tolist()
     except FileNotFoundError:
         return None
-    except Exception:
+    except Exception as e:
+        logger.warning(f"Failed to load {path}: {e}")
         return None
 
 
@@ -55,7 +54,7 @@ async def get_ncd_results(model_variant: str, exp: int = 8):
         raise HTTPException(404, f"Exp {exp} model '{model_variant}' not found")
     ncd_path = os.path.join(exp_dir, "ncd_results.json")
     if not os.path.exists(ncd_path):
-        raise HTTPException(404, "NCD results not found")
+        raise HTTPException(404, "NCD results not found — run --ncd pipeline first")
     with open(ncd_path) as f:
         data = json.load(f)
 
@@ -105,7 +104,7 @@ async def get_ncd_figure(model_variant: str, figure_name: str, exp: int = 8):
         raise HTTPException(400, f"Figure must be one of: {sorted(_ALLOWED_FIGURES)}")
     fig_path = os.path.join(exp_dir, "ncd_figures", figure_name)
     if not os.path.exists(fig_path):
-        raise HTTPException(404, "Figure not found")
+        raise HTTPException(404, "Figure not found — run --ncd pipeline first")
     return FileResponse(fig_path)
 
 
@@ -114,6 +113,6 @@ async def get_ncd_comparison():
     base = Path(settings.results_dir)
     comparison_path = os.path.join(str(base), "ncd_comparison.json")
     if not os.path.exists(comparison_path):
-        raise HTTPException(404, "NCD comparison not found")
+        raise HTTPException(404, "NCD comparison not found — run ncd_comparison.py first")
     with open(comparison_path) as f:
         return json.load(f)
