@@ -5,7 +5,7 @@ import os
 
 import torch
 
-from app.cli.definitions import EXPERIMENTS, PROJECT_ROOT
+from app.cli.definitions import ALL_CLASSES, EXPERIMENTS, PROJECT_ROOT
 
 
 def setup_logging(log_dir: str | None = None, level: int = logging.INFO) -> str:
@@ -170,6 +170,8 @@ def run_experiment(
             run_osr=True,
             test_dir=cropped_test if os.path.exists(cropped_test) else None,
             osr_method="ensemble" if osr_ensemble else "openmax",
+            ncd_mode=config.get("ncd_mode", False),
+            all_classes=ALL_CLASSES,
         )
         return
 

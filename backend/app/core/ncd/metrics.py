@@ -24,6 +24,8 @@ def hungarian_accuracy(true_labels: np.ndarray, pred_labels: np.ndarray) -> floa
 
     cost_matrix = np.zeros((n_classes, n_classes), dtype=np.int64)
     for i in range(len(true)):
+        if pred[i] < 0:  # DBSCAN noise label
+            continue
         cost_matrix[pred[i], true[i]] += 1
 
     row_ind, col_ind = linear_sum_assignment(cost_matrix, maximize=True)
