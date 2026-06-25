@@ -1,5 +1,6 @@
 """NCD pipeline orchestrator: extraction + clustering + OSR evaluation."""
 
+import json
 import logging
 import os
 
@@ -42,6 +43,17 @@ def run_ncd_pipeline(
         run_osr: whether to run Open-Set Recognition evaluation.
         test_dir: test directory for OSR evaluation (required if run_osr=True).
     """
+
+    # Validazione parametri — fail-fast su configurazioni errate
+    if ncd_mode and all_classes is None:
+        logger.error("ncd_mode=True richiede all_classes — impostare all_classes nel chiamante")
+        return
+    if run_osr and test_dir is None:
+        logger.error("run_osr=True richiede test_dir")
+        return
+    if ncd_mode and not run_osr:
+        logger.warning("ncd_mode=True senza run_osr=True: nessuna valutazione OSR verra eseguita")
+
     from app.core.ncd.clustering import (
         dbscan_clustering,
         grid_search_kmeans,
@@ -250,8 +262,6 @@ def run_ncd_pipeline(
                 if all_classes is None:
                     logger.warning("all_classes required for ncd_mode, skipping OSR")
                 else:
-                    import json
-
                     import torch
                     from torch.utils.data import DataLoader
 
@@ -297,8 +307,6 @@ def run_ncd_pipeline(
                         logger.info(f"NCD OSR complete. AUROC: {osr_results['auroc']:.4f}")
 
             elif osr_method == "ensemble":
-                import json
-
                 import torch
 
                 from app.core.ncd.extract import extract_embeddings, extract_logits
