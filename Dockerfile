@@ -70,6 +70,7 @@ CMD ["./entrypoint.sh"]
 FROM docker.io/pytorch/pytorch:2.1.0-cuda12.1-cudnn8-runtime AS training
 
 WORKDIR /workspace/backend
+ENV HOME=/workspace
 
 COPY backend/pyproject.toml .
 # KEEP IN SYNC with gpu/training targets
@@ -79,6 +80,7 @@ RUN pip install --no-cache-dir --default-timeout=1000 . --constraint constraints
     pip install --no-cache-dir transformers==4.43.0 tokenizers==0.19.1
 
 COPY backend/data/ data/
+COPY backend/scripts/ scripts/
 RUN mkdir -p models dataset
 COPY backend/app/ app/
 COPY backend/server.py .
@@ -86,7 +88,7 @@ COPY backend/cli.py .
 # experiments/ contains only metadata from the build context (see .dockerignore).
 COPY backend/experiments/ experiments/
 COPY entrypoint.sh .
-RUN chmod +x entrypoint.sh
+RUN chmod +x entrypoint.sh && chown -R 42420:42420 /workspace
 
 ENV HF_HOME=/workspace/backend/.hf_cache
 ENV TORCH_HOME=/workspace/backend/.torch_cache

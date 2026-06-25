@@ -168,7 +168,7 @@ def run_ncd_pipeline(
             else:
                 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
                 test_emb, test_labels, _, _ = extract_embeddings(
-                    model_variant, test_dir, best_model_path, num_classes, batch_size, device
+                    model_variant, test_dir, best_model_path, num_classes, batch_size, device, exp_dir=exp_dir
                 )
                 combined_emb = np.vstack([embeddings, test_emb])
                 combined_labels = np.hstack([true_labels, test_labels])
@@ -289,7 +289,7 @@ def run_ncd_pipeline(
                             return
 
                         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-                        model = load_trained_model(model_variant, num_classes, best_model_path, device)
+                        model = load_trained_model(model_variant, num_classes, best_model_path, device, exp_dir=exp_dir)
                         transform = create_transform(model_variant)
                         train_dataset = ImageFolderWithName(data_dir, transform=transform)
                         test_dataset = ImageFolderWithName(test_dir, transform=transform)
