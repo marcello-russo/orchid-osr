@@ -294,6 +294,7 @@ def run_openset_evaluation(
         num_classes=num_classes,
         batch_size=batch_size,
         device=device,
+        exp_dir=exp_dir,
     )
 
     test_emb, test_labels, _, test_species = extract_embeddings(
@@ -303,6 +304,7 @@ def run_openset_evaluation(
         num_classes=num_classes,
         batch_size=batch_size,
         device=device,
+        exp_dir=exp_dir,
     )
 
     logger.info(f"Train embeddings: {train_emb.shape}, Test embeddings: {test_emb.shape}")

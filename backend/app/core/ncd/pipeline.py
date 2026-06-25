@@ -329,10 +329,10 @@ def run_ncd_pipeline(
                     logger.error(f"Best model not found: {best_model_path}")
                     return
                 train_emb, train_labels, _, _ = extract_embeddings(
-                    model_variant, data_dir, best_model_path, num_classes, batch_size, torch.device("cpu")
+                    model_variant, data_dir, best_model_path, num_classes, batch_size, torch.device("cpu"), exp_dir=exp_dir
                 )
                 test_emb, test_labels, _, _ = extract_embeddings(
-                    model_variant, test_dir, best_model_path, num_classes, batch_size, torch.device("cpu")
+                    model_variant, test_dir, best_model_path, num_classes, batch_size, torch.device("cpu"), exp_dir=exp_dir
                 )
                 train_norm = train_emb / (np.linalg.norm(train_emb, axis=1, keepdims=True) + 1e-12)
                 test_norm = test_emb / (np.linalg.norm(test_emb, axis=1, keepdims=True) + 1e-12)
@@ -340,7 +340,7 @@ def run_ncd_pipeline(
                 maha = compute_mahalanobis_scores(train_norm, train_labels, test_norm, num_classes)
                 knn = compute_knn_scores(train_norm, test_norm)
                 test_logits = extract_logits(
-                    model_variant, test_dir, best_model_path, num_classes, batch_size, torch.device("cpu")
+                    model_variant, test_dir, best_model_path, num_classes, batch_size, torch.device("cpu"), exp_dir=exp_dir
                 )
                 energy = compute_energy_scores(test_logits)
                 ensemble = compute_ensemble_scores(maha, knn, energy)
