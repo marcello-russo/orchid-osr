@@ -16,11 +16,31 @@ def load_trained_model(
     num_classes: int,
     best_model_path: str,
     device: torch.device,
+    exp_dir: str | None = None,
 ):
-    """Load a trained model from best fold weights."""
+    """Load a trained model from best fold weights.
+    
+    If exp_dir is provided, reads config.json to determine model-specific settings
+    (e.g., multi_grain for DINOv2).
+    """
     from app.core.models import create_model
 
-    model = create_model(model_variant, num_classes=num_classes, pretrained=False)
+    model_kwargs = {}
+    if exp_dir:
+        config_path = os.path.join(exp_dir, "config.json")
+        if os.path.exists(config_path):
+            import json
+            cfg = json.load(open(config_path))
+        else:
+            cfg = {}
+        # Determine multi_grain from experiment dir name or config
+        dir_name = os.path.basename(exp_dir)
+        if "dinov2" in model_variant:
+            is_mgh = "mgh" in dir_name.lower() or cfg.get("multi_grain", False)
+            model_kwargs["multi_grain"] = is_mgh
+            logger.info(f"Model {model_variant}: multi_grain={is_mgh} (from exp_dir: {dir_name})")
+
+    model = create_model(model_variant, num_classes=num_classes, pretrained=False, **model_kwargs)
     model.load_weights(best_model_path)
     model = model.to(device)
     model.eval()
@@ -46,9 +66,10 @@ def extract_embeddings(
     num_classes: int,
     batch_size: int = 8,
     device: torch.device | None = None,
+    exp_dir: str | None = None,
 ) -> tuple[np.ndarray, np.ndarray, list[str], list[str]]:
     device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = load_trained_model(model_variant, num_classes, best_model_path, device)
+    model = load_trained_model(model_variant, num_classes, best_model_path, device, exp_dir=exp_dir)
     loader, class_to_name = _create_loader(model_variant, data_dir, batch_size)
 
     all_embeddings = []
@@ -78,9 +99,10 @@ def extract_logits(
     num_classes: int,
     batch_size: int = 8,
     device: torch.device | None = None,
+    exp_dir: str | None = None,
 ) -> np.ndarray:
     device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = load_trained_model(model_variant, num_classes, best_model_path, device)
+    model = load_trained_model(model_variant, num_classes, best_model_path, device, exp_dir=exp_dir)
     loader, _ = _create_loader(model_variant, data_dir, batch_size)
 
     all_logits = []
@@ -214,6 +236,7 @@ def run_embedding_extraction(
         best_model_path=best_model_path,
         num_classes=num_classes,
         batch_size=batch_size,
+        exp_dir=exp_dir,
     )
     logger.info(f"Estratti {embeddings.shape[0]} embedding, dim={embeddings.shape[1]}")
 
