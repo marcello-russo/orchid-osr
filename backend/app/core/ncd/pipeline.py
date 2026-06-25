@@ -135,6 +135,80 @@ def run_ncd_pipeline(
         results["clustering"]["spectral"] = {**metrics_sp, "info": info_sp}
         logger.info(f"Spectral: ACC={metrics_sp['acc']:.4f}")
 
+    # NCD clustering: when ncd_mode=True, cluster combined train + test embeddings
+    if ncd_mode and test_dir and os.path.exists(test_dir):
+        try:
+            import torch
+            from torch.utils.data import DataLoader
+            from app.core.models import create_transform
+            from app.core.ncd.extract import load_trained_model, extract_embeddings
+            from app.preprocessing.dataset_tool import ImageFolderWithName
+
+            logger.info("\n--- NCD: combined clustering (known + novel) ---")
+            results_path = os.path.join(exp_dir, "results.json")
+            best_fold = 0
+            if os.path.exists(results_path):
+                with open(results_path) as f:
+                    best_fold = json.load(f).get("best_fold", 0)
+            best_model_path = os.path.join(exp_dir, f"best_fold_{best_fold}.pt")
+            if not os.path.exists(best_model_path):
+                logger.warning(f"Best model not found: {best_model_path}, skipping NCD clustering")
+            else:
+                device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+                test_emb, test_labels, _, _ = extract_embeddings(
+                    model_variant, test_dir, best_model_path, num_classes, batch_size, device
+                )
+                combined_emb = np.vstack([embeddings, test_emb])
+                combined_labels = np.hstack([true_labels, test_labels])
+
+                logger.info(f"Combined embeddings: {combined_emb.shape}, labels: {combined_labels.shape}")
+
+                # Clustering on combined set
+                ncd_results = {}
+                k_total = num_classes + 1  # known + 1 novel
+
+                # K-means with k = num_classes + 1 (expected clusters)
+                pred_km, info_km = kmeans_clustering(combined_emb, k_total)
+                metrics_km = compute_all_metrics(combined_labels, pred_km)
+                ncd_results["kmeans_k7"] = {**metrics_km, "info": info_km}
+                logger.info(f"NCD K-means k={k_total}: ACC={metrics_km['acc']:.4f}, NMI={metrics_km['nmi']:.4f}")
+
+                # Grid search on combined
+                best_km = grid_search_kmeans(combined_emb, combined_labels, list(range(2, 12)))
+                ncd_results["kmeans_grid_best"] = {
+                    "k": best_km["k"], "acc": best_km["acc"],
+                    "nmi": best_km.get("nmi", 0), "ari": best_km.get("ari", 0),
+                }
+                logger.info(f"NCD K-means grid best: k={best_km['k']}, ACC={best_km['acc']:.4f}")
+
+                # DBSCAN on combined
+                if run_dbscan:
+                    pred_db, info_db = dbscan_clustering(combined_emb)
+                    metrics_db = compute_all_metrics(combined_labels, pred_db)
+                    ncd_results["dbscan"] = {**metrics_db, "info": info_db}
+                    logger.info(f"NCD DBSCAN: ACC={metrics_db['acc']:.4f}, clusters={info_db['n_clusters']}")
+
+                results["ncd_clustering"] = ncd_results
+
+                # t-SNE figure with novel class highlighted
+                if combined_emb.shape[1] > 2:
+                    from sklearn.manifold import TSNE
+                    from app.core.ncd.reporting import plot_tsne_known_vs_unknown
+
+                    tsne = TSNE(n_components=2, random_state=57, perplexity=max(5, min(30, len(combined_emb) // 5)))
+                    emb_2d = tsne.fit_transform(combined_emb)
+                    # known_mask: False for novel class (labels >= num_classes)
+                    # Map test labels that are >= num_classes (napoli=6) as unknown
+                    known_mask = combined_labels < num_classes
+                    combined_class_names = list(class_names)
+                    if all_classes:
+                        combined_class_names = all_classes
+                    plot_tsne_known_vs_unknown(emb_2d, combined_labels, combined_class_names, known_mask, figures_dir)
+                    logger.info("NCD t-SNE figure saved with novel class highlighted")
+        except Exception as e:
+            logger.warning(f"NCD combined clustering failed: {e}")
+            import traceback; traceback.print_exc()
+
     # Figures
     if embeddings.shape[1] > 2:
         try:
@@ -144,6 +218,8 @@ def run_ncd_pipeline(
             tsne = TSNE(n_components=2, random_state=57, perplexity=max(5, min(30, len(embeddings) // 5)))
             emb_2d = tsne.fit_transform(embeddings)
             known_mask = np.ones(len(true_labels), dtype=bool)
+            if ncd_mode and test_dir and os.path.exists(test_dir):
+                pass  # NCD figure is generated in the block above
             from app.core.ncd.reporting import plot_tsne_known_vs_unknown
 
             plot_tsne_known_vs_unknown(emb_2d, true_labels, class_names, known_mask, figures_dir)

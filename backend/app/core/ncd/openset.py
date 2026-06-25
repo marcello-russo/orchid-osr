@@ -33,8 +33,6 @@ def fit_weibull(
             "weibull_scale": float,
         }
     """
-    from scipy.stats import exponweib
-
     class_models = {}
     unique_labels = sorted(set(labels))
 
