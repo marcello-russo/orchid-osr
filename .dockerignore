@@ -8,7 +8,7 @@ results_1/
 logs/
 logs_1/
 logs_2/
-backend/dataset/
+backend/dataset/cropped_*/test/
 backend/models/
 backend/experiments/**/*.pt
 backend/experiments/**/embeddings/
