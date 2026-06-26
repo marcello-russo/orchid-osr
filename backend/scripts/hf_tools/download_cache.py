@@ -87,10 +87,10 @@ def main():
             repo_type="dataset",
             local_dir="dataset",
             allow_patterns=[
-                "cropped/*/train/*",
-                "cropped/*/test/*",
+                "cropped/*/train/**",
+                "cropped/*/test/**",
                 # Backward compat: still download test_clean/ during HF transition
-                "cropped/*/test_clean/*",
+                "cropped/*/test_clean/**",
             ],
             token=token,
         )
