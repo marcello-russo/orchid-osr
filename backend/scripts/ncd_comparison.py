@@ -1,3 +1,8 @@
+"""Aggrega risultati NCD in una tabella comparativa.
+
+Legge formato nuovo (detectors.*.auroc) e vecchio (openset.*).
+"""
+
 import json
 import os
 
@@ -10,7 +15,36 @@ EXPERIMENTS = [
     ("exp10_mgh_ncd", "Exp 10 (MGH-NCD)"),
 ]
 
-MODELS = ["resnet18", "resnet50", "convnext_tiny", "convnext_small", "dinov2_small", "dinov2_base"]
+MODELS = [
+    "resnet18", "resnet50", "convnext_tiny", "convnext_small",
+    "dinov2_small", "dinov2_base",
+]
+
+
+def _extract_auroc(data: dict) -> float:
+    """Legge AUROC dal formato piu' recente disponibile."""
+    detectors = data.get("detectors", {})
+    openset = data.get("openset", {})
+
+    for preferred in ["Ensemble", "Mahalanobis", "KNN", "Energy"]:
+        if preferred in detectors and "auroc" in detectors[preferred]:
+            val = detectors[preferred]["auroc"]
+            if val is not None and not (isinstance(val, float) and val != val):
+                return float(val)
+
+    if "auroc" in openset:
+        return float(openset["auroc"])
+    if "mean_auroc" in openset:
+        return float(openset["mean_auroc"])
+
+    return 0.0
+
+
+def _extract_baseline(data: dict) -> float:
+    """Legge baseline AUROC dal vecchio formato."""
+    openset = data.get("openset", {})
+    baseline = openset.get("baselines", {}).get("softmax_threshold", {})
+    return float(baseline.get("mean_auroc", 0))
 
 
 def main():
@@ -26,10 +60,8 @@ def main():
 
             clustering = data.get("clustering", {})
             kmeans = clustering.get("kmeans_best", {})
-            openset = data.get("openset", {})
-            baseline = openset.get("baselines", {}).get("softmax_threshold", {})
-            auroc = openset.get("mean_auroc", 0)
-            knn = openset.get("knn_auroc", 0)
+            auroc = _extract_auroc(data)
+            baseline = _extract_baseline(data)
 
             entries.append({
                 "experiment": label,
@@ -43,11 +75,11 @@ def main():
                 "f_measure": round(kmeans.get("f_measure", 0), 4),
                 "silhouette": round(kmeans.get("silhouette", 0), 4),
                 "mean_auroc": round(auroc, 4),
-                "knn_auroc": round(knn, 4),
-                "baseline_auroc": round(baseline.get("mean_auroc", 0), 4),
-                "improvement": round(auroc - baseline.get("mean_auroc", 0), 4),
+                "knn_auroc": 0,
+                "baseline_auroc": round(baseline, 4),
+                "improvement": round(auroc - baseline, 4),
             })
-            print(f"  {exp_name}: AUROC={auroc:.4f} (baseline={baseline.get('mean_auroc',0):.4f})")
+            print(f"  {exp_name}: AUROC={auroc:.4f} (baseline={baseline:.4f})")
 
     entries.sort(key=lambda e: (e["experiment"], -e.get("mean_auroc", 0)))
     with open(OUTPUT, "w") as f:

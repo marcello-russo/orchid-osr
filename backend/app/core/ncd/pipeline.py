@@ -1,12 +1,17 @@
-"""NCD pipeline orchestrator: extraction + clustering + OSR evaluation."""
+"""NCD pipeline orchestrator: extraction -> clustering -> multi-detector OSR."""
+
+from __future__ import annotations
 
 import json
 import logging
 import os
 
 import numpy as np
+import torch
 
-from app.core.ncd.openset import evaluate_osr_novel
+from app.core.ncd.detector import get_detector, list_detectors
+from app.core.ncd.evaluation import evaluate_loo, evaluate_novel
+from app.core.ncd.extraction import extract_all
 
 logger = logging.getLogger(__name__)
 
@@ -28,31 +33,65 @@ def run_ncd_pipeline(
     ncd_mode: bool = False,
     all_classes: list[str] | None = None,
 ):
-    """Full NCD pipeline: extract embeddings → cluster → OSR evaluation.
+    if k_range is None:
+        k_range = list(range(2, 12))
 
-    Args:
-        exp_dir: experiment output directory.
-        model_variant: model name.
-        num_classes: number of known classes.
-        class_names: list of class names.
-        data_dir: directory with training images (for embedding extraction).
-        batch_size: batch size for extraction.
-        k_range: range of k for k-means grid search.
-        run_dbscan: whether to run DBSCAN clustering.
-        run_spectral: whether to run spectral clustering.
-        run_osr: whether to run Open-Set Recognition evaluation.
-        test_dir: test directory for OSR evaluation (required if run_osr=True).
-    """
-
-    # Validazione parametri — fail-fast su configurazioni errate
     if ncd_mode and all_classes is None:
-        logger.error("ncd_mode=True richiede all_classes — impostare all_classes nel chiamante")
+        logger.error("ncd_mode=True richiede all_classes nel chiamante")
         return
     if run_osr and test_dir is None:
         logger.error("run_osr=True richiede test_dir")
         return
-    if ncd_mode and not run_osr:
-        logger.warning("ncd_mode=True senza run_osr=True: nessuna valutazione OSR verra eseguita")
+
+    if exclude_classes:
+        class_names = [c for c in class_names if c not in exclude_classes]
+
+    figures_dir = os.path.join(exp_dir, "ncd_figures")
+    os.makedirs(figures_dir, exist_ok=True)
+
+    results_path = os.path.join(exp_dir, "results.json")
+    best_fold = 0
+    if os.path.exists(results_path):
+        with open(results_path) as f:
+            best_fold = json.load(f).get("best_fold", 0)
+    best_model_path = os.path.join(exp_dir, f"best_fold_{best_fold}.pt")
+
+    if not os.path.exists(best_model_path):
+        logger.error("Best model not found: %s", best_model_path)
+        return
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    collect_logits = any(
+        get_detector(n).requires_logits for n in list_detectors()
+    )
+
+    bundle = extract_all(
+        model_variant=model_variant,
+        train_dir=data_dir,
+        test_dir=test_dir or data_dir,
+        model_path=best_model_path,
+        num_classes=num_classes,
+        batch_size=batch_size,
+        device=device,
+        collect_logits=collect_logits,
+        exp_dir=exp_dir,
+    )
+
+    results: dict = {
+        "model_variant": model_variant,
+        "num_classes": num_classes,
+        "class_names": class_names,
+        "embedding_shape": list(bundle.train_embeddings.shape),
+        "clustering": {},
+    }
+
+    if ncd_mode and test_dir and os.path.exists(test_dir):
+        combined_emb = np.vstack([bundle.train_embeddings, bundle.test_embeddings])
+        combined_labels = np.hstack([bundle.train_labels, bundle.test_labels])
+    else:
+        combined_emb = bundle.train_embeddings
+        combined_labels = bundle.train_labels
 
     from app.core.ncd.clustering import (
         dbscan_clustering,
@@ -60,58 +99,10 @@ def run_ncd_pipeline(
         kmeans_clustering,
         spectral_clustering,
     )
-    from app.core.ncd.extract import run_embedding_extraction
     from app.core.ncd.metrics import compute_all_metrics
 
-    if k_range is None:
-        k_range = list(range(2, 12))
-
-    # Filtra classi escluse (es. hidden novel per NCD)
-    if exclude_classes:
-        class_names = [c for c in class_names if c not in exclude_classes]
-
-    figures_dir = os.path.join(exp_dir, "ncd_figures")
-
-    # Step 1: extract embeddings
-    emb_dir = os.path.join(exp_dir, "embeddings")
-    embeddings_path = os.path.join(emb_dir, "embeddings.npy")
-
-    if not os.path.exists(embeddings_path):
-        logger.info("Embedding non trovati, estrazione...")
-        run_embedding_extraction(
-            exp_dir=exp_dir,
-            model_variant=model_variant,
-            num_classes=num_classes,
-            class_names=class_names,
-            data_dir=data_dir,
-            batch_size=batch_size,
-        )
-    else:
-        logger.info(f"Embedding trovati in {embeddings_path}")
-
-    # Load embeddings
-    embeddings = np.load(embeddings_path)
-    labels_path = os.path.join(emb_dir, "labels.npy")
-    if os.path.exists(labels_path):
-        true_labels = np.load(labels_path)
-    else:
-        logger.error("labels.npy non trovato")
-        return
-
-    logger.info(f"Embedding caricati: {embeddings.shape}, labels: {true_labels.shape}")
-
-    # Step 2: cluster + evaluate
-    results = {
-        "model_variant": model_variant,
-        "num_classes": num_classes,
-        "class_names": class_names,
-        "embedding_shape": list(embeddings.shape),
-        "clustering": {},
-    }
-
-    # K-means grid search
     logger.info("\n--- K-means grid search ---")
-    best_kmeans = grid_search_kmeans(embeddings, true_labels, k_range)
+    best_kmeans = grid_search_kmeans(combined_emb, combined_labels, k_range)
     results["clustering"]["kmeans_best"] = {
         "k": best_kmeans["k"],
         "acc": best_kmeans["acc"],
@@ -122,291 +113,107 @@ def run_ncd_pipeline(
         "silhouette": best_kmeans.get("silhouette", 0),
     }
     results["clustering"]["selected_k"] = best_kmeans["k"]
-    logger.info(f"K-means best: k={best_kmeans['k']}, ACC={best_kmeans['acc']:.4f}")
 
-    # K-means with true k
-    logger.info(f"\n--- K-means (k=true={num_classes}) ---")
-    pred_km, info_km = kmeans_clustering(embeddings, num_classes)
-    metrics_km = compute_all_metrics(true_labels, pred_km)
+    logger.info("\n--- K-means (k=true=%d) ---", num_classes)
+    pred_km, info_km = kmeans_clustering(combined_emb, num_classes)
+    metrics_km = compute_all_metrics(combined_labels, pred_km)
     results["clustering"]["kmeans_true_k"] = {**metrics_km, "info": info_km}
-    logger.info(f"K-means k={num_classes}: ACC={metrics_km['acc']:.4f}")
+    logger.info("K-means k=%d: ACC=%.4f", num_classes, metrics_km["acc"])
 
-    # DBSCAN
     if run_dbscan:
         logger.info("\n--- DBSCAN ---")
-        pred_db, info_db = dbscan_clustering(embeddings)
-        metrics_db = compute_all_metrics(true_labels, pred_db)
+        pred_db, info_db = dbscan_clustering(combined_emb)
+        metrics_db = compute_all_metrics(combined_labels, pred_db)
         results["clustering"]["dbscan"] = {**metrics_db, "info": info_db}
-        logger.info(f"DBSCAN: ACC={metrics_db['acc']:.4f}, clusters={info_db['n_clusters']}")
 
-    # Spectral
     if run_spectral:
-        logger.info(f"\n--- Spectral k={num_classes} ---")
-        pred_sp, info_sp = spectral_clustering(embeddings, num_classes)
-        metrics_sp = compute_all_metrics(true_labels, pred_sp)
+        logger.info("\n--- Spectral k=%d ---", num_classes)
+        pred_sp, info_sp = spectral_clustering(combined_emb, num_classes)
+        metrics_sp = compute_all_metrics(combined_labels, pred_sp)
         results["clustering"]["spectral"] = {**metrics_sp, "info": info_sp}
-        logger.info(f"Spectral: ACC={metrics_sp['acc']:.4f}")
 
-    # NCD clustering: when ncd_mode=True, cluster combined train + test embeddings
-    if ncd_mode and test_dir and os.path.exists(test_dir):
-        try:
-            import torch
-            from torch.utils.data import DataLoader
-            from app.core.models import create_transform
-            from app.core.ncd.extract import load_trained_model, extract_embeddings
-            from app.preprocessing.dataset_tool import ImageFolderWithName
-
-            logger.info("\n--- NCD: combined clustering (known + novel) ---")
-            results_path = os.path.join(exp_dir, "results.json")
-            best_fold = 0
-            if os.path.exists(results_path):
-                with open(results_path) as f:
-                    best_fold = json.load(f).get("best_fold", 0)
-            best_model_path = os.path.join(exp_dir, f"best_fold_{best_fold}.pt")
-            if not os.path.exists(best_model_path):
-                logger.warning(f"Best model not found: {best_model_path}, skipping NCD clustering")
+    if run_osr:
+        novel_name: str | None = None
+        if ncd_mode and all_classes:
+            train_classes = set(bundle.train_class_names)
+            novel_candidates = [c for c in all_classes if c not in train_classes]
+            if novel_candidates:
+                novel_name = novel_candidates[0]
+                logger.info("Novel class: %s", novel_name)
             else:
-                device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-                test_emb, test_labels, _, _ = extract_embeddings(
-                    model_variant, test_dir, best_model_path, num_classes, batch_size, device, exp_dir=exp_dir
+                logger.warning("Nessuna novel class in all_classes vs train")
+
+        results["detectors"] = {}
+
+        for det_name in list_detectors():
+            detector = get_detector(det_name)
+
+            if detector.requires_logits and not collect_logits:
+                logger.warning("Skip %s: logits non collezionati", det_name)
+                continue
+
+            try:
+                detector.fit(bundle.train_embeddings, bundle.train_labels)
+                scores = detector.score(
+                    bundle.test_embeddings,
+                    logits=bundle.test_logits if detector.requires_logits else None,
                 )
-                combined_emb = np.vstack([embeddings, test_emb])
-                combined_labels = np.hstack([true_labels, test_labels])
 
-                logger.info(f"Combined embeddings: {combined_emb.shape}, labels: {combined_labels.shape}")
+                if ncd_mode and novel_name:
+                    results["detectors"][det_name] = evaluate_novel(
+                        scores,
+                        bundle.test_labels,
+                        novel_name,
+                        bundle.test_class_names,
+                    )
+                else:
+                    results["detectors"][det_name] = evaluate_loo(
+                        scores, bundle.test_labels, bundle.test_class_names
+                    )
+            except Exception as e:
+                logger.warning("Detector %s fallito: %s", det_name, e)
+                import traceback
 
-                # Clustering on combined set
-                ncd_results = {}
-                k_total = num_classes + 1  # known + 1 novel
+                traceback.print_exc()
+                results["detectors"][det_name] = {"error": str(e)}
 
-                # K-means with k = num_classes + 1 (expected clusters)
-                pred_km, info_km = kmeans_clustering(combined_emb, k_total)
-                metrics_km = compute_all_metrics(combined_labels, pred_km)
-                ncd_results["kmeans_k7"] = {**metrics_km, "info": info_km}
-                logger.info(f"NCD K-means k={k_total}: ACC={metrics_km['acc']:.4f}, NMI={metrics_km['nmi']:.4f}")
+        logger.info("\n=== OSR Results ===")
+        for det_name, metrics in results["detectors"].items():
+            if "error" in metrics:
+                logger.info("  %20s: ERROR — %s", det_name, metrics["error"])
+            else:
+                au = metrics.get("auroc", metrics.get("mean_auroc", float("nan")))
+                logger.info("  %20s: AUROC = %.4f", det_name, au)
 
-                # Grid search on combined
-                best_km = grid_search_kmeans(combined_emb, combined_labels, list(range(2, 12)))
-                ncd_results["kmeans_grid_best"] = {
-                    "k": best_km["k"], "acc": best_km["acc"],
-                    "nmi": best_km.get("nmi", 0), "ari": best_km.get("ari", 0),
-                }
-                logger.info(f"NCD K-means grid best: k={best_km['k']}, ACC={best_km['acc']:.4f}")
-
-                # DBSCAN on combined
-                if run_dbscan:
-                    pred_db, info_db = dbscan_clustering(combined_emb)
-                    metrics_db = compute_all_metrics(combined_labels, pred_db)
-                    ncd_results["dbscan"] = {**metrics_db, "info": info_db}
-                    logger.info(f"NCD DBSCAN: ACC={metrics_db['acc']:.4f}, clusters={info_db['n_clusters']}")
-
-                results["ncd_clustering"] = ncd_results
-
-                # t-SNE figure with novel class highlighted
-                if combined_emb.shape[1] > 2:
-                    from sklearn.manifold import TSNE
-                    from app.core.ncd.reporting import plot_tsne_known_vs_unknown
-
-                    tsne = TSNE(n_components=2, random_state=57, perplexity=max(5, min(30, len(combined_emb) // 5)))
-                    emb_2d = tsne.fit_transform(combined_emb)
-                    # known_mask: False for novel class (labels >= num_classes)
-                    # Map test labels that are >= num_classes (napoli=6) as unknown
-                    known_mask = combined_labels < num_classes
-                    combined_class_names = list(class_names)
-                    if all_classes:
-                        combined_class_names = all_classes
-                    plot_tsne_known_vs_unknown(emb_2d, combined_labels, combined_class_names, known_mask, figures_dir)
-                    logger.info("NCD t-SNE figure saved with novel class highlighted")
-        except Exception as e:
-            logger.warning(f"NCD combined clustering failed: {e}")
-            import traceback; traceback.print_exc()
-
-    # Figures
-    if embeddings.shape[1] > 2:
+    if combined_emb.shape[1] > 2:
         try:
             from sklearn.manifold import TSNE
-
-            logger.info("Computing t-SNE for figure...")
-            tsne = TSNE(n_components=2, random_state=57, perplexity=max(5, min(30, len(embeddings) // 5)))
-            emb_2d = tsne.fit_transform(embeddings)
-            known_mask = np.ones(len(true_labels), dtype=bool)
-            if ncd_mode and test_dir and os.path.exists(test_dir):
-                pass  # NCD figure is generated in the block above
             from app.core.ncd.reporting import plot_tsne_known_vs_unknown
 
-            plot_tsne_known_vs_unknown(emb_2d, true_labels, class_names, known_mask, figures_dir)
+            tsne = TSNE(
+                n_components=2,
+                random_state=57,
+                perplexity=max(5, min(30, len(combined_emb) // 5)),
+            )
+            emb_2d = tsne.fit_transform(combined_emb)
+            known_mask = (
+                combined_labels < num_classes
+                if ncd_mode
+                else np.ones(len(combined_labels), dtype=bool)
+            )
+            plot_tsne_known_vs_unknown(
+                emb_2d,
+                combined_labels,
+                all_classes if ncd_mode and all_classes else class_names,
+                known_mask,
+                figures_dir,
+            )
         except Exception as e:
-            logger.warning(f"t-SNE figure failed: {e}")
+            logger.warning("t-SNE figure fallita: %s", e)
 
-    # Clustering comparison figure
-    try:
-        from app.core.ncd.reporting import plot_clustering_comparison
-
-        algo_data = {}
-        for algo_name in ["kmeans", "dbscan", "spectral"]:
-            if algo_name in results["clustering"]:
-                algo_data[algo_name] = results["clustering"][algo_name]
-        if algo_data:
-            plot_clustering_comparison(algo_data, figures_dir)
-    except Exception as e:
-        logger.warning(f"Clustering comparison figure failed: {e}")
-
-    # Open-Set Recognition
-    if run_osr:
-        if test_dir is None:
-            logger.warning("test_dir required for OSR, skipping")
-        else:
-            logger.info(f"\n--- Open-Set Recognition (method={osr_method}) ---")
-
-            if ncd_mode:
-                if all_classes is None:
-                    logger.warning("all_classes required for ncd_mode, skipping OSR")
-                else:
-                    import torch
-                    from torch.utils.data import DataLoader
-
-                    from app.core.models import create_transform
-                    from app.core.ncd.extract import load_trained_model
-                    from app.preprocessing.dataset_tool import ImageFolderWithName
-
-                    train_classes = class_names
-                    novel_classes = [c for c in all_classes if c not in train_classes]
-                    if not novel_classes:
-                        logger.warning("No novel class found — skipping OSR evaluation")
-                    else:
-                        novel_name = novel_classes[0]
-                        novel_idx = all_classes.index(novel_name)
-                        logger.info(f"Evaluating OSR for novel class: {novel_name}")
-
-                        results_path = os.path.join(exp_dir, "results.json")
-                        best_fold = 0
-                        if os.path.exists(results_path):
-                            with open(results_path) as f:
-                                best_fold = json.load(f).get("best_fold", 0)
-                        best_model_path = os.path.join(exp_dir, f"best_fold_{best_fold}.pt")
-                        if not os.path.exists(best_model_path):
-                            logger.error(f"Best model not found: {best_model_path}")
-                            return
-
-                        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-                        model = load_trained_model(model_variant, num_classes, best_model_path, device, exp_dir=exp_dir)
-                        transform = create_transform(model_variant)
-                        train_dataset = ImageFolderWithName(data_dir, transform=transform)
-                        test_dataset = ImageFolderWithName(test_dir, transform=transform)
-                        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
-                        test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
-
-                        osr_results = evaluate_osr_novel(
-                            model=model,
-                            train_loader=train_loader,
-                            test_loader=test_loader,
-                            novel_label=novel_idx,
-                            device=device,
-                        )
-                        results["osr"] = osr_results
-                        logger.info(f"NCD OSR complete. AUROC: {osr_results['auroc']:.4f}")
-
-            elif osr_method == "ensemble":
-                import torch
-
-                from app.core.ncd.extract import extract_embeddings, extract_logits
-                from app.core.ncd.metrics import compute_all_metrics
-                from app.core.ncd.openset import (
-                    compute_energy_scores,
-                    compute_ensemble_scores,
-                    compute_knn_scores,
-                    compute_mahalanobis_scores,
-                    compute_osr_metrics,
-                )
-
-                results_path = os.path.join(exp_dir, "results.json")
-                best_fold = 0
-                if os.path.exists(results_path):
-                    with open(results_path) as f:
-                        best_fold = json.load(f).get("best_fold", 0)
-                best_model_path = os.path.join(exp_dir, f"best_fold_{best_fold}.pt")
-                if not os.path.exists(best_model_path):
-                    logger.error(f"Best model not found: {best_model_path}")
-                    return
-                train_emb, train_labels, _, _ = extract_embeddings(
-                    model_variant, data_dir, best_model_path, num_classes, batch_size, torch.device("cpu"), exp_dir=exp_dir
-                )
-                test_emb, test_labels, _, _ = extract_embeddings(
-                    model_variant, test_dir, best_model_path, num_classes, batch_size, torch.device("cpu"), exp_dir=exp_dir
-                )
-                train_norm = train_emb / (np.linalg.norm(train_emb, axis=1, keepdims=True) + 1e-12)
-                test_norm = test_emb / (np.linalg.norm(test_emb, axis=1, keepdims=True) + 1e-12)
-
-                maha = compute_mahalanobis_scores(train_norm, train_labels, test_norm, num_classes)
-                knn = compute_knn_scores(train_norm, test_norm)
-                test_logits = extract_logits(
-                    model_variant, test_dir, best_model_path, num_classes, batch_size, torch.device("cpu"), exp_dir=exp_dir
-                )
-                energy = compute_energy_scores(test_logits)
-                ensemble = compute_ensemble_scores(maha, knn, energy)
-
-                unknown_labels = np.full(len(test_labels), -1)
-                all_metrics = []
-                for left_out in range(num_classes):
-                    val_labels = unknown_labels.copy()
-                    val_labels[test_labels != left_out] = test_labels[test_labels != left_out]
-                    val_known = [c for c in range(num_classes) if c != left_out]
-                    metrics = compute_osr_metrics(ensemble, val_labels, val_known)
-                    metrics["left_out"] = class_names[left_out]
-                    all_metrics.append(metrics)
-
-                osr_results = {
-                    "model_variant": model_variant,
-                    "num_classes": num_classes,
-                    "class_names": class_names,
-                    "mean_auroc": float(np.mean([m["auroc"] for m in all_metrics])),
-                    "per_class_metrics": all_metrics,
-                    "method": "ensemble",
-                    "ablation_maha_auroc": float(
-                        np.mean(
-                            [
-                                compute_osr_metrics(maha, val_labels, [c for c in range(num_classes) if c != lo])[
-                                    "auroc"
-                                ]
-                                for lo in range(num_classes)
-                                for val_labels in [np.where(test_labels != lo, test_labels, -1)]
-                            ]
-                        )
-                    ),
-                }
-                logger.info(f"Ensemble OSR complete. Mean AUROC: {osr_results['mean_auroc']:.4f}")
-            else:
-                from app.core.ncd.openset import run_openset_evaluation
-
-                osr_results = run_openset_evaluation(
-                    exp_dir=exp_dir,
-                    model_variant=model_variant,
-                    num_classes=num_classes,
-                    class_names=class_names,
-                    train_dir=data_dir,
-                    test_dir=test_dir,
-                    batch_size=batch_size,
-                )
-            results["openset"] = osr_results
-
-            # OSR figures
-            try:
-                from app.core.ncd.reporting import plot_auroc_per_class, plot_oscr_curve
-
-                per_class = osr_results.get("per_class_metrics", [])
-                if per_class:
-                    plot_auroc_per_class(per_class, osr_results.get("mean_auroc", 0.0), figures_dir)
-                oscr = osr_results.get("oscr_curve", [])
-                baseline_oscr = osr_results.get("baseline_oscr_curve", [])
-                if oscr:
-                    plot_oscr_curve(oscr, baseline_oscr or None, model_variant, figures_dir)
-            except Exception as e:
-                logger.warning(f"OSR figures failed: {e}")
-
-    # Save results
     ncd_path = os.path.join(exp_dir, "ncd_results.json")
     with open(ncd_path, "w") as f:
         json.dump(results, f, indent=2)
-    logger.info(f"\nRisultati NCD salvati in: {ncd_path}")
+    logger.info("Risultati NCD salvati in: %s", ncd_path)
 
     return results

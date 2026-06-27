@@ -169,7 +169,6 @@ def run_experiment(
             batch_size=batch_size,
             run_osr=True,
             test_dir=cropped_test if os.path.exists(cropped_test) else None,
-            osr_method="ensemble" if osr_ensemble else "openmax",
             ncd_mode=config.get("ncd_mode", False),
             all_classes=ALL_CLASSES,
         )

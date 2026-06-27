@@ -167,6 +167,36 @@ const REFERENCES = [
       "Chen, Y., Lang, N., Schmidt, B.C., Jain, A., Basset, Y., Beery, S., Larrivée, M. & Rolnick, D. (2025). Open-Insect: Benchmarking Open-Set Recognition of Novel Species in Biodiversity Monitoring. In NeurIPS 2025 Dataset and Benchmark Track (Spotlight).",
     url: "https://arxiv.org/abs/2503.01691",
   },
+  {
+    id: 23,
+    citation:
+      "Bao, W., Yu, Q. & Kong, Y. (2023). Latent Space Energy-based Model for Fine-grained Open Set Recognition. arXiv preprint arXiv:2309.10711.",
+    url: "https://arxiv.org/abs/2309.10711",
+  },
+  {
+    id: 24,
+    citation:
+      "Kareinen, J., Skyttä, A., Eerola, T., Kraft, K., Lensu, L., Suikkanen, S., Lehtiniemi, M. & Kälviäinen, H. (2025). Open-Set Plankton Recognition. In ECCV 2024 OOD-CV Workshop. arXiv preprint arXiv:2503.11318.",
+    url: "https://arxiv.org/abs/2503.11318",
+  },
+  {
+    id: 25,
+    citation:
+      "Sun, Y., Ming, Y., Zhu, X. & Li, Y. (2022). Out-of-Distribution Detection with Deep Nearest Neighbors. In Proceedings of the International Conference on Machine Learning (ICML), 20827–20840.",
+    url: "https://proceedings.mlr.press/v162/sun22d.html",
+  },
+  {
+    id: 26,
+    citation:
+      "Shah, D. (2026). Beyond Toy Benchmarks: A Systematic Evaluation of OOD Detection Methods For Plant Pathology Classification. arXiv preprint arXiv:2605.08618.",
+    url: "https://arxiv.org/abs/2605.08618",
+  },
+  {
+    id: 27,
+    citation:
+      "Low, C.Y., Koo, H., Park, J. & Cha, M. (2025). Dual-Margin Embedding for Fine-Grained Long-Tailed Plant Taxonomy. arXiv preprint arXiv:2512.18994.",
+    url: "https://arxiv.org/abs/2512.18994",
+  },
 ];
 
 function renderCitations(text: string) {
