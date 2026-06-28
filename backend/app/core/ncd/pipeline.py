@@ -122,13 +122,30 @@ def run_ncd_pipeline(
     }
 
     if ncd_mode and test_dir and os.path.exists(test_dir):
-        assert bundle.train_class_names == bundle.test_class_names[:len(bundle.train_class_names)], \
-            "Train/test class ordering must match for combined clustering"
+        # Build consistent label space: train labels are 0..K-1,
+        # test labels remapped to match train for known classes,
+        # novel classes get new indices (K, K+1, ...)
+        all_names = list(bundle.train_class_names)
+        for c in bundle.test_class_names:
+            if c not in all_names:
+                all_names.append(c)
+        name_to_label = {c: i for i, c in enumerate(all_names)}
+
+        # Remap test labels to consistent label space
+        remapped_test_labels = np.array([name_to_label[bundle.test_class_names[l]] for l in bundle.test_labels])
+
         combined_emb = np.vstack([bundle.train_embeddings, bundle.test_embeddings])
-        combined_labels = np.hstack([bundle.train_labels, bundle.test_labels])
+        combined_labels = np.hstack([bundle.train_labels, remapped_test_labels])
+        combined_n_classes = len(all_names)
+        logger.info(
+            "Combined labels: %d classes (%s), remapped test labels for %d train + %d novel",
+            combined_n_classes, all_names, len(bundle.train_class_names),
+            combined_n_classes - len(bundle.train_class_names),
+        )
     else:
         combined_emb = bundle.train_embeddings
         combined_labels = bundle.train_labels
+        combined_n_classes = num_classes
 
     from app.core.ncd.clustering import (
         dbscan_clustering,
@@ -151,11 +168,12 @@ def run_ncd_pipeline(
     }
     results["clustering"]["selected_k"] = best_kmeans["k"]
 
-    logger.info("\n--- K-means (k=true=%d) ---", num_classes)
-    pred_km, info_km = kmeans_clustering(combined_emb, num_classes)
+    true_k = combined_n_classes if ncd_mode else num_classes
+    logger.info("\n--- K-means (k=true=%d) ---", true_k)
+    pred_km, info_km = kmeans_clustering(combined_emb, true_k)
     metrics_km = compute_all_metrics(combined_labels, pred_km)
     results["clustering"]["kmeans_true_k"] = {**metrics_km, "info": info_km}
-    logger.info("K-means k=%d: ACC=%.4f", num_classes, metrics_km["acc"])
+    logger.info("K-means k=%d: ACC=%.4f", true_k, metrics_km["acc"])
 
     if run_dbscan:
         logger.info("\n--- DBSCAN ---")
@@ -164,8 +182,8 @@ def run_ncd_pipeline(
         results["clustering"]["dbscan"] = {**metrics_db, "info": info_db}
 
     if run_spectral:
-        logger.info("\n--- Spectral k=%d ---", num_classes)
-        pred_sp, info_sp = spectral_clustering(combined_emb, num_classes)
+        logger.info("\n--- Spectral k=%d ---", true_k)
+        pred_sp, info_sp = spectral_clustering(combined_emb, true_k)
         metrics_sp = compute_all_metrics(combined_labels, pred_sp)
         results["clustering"]["spectral"] = {**metrics_sp, "info": info_sp}
 
