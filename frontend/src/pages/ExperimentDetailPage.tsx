@@ -459,8 +459,7 @@ function NcdDetail({ modelVariant, exp }: { modelVariant: string; exp?: number }
   const openset = data.openset ?? {};
   const clustering = data.clustering ?? {};
   const meanAuroc = detectors.Ensemble?.auroc ?? detectors.Ensemble?.mean_auroc ?? openset.mean_auroc ?? 0;
-  const novelClass = openset.novel_class;
-  const napoliAuroc = novelClass?.auroc;
+  const napoliAuroc = detectors.Ensemble?.auroc ?? openset.novel_class?.auroc;
   const ablation = openset.ablation;
   const perClass = openset.per_class_metrics ?? [];
   const tsne2d = data.tsne_2d as [number, number][] | undefined;

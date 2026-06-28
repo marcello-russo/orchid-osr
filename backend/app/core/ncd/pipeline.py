@@ -122,6 +122,8 @@ def run_ncd_pipeline(
     }
 
     if ncd_mode and test_dir and os.path.exists(test_dir):
+        assert bundle.train_class_names == bundle.test_class_names[:len(bundle.train_class_names)], \
+            "Train/test class ordering must match for combined clustering"
         combined_emb = np.vstack([bundle.train_embeddings, bundle.test_embeddings])
         combined_labels = np.hstack([bundle.train_labels, bundle.test_labels])
     else:
@@ -236,10 +238,16 @@ def run_ncd_pipeline(
                 if ncd_mode
                 else np.ones(len(combined_labels), dtype=bool)
             )
+            if ncd_mode:
+                combined_class_names = list(bundle.train_class_names)
+                if novel_name:
+                    combined_class_names.append(novel_name)
+            else:
+                combined_class_names = class_names
             plot_tsne_known_vs_unknown(
                 emb_2d,
                 combined_labels,
-                all_classes if ncd_mode and all_classes else class_names,
+                combined_class_names,
                 known_mask,
                 figures_dir,
             )
