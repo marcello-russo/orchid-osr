@@ -469,6 +469,8 @@ export function ResearchPage() {
           <p className="font-bold text-foreground mb-2">{t("about.future.phase3_ncd_title")}</p>
           <p className="text-sm">{renderCitations(t("about.future.phase3_ncd"))}</p>
         </div>
+
+        <NcdResults experiment="Exp 8 (SpHOR)" />
       </section>
 
       {/* 8 ============================================================
@@ -654,7 +656,7 @@ export function ResearchPage() {
           {t("about.exp10.outcome_note")}
         </p>
 
-        <Exp10NcdResults />
+        <NcdResults experiment="Exp 10 (MGH-NCD)" />
       </section>
 
       {/* 12. Bibliography */}
@@ -959,7 +961,7 @@ const DETECTOR_LABELS: Record<string, string> = {
   Ensemble: "Ensemble",
 };
 
-function Exp10NcdResults() {
+function NcdResults({ experiment }: { experiment: string }) {
   const { t } = useTranslation();
   const ncdCompQuery = useQuery<NcdComparison>({
     queryKey: ["ncd-comparison"],
@@ -967,8 +969,8 @@ function Exp10NcdResults() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const exp10 = ncdCompQuery.data?.models?.filter((m) => m.experiment === "Exp 10 (MGH-NCD)") ?? [];
-  const sorted = [...exp10].sort((a, b) => b.ensemble_auroc - a.ensemble_auroc);
+  const models = ncdCompQuery.data?.models?.filter((m) => m.experiment === experiment) ?? [];
+  const sorted = [...models].sort((a, b) => b.ensemble_auroc - a.ensemble_auroc);
   const isLoading = ncdCompQuery.isLoading;
 
   const chartData = sorted.map((m) => ({
@@ -983,13 +985,13 @@ function Exp10NcdResults() {
     return <div className="flex justify-center py-8"><div className="size-5 rounded-full border-2 border-primary border-t-transparent animate-spin" /></div>;
   }
 
-  if (exp10.length === 0) return null;
+  if (models.length === 0) return null;
 
   return (
     <div className="space-y-8 mt-8">
       <h3 className="text-xl font-bold flex items-center gap-2">
         <Rocket className="size-5 text-primary" />
-        {t("about.exp10.ncd_title")}
+        {experiment === "Exp 10 (MGH-NCD)" ? t("about.exp10.ncd_title") : "NCD Results — Open-Set Detection per Detector"}
       </h3>
 
       {/* Table */}

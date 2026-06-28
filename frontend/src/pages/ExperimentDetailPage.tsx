@@ -455,9 +455,10 @@ function NcdDetail({ modelVariant, exp }: { modelVariant: string; exp?: number }
   if (isLoading) return <div className="flex justify-center py-8"><div className="size-5 rounded-full border-2 border-primary border-t-transparent animate-spin" /></div>;
   if (error || !data) return <p className="text-sm text-muted-foreground text-center py-8">{t("experiment_detail.ncd_no_data")}</p>;
 
+  const detectors = data.detectors ?? {};
   const openset = data.openset ?? {};
   const clustering = data.clustering ?? {};
-  const meanAuroc = openset.mean_auroc ?? 0;
+  const meanAuroc = detectors.Ensemble?.auroc ?? detectors.Ensemble?.mean_auroc ?? openset.mean_auroc ?? 0;
   const novelClass = openset.novel_class;
   const napoliAuroc = novelClass?.auroc;
   const ablation = openset.ablation;
@@ -495,7 +496,16 @@ function NcdDetail({ modelVariant, exp }: { modelVariant: string; exp?: number }
           <div className={`text-2xl font-black ${meanAuroc < 0.5 ? "text-red-500" : "text-green-500"}`}>
             {(meanAuroc * 100).toFixed(1)}%
           </div>
-          <div className="text-[10px] text-muted-foreground mt-0.5">{t("experiment_detail.ncd_ensemble")}</div>
+          <div className="flex flex-wrap justify-center gap-1.5 mt-1.5">
+            {["Ensemble", "Mahalanobis", "KNN", "Energy"].map((d) => {
+              const val = detectors[d]?.auroc ?? detectors[d]?.mean_auroc;
+              return val != null ? (
+                <span key={d} className="text-[10px] px-1.5 py-0.5 rounded bg-muted font-mono">
+                  {d[0]}: {(val * 100).toFixed(1)}%
+                </span>
+              ) : null;
+            })}
+          </div>
         </div>
         {napoliAuroc !== undefined && (
           <div className="rounded-xl border-2 border-red-500/30 bg-red-500/5 p-4 text-center">
