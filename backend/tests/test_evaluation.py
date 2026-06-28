@@ -48,12 +48,13 @@ def test_novel_class_not_found():
 
 def test_loo_structure():
     rng = np.random.default_rng(42)
-    scores = np.hstack([rng.uniform(0, 0.3, 20), rng.uniform(0.7, 1.0, 40)])
+    # Classe A ha scores ALTI (more novel), B/C bassi
+    scores = np.hstack([rng.uniform(0.7, 1.0, 20), rng.uniform(0, 0.3, 20), rng.uniform(0, 0.3, 20)])
     labels = np.hstack([np.zeros(20), np.ones(20), np.full(20, 2)])
     result = evaluate_loo(scores, labels, class_names=["A", "B", "C"])
     assert "mean_auroc" in result
     assert len(result["per_class"]) == 3
-    assert result["per_class"][0]["auroc"] > 0.85
+    assert result["per_class"][0]["auroc"] > 0.85  # A ha scores alti quando e' novel
     assert result["per_class"][0]["left_out"] == "A"
 
 
