@@ -63,9 +63,14 @@ class MahalanobisDetector(OSRDetector):
 
     def fit(self, embeddings, labels):
         self.class_means_ = {}
+        centered_list = []
         for c in np.unique(labels):
-            self.class_means_[int(c)] = embeddings[labels == c].mean(axis=0)
-        lw = LedoitWolf().fit(embeddings)
+            cls_emb = embeddings[labels == c]
+            mean = cls_emb.mean(axis=0)
+            self.class_means_[int(c)] = mean
+            centered_list.append(cls_emb - mean)
+        centered = np.vstack(centered_list)
+        lw = LedoitWolf().fit(centered)
         self.pooled_precision_ = lw.precision_
 
     def score(self, embeddings, logits=None):
@@ -89,13 +94,13 @@ class KNNDetector(OSRDetector):
     def fit(self, embeddings, labels):
         norms = np.linalg.norm(embeddings, axis=1, keepdims=True)
         self.train_emb_ = embeddings / (norms + 1e-12)
+        k = min(self.k, len(self.train_emb_))
+        self.nn_ = NearestNeighbors(n_neighbors=k).fit(self.train_emb_)
 
     def score(self, embeddings, logits=None):
         norms = np.linalg.norm(embeddings, axis=1, keepdims=True)
         emb = embeddings / (norms + 1e-12)
-        k = min(self.k, len(self.train_emb_))
-        nn = NearestNeighbors(n_neighbors=k).fit(self.train_emb_)
-        return nn.kneighbors(emb)[0].mean(axis=1)
+        return self.nn_.kneighbors(emb)[0].mean(axis=1)
 
 
 # --- Energy ---
