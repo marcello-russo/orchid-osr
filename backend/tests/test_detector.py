@@ -38,10 +38,15 @@ def test_mahalanobis_detects_novel():
 
 def test_knn_detects_novel():
     rng = np.random.default_rng(42)
-    train_emb = rng.normal(0, 0.3, (100, 8))
+    # KNN con L2 normalization: separazione angolare (come embeddings reali)
+    angles = rng.uniform(0, 0.3, (100, 1))
+    train_emb = np.hstack([np.cos(angles), np.sin(angles), np.zeros((100, 6))])
     train_labels = np.zeros(100, dtype=int)
-    test_known = rng.normal(0, 0.3, (10, 8))
-    test_novel = rng.normal(3.0, 0.3, (20, 8))
+
+    test_known = np.hstack([np.cos(angles[:10]), np.sin(angles[:10]), np.zeros((10, 6))])
+    novel_angles = rng.uniform(np.pi - 0.3, np.pi, (20, 1))
+    test_novel = np.hstack([np.cos(novel_angles), np.sin(novel_angles), np.zeros((20, 6))])
+
     test_emb = np.vstack([test_known, test_novel])
     test_labels = np.hstack([np.zeros(10), np.ones(20)])
 
@@ -49,7 +54,7 @@ def test_knn_detects_novel():
     det.fit(train_emb, train_labels)
     scores = det.score(test_emb)
     result = evaluate_novel(scores, test_labels, novel_name="1", class_names=["0", "1"])
-    assert result["auroc"] > 0.80
+    assert result["auroc"] > 0.95
 
 
 def test_knn_handles_small_train():
