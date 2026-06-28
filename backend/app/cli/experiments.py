@@ -241,15 +241,22 @@ def _resolve_experiments(args, phases: list[str]) -> list[int] | None:
 
 def _log_config(args, phases: list[str], exp_ids: list[int]) -> None:
     """Log experiment configuration."""
+    is_inference = set(phases).issubset({"ncd", "embeddings"})
+
     logging.info("=" * 70)
     logging.info("ORCHID CLASSIFICATION EXPERIMENTS")
     logging.info("=" * 70)
     logging.info(f"Model: {args.model.upper()}")
     logging.info(f"Experiments: {exp_ids}")
     logging.info(f"Phases: {phases}")
-    logging.info(f"Epochs: {args.epochs}")
-    logging.info(f"Batch size: {args.batch_size}")
-    logging.info(f"Learning rate: {args.lr}")
+    if is_inference:
+        logging.info("Epochs: N/A (inference-only phase)")
+        logging.info("Batch size: N/A")
+        logging.info("Learning rate: N/A")
+    else:
+        logging.info(f"Epochs: {args.epochs}")
+        logging.info(f"Batch size: {args.batch_size}")
+        logging.info(f"Learning rate: {args.lr}")
     if args.patience > 0:
         logging.info(f"Early stopping patience: {args.patience}")
     if "cross-validate" in phases:
