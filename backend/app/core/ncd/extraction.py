@@ -10,6 +10,10 @@ import torch
 from numpy.typing import NDArray
 from torch.utils.data import DataLoader
 
+from app.core.ncd.extract import load_trained_model
+from app.core.models import create_transform
+from app.preprocessing.dataset_tool import ImageFolderWithName
+
 
 @dataclass
 class ExtractionBundle:
@@ -46,10 +50,6 @@ def extract_all(
     exp_dir: str | None = None,
 ) -> ExtractionBundle:
     """Carica modello e forward UNICO per embeddings + logits."""
-    from app.core.ncd.extract import load_trained_model
-    from app.core.models import create_transform
-    from app.preprocessing.dataset_tool import ImageFolderWithName
-
     model = load_trained_model(
         model_variant, num_classes, model_path, device, exp_dir=exp_dir
     )

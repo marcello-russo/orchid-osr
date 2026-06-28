@@ -15,13 +15,27 @@ def set_seed(seed: int = 42):
 
 @pytest.fixture(autouse=True)
 def deterministic_mode():
-    """Ensure deterministic behavior for all tests."""
+    """Ensure deterministic behavior for all tests.
+
+    torch.backends.cudnn.deterministic abilitato solo su GPU vera.
+    La chiamata torch.cuda.is_available() puo' bloccare su driver rotto
+    — NON chiamarla direttamente. Usiamo torch.cuda.device_count() che e'
+    piu' rapida e fallisce silenziosamente.
+    """
     set_seed(42)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
+    use_cuda = False
+    if hasattr(torch, "cuda") and hasattr(torch.cuda, "device_count"):
+        try:
+            use_cuda = torch.cuda.device_count() > 0
+        except Exception:
+            use_cuda = False
+    if use_cuda:
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
     yield
-    torch.backends.cudnn.deterministic = False
-    torch.backends.cudnn.benchmark = True
+    if use_cuda:
+        torch.backends.cudnn.deterministic = False
+        torch.backends.cudnn.benchmark = True
 
 
 @pytest.fixture

@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import threading
 
 import numpy as np
 import torch
@@ -14,6 +15,40 @@ from app.core.ncd.evaluation import evaluate_loo, evaluate_novel
 from app.core.ncd.extraction import extract_all
 
 logger = logging.getLogger(__name__)
+
+
+def _get_device(timeout: float = 5.0) -> torch.device:
+    """Safe device detection with timeout.
+
+    torch.cuda.is_available() puo' bloccare se il driver NVIDIA e' in stato
+    inconsistente (es. dopo sospensione del portatile). Usa un thread separato
+    con timeout per evitare freeze della pipeline.
+    Se NCD_FORCE_CPU=1, salta completamente la verifica CUDA.
+    """
+    if os.environ.get("NCD_FORCE_CPU") == "1":
+        return torch.device("cpu")
+
+    result = [False]
+
+    def check():
+        try:
+            result[0] = torch.cuda.is_available()
+        except Exception:
+            result[0] = False
+
+    t = threading.Thread(target=check, daemon=True)
+    t.start()
+    t.join(timeout=timeout)
+
+    if t.is_alive():
+        logger.warning(
+            "torch.cuda.is_available() non risponde dopo %.1fs — fallback a CPU. "
+            "Imposta NCD_FORCE_CPU=1 per saltare la verifica CUDA.",
+            timeout,
+        )
+        return torch.device("cpu")
+
+    return torch.device("cuda" if result[0] else "cpu")
 
 
 def run_ncd_pipeline(
@@ -60,7 +95,7 @@ def run_ncd_pipeline(
         logger.error("Best model not found: %s", best_model_path)
         return
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = _get_device()
 
     collect_logits = any(
         get_detector(n).requires_logits for n in list_detectors()
