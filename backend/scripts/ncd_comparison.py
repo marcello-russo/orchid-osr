@@ -1,9 +1,11 @@
 """Aggrega risultati NCD in una tabella comparativa.
 
 Legge formato nuovo (detectors.*.auroc) e vecchio (openset.*).
+Salva valori per-detector per visualizzazione frontend.
 """
 
 import json
+import math
 import os
 
 EXP_BASE = os.path.join(os.path.dirname(__file__), "..", "experiments")
@@ -20,31 +22,41 @@ MODELS = [
     "dinov2_small", "dinov2_base",
 ]
 
+DETECTOR_NAMES = ["Ensemble", "Mahalanobis", "KNN", "Energy"]
+
+
+def _get_detector_auroc(data: dict, name: str) -> float:
+    """Legge AUROC per un detector specifico.
+
+    evaluate_novel() salva 'auroc', evaluate_loo() salva 'mean_auroc'.
+    """
+    detectors = data.get("detectors", {})
+    entry = detectors.get(name, {})
+    if "error" in entry:
+        return float("nan")
+    for key in ("auroc", "mean_auroc"):
+        if key in entry:
+            val = entry[key]
+            if val is not None and not (isinstance(val, float) and math.isnan(val)):
+                return float(val)
+    return float("nan")
+
 
 def _extract_auroc(data: dict) -> float:
-    """Legge AUROC dal formato piu' recente disponibile."""
-    detectors = data.get("detectors", {})
+    """AUROC principale: Ensemble, poi il primo detector disponibile."""
+    val = _get_detector_auroc(data, "Ensemble")
+    if not math.isnan(val) and val != 0:
+        return val
+    for name in DETECTOR_NAMES:
+        val = _get_detector_auroc(data, name)
+        if not math.isnan(val) and val != 0:
+            return val
     openset = data.get("openset", {})
-
-    for preferred in ["Ensemble", "Mahalanobis", "KNN", "Energy"]:
-        if preferred in detectors and "auroc" in detectors[preferred]:
-            val = detectors[preferred]["auroc"]
-            if val is not None and not (isinstance(val, float) and val != val):
-                return float(val)
-
     if "auroc" in openset:
         return float(openset["auroc"])
     if "mean_auroc" in openset:
         return float(openset["mean_auroc"])
-
     return 0.0
-
-
-def _extract_baseline(data: dict) -> float:
-    """Legge baseline AUROC dal vecchio formato."""
-    openset = data.get("openset", {})
-    baseline = openset.get("baselines", {}).get("softmax_threshold", {})
-    return float(baseline.get("mean_auroc", 0))
 
 
 def main():
@@ -61,9 +73,9 @@ def main():
             clustering = data.get("clustering", {})
             kmeans = clustering.get("kmeans_best", {})
             auroc = _extract_auroc(data)
-            baseline = _extract_baseline(data)
+            baseline = 0.0
 
-            entries.append({
+            entry = {
                 "experiment": label,
                 "exp_prefix": prefix,
                 "model": model,
@@ -75,11 +87,26 @@ def main():
                 "f_measure": round(kmeans.get("f_measure", 0), 4),
                 "silhouette": round(kmeans.get("silhouette", 0), 4),
                 "mean_auroc": round(auroc, 4),
-                "knn_auroc": 0,
                 "baseline_auroc": round(baseline, 4),
                 "improvement": round(auroc - baseline, 4),
-            })
-            print(f"  {exp_name}: AUROC={auroc:.4f} (baseline={baseline:.4f})")
+                "knn_auroc": 0,
+            }
+
+            # Per-detector AUROC per frontend
+            for det_name in DETECTOR_NAMES:
+                val = _get_detector_auroc(data, det_name)
+                key = f"{det_name.lower()}_auroc"
+                entry[key] = round(val, 4) if not math.isnan(val) else 0.0
+
+            # Cluster AUROC per kmeans_true_k
+            kmeans_k = clustering.get("kmeans_true_k", {})
+            if "acc" in kmeans_k:
+                entry["cluster_acc"] = round(kmeans_k["acc"], 4)
+            if "nmi" in kmeans_k:
+                entry["cluster_nmi"] = round(kmeans_k["nmi"], 4)
+
+            entries.append(entry)
+            print(f"  {exp_name}: AUROC={auroc:.4f}")
 
     entries.sort(key=lambda e: (e["experiment"], -e.get("mean_auroc", 0)))
     with open(OUTPUT, "w") as f:
