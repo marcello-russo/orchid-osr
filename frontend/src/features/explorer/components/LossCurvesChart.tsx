@@ -11,6 +11,7 @@ import {
   Tooltip,
   Legend,
   ReferenceLine,
+  ResponsiveContainer,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { FoldData } from "@/lib/types";
@@ -56,14 +57,16 @@ export function LossCurvesChart({ folds, selectedFold }: LossCurvesChartProps) {
   const maxLen = merged.length;
 
   // Debug: mostra info dati in alto a destra
+  const firstPoint = merged.length > 0 ? merged[0] : null;
   const debugInfo = `${visibleFolds.length} folds, ${maxLen} epochs, mode=${mode}`;
+  const dataPreview = firstPoint ? JSON.stringify(firstPoint).slice(0, 80) : "empty";
 
   return (
     <Card>
       <CardHeader className="pb-2 border-b border-border/50">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base">{t("experiment_detail.charts.loss")}</CardTitle>
-          <span className="text-[10px] text-muted-foreground font-mono">{debugInfo}</span>
+          <span className="text-[10px] text-muted-foreground font-mono">{debugInfo} | {dataPreview}</span>
           <div className="flex gap-1">
             {(["train", "val"] as const).map((m) => (
               <button
@@ -84,7 +87,8 @@ export function LossCurvesChart({ folds, selectedFold }: LossCurvesChartProps) {
       </CardHeader>
       <CardContent className="pt-4">
         <div ref={ref} style={{ width: "100%", height: height || 400, minHeight: 350 }}>
-          <LineChart data={merged} width={width || 800} height={height || 400}>
+          <ResponsiveContainer width="100%" height={height || 400}>
+          <LineChart data={merged}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />
             <XAxis dataKey="epoch" tick={{ fontSize: 14 }} />
             <YAxis tick={{ fontSize: 14 }} domain={['auto', 'auto']} />
@@ -138,6 +142,7 @@ export function LossCurvesChart({ folds, selectedFold }: LossCurvesChartProps) {
               );
             })}
           </LineChart>
+          </ResponsiveContainer>
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
           {t("experiment_detail.charts.loss_description")}

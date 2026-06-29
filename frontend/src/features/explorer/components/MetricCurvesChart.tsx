@@ -11,6 +11,7 @@ import {
   Tooltip,
   Legend,
   ReferenceLine,
+  ResponsiveContainer,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { FoldData } from "@/lib/types";
@@ -82,7 +83,8 @@ export function MetricCurvesChart({ folds, selectedFold }: MetricCurvesChartProp
       </CardHeader>
       <CardContent className="pt-4">
         <div ref={ref} style={{ width: "100%", height: height || 400, minHeight: 350 }}>
-          <LineChart data={merged} width={width || 800} height={height || 400}>
+          <ResponsiveContainer width="100%" height={height || 400}>
+          <LineChart data={merged}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />
             <XAxis dataKey="epoch" tick={{ fontSize: 14 }} />
             <YAxis tick={{ fontSize: 14 }} domain={[0, 1]} />
@@ -128,6 +130,7 @@ export function MetricCurvesChart({ folds, selectedFold }: MetricCurvesChartProp
               );
             })}
           </LineChart>
+          </ResponsiveContainer>
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
           {t("experiment_detail.charts.metrics_description")}
