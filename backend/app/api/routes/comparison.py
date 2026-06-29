@@ -253,7 +253,7 @@ def _normalize_fold(fold: dict) -> dict:
         "fold": fold.get("fold", 0),
         "best_f1": fold.get("best_f1", fold.get("best_knn_acc", 0)),
         "best_accuracy": fold.get("best_accuracy", fold.get("sphor_probe_accuracy", 0)),
-        "best_epoch": n_supcon + max(fold.get("best_epoch", 0), 0),
+        "best_epoch": min(n_supcon + max(fold.get("best_epoch", 0), 0), len(train_loss)),
         "final_train_loss": ce_hist.get("train_loss", [None])[-1] if ce_hist.get("train_loss") else supcon_hist.get("train_loss", [None])[-1],
         "final_val_loss": ce_hist.get("val_loss", [None])[-1] if ce_hist.get("val_loss") else supcon_hist.get("val_loss", [None])[-1],
         "history": {

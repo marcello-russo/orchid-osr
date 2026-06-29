@@ -98,11 +98,11 @@ async def get_experiment(experiment_id: str):
 
     config = _load_json(config_path) if config_path.exists() else {}
 
-    from app.api.routes.comparison import _normalize_fold
-
     folds = []
     for fold_file in sorted(exp_dir.glob("fold_*.json")):
         raw = _load_json(fold_file)
+        # Normalize SupCon two-phase format to flat format
+        from app.api.routes.comparison import _normalize_fold
         folds.append(_normalize_fold(raw))
 
     results = None
