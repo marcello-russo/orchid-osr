@@ -16,6 +16,8 @@ export interface ExperimentConfig {
   class_names?: string[];
   patience?: number;
   timestamp?: string;
+  phases?: string[];
+  recipe?: string;
   optimizer?: string;
   effective_learning_rate?: number;
   weight_decay?: number;

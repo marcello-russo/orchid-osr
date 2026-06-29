@@ -98,10 +98,37 @@ async def get_experiment(experiment_id: str):
 
     config = _load_json(config_path) if config_path.exists() else {}
 
+    # Merge recipe info from experiment definitions
+    import re
+    exp_num_match = re.search(r'exp(\d+)', experiment_id)
+    if exp_num_match:
+        exp_num = int(exp_num_match.group(1))
+        _recipes = {
+            6: {"phases": ["CE"], "recipe": "Standard Cross-Entropy training. "
+                "Una fase: loss CE su 6 classi. Backbone + testa addestrati insieme. "
+                "150 epoche, Adam, LR 0.001, batch 8."},
+            7: {"phases": ["SupCon", "CE fine-tune"], "recipe": "Due fasi: "
+                "(1) SupCon: attrae stessa specie, respinge specie diverse. "
+                "τ=0.07, proiezione 128 dim. (2) CE: backbone congelato, "
+                "sola testa lineare. AdamW, LR 0.001/0.01."},
+            8: {"phases": ["SupCon + SpHOR", "CE fine-tune"], "recipe": "Due fasi: "
+                "(1) SupCon + prototipi ortogonali sferici. Loss repulsiva "
+                "L_rep = (1/K²) Σ cos(θ_ij)². (2) CE: backbone congelato, testa lineare. "
+                "Novel: O. sphegodes_Napoli."},
+            9: {"phases": ["SupCon + SpHOR", "CE fine-tune"], "recipe": "Come Exp 8. "
+                "Novel class nascosta (solo in test) per NCD evaluation."},
+            10: {"phases": ["MGH-SupCon", "CE fine-tune"], "recipe": "Due fasi MGH: "
+                 "(1) SupCon con hard negative mining (coppie difficili pesate 3-5×) "
+                 "+ features multi-granularità (CLS + patch + mid per ViT; "
+                 "multi-stage per CNN). (2) CE: backbone frozen, testa lineare."},
+        }
+        if exp_num in _recipes:
+            config["phases"] = _recipes[exp_num]["phases"]
+            config["recipe"] = _recipes[exp_num]["recipe"]
+
     folds = []
     for fold_file in sorted(exp_dir.glob("fold_*.json")):
         raw = _load_json(fold_file)
-        # Normalize SupCon two-phase format to flat format
         from app.api.routes.comparison import _normalize_fold
         folds.append(_normalize_fold(raw))
 

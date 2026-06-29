@@ -30,7 +30,7 @@ export function LossCurvesChart({ folds, selectedFold }: LossCurvesChartProps) {
   const ref = useRef<HTMLDivElement>(null);
   const { width, height } = useChartSize(ref);
   const chartColors = useChartColors();
-  const [mode, setMode] = useState<"train" | "val">("val");
+  const [mode, setMode] = useState<"train" | "val">("train");
 
   const visibleFolds = useMemo(
     () => selectedFold === null ? folds : folds.filter((f) => f.fold === selectedFold),

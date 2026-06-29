@@ -71,9 +71,47 @@ export function ExperimentConfigCard({ config }: ExperimentConfigCardProps) {
                 <span className="ml-1 text-foreground">{t("experiment_detail.config.registry")} ({config.model_variant})</span>
               </div>
             )}
+            {config.phases && config.phases.length > 0 && (
+              <div className="col-span-full">
+                <span className="text-muted-foreground text-xs uppercase tracking-wider font-bold">
+                  {t("experiment_detail.config.phases")}
+                </span>
+                <div className="flex flex-wrap gap-1.5 mt-1">
+                  {config.phases.map((p: string) => (
+                    <span key={p} className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-bold">
+                      {p}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {config.recipe && (
+              <div className="col-span-full mt-2 text-xs text-muted-foreground leading-relaxed border-t border-border/30 pt-3">
+                {config.recipe}
+              </div>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3 md:grid-cols-4">
+            {config.phases && config.phases.length > 0 && (
+              <div className="col-span-full">
+                <span className="text-muted-foreground text-xs uppercase tracking-wider font-bold">
+                  {t("experiment_detail.config.phases")}
+                </span>
+                <div className="flex flex-wrap gap-1.5 mt-1">
+                  {config.phases.map((p: string) => (
+                    <span key={p} className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-bold">
+                      {p}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {config.recipe && (
+              <div className="col-span-full mt-2 text-xs text-muted-foreground leading-relaxed border-t border-border/30 pt-3">
+                {config.recipe}
+              </div>
+            )}
             {config.num_epochs && (
               <div>
                 <span className="text-muted-foreground">{t("experiment_detail.config.epochs")}</span>
