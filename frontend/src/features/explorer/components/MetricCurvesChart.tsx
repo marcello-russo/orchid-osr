@@ -81,8 +81,8 @@ export function MetricCurvesChart({ folds, selectedFold }: MetricCurvesChartProp
         </div>
       </CardHeader>
       <CardContent className="pt-4">
-        <div ref={ref} style={{ width: "100%", height }}>
-          <LineChart data={merged} width={width} height={height}>
+        <div ref={ref} style={{ width: "100%", height: height || 400, minHeight: 350 }}>
+          <LineChart data={merged} width={width || 800} height={height || 400}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />
             <XAxis dataKey="epoch" tick={{ fontSize: 14 }} />
             <YAxis tick={{ fontSize: 14 }} domain={[0, 1]} />
