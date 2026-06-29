@@ -270,15 +270,19 @@ interface ChartCarouselProps {
 
 function ChartCarousel({ folds, selectedFold, meanF1, stdF1, confusionMatrix, experimentId }: ChartCarouselProps) {
   const { t } = useTranslation();
-  const total = confusionMatrix ? 5 : 4;
+  // Nascondi overfitting se val_loss e' tutto zero (training SupCon)
+  const hasOverfitting = folds.some(f => f.history?.val_loss?.some((v: number) => v > 0));
+  const overfittingIdx = 3;
+  const cmIdx = confusionMatrix ? (hasOverfitting ? 4 : 3) : -1;
+  const total = (hasOverfitting ? 1 : 0) + (confusionMatrix ? 1 : 0) + 3; // loss + metrics + folds + (overfitting?) + (cm?)
   const [active, setActive] = useState(0);
 
   const chart_titles = [
     t("experiment_detail.charts.loss"),
     t("experiment_detail.charts.metrics"),
     t("experiment_detail.charts.folds"),
-    t("experiment_detail.charts.overfitting"),
-    t("experiment_detail.charts.confusion"),
+    ...(hasOverfitting ? [t("experiment_detail.charts.overfitting")] : []),
+    ...(confusionMatrix ? [t("experiment_detail.charts.confusion")] : []),
   ];
 
   const clamp = useCallback((i: number) => Math.max(0, Math.min(total - 1, i)), [total]);
@@ -331,13 +335,18 @@ function ChartCarousel({ folds, selectedFold, meanF1, stdF1, confusionMatrix, ex
 
       {/* Chart area — only active chart is rendered */}
       <div>
-        {active === 0 && <LossCurvesChart folds={folds} selectedFold={selectedFold} />}
-        {active === 1 && <MetricCurvesChart folds={folds} selectedFold={selectedFold} />}
-        {active === 2 && <FoldSummaryChart folds={folds} meanF1={meanF1} stdF1={stdF1} />}
-        {active === 3 && <OverfittingProxyChart folds={folds} selectedFold={selectedFold} />}
-        {active === 4 && confusionMatrix && (
-          <ConfusionMatrixChart matrix={confusionMatrix.matrix} labels={confusionMatrix.labels} />
-        )}
+        {(() => {
+          const charts = [
+            <LossCurvesChart folds={folds} selectedFold={selectedFold} />,
+            <MetricCurvesChart folds={folds} selectedFold={selectedFold} />,
+            <FoldSummaryChart folds={folds} meanF1={meanF1} stdF1={stdF1} />,
+          ];
+          if (hasOverfitting) charts.push(<OverfittingProxyChart folds={folds} selectedFold={selectedFold} />);
+          if (confusionMatrix) charts.push(
+            <ConfusionMatrixChart matrix={confusionMatrix.matrix} labels={confusionMatrix.labels} />
+          );
+          return active < charts.length ? charts[active] : null;
+        })()}
       </div>
     </div>
   );
