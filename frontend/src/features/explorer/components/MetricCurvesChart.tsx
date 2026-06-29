@@ -114,6 +114,19 @@ export function MetricCurvesChart({ folds, selectedFold }: MetricCurvesChartProp
                 isAnimationActive={false}
               />
             ))}
+            {visibleFolds.length > 0 && visibleFolds[0].phase_epochs?.map((ep, i) => {
+              if (i === 0 || ep <= 0 || ep > (merged.length || 1)) return null;
+              return (
+                <ReferenceLine
+                  key={`phase_${i}`}
+                  x={ep}
+                  stroke="var(--muted-foreground)"
+                  strokeDasharray="4 4"
+                  strokeOpacity={0.6}
+                  label={visibleFolds[0].phase_names?.[i] ?? `Phase ${i+1}`}
+                />
+              );
+            })}
           </LineChart>
         </div>
         <p className="mt-2 text-xs text-muted-foreground">

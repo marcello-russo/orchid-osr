@@ -98,9 +98,12 @@ async def get_experiment(experiment_id: str):
 
     config = _load_json(config_path) if config_path.exists() else {}
 
+    from app.api.routes.comparison import _normalize_fold
+
     folds = []
     for fold_file in sorted(exp_dir.glob("fold_*.json")):
-        folds.append(_load_json(fold_file))
+        raw = _load_json(fold_file)
+        folds.append(_normalize_fold(raw))
 
     results = None
     results_path = exp_dir / "results.json"

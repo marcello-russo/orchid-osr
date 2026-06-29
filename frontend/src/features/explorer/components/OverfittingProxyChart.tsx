@@ -70,6 +70,19 @@ export function OverfittingProxyChart({ folds, selectedFold }: OverfittingProxyC
               strokeDasharray="4 4"
               label={{ value: t("experiment_detail.charts.overfitting_threshold"), fontSize: 13, fill: chartColors[4] }}
             />
+            {visibleFolds.length > 0 && visibleFolds[0].phase_epochs?.map((ep, i) => {
+              if (i === 0 || ep <= 0 || ep > (merged.length || 1)) return null;
+              return (
+                <ReferenceLine
+                  key={`phase_${i}`}
+                  x={ep}
+                  stroke="var(--muted-foreground)"
+                  strokeDasharray="4 4"
+                  strokeOpacity={0.6}
+                  label={visibleFolds[0].phase_names?.[i] ?? `Phase ${i+1}`}
+                />
+              );
+            })}
             {visibleFolds.map((f) => (
               <Line
                 key={`ratio_${f.fold}`}
