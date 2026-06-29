@@ -181,9 +181,12 @@ def _discover_models() -> list[ModelOption]:
         )
 
     # Deduplica per experiment directory (alcuni modelli appaiono 2× per via di subdir)
+    # Escludi exp9 (non rilevante per classify)
     seen: set[str] = set()
     deduped: list[ModelOption] = []
     for m in options:
+        if "exp9_ncd" in m.id:
+            continue
         if m.id not in seen:
             seen.add(m.id)
             deduped.append(m)
