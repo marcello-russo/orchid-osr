@@ -240,14 +240,22 @@ def _normalize_fold(fold: dict) -> dict:
     supcon_hist = sp.get("supcon_history", {})
     ce_hist = sp.get("ce_phase", {}).get("ce_history", {})
 
-    # Concatenate supcon + ce sequences
-    train_loss = (supcon_hist.get("train_loss", []) or []) + (ce_hist.get("train_loss", []) or [])
-    val_loss = (supcon_hist.get("val_loss", []) or []) + (ce_hist.get("val_loss", []) or [])
-    val_f1 = (supcon_hist.get("val_f1", []) or []) + (ce_hist.get("val_f1", []) or [])
-    val_accuracy = (supcon_hist.get("val_accuracy", []) or []) + (ce_hist.get("val_accuracy", []) or [])
+    # SupCon phase: train_loss + val_knn_acc (no val_loss)
+    # CE phase: train_loss + val_loss + val_f1 (if present)
+    supcon_train = supcon_hist.get("train_loss", []) or []
+    supcon_val_knn = supcon_hist.get("val_knn_acc", []) or []
+    ce_train = ce_hist.get("train_loss", []) or []
+    ce_val_loss = ce_hist.get("val_loss", []) or []
+    ce_val_f1 = ce_hist.get("val_f1", []) or []
+    ce_val_acc = ce_hist.get("val_accuracy", []) or []
 
-    n_supcon = len(supcon_hist.get("train_loss", []) or [])
-    n_ce = len(ce_hist.get("train_loss", []) or [])
+    # Concatenate — use flattened dummy val_loss for SupCon (val_knn_acc as F1 proxy)
+    n_supcon = len(supcon_train)
+    n_ce = len(ce_train)
+    train_loss = supcon_train + ce_train
+    val_loss = [0.0] * n_supcon + ce_val_loss if ce_val_loss else [0.0] * (n_supcon + n_ce)
+    val_f1 = supcon_val_knn + (ce_val_f1 if ce_val_f1 else [0.0] * n_ce)
+    val_accuracy = [0.0] * (n_supcon + n_ce)
 
     result = {
         "fold": fold.get("fold", 0),
