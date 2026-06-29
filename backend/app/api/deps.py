@@ -180,8 +180,15 @@ def _discover_models() -> list[ModelOption]:
             )
         )
 
-    options.sort(key=lambda m: (-m.exp_num, -(m.mean_f1 or 0)))
-    return options
+    # Deduplica per experiment directory (alcuni modelli appaiono 2× per via di subdir)
+    seen: set[str] = set()
+    deduped: list[ModelOption] = []
+    for m in options:
+        if m.id not in seen:
+            seen.add(m.id)
+            deduped.append(m)
+    deduped.sort(key=lambda m: (-m.exp_num, -(m.mean_f1 or 0)))
+    return deduped
 
 
 def get_model_options() -> list[ModelOption]:
