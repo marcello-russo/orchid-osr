@@ -388,7 +388,8 @@
       "outcome_clustering": "ACC clustering novit\u00e0",
       "outcome_baseline": "Exp 9 (baseline)",
       "outcome_target": "Exp 10 (obiettivo)",
-      "outcome_note": "Tutte e 6 le architetture saranno addestrate con la stessa ricetta MGH-NCD per completezza. A differenza di Exp 9 dove O. majellensis era la classe nascosta, Exp 10 include tutte e 6 le specie note durante l'addestramento. La novel class discovery sar\u00e0 valutata usando una specie separata non vista, raccolta appositamente per questo scopo. La Fase 2 usa CE fine-tuning della sola testa (backbone congelato) per tutte le architetture, seguendo lo stesso approccio di Exp 7. Il backbone viene addestrato con LoRA r=32 durante la Fase 1 (SupCon) per embedding pi\u00f9 ricchi. L'analisi principale si concentrer\u00e0 su DINOv2-Base (miglior compromesso tra qualit\u00e0 embedding e memoria GPU), con confronti cross-architettura."
+      "outcome_note": "Tutte e 6 le architetture saranno addestrate con la stessa ricetta MGH-NCD per completezza. A differenza di Exp 9 dove O. majellensis era la classe nascosta, Exp 10 include tutte e 6 le specie note durante l'addestramento. La novel class discovery sar\u00e0 valutata usando una specie separata non vista, raccolta appositamente per questo scopo. La Fase 2 usa CE fine-tuning della sola testa (backbone congelato) per tutte le architetture, seguendo lo stesso approccio di Exp 7. Il backbone viene addestrato con LoRA r=32 durante la Fase 1 (SupCon) per embedding pi\u00f9 ricchi. L'analisi principale si concentrer\u00e0 su DINOv2-Base (miglior compromesso tra qualit\u00e0 embedding e memoria GPU), con confronti cross-architettura.",
+      "ncd_title": "Risultati NCD — Rilevamento Open-Set per Detector"
     },
     "exp7": {
       "motivation_title": "Perch\u00e9 SupCon?",

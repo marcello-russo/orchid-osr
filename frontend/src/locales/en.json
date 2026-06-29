@@ -452,7 +452,8 @@
       "outcome_clustering": "Novel clustering ACC",
       "outcome_baseline": "Exp 9 (baseline)",
       "outcome_target": "Exp 10 (target)",
-      "outcome_note": "All 6 architectures will be trained with the same MGH-NCD recipe for completeness. Unlike Exp 9 where O. majellensis was the hidden class, Exp 10 includes all 6 known species during training. Novel class discovery will be evaluated using a separate unseen species collected for this purpose. Phase 2 uses head-only CE fine-tuning (backbone frozen) for all architectures, following the same approach as Exp 7. The backbone is trained with LoRA r=32 during Phase 1 (SupCon) for richer embeddings. The primary analysis will focus on DINOv2-Base (best tradeoff between embedding quality and GPU memory), with cross-architecture comparisons provided."
+      "outcome_note": "All 6 architectures will be trained with the same MGH-NCD recipe for completeness. Unlike Exp 9 where O. majellensis was the hidden class, Exp 10 includes all 6 known species during training. Novel class discovery will be evaluated using a separate unseen species collected for this purpose. Phase 2 uses head-only CE fine-tuning (backbone frozen) for all architectures, following the same approach as Exp 7. The backbone is trained with LoRA r=32 during Phase 1 (SupCon) for richer embeddings. The primary analysis will focus on DINOv2-Base (best tradeoff between embedding quality and GPU memory), with cross-architecture comparisons provided.",
+      "ncd_title": "NCD Results — Open-Set Detection per Detector"
     },
     "exp7": {
       "motivation_title": "Why SupCon?",

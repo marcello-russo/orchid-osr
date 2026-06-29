@@ -26,7 +26,11 @@ import { fetchApi, fetchNcdComparison } from "@/lib/api";
 import {
   LineChart,
   Line,
+  BarChart,
+  Bar,
+  XAxis,
   YAxis,
+  CartesianGrid,
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
@@ -166,6 +170,36 @@ const REFERENCES = [
     citation:
       "Chen, Y., Lang, N., Schmidt, B.C., Jain, A., Basset, Y., Beery, S., Larrivée, M. & Rolnick, D. (2025). Open-Insect: Benchmarking Open-Set Recognition of Novel Species in Biodiversity Monitoring. In NeurIPS 2025 Dataset and Benchmark Track (Spotlight).",
     url: "https://arxiv.org/abs/2503.01691",
+  },
+  {
+    id: 23,
+    citation:
+      "Bao, W., Yu, Q. & Kong, Y. (2023). Latent Space Energy-based Model for Fine-grained Open Set Recognition. arXiv preprint arXiv:2309.10711.",
+    url: "https://arxiv.org/abs/2309.10711",
+  },
+  {
+    id: 24,
+    citation:
+      "Kareinen, J., Skyttä, A., Eerola, T., Kraft, K., Lensu, L., Suikkanen, S., Lehtiniemi, M. & Kälviäinen, H. (2025). Open-Set Plankton Recognition. In ECCV 2024 OOD-CV Workshop. arXiv preprint arXiv:2503.11318.",
+    url: "https://arxiv.org/abs/2503.11318",
+  },
+  {
+    id: 25,
+    citation:
+      "Sun, Y., Ming, Y., Zhu, X. & Li, Y. (2022). Out-of-Distribution Detection with Deep Nearest Neighbors. In Proceedings of the International Conference on Machine Learning (ICML), 20827–20840.",
+    url: "https://proceedings.mlr.press/v162/sun22d.html",
+  },
+  {
+    id: 26,
+    citation:
+      "Shah, D. (2026). Beyond Toy Benchmarks: A Systematic Evaluation of OOD Detection Methods For Plant Pathology Classification. arXiv preprint arXiv:2605.08618.",
+    url: "https://arxiv.org/abs/2605.08618",
+  },
+  {
+    id: 27,
+    citation:
+      "Low, C.Y., Koo, H., Park, J. & Cha, M. (2025). Dual-Margin Embedding for Fine-Grained Long-Tailed Plant Taxonomy. arXiv preprint arXiv:2512.18994.",
+    url: "https://arxiv.org/abs/2512.18994",
   },
 ];
 
@@ -435,6 +469,8 @@ export function ResearchPage() {
           <p className="font-bold text-foreground mb-2">{t("about.future.phase3_ncd_title")}</p>
           <p className="text-sm">{renderCitations(t("about.future.phase3_ncd"))}</p>
         </div>
+
+        <NcdResults experiment="Exp 8 (SpHOR)" />
       </section>
 
       {/* 8 ============================================================
@@ -619,6 +655,8 @@ export function ResearchPage() {
         <p className="text-muted-foreground text-sm leading-relaxed">
           {t("about.exp10.outcome_note")}
         </p>
+
+        <NcdResults experiment="Exp 10 (MGH-NCD)" />
       </section>
 
       {/* 12. Bibliography */}
@@ -904,6 +942,114 @@ function Exp9NcdResults() {
             })}
           </tbody>
         </table>
+      </div>
+    </div>
+  );
+}
+
+const DETECTOR_COLORS: Record<string, string> = {
+  Mahalanobis: "#6366f1",
+  KNN: "#22c55e",
+  Energy: "#f59e0b",
+  Ensemble: "#8b5cf6",
+};
+
+const DETECTOR_LABELS: Record<string, string> = {
+  Mahalanobis: "Mahalanobis",
+  KNN: "KNN",
+  Energy: "Energy",
+  Ensemble: "Ensemble",
+};
+
+function NcdResults({ experiment }: { experiment: string }) {
+  const { t } = useTranslation();
+  const ncdCompQuery = useQuery<NcdComparison>({
+    queryKey: ["ncd-comparison"],
+    queryFn: fetchNcdComparison,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const models = ncdCompQuery.data?.models?.filter((m) => m.experiment === experiment) ?? [];
+  const sorted = [...models].sort((a, b) => b.ensemble_auroc - a.ensemble_auroc);
+  const isLoading = ncdCompQuery.isLoading;
+
+  const chartData = sorted.map((m) => ({
+    name: m.model.replace("_", " "),
+    Mahalanobis: +(m.mahalanobis_auroc * 100).toFixed(1),
+    KNN: +(m.knn_auroc * 100).toFixed(1),
+    Energy: +(m.energy_auroc * 100).toFixed(1),
+    Ensemble: +(m.ensemble_auroc * 100).toFixed(1),
+  }));
+
+  if (isLoading) {
+    return <div className="flex justify-center py-8"><div className="size-5 rounded-full border-2 border-primary border-t-transparent animate-spin" /></div>;
+  }
+
+  if (models.length === 0) return null;
+
+  return (
+    <div className="space-y-8 mt-8">
+      <h3 className="text-xl font-bold flex items-center gap-2">
+        <Rocket className="size-5 text-primary" />
+        {experiment === "Exp 10 (MGH-NCD)" ? t("about.exp10.ncd_title") : "NCD Results — Open-Set Detection per Detector"}
+      </h3>
+
+      {/* Table */}
+      <div className="overflow-x-auto rounded-xl border border-border/50 bg-background/50">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border/50 text-xs uppercase tracking-widest text-muted-foreground font-bold">
+              <th className="text-left py-3 px-4 w-10">#</th>
+              <th className="text-left py-3 px-3">Modello</th>
+              {["Ensemble", "Mahalanobis", "KNN", "Energy"].map((d) => (
+                <th key={d} className="text-center py-3 px-2" style={{ color: DETECTOR_COLORS[d] }}>
+                  {d}
+                </th>
+              ))}
+              <th className="text-center py-3 px-2">Clust Acc</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border/30">
+            {sorted.map((m, i) => (
+              <tr key={m.model} className={i === 0 ? "bg-amber-500/5" : "hover:bg-muted/30 transition-colors"}>
+                <td className="py-3 px-4"><span className="text-lg font-black">{i <= 2 ? ["🥇","🥈","🥉"][i] : `#${i+1}`}</span></td>
+                <td className="py-3 px-3 font-bold">{m.model}</td>
+                {["Ensemble", "Mahalanobis", "KNN", "Energy"].map((d) => {
+                  const key = `${d.toLowerCase()}_auroc` as keyof typeof m;
+                  const val = m[key] as number;
+                  return (
+                    <td key={d} className="text-center py-3 px-2 font-bold tabular-nums"
+                        style={{ color: d === "Ensemble" ? DETECTOR_COLORS.Ensemble : undefined }}>
+                      {(val * 100).toFixed(1)}%
+                    </td>
+                  );
+                })}
+                <td className="text-center py-3 px-2 tabular-nums text-muted-foreground">
+                  {(m.cluster_acc * 100).toFixed(1)}%
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Bar chart */}
+      <div className="rounded-xl border border-border/50 bg-background/50 p-4 md:p-6">
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={chartData} margin={{ top: 10, right: 20, bottom: 10, left: 10 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+            <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} tickFormatter={(v) => `${v}%`} />
+            <Tooltip
+              contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid hsl(var(--border))" }}
+              formatter={(v: number, name: string) => [`${v}%`, name]}
+            />
+            {["Mahalanobis", "KNN", "Energy", "Ensemble"].map((d) => (
+              <Bar key={d} dataKey={d} fill={DETECTOR_COLORS[d]} name={d}
+                   radius={[4, 4, 0, 0]} maxBarSize={24} />
+            ))}
+          </BarChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );

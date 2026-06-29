@@ -79,6 +79,7 @@ EXPERIMENTS = {
         "num_classes": 6,
         "test_classes": TRAIN_CLASSES,
         "loss_type": "supcon",
+        "ncd_mode": True,
         "description": "SupCon + Spherical Orthogonal Prototypes (SpHOR-style, Exp 8)",
     },
     9: {
