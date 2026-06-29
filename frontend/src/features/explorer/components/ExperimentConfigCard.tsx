@@ -39,7 +39,7 @@ export function ExperimentConfigCard({ config }: ExperimentConfigCardProps) {
                 <span className="ml-1 font-mono text-foreground">{config.batch_size}</span>
               </div>
             )}
-            {config.patience !== undefined && (
+            {config.patience !== undefined && config.patience > 0 && (
               <div>
                 <span className="text-muted-foreground">{t("experiment_detail.config.patience")}</span>
                 <InfoTooltip text={TOOLTIPS.patience} />
@@ -133,7 +133,7 @@ export function ExperimentConfigCard({ config }: ExperimentConfigCardProps) {
                 <span className="ml-1 font-mono text-foreground">{config.learning_rate}</span>
               </div>
             )}
-            {config.patience !== undefined && (
+            {config.patience !== undefined && config.patience > 0 && (
               <div>
                 <span className="text-muted-foreground">{t("experiment_detail.config.patience")}</span>
                 <InfoTooltip text={TOOLTIPS.patience} />
