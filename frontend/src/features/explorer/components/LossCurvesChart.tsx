@@ -55,11 +55,15 @@ export function LossCurvesChart({ folds, selectedFold }: LossCurvesChartProps) {
 
   const maxLen = merged.length;
 
+  // Debug: mostra info dati in alto a destra
+  const debugInfo = `${visibleFolds.length} folds, ${maxLen} epochs, mode=${mode}`;
+
   return (
     <Card>
       <CardHeader className="pb-2 border-b border-border/50">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base">{t("experiment_detail.charts.loss")}</CardTitle>
+          <span className="text-[10px] text-muted-foreground font-mono">{debugInfo}</span>
           <div className="flex gap-1">
             {(["train", "val"] as const).map((m) => (
               <button
@@ -79,8 +83,8 @@ export function LossCurvesChart({ folds, selectedFold }: LossCurvesChartProps) {
         </div>
       </CardHeader>
       <CardContent className="pt-4">
-        <div ref={ref} style={{ width: "100%", height }}>
-          <LineChart data={merged} width={width} height={height}>
+        <div ref={ref} style={{ width: "100%", height: height || 400, minHeight: 350 }}>
+          <LineChart data={merged} width={width || 800} height={height || 400}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />
             <XAxis dataKey="epoch" tick={{ fontSize: 14 }} />
             <YAxis tick={{ fontSize: 14 }} domain={['auto', 'auto']} />

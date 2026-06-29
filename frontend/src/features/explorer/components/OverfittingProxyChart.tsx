@@ -57,8 +57,8 @@ export function OverfittingProxyChart({ folds, selectedFold }: OverfittingProxyC
         <CardTitle className="text-base">{t("experiment_detail.charts.overfitting_title")}</CardTitle>
       </CardHeader>
       <CardContent className="pt-4">
-        <div ref={ref} style={{ width: "100%", height }}>
-          <LineChart data={merged} width={width} height={height}>
+        <div ref={ref} style={{ width: "100%", height: height || 400, minHeight: 350 }}>
+          <LineChart data={merged} width={width || 800} height={height || 400}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />
             <XAxis dataKey="epoch" tick={{ fontSize: 14 }} />
             <YAxis tick={{ fontSize: 14 }} />

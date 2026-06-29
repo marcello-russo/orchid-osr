@@ -50,8 +50,8 @@ export function FoldSummaryChart({ folds, meanF1, stdF1 }: FoldSummaryChartProps
         <CardTitle className="text-base">{t("experiment_detail.charts.folds")}{titleSuffix}</CardTitle>
       </CardHeader>
       <CardContent className="pt-4">
-        <div ref={ref} style={{ width: "100%", height }}>
-          <BarChart data={data} layout="vertical" width={width} height={height}>
+        <div ref={ref} style={{ width: "100%", height: height || 400, minHeight: 350 }}>
+          <BarChart data={data} layout="vertical" width={width || 800} height={height || 400}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />
             <XAxis type="number" domain={[0, 1]} tick={{ fontSize: 14 }} tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`} />
             <YAxis type="category" dataKey="name" tick={{ fontSize: 14 }} width={80} />
