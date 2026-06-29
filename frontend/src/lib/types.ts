@@ -336,6 +336,11 @@ export interface NcdComparisonEntry {
   knn_auroc: number;
   baseline_auroc: number;
   improvement: number;
+  ensemble_auroc: number;
+  mahalanobis_auroc: number;
+  energy_auroc: number;
+  cluster_acc: number;
+  cluster_nmi: number;
 }
 
 export interface NcdComparison {
