@@ -105,6 +105,7 @@
     },
     "config": {
       "training_recipe": "Recipe di Training",
+      "phases": "Fasi",
       "epochs": "Epoche",
       "batch_size": "Batch Size",
       "patience": "Patience",
