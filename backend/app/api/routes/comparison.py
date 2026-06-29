@@ -219,6 +219,58 @@ async def compare_experiments():
     return result
 
 
+def _normalize_fold(fold: dict) -> dict:
+    """Normalize SupCon two-phase fold format to flat format expected by frontend.
+
+    SupCon format (exp 7+):
+      { best_f1, supcon_phase: { supcon_history: { train_loss, val_loss, ... },
+                                 ce_phase: { ce_history: { train_loss, val_loss, val_f1, ... } } } }
+
+    Flat format (exp 6):
+      { best_f1, best_accuracy, best_epoch, final_train_loss, final_val_loss,
+        history: { train_loss, val_loss, val_accuracy, val_f1 } }
+
+    This function merges supcon + ce sequences into a single history array,
+    tracking the phase boundary via phase_epochs.
+    """
+    if "supcon_phase" not in fold:
+        return fold  # Already flat format
+
+    sp = fold["supcon_phase"]
+    supcon_hist = sp.get("supcon_history", {})
+    ce_hist = sp.get("ce_phase", {}).get("ce_history", {})
+
+    # Concatenate supcon + ce sequences
+    train_loss = (supcon_hist.get("train_loss", []) or []) + (ce_hist.get("train_loss", []) or [])
+    val_loss = (supcon_hist.get("val_loss", []) or []) + (ce_hist.get("val_loss", []) or [])
+    val_f1 = (supcon_hist.get("val_f1", []) or []) + (ce_hist.get("val_f1", []) or [])
+    val_accuracy = (supcon_hist.get("val_accuracy", []) or []) + (ce_hist.get("val_accuracy", []) or [])
+
+    n_supcon = len(supcon_hist.get("train_loss", []) or [])
+    n_ce = len(ce_hist.get("train_loss", []) or [])
+
+    result = {
+        "fold": fold.get("fold", 0),
+        "best_f1": fold.get("best_f1", fold.get("best_knn_acc", 0)),
+        "best_accuracy": fold.get("best_accuracy", fold.get("sphor_probe_accuracy", 0)),
+        "best_epoch": n_supcon + max(fold.get("best_epoch", 0), 0),
+        "final_train_loss": ce_hist.get("train_loss", [None])[-1] if ce_hist.get("train_loss") else supcon_hist.get("train_loss", [None])[-1],
+        "final_val_loss": ce_hist.get("val_loss", [None])[-1] if ce_hist.get("val_loss") else supcon_hist.get("val_loss", [None])[-1],
+        "history": {
+            "train_loss": train_loss,
+            "val_loss": val_loss,
+            "val_f1": val_f1,
+            "val_accuracy": val_accuracy if val_accuracy else [0.0] * len(train_loss),
+        },
+        "train_size": fold.get("train_size", 0),
+        "val_size": fold.get("val_size", 0),
+    }
+    if n_ce > 0:
+        result["phase_epochs"] = [n_supcon, n_supcon + n_ce]
+        result["phase_names"] = ["SupCon", "CE"]
+    return result
+
+
 @router.get("/{model_variant}/fold/{fold_number}")
 async def get_comparison_fold(model_variant: str, fold_number: int):
     if model_variant not in _KNOWN_MODELS:
@@ -231,4 +283,5 @@ async def get_comparison_fold(model_variant: str, fold_number: int):
     if not fold_file.exists():
         raise HTTPException(status_code=404, detail=f"Fold {fold_number} not found for {model_variant}")
 
-    return _load_json(fold_file)
+    raw = _load_json(fold_file)
+    return _normalize_fold(raw)

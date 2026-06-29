@@ -36,6 +36,8 @@ export interface FoldData {
   };
   train_size: number;
   val_size: number;
+  phase_epochs?: number[];
+  phase_names?: string[];
 }
 
 export interface PerClassMetrics {
