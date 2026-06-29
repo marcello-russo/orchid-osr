@@ -157,7 +157,7 @@ export function ExperimentsPage() {
                         ? `${(exp.test_accuracy * 100).toFixed(2)}%`
                         : "—"}
                     </TableCell>
-                    <TableCell className="text-right">{exp.num_folds ?? "—"}</TableCell>
+                    <TableCell className="text-right">{exp.folds_completed != null ? `${exp.folds_completed}/${exp.num_folds ?? "?"}` : "—"}</TableCell>
                   </TableRow>
                 );
               })}
