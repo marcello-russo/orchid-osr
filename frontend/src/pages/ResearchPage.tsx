@@ -132,7 +132,7 @@ const REFERENCES = [
   {
     id: 16,
     citation:
-      "Bahavan, N., Seneviratne, S. & Halgamuge, S. (2026). SpHOR: A Representation Learning Perspective on Open-set Recognition for Identifying Unknown Classes in Deep Learning Models. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) Findings.",
+      "Bahavan, N., Seneviratne, S. & Halgamuge, S. (2026). SphOR: A Representation Learning Perspective on Open-set Recognition for Identifying Unknown Classes in Deep Learning Models. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) Findings Track.",
     url: "https://arxiv.org/abs/2503.08049",
   },
   {
@@ -163,7 +163,7 @@ const REFERENCES = [
     id: 21,
     citation:
       "Lee, K., Lee, K., Lee, H. & Shin, J. (2018). A Simple Unified Framework for Detecting Out-of-Distribution Samples and Adversarial Attacks. In Advances in Neural Information Processing Systems (NeurIPS), 31.",
-    url: "https://papers.nips.cc/paper_files/paper/2018/hash/aba6db44e10e11c95413e0b4cbf78f52-Abstract.html",
+    url: "https://arxiv.org/abs/1807.03888",
   },
   {
     id: 22,
