@@ -83,7 +83,7 @@ export function LossCurvesChart({ folds, selectedFold }: LossCurvesChartProps) {
           <LineChart data={merged} width={width} height={height}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />
             <XAxis dataKey="epoch" tick={{ fontSize: 14 }} />
-            <YAxis tick={{ fontSize: 14 }} />
+            <YAxis tick={{ fontSize: 14 }} domain={['auto', 'auto']} />
             <Tooltip
               formatter={(value) => Number(value).toFixed(2)}
               labelFormatter={(l) => `${t("experiment_detail.charts.epoch")}${l}`}

@@ -6,6 +6,7 @@ Tutti i detector seguono: higher scores = more novel.
 
 from __future__ import annotations
 
+import logging
 from abc import ABC, abstractmethod
 from typing import ClassVar
 
@@ -15,6 +16,8 @@ from scipy.special import logsumexp
 from scipy.stats import rankdata
 from sklearn.covariance import LedoitWolf
 from sklearn.neighbors import NearestNeighbors
+
+logger = logging.getLogger(__name__)
 
 
 class OSRDetector(ABC):
@@ -62,16 +65,31 @@ class MahalanobisDetector(OSRDetector):
     name = "Mahalanobis"
 
     def fit(self, embeddings, labels):
+        unique = np.unique(labels)
+        if len(unique) < 1:
+            raise ValueError(f"{self.name}: training labels vuoti")
+        if np.any(np.isnan(embeddings)):
+            raise ValueError(f"{self.name}: embeddings contengono NaN")
+
         self.class_means_ = {}
         centered_list = []
-        for c in np.unique(labels):
+        for c in unique:
             cls_emb = embeddings[labels == c]
+            if len(cls_emb) < 2:
+                logger.warning(
+                    "%s: classe %s ha solo %d campioni — cov stima imprecisa",
+                    self.name, int(c), len(cls_emb),
+                )
             mean = cls_emb.mean(axis=0)
             self.class_means_[int(c)] = mean
             centered_list.append(cls_emb - mean)
         centered = np.vstack(centered_list)
         lw = LedoitWolf().fit(centered)
         self.pooled_precision_ = lw.precision_
+        logger.debug(
+            "%s: fit completato, %d classi, embedding dim %d",
+            self.name, len(unique), embeddings.shape[1],
+        )
 
     def score(self, embeddings, logits=None):
         scores = np.full(len(embeddings), np.inf)
@@ -120,6 +138,9 @@ class EnergyDetector(OSRDetector):
     def score(self, embeddings, logits=None):
         if logits is None:
             raise ValueError("EnergyDetector requires logits")
+        if np.any(np.isnan(logits)):
+            logger.warning("EnergyDetector: logits contengono NaN")
+            return np.full(len(logits), float("nan"))
         return -self.temperature * logsumexp(logits / self.temperature, axis=1)
 
 

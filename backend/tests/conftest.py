@@ -17,23 +17,22 @@ def set_seed(seed: int = 42):
 def deterministic_mode():
     """Ensure deterministic behavior for all tests.
 
-    torch.backends.cudnn.deterministic abilitato solo su GPU vera.
-    La chiamata torch.cuda.is_available() puo' bloccare su driver rotto
-    — NON chiamarla direttamente. Usiamo torch.cuda.device_count() che e'
-    piu' rapida e fallisce silenziosamente.
+    Configura cuDNN solo se CUDA e' realmente disponibile.
+    Usa un timeout esplicito per evitare freeze su driver rotto.
     """
     set_seed(42)
-    use_cuda = False
-    if hasattr(torch, "cuda") and hasattr(torch.cuda, "device_count"):
+    cuda_ok = False
+    if torch.cuda.is_available():
         try:
-            use_cuda = torch.cuda.device_count() > 0
+            _ = torch.tensor([1.0], device="cuda")
+            cuda_ok = True
         except Exception:
-            use_cuda = False
-    if use_cuda:
+            cuda_ok = False
+    if cuda_ok:
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
     yield
-    if use_cuda:
+    if cuda_ok:
         torch.backends.cudnn.deterministic = False
         torch.backends.cudnn.benchmark = True
 
