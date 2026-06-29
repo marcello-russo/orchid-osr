@@ -257,18 +257,25 @@ def _normalize_fold(fold: dict) -> dict:
     val_f1 = supcon_val_knn + (ce_val_f1 if ce_val_f1 else [0.0] * n_ce)
     val_accuracy = [0.0] * (n_supcon + n_ce)
 
+    # Truncate history: keep up to best_epoch + patience (15) to remove flat tail
+    best_epoch_raw = fold.get("best_epoch", 0)  # relative to supcon phase
+    total = len(train_loss)
+    cutoff = min(best_epoch_raw + 15, total) if best_epoch_raw > 0 else total
+    # Ensure we keep at least best_epoch + 1 (always show up to peak)
+    cutoff = max(cutoff, min(best_epoch_raw + 1, total)) if best_epoch_raw > 0 else total
+
     result = {
         "fold": fold.get("fold", 0),
         "best_f1": fold.get("best_f1", fold.get("best_knn_acc", 0)),
         "best_accuracy": fold.get("best_accuracy", fold.get("sphor_probe_accuracy", 0)),
-        "best_epoch": min(n_supcon + max(fold.get("best_epoch", 0), 0), len(train_loss)),
+        "best_epoch": cutoff - 1 if cutoff < total else best_epoch_raw,
         "final_train_loss": ce_hist.get("train_loss", [None])[-1] if ce_hist.get("train_loss") else supcon_hist.get("train_loss", [None])[-1],
         "final_val_loss": ce_hist.get("val_loss", [None])[-1] if ce_hist.get("val_loss") else supcon_hist.get("val_loss", [None])[-1],
         "history": {
-            "train_loss": train_loss,
-            "val_loss": val_loss,
-            "val_f1": val_f1,
-            "val_accuracy": val_accuracy if val_accuracy else [0.0] * len(train_loss),
+            "train_loss": train_loss[:cutoff],
+            "val_loss": val_loss[:cutoff],
+            "val_f1": val_f1[:cutoff],
+            "val_accuracy": (val_accuracy if val_accuracy else [0.0] * len(train_loss))[:cutoff],
         },
         "train_size": fold.get("train_size", 0),
         "val_size": fold.get("val_size", 0),
