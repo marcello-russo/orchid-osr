@@ -1,9 +1,10 @@
 # backend/app/api/main.py
 import logging
 import threading
+import uuid
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
@@ -11,12 +12,34 @@ from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.api.routes import auth, classify, comparison, dataset, embeddings, experiments, health, species
 from app.api.routes import ncd as ncd_router
 from app.api.routes.auth import limiter
 
 logger = logging.getLogger(__name__)
+
+_REQUEST_IDS: dict[int, str] = {}
+
+
+class RequestIDMiddleware(BaseHTTPMiddleware):
+    """Aggiunge un request_id univoco a ogni richiesta per tracciabilità."""
+
+    async def dispatch(self, request: Request, call_next):
+        rid = request.headers.get("X-Request-ID", str(uuid.uuid4())[:8])
+        _REQUEST_IDS[id(request)] = rid
+        try:
+            response = await call_next(request)
+            response.headers["X-Request-ID"] = rid
+            return response
+        finally:
+            _REQUEST_IDS.pop(id(request), None)
+
+
+def _req_id(request: Request) -> str:
+    return _REQUEST_IDS.get(id(request), "???")
+
 
 app = FastAPI(
     title="Orchid Classification API",
@@ -27,11 +50,14 @@ app = FastAPI(
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request, exc):
+    rid = _req_id(request)
+    logger.warning("req=%s validation_error: %s", rid, exc.errors())
     return JSONResponse(
         status_code=422,
         content={
             "error": "validation_error",
             "detail": "Invalid request data",
+            "request_id": rid,
             "fields": {e["loc"][-1]: e["msg"] for e in exc.errors()},
         },
     )
@@ -39,18 +65,28 @@ async def validation_exception_handler(request, exc):
 
 @app.exception_handler(StarletteHTTPException)
 async def starlette_http_exception_handler(request, exc):
+    rid = _req_id(request)
+    if exc.status_code >= 500:
+        logger.error("req=%s http_%d: %s", rid, exc.status_code, exc.detail)
+    else:
+        logger.info("req=%s http_%d: %s", rid, exc.status_code, exc.detail)
     return JSONResponse(
         status_code=exc.status_code,
-        content={"error": "http_error", "detail": exc.detail},
+        content={"error": "http_error", "detail": exc.detail, "request_id": rid},
     )
 
 
 @app.exception_handler(Exception)
 async def general_exception_handler(request, exc):
-    logger.error(f"Errore non gestito: {exc}", exc_info=True)
+    rid = _req_id(request)
+    logger.error("req=%s unhandled: %s", rid, exc, exc_info=True)
     return JSONResponse(
         status_code=500,
-        content={"error": "internal_error", "detail": "Errore interno del server"},
+        content={
+            "error": "internal_error",
+            "detail": "Errore interno del server",
+            "request_id": rid,
+        },
     )
 
 
@@ -89,6 +125,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Request ID middleware
+app.add_middleware(RequestIDMiddleware)
 
 # Rate limiting
 app.state.limiter = limiter
