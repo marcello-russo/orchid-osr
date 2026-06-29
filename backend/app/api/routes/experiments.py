@@ -69,7 +69,8 @@ async def list_experiments():
                 "model_variant": config.get("model_variant"),
                 "type": exp_type,
                 "status": "completed" if (results or exp_type == "baseline") else "partial",
-                "num_folds": len(fold_files) if has_folds else None,
+                "num_folds": len(fold_files) if has_folds else (config or {}).get("num_folds", 5),
+                "folds_completed": len(fold_files),
                 "test_accuracy": results.get("test_metrics", {}).get("accuracy") if results else None,
                 "mean_f1": (results.get("mean_f1") or results.get("test_metrics", {}).get("f1_macro"))
                 if results

@@ -55,6 +55,7 @@ class ExperimentSummary(BaseModel):
     type: str
     status: str
     num_folds: Optional[int] = None
+    folds_completed: Optional[int] = None
     test_accuracy: Optional[float] = None
     mean_f1: Optional[float] = None
     std_f1: Optional[float] = None
