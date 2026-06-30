@@ -98,34 +98,36 @@ async def get_experiment(experiment_id: str):
         from app.core.db import get_db, _row_to_dict
 
         conn = get_db()
-        row = conn.execute(
-            "SELECT * FROM experiments WHERE id = ?", (experiment_id,)
-        ).fetchone()
-        if row:
-            exp_data = _row_to_dict(row)
-            folds_rows = conn.execute(
-                "SELECT * FROM folds WHERE experiment_id = ? ORDER BY fold_idx",
-                (experiment_id,),
-            ).fetchall()
-            folds = [_row_to_dict(r) for r in folds_rows]
+        try:
+            row = conn.execute(
+                "SELECT * FROM experiments WHERE id = ?", (experiment_id,)
+            ).fetchone()
+            if row:
+                exp_data = _row_to_dict(row)
+                folds_rows = conn.execute(
+                    "SELECT * FROM folds WHERE experiment_id = ? ORDER BY fold_idx",
+                    (experiment_id,),
+                ).fetchall()
+                folds = [_row_to_dict(r) for r in folds_rows]
+
+                config = {
+                    k: exp_data.get(k) for k in [
+                        "model_variant", "num_folds", "num_classes", "loss_type",
+                        "phases", "recipe",
+                    ]
+                }
+                config = {k: v for k, v in config.items() if v is not None}
+
+                return _build_experiment_response(
+                    exp_id=experiment_id,
+                    config=config,
+                    folds=folds,
+                    exp_data=exp_data,
+                )
+        finally:
             conn.close()
-
-            config = {
-                k: exp_data.get(k) for k in [
-                    "model_variant", "num_folds", "num_classes", "loss_type",
-                    "phases", "recipe",
-                ]
-            }
-            config = {k: v for k, v in config.items() if v is not None}
-
-            return _build_experiment_response(
-                exp_id=experiment_id,
-                config=config,
-                folds=folds,
-                exp_data=exp_data,
-            )
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning("DB fallito per %s — fallback a JSON: %s", experiment_id, e)
 
     # Fallback a JSON filesystem
     if not exp_dir.exists() or not exp_dir.is_dir():
