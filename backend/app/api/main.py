@@ -14,6 +14,7 @@ from slowapi.errors import RateLimitExceeded
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from app.api.routes import admin as admin_router
 from app.api.routes import auth, classify, comparison, dataset, embeddings, experiments, health, species
 from app.api.routes import ncd as ncd_router
 from app.api.routes.auth import limiter
@@ -108,6 +109,22 @@ async def _startup_sync_weights():
     thread.start()
     logger.info("Background weight sync started")
 
+    # Lazy DB sync (se DB vuoto, popola da JSON in background)
+    try:
+        from app.core.db import get_db, sync_all
+
+        conn = get_db()
+        count = conn.execute("SELECT COUNT(*) FROM experiments").fetchone()[0]
+        conn.close()
+        if count == 0:
+            logger.info("DB vuoto — sync da JSON in background...")
+            thread = threading.Thread(target=sync_all, daemon=True)
+            thread.start()
+        else:
+            logger.info("DB ha gia' %d esperimenti — skip sync", count)
+    except Exception as e:
+        logger.warning("Lazy sync fallita (non bloccante): %s", e)
+
 
 @app.on_event("shutdown")
 async def shutdown():
@@ -135,6 +152,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Include routers
 app.include_router(auth.router)
+app.include_router(admin_router.router)
 app.include_router(health.router, tags=["health"])
 app.include_router(classify.router, tags=["classification"])
 app.include_router(experiments.router, tags=["experiments"])
