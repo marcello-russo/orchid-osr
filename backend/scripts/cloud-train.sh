@@ -1,5 +1,4 @@
 #!/bin/bash
-if [ -z "$BASH_VERSION" ]; then exec bash "$0" "$@"; fi
 set -euo pipefail
 if [ -z "${BASH_VERSION:-}" ]; then exec bash "$0" "$@"; fi
 
