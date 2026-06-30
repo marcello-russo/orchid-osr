@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+if [ -z "${BASH_VERSION:-}" ]; then exec bash "$0" "$@"; fi
 # Run NCD pipeline for all remaining exp8 and exp10 models.
 # Skips models that already have new-format results.
 # Output: each model writes to experiments/<exp>_<model>/ncd_results.json

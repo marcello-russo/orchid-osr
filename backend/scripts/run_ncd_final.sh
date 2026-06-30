@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+if [ -z "${BASH_VERSION:-}" ]; then exec bash "$0" "$@"; fi
 # Run NCD for exp8 and exp10 with fixed LedoitWolf centering.
 # Saves logs to experiments/<exp_dir>/ncd_batch.log
 set -euo pipefail

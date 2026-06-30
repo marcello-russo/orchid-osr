@@ -1,4 +1,5 @@
 #!/bin/bash
+if [ -z "${BASH_VERSION:-}" ]; then exec bash "$0" "$@"; fi
 # smart-train.sh — Sequencer training a batteria (o senza)
 # Esegue tutti i fold di tutti i modelli in sequenza, poi aggrega e carica su HF.
 #
