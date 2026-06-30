@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import datetime
 import glob
 import json
 import logging
@@ -136,12 +137,18 @@ def sync_experiment(exp_dir: str, conn: sqlite3.Connection | None = None) -> boo
         results = _read_file(results_file) or {}
         test_metrics = results.get("test_metrics") if isinstance(results.get("test_metrics"), dict) else {}
 
+        started = (results.get("started_at") or
+                   datetime.datetime.fromtimestamp(
+                       min(os.path.getmtime(f) for f in [config_file, results_file] if os.path.exists(f))
+                   ).isoformat())
+        completed = datetime.datetime.fromtimestamp(max_mtime).isoformat() if results else None
+
         conn.execute(
             """INSERT OR REPLACE INTO experiments
                (id, name, model_variant, num_folds, num_classes, loss_type,
                 phases, recipe, mean_f1, std_f1, mean_accuracy,
-                test_f1, test_accuracy, best_fold, status, mtime)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                test_f1, test_accuracy, best_fold, status, started_at, completed_at, mtime)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 exp_id,
                 config.get("name") or config.get("type") or exp_id,
@@ -158,6 +165,8 @@ def sync_experiment(exp_dir: str, conn: sqlite3.Connection | None = None) -> boo
                 test_metrics.get("accuracy") or results.get("test_accuracy"),
                 results.get("best_fold"),
                 "completed" if results else "running",
+                started,
+                completed,
                 max_mtime,
             ),
         )

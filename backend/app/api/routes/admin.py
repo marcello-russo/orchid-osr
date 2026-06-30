@@ -13,5 +13,9 @@ router = APIRouter(prefix="/api/admin", tags=["admin"])
 
 @router.post("/sync-db")
 async def sync_database(admin=Depends(require_role("admin"))):
-    synced = sync_all()
-    return {"synced": synced, "status": "ok"}
+    try:
+        synced = sync_all()
+        return {"synced": synced, "status": "ok"}
+    except Exception as e:
+        logger.error("DB sync fallita: %s", e)
+        return {"synced": 0, "status": "error", "detail": str(e)}
