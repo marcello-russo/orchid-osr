@@ -1,3 +1,54 @@
+from pathlib import Path
+
+from app.config import settings
+
+# Project root (backend/)
+PROJECT_ROOT = Path(__file__).parent.parent.parent
+
+ALL_CLASSES = settings.class_names
+INTERNET_CLASSES = settings.internet_classes
+TRAIN_CLASSES = [c for c in ALL_CLASSES if c != "O. sphegodes_Napoli"]
+
+DATASET_PATHS = {
+    "privato": {
+        "raw": "dataset/raw/",
+        "augmented": "dataset/augmented_privato/",
+        "train": "dataset/train_privato.pt",
+        "val": "dataset/val_privato.pt",
+        "test": "dataset/test_privato.pt",
+    },
+    "internet_raw": {
+        "raw": "dataset/internet_raw/",
+        "test": "dataset/test_internet_raw.pt",
+    },
+    "internet_cropped": {
+        "raw": "dataset/internet_cropped/",
+        "test": "dataset/test_internet_cropped.pt",
+    },
+    "combined": {
+        "raw": "dataset/combined/",
+        "augmented": "dataset/augmented_combined/",
+        "train": "dataset/train_combined.pt",
+        "val": "dataset/val_combined.pt",
+        "test": "dataset/test_combined.pt",
+    },
+    "clean": {
+        "train": "dataset/cropped_256x512/train/",
+        "test": "dataset/cropped_256x512/test/",
+    },
+}
+
+DEFAULT_CONFIG = {
+    "model_variant": "resnet18",
+    "epochs": 26,
+    "batch_size": 8,
+    "learning_rate": 0.001,
+    "seed": 57,
+    "pretrained": True,
+    "num_folds": 5,
+}
+
+
 EXPERIMENTS = {
     6: {
         "name": "exp6_clean_split",
