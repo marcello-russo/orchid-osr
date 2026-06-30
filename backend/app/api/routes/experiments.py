@@ -89,11 +89,49 @@ async def list_experiments():
 
 @router.get("/{experiment_id}", response_model=ExperimentDetailResponse)
 async def get_experiment(experiment_id: str):
-    """Get full experiment detail with all folds."""
+    """Get full experiment detail with all folds. Prova DB, fallback a JSON."""
     experiment_id = _validate_id(experiment_id)
     exp_dir = _get_experiments_dir() / experiment_id
+
+    # Fallback immediato se l'esperimento non esiste (prima di aprire il DB)
     if not exp_dir.exists() or not exp_dir.is_dir():
         raise HTTPException(status_code=404, detail=f"Experiment '{experiment_id}' not found")
+
+    # Try DB first
+    try:
+        from app.core.db import get_db, _row_to_dict
+
+        conn = get_db()
+        try:
+            row = conn.execute(
+                "SELECT * FROM experiments WHERE id = ?", (experiment_id,)
+            ).fetchone()
+            if row:
+                exp_data = _row_to_dict(row)
+                folds_rows = conn.execute(
+                    "SELECT * FROM folds WHERE experiment_id = ? ORDER BY fold_idx",
+                    (experiment_id,),
+                ).fetchall()
+                folds = [_row_to_dict(r) for r in folds_rows]
+
+                config = {
+                    k: exp_data.get(k) for k in [
+                        "model_variant", "num_folds", "num_classes", "loss_type",
+                        "phases", "recipe",
+                    ]
+                }
+                config = {k: v for k, v in config.items() if v is not None}
+
+                return _build_experiment_response(
+                    exp_id=experiment_id,
+                    config=config,
+                    folds=folds,
+                    exp_data=exp_data,
+                )
+        finally:
+            conn.close()
+    except Exception as e:
+        logger.warning("DB fallito per %s — fallback a JSON: %s", experiment_id, e)
 
     config_path = exp_dir / "config.json"
     results_path = exp_dir / "results.json"
@@ -196,8 +234,37 @@ async def get_experiment(experiment_id: str):
         mtime = rp.stat().st_mtime
         last_modified = datetime.datetime.fromtimestamp(mtime).isoformat()
 
+    return _build_experiment_response(
+        exp_id=experiment_id,
+        config=config,
+        folds=folds,
+        results=results,
+        last_modified=last_modified,
+    )
+
+
+def _build_experiment_response(
+    exp_id: str,
+    config: dict,
+    folds: list,
+    results: dict | None = None,
+    exp_data: dict | None = None,
+    last_modified: str | None = None,
+) -> dict:
+    """Costruisce risposta standard per un esperimento."""
+    if exp_data:
+        results = {
+            "mean_f1": exp_data.get("mean_f1"),
+            "std_f1": exp_data.get("std_f1"),
+            "mean_accuracy": exp_data.get("mean_accuracy"),
+            "test_metrics": {
+                "f1_macro": exp_data.get("test_f1"),
+                "accuracy": exp_data.get("test_accuracy"),
+            } if exp_data.get("test_f1") else None,
+            "best_fold": exp_data.get("best_fold"),
+        }
     return {
-        "id": experiment_id,
+        "id": exp_id,
         "config": config,
         "folds": folds,
         "results": results,
@@ -206,11 +273,12 @@ async def get_experiment(experiment_id: str):
             "model_variant": config.get("model_variant"),
             "type": "kfold" if folds else "baseline",
             "num_folds": len(folds),
-            "mean_accuracy": results.get("mean_accuracy") if results else None,
-            "mean_f1": (results.get("mean_f1") or results.get("test_metrics", {}).get("f1_macro")) if results else None,
-            "std_f1": results.get("std_f1") if results else None,
-            "test_accuracy": results.get("test_metrics", {}).get("accuracy") if results else None,
-            "test_f1": results.get("test_metrics", {}).get("f1_macro") if results else None,
+            "mean_accuracy": (results or {}).get("mean_accuracy"),
+            "mean_f1": ((results or {}).get("mean_f1") or
+                       ((results or {}).get("test_metrics") or {}).get("f1_macro")),
+            "std_f1": (results or {}).get("std_f1"),
+            "test_accuracy": ((results or {}).get("test_metrics") or {}).get("accuracy"),
+            "test_f1": ((results or {}).get("test_metrics") or {}).get("f1_macro"),
         },
     }
 
