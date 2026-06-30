@@ -93,6 +93,10 @@ async def get_experiment(experiment_id: str):
     experiment_id = _validate_id(experiment_id)
     exp_dir = _get_experiments_dir() / experiment_id
 
+    # Fallback immediato se l'esperimento non esiste (prima di aprire il DB)
+    if not exp_dir.exists() or not exp_dir.is_dir():
+        raise HTTPException(status_code=404, detail=f"Experiment '{experiment_id}' not found")
+
     # Try DB first
     try:
         from app.core.db import get_db, _row_to_dict
@@ -128,10 +132,6 @@ async def get_experiment(experiment_id: str):
             conn.close()
     except Exception as e:
         logger.warning("DB fallito per %s — fallback a JSON: %s", experiment_id, e)
-
-    # Fallback a JSON filesystem
-    if not exp_dir.exists() or not exp_dir.is_dir():
-        raise HTTPException(status_code=404, detail=f"Experiment '{experiment_id}' not found")
 
     config_path = exp_dir / "config.json"
     results_path = exp_dir / "results.json"
