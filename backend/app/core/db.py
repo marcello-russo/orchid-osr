@@ -137,10 +137,13 @@ def sync_experiment(exp_dir: str, conn: sqlite3.Connection | None = None) -> boo
         results = _read_file(results_file) or {}
         test_metrics = results.get("test_metrics") if isinstance(results.get("test_metrics"), dict) else {}
 
-        started = (results.get("started_at") or
-                   datetime.datetime.fromtimestamp(
-                       min(os.path.getmtime(f) for f in [config_file, results_file] if os.path.exists(f))
-                   ).isoformat())
+        started_at_raw = results.get("started_at")
+        if started_at_raw is not None:
+            started = started_at_raw
+        else:
+            started = datetime.datetime.fromtimestamp(
+                min(os.path.getmtime(f) for f in [config_file, results_file] if os.path.exists(f))
+            ).isoformat()
         completed = datetime.datetime.fromtimestamp(max_mtime).isoformat() if results else None
 
         conn.execute(
@@ -213,6 +216,9 @@ def sync_all() -> int:
     synced = 0
     experiments_dir = settings.results_dir
     for d in sorted(glob.glob(os.path.join(experiments_dir, "*", ""))):
+        dirname = os.path.basename(d.rstrip("/"))
+        if not dirname.startswith("exp"):
+            continue
         if sync_experiment(d.rstrip("/"), conn):
             synced += 1
     conn.close()
