@@ -14,72 +14,140 @@ pinned: false
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Python-3.11+-3776AB?style=flat&logo=python&logoColor=white" alt="Python"/>
+  <img src="https://img.shields.io/badge/Python-3.12-3776AB?style=flat&logo=python&logoColor=white" alt="Python"/>
   <img src="https://img.shields.io/badge/PyTorch-2.6-EE4C2C?style=flat&logo=pytorch&logoColor=white" alt="PyTorch"/>
   <img src="https://img.shields.io/badge/FastAPI-0.115-009688?style=flat&logo=fastapi&logoColor=white" alt="FastAPI"/>
   <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat&logo=react&logoColor=white" alt="React"/>
-  <img src="https://img.shields.io/badge/TypeScript-5.7-3178C6?style=flat&logo=typescript&logoColor=white" alt="TypeScript"/>
-  <img src="https://img.shields.io/badge/Vite-6-646CFF?style=flat&logo=vite&logoColor=white" alt="Vite"/>
-  <img src="https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?style=flat&logo=tailwindcss&logoColor=white" alt="Tailwind"/>
+  <img src="https://img.shields.io/badge/SQLite-003B57?style=flat&logo=sqlite&logoColor=white" alt="SQLite"/>
   <br/>
-  <img src="https://img.shields.io/badge/ResNet-18|50-2496ED?style=flat&logo=pytorch&logoColor=white" alt="ResNet"/>
-  <img src="https://img.shields.io/badge/ConvNeXt-Tiny|Small-FF6F00?style=flat&logo=pytorch&logoColor=white" alt="ConvNeXt"/>
-  <img src="https://img.shields.io/badge/DINOv2-Small|Base-8B5CF6?style=flat&logo=pytorch&logoColor=white" alt="DINOv2"/>
-  <br/>
-  <img src="https://img.shields.io/badge/HuggingFace_Spaces-FFD21E?style=flat&logo=huggingface&logoColor=000" alt="HuggingFace"/>
-  <img src="https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white" alt="Docker"/>
-  <img src="https://img.shields.io/badge/GitHub_Actions-2088FF?style=flat&logo=githubactions&logoColor=white" alt="GitHub Actions"/>
-  <img src="https://img.shields.io/badge/CUDA-12.4-76B900?style=flat&logo=nvidia&logoColor=white" alt="CUDA"/>
+  <em>Ultra-fine-grained classification and Novel Class Discovery for <b>Ophrys</b> orchids</em>
 </p>
 
-# OrchID-NCD
-
-> Ultra-fine-grained visual classification and Novel Class Discovery for *Ophrys* orchids.
-
-Master's thesis project at the University of Naples Federico II (DIETI Department).
-
-**Live demo:** [marcellorusso-orchid-ncd.hf.space](https://marcellorusso-orchid-ncd.hf.space)
+<p align="center">
+  <strong>Master's thesis — University of Naples Federico II (DIETI)</strong>
+  <br/>
+  <a href="https://marcellorusso-orchid-ncd.hf.space">Live Demo</a> ·
+  <a href="https://github.com/squidslab/OrchID">GitHub</a> ·
+  <a href="https://arxiv.org/abs/2503.08049">SpHOR Paper</a>
+</p>
 
 ---
 
-## Features
+## Results
 
-- **6 deep learning architectures** — ResNet, ConvNeXt, DINOv2 with per-model optimizers and LoRA fine-tuning
-- **Multi-experiment comparison** — CE baseline, SupCon contrastive learning, Spherical Orthogonal Prototypes, MGH-NCD
-- **Novel Class Discovery pipeline** — Open-Set Recognition (Mahalanobis + KNN + Energy ensemble), clustering, t-SNE/UMAP visualization
-- **Multi-granularity features** — concatenated activations from multiple network stages for richer representations
-- **Hard negative mining** — targeted upweighting of confusing class pairs during contrastive training
-- **Invite-based authentication** — admin creates invite tokens, users register with username/password, bcrypt hashing
-- **Full i18n** — Italian and English UI, dynamic language switching
-- **Interactive dashboard** — experiment KPIs, species distribution charts, per-fold metrics, NCD results
-- **Dataset gallery** — browse and explore the 6-species dataset with train/test split views
-- **Image classification** — upload or drag-and-drop, model selection dropdown, cached weights
-- **Explainability** — Captum occlusion heatmaps for model interpretability
-- **CI/CD pipeline** — GitHub Actions with ruff lint/format, pytest, ESLint, Docker build validation
+| Model | Exp 6 (CE) | Exp 7 (SupCon) | Exp 8 (SpHOR) | **Exp 10 AUROC** |
+|-------|:---:|:---:|:---:|:---:|
+| **DINOv2-Base** | 0.911 | 0.933 | 0.930 | **0.914** |
+| DINOv2-Small | 0.884 | 0.913 | 0.917 | 0.815 |
+| ConvNeXt-Tiny | 0.674 | 0.844 | 0.815 | 0.849 |
+| ConvNeXt-Small | 0.556 | 0.704 | 0.698 | 0.846 |
+| ResNet-50 | 0.887 | 0.383 | 0.540 | 0.731 |
+| ResNet-18 | 0.860 | 0.363 | 0.398 | 0.680 |
+
+Exp 10 AUROC: novel class detection (O. sphegodes\_Napoli held out).
 
 ---
 
 ## Quick Start
 
 ### Prerequisites
-- Linux with NVIDIA GPU + Docker
+- Python 3.10+, Node.js 20+
+- NVIDIA GPU (for training, CPU-only inference supported)
+- [Optional] Docker + Podman
 
-### Run
-
-```bash
-git clone https://github.com/squidslab/OrchID.git
-cd OrchID/orchid-ncd
-./backend/scripts/docker-start.sh
-```
-
-### Development
+### Local Development
 
 ```bash
 # Backend
-cd backend && python server.py --reload
+cd backend
+pip install -e ".[dev]"
+python server.py  # → http://localhost:5000
 
 # Frontend
-cd frontend && npm install && npm run dev
+cd frontend
+npm install
+npm run dev       # → http://localhost:5175
+```
+
+Login with `admin` / `orchid2026` (auto-created on first start).
+
+### Training
+
+```bash
+cd backend
+python cli.py --cross-validate --exp 6 --model resnet18    # CE baseline
+python cli.py --cross-validate --exp 7 --model resnet18    # SupCon
+python cli.py --cross-validate --exp 8 --model resnet18 --sphor  # SpHOR
+python cli.py --ncd --exp 10 --model dinov2_base           # NCD evaluation
+```
+
+See [AGENTS.md](AGENTS.md) for the full command reference.
+
+---
+
+## Architecture
+
+```
+┌─────────────┐     ┌──────────────┐     ┌──────────────────┐
+│  Frontend   │────→│   Backend    │────→│   Model Registry │
+│  React+Vite │     │  FastAPI     │     │  (PyTorch Hub)   │
+│  TypeScript │     │  Python 3.12 │     │  6 architectures │
+└─────────────┘     └──────┬───────┘     └──────────────────┘
+                           │
+                    ┌──────┴───────┐
+                    │   SQLite DB  │
+                    │  Metadata    │
+                    └──────────────┘
+```
+
+**Storage:**
+- **Metadata**: SQLite (`data/orchid.db`) — experiments, folds, users
+- **Weights**: HuggingFace Hub (`marcellorusso/orchid-ncd-models`)
+- **Dataset**: Filesystem + HuggingFace Dataset hub
+- **Embeddings**: NPY files per experiment (cached model activations)
+
+**Training Pipeline:**
+1. 5-fold stratified cross-validation
+2. Two-phase training (SupCon + CE fine-tune) for exp 7-10
+3. Early stopping (patience=15), gradient accumulation
+4. NCD evaluation: embedding extraction → 4 OSR detectors → clustering → figures
+
+---
+
+## Experiments
+
+| Exp | Method | Phases | Description |
+|-----|--------|--------|-------------|
+| 6 | CE baseline | 1 (CE) | Standard Cross-Entropy, backbone + head trained jointly |
+| 7 | SupCon | 2 (SupCon + CE) | Supervised Contrastive Learning + linear probe |
+| 8 | SpHOR | 2 (SupCon+SpHOR + CE) | SupCon + orthogonal spherical prototypes |
+| 9 | NCD (SpHOR) | 2 (same as 8) | Same as 8, NCD evaluation enabled |
+| 10 | MGH-NCD | 2 (MGH-SupCon + CE) | Hard negative mining + multi-granularity features |
+
+**Backbones**: ResNet-18/50, ConvNeXt-Tiny/Small, DINOv2-Small/Base.
+
+**OSR Detectors**: Mahalanobis (LedoitWolf shrinkage), KNN (L2-normalized), Energy (logsumexp), Ensemble (rank-normalized average).
+
+---
+
+## Dataset
+
+Six cryptic *Ophrys* species + one held-out novel class:
+
+| Species | Train | Test | Novel |
+|---------|:-----:|:----:|:----:|
+| O. exaltata | ✓ | ✓ | |
+| O. garganica | ✓ | ✓ | |
+| O. incubacea | ✓ | ✓ | |
+| O. majellensis | ✓ | ✓ | |
+| O. sphegodes | ✓ | ✓ | |
+| O. sphegodes\_Palena | ✓ | ✓ | |
+| **O. sphegodes\_Napoli** | | ✓ | **✓** |
+
+Download from HuggingFace:
+```python
+from huggingface_hub import snapshot_download
+snapshot_download("marcellorusso/orchid-ncd-dataset", repo_type="dataset")
 ```
 
 ---
@@ -89,41 +157,30 @@ cd frontend && npm install && npm run dev
 | Endpoint | Method | Auth | Description |
 |----------|--------|------|-------------|
 | `/auth/login` | POST | — | Login |
-| `/auth/register` | POST | — | Register with invite code |
-| `/classify` | POST | Public | Classify image (base64) |
-| `/classify/upload` | POST | Public | Classify uploaded image |
-| `/classify/explain` | POST | User | Captum heatmap |
-| `/classify/models` | GET | Public | Available models |
-| `/api/experiments` | GET | Public | All experiments |
-| `/api/species` | GET | Public | Species with counts |
-| `/api/comparison` | GET | Public | Cross-experiment comparison |
-| `/api/dataset/classes` | GET | User | Class counts |
-| `/api/embeddings` | GET | User | Latent space (t-SNE/UMAP) |
-| `/api/ncd/{model}/results` | GET | User | NCD results |
-| `/auth/me` | GET | Bearer | Current user |
+| `/auth/register` | POST | — | Register (requires invite code) |
+| `/classify` | POST | — | Classify image (base64) |
+| `/classify/models` | GET | — | List available models |
+| `/api/experiments` | GET | — | All experiments |
+| `/api/experiments/{id}` | GET | — | Experiment detail with folds |
+| `/api/comparison/experiments` | GET | — | Cross-experiment comparison |
+| `/api/admin/sync-db` | POST | Admin | Force SQLite sync from JSON |
+| `/api/species` | GET | — | Species with counts |
+| `/api/ncd/comparison` | GET | — | NCD results table |
 | `/docs` | GET | — | Swagger UI |
 
 ---
 
-## Architecture
+## References
 
-| Layer | Technology |
-|-------|-----------|
-| Training | PyTorch + CUDA, torchvision, Captum, LoRA (PEFT) |
-| Backend | FastAPI, Python 3.12, JWT auth, bcrypt |
-| Frontend | React 19, TypeScript, Vite, Tailwind v4, Shadcn/ui, Recharts |
-| Infra | Docker, GitHub Actions, HuggingFace Spaces |
+- [SpHOR: Spherical Orthogonal Prototypes for Open-Set Recognition](https://arxiv.org/abs/2503.08049) — Bahavan et al., CVPR 2026 Findings
+- [SupCon: Supervised Contrastive Learning](https://papers.nips.cc/paper/2020/hash/d89a66c7c80a29b1bdbab0f2a1a94af8-Abstract.html) — Khosla et al., NeurIPS 2020
+- [Energy-based OOD Detection](https://proceedings.neurips.cc/paper/2020/hash/f5496252609c43eb8a3d147ab9b9c006-Abstract.html) — Liu et al., NeurIPS 2020
+- [Mahalanobis OOD Detection](https://arxiv.org/abs/1807.03888) — Lee et al., NeurIPS 2018
+- [KNN OOD Detection](https://proceedings.mlr.press/v162/sun22d.html) — Sun et al., ICML 2022
+- [MGCE: Generalized Fine-Grained Category Discovery](https://arxiv.org/abs/2509.26227) — Zheng et al., 2025
+- [Generalized Category Discovery](https://doi.org/10.1109/CVPR52688.2022.00737) — Vaze et al., CVPR 2022
 
 ---
-
-## Dataset
-
-Six cryptic *Ophrys* species, private field photos + internet images. Available on HuggingFace:
-
-```python
-from huggingface_hub import snapshot_download
-snapshot_download("marcellorusso/orchid-ncd-dataset", repo_type="dataset", local_dir="dataset")
-```
 
 ## Links
 
