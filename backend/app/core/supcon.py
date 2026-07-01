@@ -219,14 +219,11 @@ def train_supcon(
 
         logger.info(f"[SupCon] Train Loss: {train_loss:.4f} | Val KNN Acc: {knn_acc:.4f} | Emb Norm: {avg_norm:.4f}")
 
-        if knn_acc >= best_knn:
+        if knn_acc > best_knn:
             best_knn = knn_acc
             best_backbone_wts = copy.deepcopy(model.state_dict())
-            logger.info(f"[SupCon] New best KNN: {knn_acc:.4f}")
-
-        # Early stopping on KNN accuracy (validation metric)
-        if knn_acc >= best_knn:
             epochs_no_improve = 0
+            logger.info(f"[SupCon] New best KNN: {knn_acc:.4f}")
         else:
             epochs_no_improve += 1
 

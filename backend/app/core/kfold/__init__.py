@@ -5,6 +5,7 @@ K-Fold Cross-Validation con augmentation bilanciata per fold.
 import json
 import logging
 import os
+import shutil
 from datetime import datetime
 
 import torch
@@ -170,8 +171,6 @@ def kfold_experiment(
     else:
         fold_indices = list(range(num_folds))
 
-    import shutil
-
     base_temp_dir = None
     try:
         from app.core.models import get_registry_entry
@@ -189,8 +188,16 @@ def kfold_experiment(
         for fold_idx in fold_indices:
             fold_json_path = os.path.join(kfold_dir, f"fold_{fold_idx}.json")
             if os.path.exists(fold_json_path):
-                logger.info(f"Fold {fold_idx} già completato (trovato {fold_json_path}). Salto...")
-                continue
+                # Validate partial JSON: try parsing it, skip if corrupted
+                try:
+                    with open(fold_json_path) as f:
+                        json.load(f)
+                except (json.JSONDecodeError, ValueError, OSError):
+                    logger.warning(f"Fold {fold_idx} JSON corrotto, rifaccio...")
+                    os.remove(fold_json_path)
+                else:
+                    logger.info(f"Fold {fold_idx} già completato (trovato {fold_json_path}). Salto...")
+                    continue
 
             train_idx, val_idx = folds[fold_idx]
 
@@ -262,8 +269,10 @@ def kfold_experiment(
                 cleanup_gpu()
 
                 fold_json_path = os.path.join(kfold_dir, f"fold_{fold_idx}.json")
-                with open(fold_json_path, "w") as f:
+                tmp_path = fold_json_path + ".tmp"
+                with open(tmp_path, "w") as f:
                     json.dump(fold_metrics, f, indent=2, default=str)
+                os.replace(tmp_path, fold_json_path)
                 logger.info(f"Fold {fold_idx} salvato in: {fold_json_path}")
 
                 for ckpt in ("last_ckpt.pt", "last_ckpt_supcon.pt", "last_ckpt.pt.tmp", "last_ckpt_supcon.pt.tmp"):
