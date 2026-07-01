@@ -125,6 +125,22 @@ async def _startup_sync_weights():
     except Exception as e:
         logger.warning("Lazy sync fallita (non bloccante): %s", e)
 
+    # Periodic DB sync ogni 60 secondi (rileva nuovi esperimenti/fold completati)
+    def _periodic_sync():
+        while True:
+            try:
+                from app.core.db import sync_all
+                n = sync_all()
+                if n > 0:
+                    logger.info("Sync periodico DB: %d esperimenti aggiornati", n)
+            except Exception as e:
+                logger.debug("Sync periodico DB: %s", e)
+            threading.Event().wait(60)
+
+    thread = threading.Thread(target=_periodic_sync, daemon=True)
+    thread.start()
+    logger.info("Periodic DB sync started (every 60s)")
+
 
 @app.on_event("shutdown")
 async def shutdown():

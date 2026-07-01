@@ -1,10 +1,13 @@
 # backend/app/api/routes/experiments.py
 import datetime
 import json
+import logging
 import re
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
+
+logger = logging.getLogger(__name__)
 
 from app.api.schemas import ExperimentDetailResponse, ExperimentSummary, FoldDataResponse
 from app.config import settings
@@ -33,6 +36,47 @@ def _parse_exp_num(name: str) -> int:
 def _load_json(path: Path) -> dict:
     with open(path) as f:
         return json.load(f)
+
+
+def _read_ncd_metrics(d: Path) -> dict:
+    """Legge metriche NCD da ncd_results.json, se presente."""
+    ncd_path = d / "ncd_results.json"
+    if not ncd_path.exists():
+        return {}
+    try:
+        ncd_data = json.loads(ncd_path.read_text())
+    except (json.JSONDecodeError, FileNotFoundError):
+        return {}
+
+    metrics: dict = {}
+    detectors = ncd_data.get("detectors", {})
+    if isinstance(detectors, dict):
+        best_auroc = -1.0
+        best_detector = None
+        for name, det_data in detectors.items():
+            if not isinstance(det_data, dict):
+                continue
+            auroc = det_data.get("auroc")
+            if isinstance(auroc, (int, float)) and auroc > best_auroc:
+                best_auroc = auroc
+                best_detector = name
+        if best_auroc >= 0:
+            metrics["ncd_auroc"] = best_auroc
+            metrics["ncd_detector"] = best_detector
+
+    clustering = ncd_data.get("clustering", {})
+    if isinstance(clustering, dict):
+        best_nmi = -1.0
+        for name, cl_data in clustering.items():
+            if not isinstance(cl_data, dict):
+                continue
+            nmi = cl_data.get("nmi")
+            if isinstance(nmi, (int, float)) and nmi > best_nmi:
+                best_nmi = nmi
+        if best_nmi >= 0:
+            metrics["ncd_clustering_nmi"] = best_nmi
+
+    return metrics
 
 
 @router.get("", response_model=list[ExperimentSummary])
@@ -66,6 +110,15 @@ async def list_experiments():
         config_type = (config or {}).get("type", "")
         exp_type = "kfold" if has_folds else ("kfold" if config_type == "kfold" else "baseline")
 
+        has_ncd_file = (d / "ncd_results.json").exists()
+        is_ncd = bool(config.get("ncd_mode"))
+        ncd_metrics = _read_ncd_metrics(d) if has_ncd_file else {}
+
+        test_accuracy = results.get("test_metrics", {}).get("accuracy") if results else None
+        # Se ci sono metriche NCD, usa AUROC come test_accuracy
+        if ncd_metrics.get("ncd_auroc") is not None:
+            test_accuracy = ncd_metrics["ncd_auroc"]
+
         experiments.append(
             {
                 "id": d.name,
@@ -75,12 +128,15 @@ async def list_experiments():
                 "status": "completed" if (results or exp_type == "baseline") else "partial",
                 "num_folds": len(fold_files) if has_folds else (config or {}).get("num_folds", 5),
                 "folds_completed": len(fold_files),
-                "test_accuracy": results.get("test_metrics", {}).get("accuracy") if results else None,
-                "mean_f1": (results.get("mean_f1") or results.get("test_metrics", {}).get("f1_macro"))
+                "test_accuracy": test_accuracy,
+                "mean_f1": (results.get("mean_f1") if results.get("mean_f1") is not None
+                           else results.get("test_metrics", {}).get("f1_macro"))
                 if results
                 else None,
                 "std_f1": results.get("std_f1") if results else None,
                 "timestamp": config.get("timestamp"),
+                "is_ncd": is_ncd,
+                **ncd_metrics,
             }
         )
 
@@ -228,6 +284,13 @@ async def get_experiment(experiment_id: str):
     if results_path.exists():
         results = _load_json(results_path)
 
+    # NCD metrics from ncd_results.json (JSON fallback)
+    if (exp_dir / "ncd_results.json").exists():
+        ncd_metrics = _read_ncd_metrics(exp_dir)
+        if ncd_metrics:
+            results = results or {}
+            results.update(ncd_metrics)
+
     last_modified = None
     rp = exp_dir / "results.json"
     if rp.exists():
@@ -252,6 +315,7 @@ def _build_experiment_response(
     last_modified: str | None = None,
 ) -> dict:
     """Costruisce risposta standard per un esperimento."""
+    # Normalize results from DB row or JSON dict
     if exp_data:
         results = {
             "mean_f1": exp_data.get("mean_f1"),
@@ -260,9 +324,23 @@ def _build_experiment_response(
             "test_metrics": {
                 "f1_macro": exp_data.get("test_f1"),
                 "accuracy": exp_data.get("test_accuracy"),
-            } if exp_data.get("test_f1") else None,
+            } if exp_data.get("test_f1") is not None else None,
             "best_fold": exp_data.get("best_fold"),
+            "ncd_auroc": exp_data.get("ncd_auroc"),
+            "ncd_aupr": exp_data.get("ncd_aupr"),
+            "ncd_detector": exp_data.get("ncd_detector"),
+            "ncd_clustering_nmi": exp_data.get("ncd_clustering_nmi"),
         }
+
+    is_ncd = bool(config.get("ncd_mode")) or bool((exp_data or {}).get("is_ncd"))
+    ncd_auroc = (results or {}).get("ncd_auroc")
+
+    # Se ci sono metriche NCD, usa AUROC come test_accuracy (sempre più significativa della standard)
+    if ncd_auroc is not None:
+        results = results or {}
+        results.setdefault("test_metrics", {})["accuracy"] = ncd_auroc
+        results.setdefault("test_metrics", {})["f1_macro"] = ncd_auroc
+
     return {
         "id": exp_id,
         "config": config,
@@ -274,11 +352,16 @@ def _build_experiment_response(
             "type": "kfold" if folds else "baseline",
             "num_folds": len(folds),
             "mean_accuracy": (results or {}).get("mean_accuracy"),
-            "mean_f1": ((results or {}).get("mean_f1") or
-                       ((results or {}).get("test_metrics") or {}).get("f1_macro")),
+            "mean_f1": ((results or {}).get("mean_f1") if (results or {}).get("mean_f1") is not None
+                       else ((results or {}).get("test_metrics") or {}).get("f1_macro")),
             "std_f1": (results or {}).get("std_f1"),
             "test_accuracy": ((results or {}).get("test_metrics") or {}).get("accuracy"),
             "test_f1": ((results or {}).get("test_metrics") or {}).get("f1_macro"),
+            "is_ncd": is_ncd,
+            "ncd_auroc": (results or {}).get("ncd_auroc"),
+            "ncd_aupr": (results or {}).get("ncd_aupr"),
+            "ncd_detector": (results or {}).get("ncd_detector"),
+            "ncd_clustering_nmi": (results or {}).get("ncd_clustering_nmi"),
         },
     }
 

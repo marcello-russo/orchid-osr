@@ -8,12 +8,15 @@ import json
 import logging
 import os
 import sqlite3
+from pathlib import Path
 
 from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-DB_PATH = os.path.join(settings.results_dir, "..", "data", "orchid.db")
+# Path assoluto: backend/data/orchid.db
+_BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
+DB_PATH = str(_BACKEND_DIR / "data" / "orchid.db")
 
 
 _SCHEMA_SQL = """
@@ -72,10 +75,35 @@ CREATE INDEX IF NOT EXISTS idx_folds_experiment ON folds(experiment_id);
 CREATE INDEX IF NOT EXISTS idx_folds_experiment_fold ON folds(experiment_id, fold_idx);
 """
 
+# Colonne NCD aggiunte dopo la creazione iniziale della tabella
+_NCD_COLUMNS = [
+    ("ncd_auroc", "REAL"),
+    ("ncd_aupr", "REAL"),
+    ("ncd_detector", "TEXT"),
+    ("ncd_clustering_nmi", "REAL"),
+    ("is_ncd", "INTEGER DEFAULT 0"),
+]
+
+
+def _migrate_schema(conn: sqlite3.Connection) -> None:
+    """Aggiunge colonne mancanti (migrazione backward-compatibile)."""
+    existing = {
+        row[1]
+        for row in conn.execute("PRAGMA table_info(experiments)").fetchall()
+    }
+    for col_name, col_type in _NCD_COLUMNS:
+        if col_name not in existing:
+            try:
+                conn.execute(f"ALTER TABLE experiments ADD COLUMN {col_name} {col_type}")
+                logger.info("Migrazione DB: aggiunta colonna %s", col_name)
+            except sqlite3.OperationalError:
+                logger.warning("Migrazione DB: impossibile aggiungere %s", col_name)
+    conn.commit()
+
 
 def _init_schema(conn: sqlite3.Connection) -> None:
     conn.executescript(_SCHEMA_SQL)
-    conn.commit()
+    _migrate_schema(conn)
 
 
 def get_db() -> sqlite3.Connection:
@@ -105,6 +133,50 @@ def _read_file(path: str) -> dict | None:
             return json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
         return None
+
+
+def _read_ncd_metrics(exp_dir: str) -> dict:
+    """Legge le metriche NCD da ncd_results.json e calcola i valori migliori."""
+    ncd_file = os.path.join(exp_dir, "ncd_results.json")
+    if not os.path.exists(ncd_file):
+        return {}
+    ncd_data = _read_file(ncd_file)
+    if not ncd_data:
+        return {}
+
+    metrics = {}
+
+    detectors = ncd_data.get("detectors", {})
+    if detectors and isinstance(detectors, dict):
+        best_auroc = -1.0
+        best_aupr = -1.0
+        best_detector = None
+        for name, det_data in detectors.items():
+            if not isinstance(det_data, dict):
+                continue
+            auroc = det_data.get("auroc")
+            if isinstance(auroc, (int, float)) and auroc > best_auroc:
+                best_auroc = auroc
+                best_aupr = det_data.get("aupr", best_aupr)
+                best_detector = name
+        if best_auroc >= 0:
+            metrics["ncd_auroc"] = best_auroc
+            metrics["ncd_aupr"] = best_aupr if best_aupr >= 0 else None
+            metrics["ncd_detector"] = best_detector
+
+    clustering = ncd_data.get("clustering", {})
+    if clustering and isinstance(clustering, dict):
+        best_nmi = -1.0
+        for name, cl_data in clustering.items():
+            if not isinstance(cl_data, dict):
+                continue
+            nmi = cl_data.get("nmi", cl_data.get("novel_nmi"))
+            if isinstance(nmi, (int, float)) and nmi > best_nmi:
+                best_nmi = nmi
+        if best_nmi >= 0:
+            metrics["ncd_clustering_nmi"] = best_nmi
+
+    return metrics
 
 
 def sync_experiment(exp_dir: str, conn: sqlite3.Connection | None = None) -> bool:
@@ -146,32 +218,53 @@ def sync_experiment(exp_dir: str, conn: sqlite3.Connection | None = None) -> boo
             ).isoformat()
         completed = datetime.datetime.fromtimestamp(max_mtime).isoformat() if results else None
 
+        has_ncd_file = os.path.exists(os.path.join(exp_dir, "ncd_results.json"))
+        is_ncd = 1 if config.get("ncd_mode") else 0
+        ncd_metrics = _read_ncd_metrics(exp_dir) if has_ncd_file else {}
+
+        # Build column list dynamically per includere campi NCD
+        base_cols = [
+            "id", "name", "model_variant", "num_folds", "num_classes", "loss_type",
+            "phases", "recipe", "mean_f1", "std_f1", "mean_accuracy",
+            "test_f1", "test_accuracy", "best_fold", "status", "started_at", "completed_at", "mtime",
+        ]
+        ncd_cols = ["ncd_auroc", "ncd_aupr", "ncd_detector", "ncd_clustering_nmi", "is_ncd"]
+        all_cols = base_cols + ncd_cols
+
+        placeholders = ", ".join("?" for _ in all_cols)
+        columns = ", ".join(all_cols)
+
+        base_vals = [
+            exp_id,
+            config.get("name") or config.get("type") or exp_id,
+            config.get("model_variant", "unknown"),
+            results.get("num_folds") or config.get("num_folds", 5),
+            config.get("num_classes", 0),
+            config.get("loss_type"),
+            json.dumps(config.get("phases")) if config.get("phases") else None,
+            config.get("recipe"),
+            results.get("mean_f1"),
+            results.get("std_f1"),
+            results.get("mean_accuracy"),
+            test_metrics.get("f1_macro") or results.get("test_f1"),
+            test_metrics.get("accuracy") or results.get("test_accuracy"),
+            results.get("best_fold"),
+            "completed" if results else "running",
+            started,
+            completed,
+            max_mtime,
+        ]
+        ncd_vals = [
+            ncd_metrics.get("ncd_auroc"),
+            ncd_metrics.get("ncd_aupr"),
+            ncd_metrics.get("ncd_detector"),
+            ncd_metrics.get("ncd_clustering_nmi"),
+            is_ncd,
+        ]
+
         conn.execute(
-            """INSERT OR REPLACE INTO experiments
-               (id, name, model_variant, num_folds, num_classes, loss_type,
-                phases, recipe, mean_f1, std_f1, mean_accuracy,
-                test_f1, test_accuracy, best_fold, status, started_at, completed_at, mtime)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-            (
-                exp_id,
-                config.get("name") or config.get("type") or exp_id,
-                config.get("model_variant", "unknown"),
-                results.get("num_folds") or config.get("num_folds", 5),
-                config.get("num_classes", 0),
-                config.get("loss_type"),
-                json.dumps(config.get("phases")) if config.get("phases") else None,
-                config.get("recipe"),
-                results.get("mean_f1"),
-                results.get("std_f1"),
-                results.get("mean_accuracy"),
-                test_metrics.get("f1_macro") or results.get("test_f1"),
-                test_metrics.get("accuracy") or results.get("test_accuracy"),
-                results.get("best_fold"),
-                "completed" if results else "running",
-                started,
-                completed,
-                max_mtime,
-            ),
+            f"INSERT OR REPLACE INTO experiments ({columns}) VALUES ({placeholders})",
+            base_vals + ncd_vals,
         )
 
         for ff in sorted(glob.glob(os.path.join(exp_dir, "fold_*.json"))):
@@ -214,7 +307,7 @@ def sync_experiment(exp_dir: str, conn: sqlite3.Connection | None = None) -> boo
 def sync_all() -> int:
     conn = get_db()
     synced = 0
-    experiments_dir = settings.results_dir
+    experiments_dir = os.path.abspath(settings.results_dir)
     for d in sorted(glob.glob(os.path.join(experiments_dir, "*", ""))):
         dirname = os.path.basename(d.rstrip("/"))
         if not dirname.startswith("exp"):

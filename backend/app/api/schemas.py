@@ -60,6 +60,11 @@ class ExperimentSummary(BaseModel):
     mean_f1: Optional[float] = None
     std_f1: Optional[float] = None
     timestamp: Optional[str] = None
+    is_ncd: bool = False
+    ncd_auroc: Optional[float] = None
+    ncd_aupr: Optional[float] = None
+    ncd_detector: Optional[str] = None
+    ncd_clustering_nmi: Optional[float] = None
 
 
 class ExperimentDetailResponse(BaseModel):
