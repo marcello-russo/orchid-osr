@@ -44,7 +44,7 @@ async def get_embeddings(
             raise HTTPException(status_code=400, detail=f"Unknown experiment: {experiment}")
         exp_dir = exp_dir / experiment
     else:
-        dirs = sorted(exp_dir.glob("exp*/embeddings/metadata.json"))
+        dirs = sorted(d for d in exp_dir.glob("exp*/embeddings/metadata.json") if "exp9_ncd" not in str(d))
         if not dirs:
             raise HTTPException(
                 status_code=404, detail="No embeddings found. Train a model first or specify an experiment."

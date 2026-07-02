@@ -213,7 +213,15 @@ export async function login(username: string, password: string): Promise<{ token
     body: JSON.stringify({ username, password }),
     headers: { "Content-Type": "application/json" },
   });
-  if (!res.ok) throw new Error(await res.text());
+  if (!res.ok) {
+    const body = await res.text();
+    try {
+      const parsed = JSON.parse(body);
+      throw new Error(`API ${res.status}: ${parsed.detail || parsed.error || body}`);
+    } catch {
+      throw new Error(`API ${res.status}: ${body}`);
+    }
+  }
   return res.json();
 }
 

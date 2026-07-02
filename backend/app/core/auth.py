@@ -115,7 +115,10 @@ def login_user(username: str, password: str) -> dict:
             if len(_LOGIN_ATTEMPTS) >= _MAX_TRACKED_USERS:
                 _LOGIN_ATTEMPTS.popitem(last=False)
             _LOGIN_ATTEMPTS[username] = _LOGIN_ATTEMPTS.get(username, 0) + 1
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid username or password")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Credenziali non valide. Username o password errati.",
+        )
 
     with _LOGIN_LOCK:
         _LOGIN_ATTEMPTS.pop(username, None)
