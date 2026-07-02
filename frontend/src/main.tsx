@@ -1,5 +1,9 @@
 // frontend/src/main.tsx
 
+// THREE.Clock deprecato in three@0.184, sostituito con Timer
+import * as THREE from "three";
+(THREE as any).Clock = THREE.Timer;
+
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { QueryProvider } from "@/lib/queryClient";

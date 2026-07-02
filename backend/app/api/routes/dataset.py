@@ -186,7 +186,6 @@ async def serve_image(
     class_name: str,
     filename: str,
     size: int = Query(None, gt=0, le=1024),
-    user=Depends(user_from_header_or_query),
 ):
     """Serve a dataset image file, optionally resized and converted to WebP."""
     split = _validate_segment(split)

@@ -14,14 +14,6 @@ const PALETTE = [
 const API_BASE = import.meta.env.VITE_API_URL ?? "";
 
 const EXP_OPTIONS = [
-  { group: "Exp 6 (CE)", prefix: "Exp 6", options: [
-    { value: "exp6_clean_split_resnet18", label: "ResNet-18" },
-    { value: "exp6_clean_split_resnet50", label: "ResNet-50" },
-    { value: "exp6_clean_split_convnext_tiny", label: "ConvNeXt-Tiny" },
-    { value: "exp6_clean_split_convnext_small", label: "ConvNeXt-Small" },
-    { value: "exp6_clean_split_dinov2_small", label: "DINOv2-Small" },
-    { value: "exp6_clean_split_dinov2_base", label: "DINOv2-Base" },
-  ]},
   { group: "Exp 7 (SupCon)", prefix: "Exp 7", options: [
     { value: "exp7_supcon_resnet18", label: "ResNet-18" },
     { value: "exp7_supcon_resnet50", label: "ResNet-50" },
@@ -38,14 +30,7 @@ const EXP_OPTIONS = [
     { value: "exp8_sphor_dinov2_small", label: "DINOv2-Small" },
     { value: "exp8_sphor_dinov2_base", label: "DINOv2-Base" },
   ]},
-  { group: "Exp 9 (NCD)", prefix: "Exp 9", options: [
-    { value: "exp9_ncd_resnet18", label: "ResNet-18" },
-    { value: "exp9_ncd_resnet50", label: "ResNet-50" },
-    { value: "exp9_ncd_convnext_tiny", label: "ConvNeXt-Tiny" },
-    { value: "exp9_ncd_convnext_small", label: "ConvNeXt-Small" },
-    { value: "exp9_ncd_dinov2_small", label: "DINOv2-Small" },
-    { value: "exp9_ncd_dinov2_base", label: "DINOv2-Base" },
-  ]},
+
   { group: "Exp 10 (MGH-NCD)", prefix: "Exp 10", options: [
     { value: "exp10_mgh_ncd_resnet18", label: "ResNet-18" },
     { value: "exp10_mgh_ncd_resnet50", label: "ResNet-50" },
@@ -58,7 +43,7 @@ const EXP_OPTIONS = [
 
 export function EmbeddingsPage() {
   const { t } = useTranslation();
-  const [experiment, setExperiment] = useState("exp6_clean_split_dinov2_small");
+  const [experiment, setExperiment] = useState("exp10_mgh_ncd_dinov2_small");
   const [method, setMethod] = useState("tsne_3d");
   const [split, setSplit] = useState("all");
   const [hidden, setHidden] = useState<Set<string>>(new Set());
