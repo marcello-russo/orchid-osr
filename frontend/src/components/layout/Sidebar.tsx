@@ -42,7 +42,7 @@ export function Sidebar() {
         <button
           onClick={() => setSidebarOpen(false)}
           className="flex items-center justify-center rounded-lg p-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-          aria-label="Close menu"
+          aria-label={t("common.close_menu")}
         >
           <X className="size-4" />
         </button>

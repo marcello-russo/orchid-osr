@@ -1,8 +1,11 @@
 // frontend/src/main.tsx
 
-// THREE.Clock deprecato in three@0.184, sostituito con Timer
-import * as THREE from "three";
-(THREE as any).Clock = THREE.Timer;
+// THREE.Clock deprecation: harmless, silenziato
+const _origConsoleWarn = console.warn;
+console.warn = (...args: any[]) => {
+  if (typeof args[0] === "string" && args[0].includes("THREE.Clock")) return;
+  _origConsoleWarn(...args);
+};
 
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";

@@ -249,7 +249,7 @@ export default function AuthPage() {
                 label: t("auth.inviteCode"),
                 value: inviteCode,
                 onChange: (v) => setInviteCode(v.toUpperCase()),
-                placeholder: "INV-...",
+                placeholder: t("auth.inviteCode"),
                 icon: <Key className="h-4 w-4" />,
                 required: true,
               })}
@@ -277,7 +277,7 @@ export default function AuthPage() {
                   onClick={() => setShowPassword(!showPassword)}
                   className="text-muted-foreground hover:text-foreground"
                   tabIndex={-1}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-label={showPassword ? t("auth.hidePassword") : t("auth.showPassword")}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
