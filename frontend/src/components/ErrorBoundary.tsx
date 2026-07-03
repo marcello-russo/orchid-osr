@@ -33,12 +33,12 @@ export class ErrorBoundary extends Component<Props, State> {
 
       return (
         <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-          <p className="text-sm">{i18n.t("common.page_error")}</p>
+          <p className="text-sm">{i18n.isInitialized ? i18n.t("common.page_error") : "Something went wrong rendering this page."}</p>
           <button
             onClick={() => this.setState({ hasError: false, error: null })}
             className="mt-3 rounded-lg px-4 py-2 text-sm font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
           >
-            {i18n.t("common.retry")}
+            {i18n.isInitialized ? i18n.t("common.retry") : "Retry"}
           </button>
         </div>
       );
