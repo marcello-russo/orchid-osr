@@ -231,7 +231,7 @@
       "heatmap_alt": "Sovrimpressione heatmap",
       "heatmap_btn": "Heatmap",
       "original": "Originale",
-      "predicted": "🌸 Predetta:",
+      "predicted": "Predetta:",
       "heatmap_explanation": "L'heatmap evidenzia le regioni dell'immagine che hanno più influenzato la predizione del modello. Verde = contributo positivo, Rosso = contributo negativo."
     },
     "upload_hint": "PNG · JPG · WEBP · max 10MB",
@@ -342,8 +342,8 @@
       "unavailable": "Risultati non disponibili — il backend è in esecuzione?",
       "no_data": "Nessun risultato per l'esperimento 6 trovato.",
       "comment_winner": "{{model}} leads the ranking with {{f1}} mean F1 — the strongest classifier in the benchmark.",
-      "comment_stability": "📊 {{model}} mostra la maggiore consistenza (std={{std}}%), con performance affidabili su tutti i fold.",
-      "comment_gap": "📏 Il divario tra 1° ({{top}}) e ultimo posto ({{bottom}}) è di {{gap}} punti F1, riflettendo differenze di performance significative tra architetture."
+      "comment_stability": "{{model}} mostra la maggiore consistenza (std={{std}}%), con performance affidabili su tutti i fold.",
+      "comment_gap": "Il divario tra 1° ({{top}}) e ultimo posto ({{bottom}}) è di {{gap}} punti F1, riflettendo differenze di performance significative tra architetture."
     },
     "bibliography": {
       "title": "Bibliografia"
