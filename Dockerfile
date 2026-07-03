@@ -82,7 +82,7 @@ RUN pip install --no-cache-dir --default-timeout=1000 . --constraint constraints
 COPY backend/data/ data/
 COPY backend/scripts/ scripts/
 COPY backend/dataset/ dataset/
-RUN mkdir -p models
+RUN mkdir -p models dataset
 COPY backend/app/ app/
 COPY backend/server.py .
 COPY backend/cli.py .

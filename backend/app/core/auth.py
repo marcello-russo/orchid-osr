@@ -19,6 +19,7 @@ _LOGIN_ATTEMPTS: OrderedDict[str, int] = OrderedDict()
 MAX_LOGIN_ATTEMPTS = 5
 _MAX_TRACKED_USERS = 1000
 _LOGIN_LOCK = threading.Lock()
+_DATA_LOCK = threading.Lock()
 
 
 def _sync_to_hf() -> None:
@@ -52,6 +53,14 @@ def _save_data(data: dict) -> None:
     _sync_to_hf()
 
 
+def _atomic_modify(modifier):
+    """Read-modify-write atomico per users.json."""
+    with _DATA_LOCK:
+        data = _load_data()
+        modifier(data)
+        _save_data(data)
+
+
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode(), bcrypt.gensalt(12)).decode()
 
@@ -80,27 +89,30 @@ def decode_jwt(token: str) -> dict:
 
 
 def register_user(invite_code: str, username: str, password: str) -> dict:
-    data = _load_data()
+    result = {"username": username, "role": "user"}
 
-    invite = next((i for i in data["invites"] if i["code"] == invite_code), None)
-    if not invite:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid invite code")
-    if invite["used"]:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invite code already used")
-    if any(u["username"] == username for u in data["users"]):
-        raise HTTPException(status.HTTP_409_CONFLICT, "Username already taken")
+    def _modify(data):
+        invite = next((i for i in data["invites"] if i["code"] == invite_code), None)
+        if not invite:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid invite code")
+        if invite["used"]:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invite code already used")
+        if any(u["username"] == username for u in data["users"]):
+            raise HTTPException(status.HTTP_409_CONFLICT, "Username already taken")
 
-    invite["used"] = True
-    role = invite["role"]
-    data["users"].append(
-        {
-            "username": username,
-            "password_hash": hash_password(password),
-            "role": role,
-        }
-    )
-    _save_data(data)
-    return {"username": username, "role": role}
+        invite["used"] = True
+        role = invite["role"]
+        data["users"].append(
+            {
+                "username": username,
+                "password_hash": hash_password(password),
+                "role": role,
+            }
+        )
+        result["role"] = role
+
+    _atomic_modify(_modify)
+    return result
 
 
 def login_user(username: str, password: str) -> dict:
@@ -108,7 +120,8 @@ def login_user(username: str, password: str) -> dict:
         if _LOGIN_ATTEMPTS.get(username, 0) >= MAX_LOGIN_ATTEMPTS:
             raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, "Account temporarily locked. Try again later.")
 
-    data = _load_data()
+    with _DATA_LOCK:
+        data = _load_data()
     user = next((u for u in data["users"] if u["username"] == username), None)
     if not user or not verify_password(password, user["password_hash"]):
         with _LOGIN_LOCK:
@@ -126,33 +139,36 @@ def login_user(username: str, password: str) -> dict:
 
 
 def ensure_admin_exists() -> None:
-    data = _load_data()
-    if not any(u["role"] == "admin" for u in data["users"]):
-        data["users"].append(
-            {
-                "username": settings.admin_username,
-                "password_hash": hash_password(settings.admin_password),
-                "role": "admin",
-            }
-        )
-        _save_data(data)
+    def _modify(data):
+        if not any(u["role"] == "admin" for u in data["users"]):
+            data["users"].append(
+                {
+                    "username": settings.admin_username,
+                    "password_hash": hash_password(settings.admin_password),
+                    "role": "admin",
+                }
+            )
+
+    _atomic_modify(_modify)
 
 
 def generate_invite(role: str = "user", count: int = 1) -> list[str]:
-    data = _load_data()
-    codes = []
-    for _ in range(count):
-        code = f"INV-{secrets.token_urlsafe(9).upper()}"
-        data["invites"].append(
-            {
-                "code": code,
-                "used": False,
-                "role": role,
-                "created_at": datetime.now(timezone.utc).isoformat(),
-            }
-        )
-        codes.append(code)
-    _save_data(data)
+    codes: list[str] = []
+
+    def _modify(data):
+        for _ in range(count):
+            code = f"INV-{secrets.token_urlsafe(9).upper()}"
+            data["invites"].append(
+                {
+                    "code": code,
+                    "used": False,
+                    "role": role,
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                }
+            )
+            codes.append(code)
+
+    _atomic_modify(_modify)
     return codes
 
 
