@@ -236,7 +236,8 @@
     },
     "upload_hint": "PNG · JPG · WEBP · max 10MB",
     "heatmap": "Heatmap",
-    "original": "Original"
+    "original": "Original",
+    "explainability": "Explainability Analysis (Heatmap)"
   },
   "dataset": {
     "title": "Dataset Explorer",
@@ -347,7 +348,7 @@
       "delta": "Δ"
     },
     "future": {
-      "title": "Exp 8: Supervised Contrastive Learning",
+      "title": "Exp 8: Open-World Recognition (SpHOR + GCD)",
       "phase2_intro": "Exp 6 trains classifiers with standard Cross-Entropy loss. While effective for classification, CE does not explicitly structure the embedding space — same-class samples may be scattered and different-class samples may overlap. Exp 7 addresses this by applying Supervised Contrastive Learning (SupCon) [8], which reshapes the latent space so that embeddings of the same species cluster together while different species are pushed apart.",
       "phase2_how": "How SupCon works. For each image (anchor) in a batch, the loss computes cosine similarities against all other images. Same-class pairs are attracted (positive pairs), while different-class pairs are repelled (negative pairs). This is formalised as an InfoNCE objective [13] with a temperature scaling parameter tau. Unlike Triplet Loss, which requires explicit anchor-positive-negative mining, SupCon naturally uses all pair combinations in the batch.",
       "phase2_pipeline": "Two-phase training. Each fold of Exp 7 consists of two phases: (1) SupCon pretraining — the backbone and a projection head (embedding_dim to 128) are trained with the contrastive loss; the classifier head is ignored. The best model is selected via KNN accuracy (k=1) on validation embeddings. (2) CE fine-tuning — the projection head is discarded, the backbone is frozen, and only the linear classifier head is trained with Cross-Entropy loss at a higher learning rate (0.01).",
@@ -378,7 +379,7 @@
       "best_fold": "Best Fold",
       "unavailable": "Results not available — is the backend running?",
       "no_data": "Experiment 6 results not found yet.",
-      "comment_winner": "🏆 {{model}} leads the ranking with {{f1}} mean F1 — the strongest classifier in the benchmark.",
+      "comment_winner": "{{model}} leads the ranking with {{f1}} mean F1 — the strongest classifier in the benchmark.",
       "comment_stability": "📊 {{model}} shows the highest consistency (std={{std}}%), with reliable performance across all folds.",
       "comment_gap": "📏 The gap between 1st ({{top}}) and last place ({{bottom}}) is {{gap}} F1 points, reflecting meaningful architecture-level performance differences."
     },
@@ -400,13 +401,13 @@
       "motivation": "From the literature [8] we know that Supervised Contrastive Learning produces more structured embeddings than CE: same-species samples are pulled together, different species are pushed apart. This organized latent space is essential for the subsequent Novel Class Discovery phase [7]. Exp 7 applies SupCon to all 6 architectures with two-phase training: (1) contrastive pretraining of backbone + projection head, (2) CE fine-tuning of the linear head only with frozen backbone.",
       "title": "Exp 7 Analysis — SupCon",
       "overview": "Exp 7 trained 6 architectures with SupCon + CE fine-tuning via 5-fold cross-validation, with final testing on 300 images (50 per species).",
-      "winner_title": "🏆 Overall Winner: DINOv2-Small",
+      "winner_title": "Overall Winner: DINOv2-Small",
       "winner": "DINOv2-Small dominates the leaderboard with a Test F1 of 0.8958, outperforming the runner-up (ResNet-50, 0.7993) by nearly 10 percentage points. The gap between cross-validation (CV F1 0.9058) and test (0.8958) is only 0.01 — the lowest among all models — indicating excellent generalization. At the species level, it excels on O. sphegodes_Palena (F1=0.990) and O. majellensis (0.980), while the hardest species remains O. sphegodes (0.782). This result confirms DINOv2-Small as the ideal backbone for our domain: lightweight (42M parameters), pre-trained on 142M images, and effectively adaptable via LoRA to 2,232 Ophrys images.",
-      "overfitting_title": "⚠️ Overfitting: the big model problem",
+      "overfitting_title": "Overfitting: the big model problem",
       "overfitting": "The most striking finding of Exp 7 is the gap between cross-validation and test performance. DINOv2-Base (304M parameters) has a gap of 0.2262 — the worst overall — despite a CV F1 of 0.9135. On O. majellensis, its recall is only 0.12, meaning only 6 out of 50 test images are correctly classified. ConvNeXt-Small (gap 0.1935) and ConvNeXt-Tiny (0.1945) fare similarly poorly. Conversely, ResNet-50 shows a negative gap (-0.0635): its test F1 (0.7993) exceeds CV (0.7359), suggesting that 5-fold cross-validation underestimates its capabilities due to the small validation set size. This pattern suggests that for small datasets, models with fewer parameters and strong implicit regularization generalize better than massive architectures with generic pre-training.",
-      "species_title": "🔬 Easiest and hardest species",
+      "species_title": "Easiest and hardest species",
       "species": "O. sphegodes_Palena is the easiest species overall: DINOv2-Small achieves F1=0.990, ResNet-18 0.960. O. exaltata and O. incubacea are handled well by all models (mean F1 >0.80), likely due to their abundance in the training set (501 and 366 images respectively). O. majellensis is the most polarizing: DINOv2-Small scores F1=0.98, but ConvNeXt-Tiny and ConvNeXt-Small drop to F1=0.21 and 0.25, with recall of 0.12 and 0.14. O. sphegodes is universally the most problematic: no model exceeds F1=0.78, and ConvNeXt precision is below 0.50.",
-      "arch_title": "📐 Architecture comparison",
+      "arch_title": "Architecture comparison",
       "arch": "ResNet-50 and ResNet-18 show the most stable pattern: both have low or negative CV-test gaps, with ResNet-50 reaching 0.7993 despite its relatively simple architecture. ConvNeXt-Tiny (0.6810) and ConvNeXt-Small (0.6886), despite being more modern architectures, perform worse. A possible explanation is that BatchNorm, present in ResNet but absent in ConvNeXt, acts as a critical implicit regularizer for datasets with only a few hundred images per class."
     },
     "analysis": {
