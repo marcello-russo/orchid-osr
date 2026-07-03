@@ -231,7 +231,7 @@
       "heatmap_alt": "Heatmap overlay",
       "heatmap_btn": "Heatmap",
       "original": "Original",
-      "predicted": "🌸 Predicted:",
+      "predicted": "Predicted:",
       "heatmap_explanation": "The heatmap highlights which regions of the image most influenced the model's prediction. Green = positive contribution, Red = negative."
     },
     "upload_hint": "PNG · JPG · WEBP · max 10MB",
@@ -380,8 +380,8 @@
       "unavailable": "Results not available — is the backend running?",
       "no_data": "Experiment 6 results not found yet.",
       "comment_winner": "{{model}} leads the ranking with {{f1}} mean F1 — the strongest classifier in the benchmark.",
-      "comment_stability": "📊 {{model}} shows the highest consistency (std={{std}}%), with reliable performance across all folds.",
-      "comment_gap": "📏 The gap between 1st ({{top}}) and last place ({{bottom}}) is {{gap}} F1 points, reflecting meaningful architecture-level performance differences."
+      "comment_stability": "{{model}} shows the highest consistency (std={{std}}%), with reliable performance across all folds.",
+      "comment_gap": "The gap between 1st ({{top}}) and last place ({{bottom}}) is {{gap}} F1 points, reflecting meaningful architecture-level performance differences."
     },
     "bibliography": {
       "title": "References"
