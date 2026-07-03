@@ -17,9 +17,9 @@ FROM docker.io/python:3.11-slim AS cpu
 
 WORKDIR /workspace/backend
 
-RUN pip install --no-cache-dir \
+RUN pip install --no-cache-dir --default-timeout=1000 \
     torch torchvision \
-    --extra-index-url https://download.pytorch.org/whl/cpu
+    --index-url https://download.pytorch.org/whl/cpu
 
 COPY backend/pyproject.toml .
 # KEEP IN SYNC with gpu/training targets
