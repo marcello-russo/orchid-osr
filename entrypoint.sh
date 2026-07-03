@@ -45,6 +45,12 @@ if [ ! -d "dataset/cropped_256x512/train" ] || [ ! -d "dataset/cropped_224x224/t
     python scripts/hf_tools/download_cache.py || echo "Download fallito (forse HF_TOKEN mancante)"
 fi
 
+# Check frontend dist
+if [ ! -d "frontend/dist" ]; then
+    echo "⚠️  frontend/dist non trovata. La SPA non sarà servita."
+    echo "   Esegui 'cd frontend && npm run build' prima di avviare."
+fi
+
 # Avvia server (--reload in dev mode)
 EXTRA_ARGS=""
 if [ "$API_RELOAD" = "true" ]; then
