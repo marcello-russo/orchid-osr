@@ -467,16 +467,5 @@
   "header": {
     "logout": "Esci",
     "login": "Accedi"
-  },
-  "research": {
-    "fold_details_unavailable": "Dettagli fold non disponibili",
-    "fold": "Fold",
-    "epoch": "Epoca",
-    "best_ep": "Miglior ep:",
-    "acc_label": "Acc:",
-    "compare_title": "Exp 6 — Cross-Entropy Baseline",
-    "exp7_title": "Exp 7 — Supervised Contrastive Learning",
-    "exp8_title": "Exp 8 — Open-World Recognition",
-    "exp9_title": "Exp 9 — Novel Class Discovery"
   }
 }
