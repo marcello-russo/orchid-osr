@@ -270,6 +270,7 @@ def _resolve_weights(model_id: str) -> tuple[Path, str] | None:
 # ── LRU model cache ──────────────────────────────────────────
 
 _model_cache: OrderedDict[str, ClassifierModel] = OrderedDict()
+_cache_lock = threading.Lock()
 
 
 def get_model(model_type: str = "resnet18", model_id: str | None = None) -> ClassifierModel:
@@ -288,9 +289,10 @@ def get_model(model_type: str = "resnet18", model_id: str | None = None) -> Clas
         weights_path = _find_weights(model_type)
         cache_key = f"{model_type}:{weights_path}"
 
-    if cache_key in _model_cache:
-        _model_cache.move_to_end(cache_key)
-        return _model_cache[cache_key]
+    with _cache_lock:
+        if cache_key in _model_cache:
+            _model_cache.move_to_end(cache_key)
+            return _model_cache[cache_key]
 
     model = create_model(variant, num_classes=settings.num_classes, pretrained=True)
     if weights_path:
@@ -303,11 +305,11 @@ def get_model(model_type: str = "resnet18", model_id: str | None = None) -> Clas
     device = _get_device()
     model = model.to(device)
 
-    if len(_model_cache) >= MAX_CACHED_MODELS:
-        evicted_key, evicted = _model_cache.popitem(last=False)
-        logger.info(f"Evicted model from cache: {evicted_key}")
-
-    _model_cache[cache_key] = model
+    with _cache_lock:
+        if len(_model_cache) >= MAX_CACHED_MODELS:
+            evicted_key, evicted = _model_cache.popitem(last=False)
+            logger.info(f"Evicted model from cache: {evicted_key}")
+        _model_cache[cache_key] = model
     return model
 
 
