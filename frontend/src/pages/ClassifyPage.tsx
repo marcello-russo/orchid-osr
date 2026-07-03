@@ -179,7 +179,7 @@ function DropZone({ onClick, onDrop, onDragOver, onChange, inputRef, t }: {
         {t("classify.upload.browse")}
       </p>
       <p className="text-xs text-muted-foreground/60 mt-4 font-mono">
-        PNG · JPG · WEBP · max 10MB
+        {t("classify.upload_hint")}
       </p>
       <input ref={inputRef} type="file" accept="image/*" onChange={onChange} className="hidden" />
     </div>
@@ -396,7 +396,7 @@ export function ClassifyPage() {
                       showHeatmap ? "bg-primary text-primary-foreground" : "bg-background/80 text-foreground hover:bg-background"
                     )}
                   >
-                    Heatmap
+                    {t("classify.heatmap")}
                   </button>
                   <button
                     onClick={() => setShowHeatmap(false)}
@@ -405,7 +405,7 @@ export function ClassifyPage() {
                       !showHeatmap ? "bg-primary text-primary-foreground" : "bg-background/80 text-foreground hover:bg-background"
                     )}
                   >
-                    Original
+                    {t("classify.original")}
                   </button>
                 </div>
               )}

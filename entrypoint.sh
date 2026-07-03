@@ -31,6 +31,12 @@ except Exception as e:
     export USERS_PATH="$DATA_DIR/users.json"
 fi
 
+# Check frontend dist (prima di operazioni lente)
+if [ ! -d "frontend/dist" ]; then
+    echo "⚠️  frontend/dist non trovata. La SPA non sarà servita."
+    echo "   Esegui 'cd frontend && npm run build' prima di avviare."
+fi
+
 # Sync experiments/models to persistent storage
 if [ -d "$DATA_DIR" ]; then
     mkdir -p "$DATA_DIR/experiments"
