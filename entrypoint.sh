@@ -31,6 +31,12 @@ except Exception as e:
     export USERS_PATH="$DATA_DIR/users.json"
 fi
 
+# Check frontend dist (prima di operazioni lente)
+if [ ! -d "frontend/dist" ]; then
+    echo "⚠️  frontend/dist non trovata. La SPA non sarà servita."
+    echo "   Esegui 'cd frontend && npm run build' prima di avviare."
+fi
+
 # Sync experiments/models to persistent storage
 if [ -d "$DATA_DIR" ]; then
     mkdir -p "$DATA_DIR/experiments"
@@ -43,12 +49,6 @@ fi
 if [ ! -d "dataset/cropped_256x512/train" ] || [ ! -d "dataset/cropped_224x224/train" ]; then
     echo "Dataset non trovato — download in corso..."
     python scripts/hf_tools/download_cache.py || echo "Download fallito (forse HF_TOKEN mancante)"
-fi
-
-# Check frontend dist
-if [ ! -d "frontend/dist" ]; then
-    echo "⚠️  frontend/dist non trovata. La SPA non sarà servita."
-    echo "   Esegui 'cd frontend && npm run build' prima di avviare."
 fi
 
 # Avvia server (--reload in dev mode)
