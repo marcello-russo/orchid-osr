@@ -227,7 +227,7 @@
       "explain": "Explain"
     },
     "results": {
-      "explainability": "🔬 Explainability Analysis (Heatmap)",
+      "explainability": "Explainability Analysis (Heatmap)",
       "heatmap_alt": "Heatmap overlay",
       "heatmap_btn": "Heatmap",
       "original": "Original",
@@ -236,8 +236,7 @@
     },
     "upload_hint": "PNG · JPG · WEBP · max 10MB",
     "heatmap": "Heatmap",
-    "original": "Original",
-    "explainability": "Explainability Analysis (Heatmap)"
+    "original": "Original"
   },
   "dataset": {
     "title": "Dataset Explorer",

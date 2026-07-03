@@ -227,7 +227,7 @@
       "explain": "Spiega"
     },
     "results": {
-      "explainability": "🔬 Analisi Spiegabilità (Heatmap)",
+      "explainability": "Analisi Spiegabilità (Heatmap)",
       "heatmap_alt": "Sovrimpressione heatmap",
       "heatmap_btn": "Heatmap",
       "original": "Originale",
@@ -236,8 +236,7 @@
     },
     "upload_hint": "PNG · JPG · WEBP · max 10MB",
     "heatmap": "Heatmap",
-    "original": "Originale",
-    "explainability": "Explainability Analysis (Heatmap)"
+    "original": "Originale"
   },
   "dataset": {
     "title": "Dataset Explorer",
