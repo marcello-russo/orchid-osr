@@ -236,7 +236,8 @@
     },
     "upload_hint": "PNG · JPG · WEBP · max 10MB",
     "heatmap": "Heatmap",
-    "original": "Originale"
+    "original": "Originale",
+    "explainability": "Explainability Analysis (Heatmap)"
   },
   "dataset": {
     "title": "Dataset Explorer",
@@ -340,7 +341,7 @@
       "best_fold": "Miglior Fold",
       "unavailable": "Risultati non disponibili — il backend è in esecuzione?",
       "no_data": "Nessun risultato per l'esperimento 6 trovato.",
-      "comment_winner": "🏆 {{model}} guida la classifica con {{f1}} F1 medio — il classificatore più forte del benchmark.",
+      "comment_winner": "{{model}} leads the ranking with {{f1}} mean F1 — the strongest classifier in the benchmark.",
       "comment_stability": "📊 {{model}} mostra la maggiore consistenza (std={{std}}%), con performance affidabili su tutti i fold.",
       "comment_gap": "📏 Il divario tra 1° ({{top}}) e ultimo posto ({{bottom}}) è di {{gap}} punti F1, riflettendo differenze di performance significative tra architetture."
     },
@@ -403,13 +404,13 @@
       "motivation": "Dalla letteratura [8] sappiamo che il Supervised Contrastive Learning produce embedding più strutturati della CE: campioni della stessa specie sono attratti in cluster compatti, specie diverse sono respinte sull'ipersfera unitaria. Questo spazio latente organizzato è essenziale per la fase successiva di Novel Class Discovery [7] perché il NCD si basa su criteri di distanza — se lo spazio di embedding è strutturalmente degenere (es. tutte le classi collassano in un cono ristretto), nessuna soglia di distanza può separare specie note da specie sconosciute. L'Exp 7 applica SupCon a tutte e 6 le architetture con training in due fasi: (1) pretraining contrastivo del backbone + projection head (embedding_dim verso 128), (2) fine-tuning CE della sola testa lineare a backbone congelato.",
       "title": "Analisi Exp 7 — SupCon",
       "overview": "Exp 7 ha addestrato 6 architetture con SupCon + CE fine-tuning su 5-fold cross-validation, con test finale su 300 immagini (50 per specie).",
-      "winner_title": "Vincitore Assoluto: DINOv2-Small",
+      "winner_title": "Overall Winner: DINOv2-Small",
       "winner": "DINOv2-Small domina la classifica con un Test F1 di 0.8958, superando il secondo classificato (ResNet-50, 0.7993) di quasi 10 punti percentuali. Il gap tra validazione incrociata (CV F1 0.9058) e test (0.8958) è di appena 0.01 — il più basso tra tutti i modelli — indicando un'ottima generalizzazione. A livello di singola specie, eccelle su O. sphegodes_Palena (F1=0.990) e O. majellensis (F1=0.980), mentre la specie più difficile resta O. sphegodes (F1=0.782). Il risultato conferma che DINOv2-Small è il backbone ideale per il nostro dominio: 42M parametri, pre-addestrato tramite self-supervision su 142M immagini, e adattabile efficacemente via LoRA — un protocollo che mantiene il 99.5% dei pesi congelati e apprende solo 0.42M shift di attenzione dominio-specifici. Qualitativamente, le proiezioni t-SNE degli embedding di validazione di DINOv2-Small mostrano cluster compatti e ben separati per ogni specie, con le due popolazioni di O. sphegodes (continente e Palena) che formano gruppi adiacenti ma non sovrapposti — precisamente la struttura geometrica richiesta dal NCD.",
-      "overfitting_title": "Overfitting: il problema dei modelli grandi",
+      "overfitting_title": "Overfitting: the big model problem",
       "overfitting": "Il dato più rilevante dell'Exp 7 è il gap tra validazione incrociata e test finale. DINOv2-Base (304M parametri) ha un gap di 0.2262 — il peggiore in assoluto — nonostante una CV F1 di 0.9135. Su O. majellensis, il suo recall è di appena 0.12, il che significa che su 50 immagini di test ne classifica correttamente solo 6. Il problema è simile per ConvNeXt-Small (gap 0.1935) e ConvNeXt-Tiny (0.1945). Al contrario, ResNet-50 ha un gap negativo (-0.0635): il suo test F1 (0.7993) supera la CV (0.7359). Questo pattern è coerente con il fenomeno del double descent [18]: su dataset piccoli (N=2.232), i modelli in regime overparameterizzato (ResNet-50 con 25M params) generalizzano meglio di quelli al interpolation threshold (ConvNeXt-Small con 50M params). Le architetture CNN moderne progettate per dataset ImageNet-scale (1.2M immagini) mancano della regolarizzazione implicita che BatchNorm fornisce a ResNet, rendendole più prone ad apprendere rumore in regimi di pochi dati.",
-      "species_title": "Le specie più facili e più difficili",
+      "species_title": "Easiest and hardest species",
       "species": "O. sphegodes_Palena è la specie più facile in assoluto: DINOv2-Small raggiunge F1=0.990, ResNet-18 0.960. O. exaltata e O. incubacea sono gestite bene da tutti i modelli (F1 medi >0.80), probabilmente grazie alla loro abbondanza nel training set (501 e 366 immagini rispettivamente) e ai pattern del labello morfologicamente distinti. O. majellensis è la specie più polarizzante: DINOv2-Small la classifica con F1=0.98, ma ConvNeXt-Tiny e ConvNeXt-Small scendono a F1=0.21 e 0.25, con recall di 0.12 e 0.14 — il modello vede solo 152 immagini di training per questa specie su 5 fold (circa 30 per fold), e LayerNorm di ConvNeXt non fornisce la stessa regolarizzazione di BatchNorm. O. sphegodes è universalmente la più problematica: nessun modello supera F1=0.78, e ConvNeXt ha precisione sotto 0.50, il che significa che più della metà delle sue predizioni sono in realtà altre specie. Ciò è coerente con O. sphegodes come taxon più fenotipicamente variabile del dataset, con alta varianza intra-classe che offusca il confine decisionale.",
-      "arch_title": "Confronto tra architetture",
+      "arch_title": "Architecture comparison",
       "arch": "ResNet-50 e ResNet-18 mostrano il pattern più stabile: entrambi hanno gap CV-test bassi o negativi. I modelli ConvNeXt, nonostante il design moderno (convoluzioni a largo kernel, LayerNorm, attivazioni GELU), performano sistematicamente peggio. Una differenza architetturale chiave sono i livelli di normalizzazione: ResNet usa BatchNorm, che calcola statistiche di batch (media e varianza) durante il training e agisce quindi come regolarizzatore iniettando rumore proporzionale a 1/batch_size nelle statistiche di normalizzazione [19]. ConvNeXt usa LayerNorm, che normalizza attraverso i canali per campione — questo rimuove il rumore dipendente dal batch che regolarizza implicitamente ResNet. Sul nostro dataset di 2.232 immagini, questa differenza di regolarizzazione è significativa: ResNet-50 (25.6M params, BatchNorm) generalizza meglio di ConvNeXt-Small (50M params, LayerNorm)."
     },
     "exp9": {
@@ -425,7 +426,7 @@
       "delta": "Δ"
     },
     "future": {
-      "title": "Exp 8: Supervised Contrastive Learning",
+      "title": "Exp 8: Open-World Recognition (SpHOR + GCD)",
       "phase2_intro": "Exp 6 addestra classificatori con loss Cross-Entropy standard. Sebbene efficaci per la classificazione, la CE non struttura esplicitamente lo spazio di embedding. Exp 7 affronta questo problema applicando SupCon [8].",
       "phase2_how": "Come funziona SupCon: per ogni immagine in un batch, la loss calcola similarità coseno rispetto a tutte le altre immagini. Coppie della stessa classe sono attratte, coppie di classi diverse sono respinte, formalizzato come obiettivo InfoNCE [13] con parametro di temperatura tau.",
       "phase2_pipeline": "Training in due fasi: (1) pretraining SupCon del backbone + projection head; (2) fine-tuning CE della sola testa lineare a backbone congelato.",
