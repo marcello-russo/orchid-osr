@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   currentId: string;
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export function ExperimentSelectTable({ currentId, onCompare }: Props) {
+  const { t } = useTranslation();
   const { data: allExperiments, isLoading } = useExperiments();
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
@@ -77,7 +79,7 @@ export function ExperimentSelectTable({ currentId, onCompare }: Props) {
       </div>
       <div className="flex justify-end">
         <Button onClick={() => onCompare(Array.from(selected))} disabled={selected.size === 0}>
-          Compare ({selected.size})
+          {t("experiment.compare")} ({selected.size})
         </Button>
       </div>
     </div>

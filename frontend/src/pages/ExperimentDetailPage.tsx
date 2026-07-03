@@ -104,7 +104,7 @@ export function ExperimentDetailPage() {
         <div className="flex flex-wrap items-center gap-2">
           {isCompareMode ? (
             <>
-              <span className="text-lg sm:text-2xl font-bold">Comparing:</span>
+              <span className="text-lg sm:text-2xl font-bold">{t("experiment.comparing")}</span>
               {[experiment, ...compareExperiments].filter(Boolean).map((exp, i) => {
                 const COLORS = ["#3B82F6", "#D97706", "#10B981", "#8B5CF6"];
                 return (
@@ -137,7 +137,7 @@ export function ExperimentDetailPage() {
               </DialogTrigger>
               <DialogContent className="sm:max-w-2xl md:max-w-3xl lg:max-w-4xl">
                 <DialogHeader>
-                  <DialogTitle>Select experiments to compare</DialogTitle>
+                  <DialogTitle>{t("experiment.select_compare")}</DialogTitle>
                 </DialogHeader>
                 <ExperimentSelectTable
                   currentId={id!}
@@ -147,7 +147,7 @@ export function ExperimentDetailPage() {
             </Dialog>
           ) : (
             <Button variant="ghost" size="sm" onClick={() => setSearchParams({})}>
-              Exit compare
+              {t("experiment.exit_compare")}
             </Button>
           )}
         </div>
@@ -201,7 +201,7 @@ export function ExperimentDetailPage() {
               activeTab === "charts" ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"
             }`}
           >
-            Charts
+            {t("experiment.charts")}
           </button>
           {(expNum === 8 || expNum === 9 || expNum === 10) && (
             <button
@@ -219,7 +219,7 @@ export function ExperimentDetailPage() {
               activeTab === "logs" ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-muted/80"
             }`}
           >
-            Logs
+            {t("experiment.logs")}
           </button>
         </div>
       )}
@@ -524,7 +524,7 @@ function NcdDetail({ modelVariant, exp }: { modelVariant: string; exp?: number }
               </span>
             </div>
             <div className="text-2xl font-black text-red-500">{(napoliAuroc * 100).toFixed(1)}%</div>
-            <div className="text-[10px] text-muted-foreground mt-0.5">vs 50% random</div>
+            <div className="text-[10px] text-muted-foreground mt-0.5">{t("experiment.vs_random")}</div>
           </div>
         )}
         <div className="rounded-xl border border-border/40 bg-background p-4 text-center">
@@ -552,7 +552,7 @@ function NcdDetail({ modelVariant, exp }: { modelVariant: string; exp?: number }
       {scatterPoints.length > 0 && (
         <section>
           <h3 className="text-lg font-bold mb-4">
-            t-SNE
+            {t("experiment.tsne")}
             <div className="inline-flex ml-3 gap-1">
               <button onClick={() => setTsneMode("2d")}
                 className={`px-2 py-0.5 text-xs rounded font-bold ${tsneMode === "2d" ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
@@ -574,7 +574,7 @@ function NcdDetail({ modelVariant, exp }: { modelVariant: string; exp?: number }
                 speciesColors={speciesColors}
               />
             ) : (
-              <p className="text-sm text-muted-foreground">3D t-SNE not available</p>
+              <p className="text-sm text-muted-foreground">{t("experiment.tsne_unavailable")}</p>
             )}
           </div>
         </section>
@@ -596,7 +596,7 @@ function NcdDetail({ modelVariant, exp }: { modelVariant: string; exp?: number }
                 <th className="text-center py-3 px-2">{t("experiment_detail.ncd_clustering_ari")}</th>
                 <th className="text-center py-3 px-2">{t("experiment_detail.ncd_clustering_ami")}</th>
                 <th className="text-center py-3 px-2">{t("experiment_detail.ncd_clustering_f")}</th>
-                <th className="text-center py-3 px-2">k</th>
+                <th className="text-center py-3 px-2">{t("experiment.k_label")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/30">

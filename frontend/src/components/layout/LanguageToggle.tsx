@@ -3,7 +3,7 @@ import { Languages } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function LanguageToggle() {
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
 
   const toggleLanguage = () => {
     const nextLang = i18n.language.startsWith("en") ? "it" : "en";
@@ -16,7 +16,7 @@ export function LanguageToggle() {
       size="sm"
       onClick={toggleLanguage}
       className="gap-1.5 px-2.5 border-primary/20 hover:bg-primary/10 text-xs font-bold tracking-wider"
-      title="Switch Language"
+      title={t("common.switch_language")}
     >
       <Languages className="size-3.5" />
       <span className="uppercase">{i18n.language.startsWith("en") ? "en" : "it"}</span>

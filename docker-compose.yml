@@ -4,6 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
       target: cpu
+    restart: unless-stopped
     ports:
       - "7860:7860"
     env_file:
@@ -15,10 +16,12 @@ services:
       - ./backend/app:/workspace/backend/app
       - ./backend/server.py:/workspace/backend/server.py
       - ./backend/cli.py:/workspace/backend/cli.py
+      - ./frontend/dist:/workspace/backend/frontend/dist
       - dataset:/workspace/backend/dataset
       - models:/workspace/backend/models
       - experiments:/workspace/backend/experiments
 
+  # Servizio GPU per training/inferenza interattivo (nessun restart: l'utente lo avvia e ferma manualmente)
   gpu:
     profiles: [gpu]
     build:
@@ -44,6 +47,7 @@ services:
               count: all
               capabilities: [gpu]
 
+  # Servizio training per cloud/OVH (nessun restart: comando singolo bash, non un demone)
   train:
     profiles: [train]
     build:

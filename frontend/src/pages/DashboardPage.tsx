@@ -98,7 +98,7 @@ export function DashboardPage() {
           color="purple"
         />
         <NavCard
-          to="/about"
+          to="/research"
           icon={BookOpen}
           title={t("common.about")}
           description={t("dashboard.nav.research")}

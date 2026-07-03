@@ -5,8 +5,10 @@ import { ThemeToggle } from "./ThemeToggle";
 import { LanguageToggle } from "./LanguageToggle";
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "@/stores/useAppStore";
+import { useTranslation } from "react-i18next";
 
 export function Header() {
+  const { t } = useTranslation();
   const { sidebarOpen, toggleSidebar, token, user, logout } = useAppStore();
   const navigate = useNavigate();
 
@@ -15,7 +17,7 @@ export function Header() {
       <button
         onClick={toggleSidebar}
         className="cursor-pointer flex items-center justify-center rounded-lg p-2 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-        aria-label={sidebarOpen ? "Close menu" : "Open menu"}
+        aria-label={sidebarOpen ? t("common.close_menu") : t("common.open_menu")}
         aria-expanded={sidebarOpen}
         aria-controls="sidebar"
       >
@@ -39,7 +41,7 @@ export function Header() {
               onClick={() => { logout(); navigate("/"); }}
               className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
             >
-              Esci
+              {t("header.logout")}
             </button>
           </div>
         ) : (
@@ -47,7 +49,7 @@ export function Header() {
             onClick={() => navigate("/auth")}
             className="text-sm text-primary hover:underline cursor-pointer mr-2"
           >
-            Accedi
+            {t("header.login")}
           </button>
         )}
         <LanguageToggle />
