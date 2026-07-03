@@ -120,7 +120,8 @@ def login_user(username: str, password: str) -> dict:
         if _LOGIN_ATTEMPTS.get(username, 0) >= MAX_LOGIN_ATTEMPTS:
             raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, "Account temporarily locked. Try again later.")
 
-    data = _load_data()
+    with _DATA_LOCK:
+        data = _load_data()
     user = next((u for u in data["users"] if u["username"] == username), None)
     if not user or not verify_password(password, user["password_hash"]):
         with _LOGIN_LOCK:
