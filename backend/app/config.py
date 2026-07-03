@@ -83,8 +83,18 @@ class Settings(BaseSettings):
             )
         return self
 
-    admin_username: str = "admin"
-    admin_password: str = "admin"
+    admin_username: str = "marcello"
+    admin_password: str = "orchid-2026"
+
+    @model_validator(mode="after")
+    def _validate_admin_credentials(self):
+        if self.admin_username == "admin" and self.admin_password == "admin":
+            import warnings
+            warnings.warn(
+                "ADMIN_USERNAME and ADMIN_PASSWORD are both set to 'admin'! "
+                "Override them in .env for any production-like deployment."
+            )
+        return self
 
     model_config = SettingsConfigDict(
         env_file=str(Path(__file__).resolve().parent.parent.parent / ".env"),
