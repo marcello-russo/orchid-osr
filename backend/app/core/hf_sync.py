@@ -1,4 +1,5 @@
 """Shared HF download utilities for experiment sync."""
+
 import os
 import shutil
 from pathlib import Path
@@ -25,17 +26,19 @@ def list_repo_files(api: HfApi, repo: str) -> list[str]:
     return [i.path for i in items if "." in i.path.split("/")[-1]]
 
 
-def parse_exp_dir_name(
-    dir_name: str, model_set: set[str] | None = None
-) -> tuple[int | None, str | None]:
+def parse_exp_dir_name(dir_name: str, model_set: set[str] | None = None) -> tuple[int | None, str | None]:
     """Parse experiment dir name like 'exp10_mgh_ncd_convnext_small' → (10, 'convnext_small').
 
     Returns (exp_num, model_variant) or (None, None) if parsing fails.
     """
     if model_set is None:
         model_set = {
-            "resnet18", "resnet50", "convnext_tiny", "convnext_small",
-            "dinov2_small", "dinov2_base",
+            "resnet18",
+            "resnet50",
+            "convnext_tiny",
+            "convnext_small",
+            "dinov2_small",
+            "dinov2_base",
         }
     parts = dir_name.split("_")
     for i, p in enumerate(parts):

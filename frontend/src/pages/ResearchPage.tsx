@@ -954,13 +954,6 @@ const DETECTOR_COLORS: Record<string, string> = {
   Ensemble: "#8b5cf6",
 };
 
-const DETECTOR_LABELS: Record<string, string> = {
-  Mahalanobis: "Mahalanobis",
-  KNN: "KNN",
-  Energy: "Energy",
-  Ensemble: "Ensemble",
-};
-
 function NcdResults({ experiment }: { experiment: string }) {
   const { t } = useTranslation();
   const ncdCompQuery = useQuery<NcdComparison>({
@@ -1042,7 +1035,7 @@ function NcdResults({ experiment }: { experiment: string }) {
             <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} tickFormatter={(v) => `${v}%`} />
             <Tooltip
               contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid hsl(var(--border))" }}
-              formatter={(v: number, name: string) => [`${v}%`, name]}
+              formatter={(v, name) => [`${v ?? 0}%`, name]}
             />
             {["Mahalanobis", "KNN", "Energy", "Ensemble"].map((d) => (
               <Bar key={d} dataKey={d} fill={DETECTOR_COLORS[d]} name={d}

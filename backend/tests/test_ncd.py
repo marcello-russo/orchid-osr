@@ -2,7 +2,6 @@ import os
 import tempfile
 
 import numpy as np
-import pytest
 
 from app.api.routes.ncd import _load_npy_or_none
 

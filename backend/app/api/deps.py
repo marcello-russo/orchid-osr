@@ -5,20 +5,24 @@ Docker image (tracked in git). Model weights (.pt) are downloaded from
 HuggingFace Hub on demand and cached locally.
 """
 
+from __future__ import annotations
+
 import json
 import logging
 import threading
 from collections import OrderedDict
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-import torch
 from fastapi import Depends, Header, HTTPException, Query, Request, status
 from huggingface_hub import hf_hub_download
 
 from app.api.schemas import CacheStatus, ModelOption
 from app.config import settings
 from app.core.auth import decode_jwt
-from app.core.models import ClassifierModel, available_models, create_model
+
+if TYPE_CHECKING:
+    from app.core.models import ClassifierModel
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +58,9 @@ _VARIANT_DISPLAY = {
 }
 
 
-def _get_device() -> torch.device:
+def _get_device():
+    import torch
+
     return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
@@ -273,8 +279,10 @@ _model_cache: OrderedDict[str, ClassifierModel] = OrderedDict()
 _cache_lock = threading.Lock()
 
 
-def get_model(model_type: str = "resnet18", model_id: str | None = None) -> ClassifierModel:
+def get_model(model_type: str = "resnet18", model_id: str | None = None):
     """Load and cache model, downloading weights from HF if needed."""
+    from app.core.models import available_models, create_model
+
     if model_id:
         result = _resolve_weights(model_id)
         if result is None:

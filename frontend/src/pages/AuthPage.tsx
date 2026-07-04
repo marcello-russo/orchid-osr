@@ -73,7 +73,7 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const isSubmitting = useRef(false);
-  const errorTimer = useRef<ReturnType<typeof setTimeout>>();
+  const errorTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const firstErrorRef = useRef<HTMLInputElement>(null);
   const { setAuth } = useAppStore();
   const navigate = useNavigate();

@@ -1,8 +1,12 @@
 # app/config.py
+import logging
+import os
 from pathlib import Path
 
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+logger = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):
@@ -73,14 +77,41 @@ class Settings(BaseSettings):
 
     # JWT authentication (from .env)
     jwt_secret: str = ""
+    jwt_secret_path: str = "data/jwt_secret.txt"
 
     @model_validator(mode="after")
     def _validate_jwt_secret(self):
-        if not self.jwt_secret:
-            raise ValueError(
-                "JWT_SECRET is empty! Authentication tokens would be forgeable. "
-                "Set a strong JWT_SECRET in your .env file."
-            )
+        if self.jwt_secret:
+            return self
+
+        import secrets
+
+        # Resolve secret path: env var override, then default
+        env_path = os.environ.get("JWT_SECRET_PATH", "")
+        if env_path:
+            secret_file = Path(env_path)
+        else:
+            secret_file = Path(__file__).resolve().parent.parent / self.jwt_secret_path
+
+        try:
+            if secret_file.is_file():
+                self.jwt_secret = secret_file.read_text().strip()
+                if not self.jwt_secret:
+                    raise ValueError("empty secret file")
+                logger.info("JWT_SECRET loaded from %s", secret_file)
+                return self
+        except OSError:
+            pass
+
+        # Generate and persist
+        self.jwt_secret = secrets.token_hex(32)
+        try:
+            secret_file.parent.mkdir(parents=True, exist_ok=True)
+            secret_file.write_text(self.jwt_secret)
+            secret_file.chmod(0o600)
+            logger.info("JWT_SECRET generated and saved to %s (mode 600)", secret_file)
+        except OSError:
+            logger.warning("Could not persist JWT_SECRET to %s", secret_file)
         return self
 
     admin_username: str = "marcello"
@@ -90,6 +121,7 @@ class Settings(BaseSettings):
     def _validate_admin_credentials(self):
         if self.admin_username == "admin" and self.admin_password == "admin":
             import warnings
+
             warnings.warn(
                 "ADMIN_USERNAME and ADMIN_PASSWORD are both set to 'admin'! "
                 "Override them in .env for any production-like deployment."

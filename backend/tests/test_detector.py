@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
-from app.core.ncd.detector import list_detectors, get_detector
+
+from app.core.ncd.detector import get_detector, list_detectors
 from app.core.ncd.evaluation import evaluate_novel
 
 

@@ -1,8 +1,11 @@
 """Test auth core functions."""
-import pytest
+
 from unittest.mock import patch
 
-from app.core.auth import verify_password, hash_password, login_user, MAX_LOGIN_ATTEMPTS
+import pytest
+from fastapi import HTTPException
+
+from app.core.auth import MAX_LOGIN_ATTEMPTS, hash_password, login_user, verify_password
 
 
 class TestPasswordHashing:
@@ -18,13 +21,16 @@ class TestPasswordHashing:
 
 
 class TestLoginLockout:
+    def _assert_auth_error(self, match: str) -> None:
+        return pytest.raises(HTTPException, match=match)
+
     def test_lockout_after_max_attempts(self):
         with patch("app.core.auth._load_data") as mock_load:
             mock_load.return_value = {"users": [], "invites": []}
-            for i in range(MAX_LOGIN_ATTEMPTS):
-                with pytest.raises(Exception, match="Invalid username"):
+            for _ in range(MAX_LOGIN_ATTEMPTS):
+                with pytest.raises(HTTPException, match="Credenziali non valide"):
                     login_user("target_user", "wrong")
-            with pytest.raises(Exception, match="locked"):
+            with pytest.raises(HTTPException, match="locked"):
                 login_user("target_user", "wrong")
 
     def test_successful_login_resets_counter(self):
@@ -37,11 +43,11 @@ class TestLoginLockout:
             mock_load.return_value = {"users": [mock_user], "invites": []}
             # Failed attempts
             for _ in range(MAX_LOGIN_ATTEMPTS - 1):
-                with pytest.raises(Exception, match="Invalid username"):
+                with pytest.raises(HTTPException, match="Credenziali non valide"):
                     login_user("valid_user", "wrong")
             # Successful login resets counter
             result = login_user("valid_user", "correct")
             assert result["username"] == "valid_user"
             # Now should be able to fail again
-            with pytest.raises(Exception, match="Invalid username"):
+            with pytest.raises(HTTPException, match="Credenziali non valide"):
                 login_user("valid_user", "wrong")

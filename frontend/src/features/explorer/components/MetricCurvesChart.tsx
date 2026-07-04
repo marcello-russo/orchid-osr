@@ -28,7 +28,7 @@ interface MetricCurvesChartProps {
 export function MetricCurvesChart({ folds, selectedFold }: MetricCurvesChartProps) {
   const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
-  const { width, height } = useChartSize(ref);
+  const { height } = useChartSize(ref);
   const chartColors = useChartColors();
   const [metric, setMetric] = useState<"f1" | "accuracy">("f1");
 

@@ -1,21 +1,19 @@
 """Test per la thread-safety della cache modelli in deps.py."""
 
 import threading
-from unittest.mock import patch, MagicMock
-
-import pytest
+from unittest.mock import MagicMock, patch
 
 
 class TestModelCacheConcurrency:
     """Verifica che _cache_lock prevenga race condition."""
 
-    @patch("app.api.deps.create_model")
     @patch("app.api.deps._find_weights")
-    @patch("app.api.deps.available_models")
-    def test_concurrent_access_does_not_crash(self, mock_available, mock_find, mock_create):
+    @patch("app.core.models.available_models")
+    @patch("app.core.models.create_model")
+    def test_concurrent_access_does_not_crash(self, mock_create, mock_available, mock_find):
         """Due thread che caricano lo stesso modello non devono crashare."""
         mock_available.return_value = ["resnet18", "resnet50"]
-        from app.api.deps import get_model, _model_cache, MAX_CACHED_MODELS
+        from app.api.deps import _model_cache, get_model
 
         _model_cache.clear()
 
@@ -37,16 +35,15 @@ class TestModelCacheConcurrency:
             t.join()
 
         assert len(errors) == 0, f"Concurrent access caused errors: {errors}"
-        # Model should be cached once
         assert len(_model_cache) == 1
 
-    @patch("app.api.deps.create_model")
     @patch("app.api.deps._find_weights")
-    @patch("app.api.deps.available_models")
-    def test_cache_eviction_with_lock(self, mock_available, mock_find, mock_create):
+    @patch("app.core.models.available_models")
+    @patch("app.core.models.create_model")
+    def test_cache_eviction_with_lock(self, mock_create, mock_available, mock_find):
         """Cache che supera MAX_CACHED_MODELS deve fare eviction senza crash."""
         mock_available.return_value = ["a", "b", "c", "d", "e", "f", "g"]
-        from app.api.deps import get_model, _model_cache, MAX_CACHED_MODELS
+        from app.api.deps import MAX_CACHED_MODELS, _model_cache, get_model
 
         _model_cache.clear()
         mock_find.return_value = None
@@ -69,16 +66,15 @@ class TestModelCacheConcurrency:
             t.join()
 
         assert len(errors) == 0, f"Eviction caused errors: {errors}"
-        # Cache should not exceed MAX_CACHED_MODELS
         assert len(_model_cache) <= MAX_CACHED_MODELS
 
-    @patch("app.api.deps.create_model")
     @patch("app.api.deps._find_weights")
-    @patch("app.api.deps.available_models")
-    def test_cache_hit_does_not_duplicate(self, mock_available, mock_find, mock_create):
+    @patch("app.core.models.available_models")
+    @patch("app.core.models.create_model")
+    def test_cache_hit_does_not_duplicate(self, mock_create, mock_available, mock_find):
         """Stesso modello richiesto più volte non deve creare duplicati."""
         mock_available.return_value = ["resnet18", "resnet50"]
-        from app.api.deps import get_model, _model_cache
+        from app.api.deps import _model_cache, get_model
 
         _model_cache.clear()
         mock_find.return_value = None

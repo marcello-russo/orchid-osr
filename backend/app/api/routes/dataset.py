@@ -7,7 +7,7 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, Response
 from PIL import Image
 
-from app.api.deps import require_role, user_from_header_or_query
+from app.api.deps import require_role
 from app.api.schemas import ClassImagesResponse, DatasetClassesResponse, DatasetClassInfo, DatasetImage
 from app.config import settings
 

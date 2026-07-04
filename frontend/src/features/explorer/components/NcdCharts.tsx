@@ -5,8 +5,18 @@ import {
   Cell, ReferenceLine,
 } from "recharts";
 
+import type { NcdClusteringResult } from "@/lib/types";
+
 const CHART_COLORS = ["#3B82F6", "#8B5CF6", "#F59E0B", "#EF4444"];
 const CLUSTER_PALETTE = ["#3B82F6", "#8B5CF6", "#22C55E", "#EF4444"];
+const CLUSTER_ALGOS = ["kmeans_best", "kmeans_true_k", "spectral", "dbscan"];
+const CLUSTER_LABELS = ["K-Means (best k)", "K-Means (k=true)", "Spectral", "DBSCAN"];
+const CHART_METRICS = [
+  { key: "acc" as const, label: "ACC" },
+  { key: "nmi" as const, label: "NMI" },
+  { key: "ari" as const, label: "ARI" },
+  { key: "f_measure" as const, label: "F" },
+];
 
 interface AblationData {
   name: string;
@@ -50,7 +60,7 @@ export function AblationChart({ ablation }: { ablation: Record<string, number> }
           </Bar>
           <Tooltip
             contentStyle={{ background: "#1a1a1a", border: "1px solid #333", borderRadius: 8 }}
-            formatter={(value: any) => [`${(Number(value) * 100).toFixed(1)}%`, "AUROC"]}
+            formatter={(value) => [`${(Number(value ?? 0) * 100).toFixed(1)}%`, "AUROC"]}
           />
         </BarChart>
       </ResponsiveContainer>
@@ -58,25 +68,17 @@ export function AblationChart({ ablation }: { ablation: Record<string, number> }
   );
 }
 
-export function ClusteringComparisonChart({ clustering }: { clustering: Record<string, any> }) {
+export function ClusteringComparisonChart({ clustering }: { clustering: Record<string, NcdClusteringResult> }) {
   const { t } = useTranslation();
-  const algos = ["kmeans_best", "kmeans_true_k", "spectral", "dbscan"];
-  const labels = ["K-Means (best k)", "K-Means (k=true)", "Spectral", "DBSCAN"];
-  const metrics = [
-    { key: "acc", label: "ACC" },
-    { key: "nmi", label: "NMI" },
-    { key: "ari", label: "ARI" },
-    { key: "f_measure", label: "F" },
-  ];
 
   const chartData = useMemo(() =>
-    metrics.map((m) => ({
+    CHART_METRICS.map((m) => ({
       name: m.label,
       ...Object.fromEntries(
-        algos.map((a, i) => [labels[i], clustering?.[a]?.[m.key] ?? 0])
+        CLUSTER_ALGOS.map((a, i) => [CLUSTER_LABELS[i], clustering?.[a]?.[m.key] ?? 0])
       ),
     })),
-  [clustering, metrics]);
+  [clustering]);
 
   if (!chartData.length) return null;
 
@@ -88,12 +90,12 @@ export function ClusteringComparisonChart({ clustering }: { clustering: Record<s
           <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
           <XAxis dataKey="name" tick={{ fill: "#888", fontSize: 12 }} />
           <YAxis domain={[0, 1]} tick={{ fill: "#888", fontSize: 11 }} />
-          {labels.map((l, i) => (
+          {CLUSTER_LABELS.map((l, i) => (
             <Bar key={l} dataKey={l} fill={CLUSTER_PALETTE[i]} radius={[2, 2, 0, 0]} />
           ))}
           <Tooltip
             contentStyle={{ background: "#1a1a1a", border: "1px solid #333", borderRadius: 8 }}
-            formatter={(value: any) => [(Number(value) * 100).toFixed(1) + "%"]}
+            formatter={(value) => [`${(Number(value ?? 0) * 100).toFixed(1)}%`]}
           />
           <Legend wrapperStyle={{ fontSize: 12 }} />
         </BarChart>
@@ -142,7 +144,7 @@ export function PerClassAurocChart({
           </Bar>
           <Tooltip
             contentStyle={{ background: "#1a1a1a", border: "1px solid #333", borderRadius: 8 }}
-            formatter={(value: any) => [`${(Number(value) * 100).toFixed(1)}%`]}
+            formatter={(value) => [`${(Number(value ?? 0) * 100).toFixed(1)}%`]}
           />
         </BarChart>
       </ResponsiveContainer>

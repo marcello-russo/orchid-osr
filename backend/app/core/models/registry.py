@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Type
+from typing import TYPE_CHECKING, Type
 
-from torchvision import transforms as T
+if TYPE_CHECKING:
+    from torchvision import transforms as T
 
-from app.core.models.base import ClassifierModel, ModelConfig
+    from app.core.models.base import ClassifierModel, ModelConfig
 
 
 @dataclass
@@ -45,6 +46,8 @@ def create_model(
     pretrained: bool = True,
     **kwargs,
 ) -> ClassifierModel:
+    from app.core.models.base import ClassifierModel  # noqa: F811
+
     entry = get_registry_entry(model_type)
     kwargs.setdefault("variant", model_type)
     valid = entry.config_cls.model_fields.keys()
@@ -55,8 +58,11 @@ def create_model(
     return config.create_model()
 
 
-def create_transform(model_type: str) -> T.Compose:
+def create_transform(model_type: str):
+    from torchvision import transforms as T
+
     from app.preprocessing.resizing import ResizeImageTransform
+
     entry = get_registry_entry(model_type)
     w, h = entry.input_size
     return T.Compose([

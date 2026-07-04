@@ -3,12 +3,10 @@
 Utility script — NCD upload is now handled by the HF Space entrypoint.
 This script exists as a fallback for manual sync if needed."""
 
-import json
 import logging
 import os
-import sys
 
-from huggingface_hub import HfApi, create_repo
+from huggingface_hub import HfApi
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -57,7 +55,7 @@ def main():
                 path_in_repo=f"{hf_path}/ncd_results.json",
                 path_or_fileobj=ncd_json,
             )
-            logger.info(f"  -> ncd_results.json")
+            logger.info("  -> ncd_results.json")
 
         # Upload ncd_figures/
         ncd_figures = os.path.join(exp_dir, "ncd_figures")

@@ -16,8 +16,12 @@ from app.core.ncd.extract import (
 )
 
 KNOWN_CLASSES = [
-    "O. exaltata", "O. garganica", "O. incubacea",
-    "O. majellensis", "O. sphegodes", "O. sphegodes_Palena",
+    "O. exaltata",
+    "O. garganica",
+    "O. incubacea",
+    "O. majellensis",
+    "O. sphegodes",
+    "O. sphegodes_Palena",
 ]
 NOVEL_CLASS = "O. sphegodes_Napoli"
 TRAIN_DIR = "dataset/cropped_256x512/train"
@@ -91,7 +95,7 @@ def main():
             print(f"  Train: {train_emb.shape[0]} embedding")
         else:
             # No existing embeddings - extract from train too
-            print(f"  No train embeddings found, extracting from train set...")
+            print("  No train embeddings found, extracting from train set...")
             train_emb, train_labels, _, _ = extract_embeddings(
                 model_variant=model_variant,
                 data_dir=TRAIN_DIR,
@@ -110,7 +114,10 @@ def main():
         combined_labels = np.concatenate([train_labels, test_labels])
         n_train = len(train_emb)
 
-        print(f"  Combined: {combined_emb.shape} (train={n_train}, test_known={known_test_mask.sum()}, novel={novel_mask.sum()})")
+        print(
+            f"  Combined: {combined_emb.shape} "
+            f"(train={n_train}, test_known={known_test_mask.sum()}, novel={novel_mask.sum()})"
+        )
 
         # Compute projections
         tsne_2d = compute_tsne(combined_emb, n_components=2)

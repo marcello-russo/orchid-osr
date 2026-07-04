@@ -259,7 +259,6 @@ def _normalize_fold(fold: dict) -> dict:
     ce_train = ce_hist.get("train_loss", []) or []
     ce_val_loss = ce_hist.get("val_loss", []) or []
     ce_val_f1 = ce_hist.get("val_f1", []) or []
-    ce_val_acc = ce_hist.get("val_accuracy", []) or []
 
     # Concatenate — use flattened dummy val_loss for SupCon (val_knn_acc as F1 proxy)
     n_supcon = len(supcon_train)
@@ -282,10 +281,16 @@ def _normalize_fold(fold: dict) -> dict:
         "best_f1": fold.get("best_f1", fold.get("best_knn_acc", 0)),
         "best_accuracy": fold.get("best_accuracy", fold.get("sphor_probe_accuracy", 0)),
         "best_epoch": cutoff - 1 if cutoff > 0 else 0,
-        "final_train_loss": (train_loss[cutoff - 1] if cutoff > 0 and cutoff <= total
-                             else ce_hist.get("train_loss", [None])[-1] or supcon_hist.get("train_loss", [None])[-1]),
-        "final_val_loss": (val_loss[cutoff - 1] if cutoff > 0 and cutoff <= len(val_loss)
-                           else ce_hist.get("val_loss", [None])[-1] or supcon_hist.get("val_loss", [None])[-1]),
+        "final_train_loss": (
+            train_loss[cutoff - 1]
+            if cutoff > 0 and cutoff <= total
+            else ce_hist.get("train_loss", [None])[-1] or supcon_hist.get("train_loss", [None])[-1]
+        ),
+        "final_val_loss": (
+            val_loss[cutoff - 1]
+            if cutoff > 0 and cutoff <= len(val_loss)
+            else ce_hist.get("val_loss", [None])[-1] or supcon_hist.get("val_loss", [None])[-1]
+        ),
         "history": {
             "train_loss": train_loss[:cutoff],
             "val_loss": val_loss[:cutoff],

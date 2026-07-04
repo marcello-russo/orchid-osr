@@ -6,7 +6,6 @@ import tempfile
 from unittest.mock import patch
 
 import numpy as np
-import pytest
 import torch
 
 from app.core.ncd.extraction import ExtractionBundle

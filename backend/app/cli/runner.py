@@ -5,7 +5,7 @@ import os
 
 import torch
 
-from app.cli.definitions import ALL_CLASSES, EXPERIMENTS, PROJECT_ROOT
+from app.cli.definitions import EXPERIMENTS, PROJECT_ROOT
 
 
 def setup_logging(log_dir: str | None = None, level: int = logging.INFO) -> str:

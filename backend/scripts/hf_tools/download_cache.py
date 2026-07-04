@@ -1,6 +1,7 @@
 import os
 import shutil
 from pathlib import Path
+
 from huggingface_hub import snapshot_download
 
 DATASET_REPO = "marcellorusso/orchid-ncd-dataset"
@@ -66,6 +67,7 @@ def _load_token() -> str | None:
     if token:
         return token
     from dotenv import load_dotenv
+
     env_path = Path(__file__).resolve().parent.parent.parent / ".env"
     if env_path.exists():
         load_dotenv(env_path)

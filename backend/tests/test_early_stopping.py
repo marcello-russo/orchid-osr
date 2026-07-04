@@ -89,9 +89,6 @@ def test_fix_oscillation_stops_eventually():
     assert stopped
 
 
-
-
-
 def test_fix_constant_values_stop():
     """Sempre lo stesso valore → early stopping dopo patience epoche."""
     k = [0.7, 0.7, 0.7, 0.7]
@@ -117,12 +114,15 @@ def test_fix_short_history_no_stop():
 class TestOldBehaviorVsFix:
     """Confronta diretto: vecchio >= vs nuovo >."""
 
-    @pytest.mark.parametrize("history,patience,expect_old_stop,expect_new_stop", [
-        ([0.8, 0.85, 0.85, 0.85, 0.85], 3, False, True),  # plateau: old non ferma, fix sì
-        ([0.7, 0.8, 0.9], 3, False, False),                 # sempre migliora: nessuno ferma
-        ([0.8, 0.85, 0.86, 0.86, 0.86, 0.86], 3, False, True),  # plateau dopo miglioramento
-        ([0.8, 0.75, 0.72, 0.7], 2, True, True),            # calo: entrambi fermano
-    ])
+    @pytest.mark.parametrize(
+        "history,patience,expect_old_stop,expect_new_stop",
+        [
+            ([0.8, 0.85, 0.85, 0.85, 0.85], 3, False, True),  # plateau: old non ferma, fix sì
+            ([0.7, 0.8, 0.9], 3, False, False),  # sempre migliora: nessuno ferma
+            ([0.8, 0.85, 0.86, 0.86, 0.86, 0.86], 3, False, True),  # plateau dopo miglioramento
+            ([0.8, 0.75, 0.72, 0.7], 2, True, True),  # calo: entrambi fermano
+        ],
+    )
     def test_comparison(self, history, patience, expect_old_stop, expect_new_stop):
         _, old_stopped, _ = _simulate_supcon_epochs(history, patience, use_strict_gt=False)
         _, new_stopped, _ = _simulate_supcon_epochs(history, patience, use_strict_gt=True)

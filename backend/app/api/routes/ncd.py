@@ -1,14 +1,14 @@
 import json
+import logging
 import os
 from pathlib import Path
-
-import logging
-logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 
 from app.config import settings
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/ncd", tags=["ncd"])
 

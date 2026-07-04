@@ -97,9 +97,7 @@ def run_ncd_pipeline(
 
     device = _get_device()
 
-    collect_logits = any(
-        get_detector(n).requires_logits for n in list_detectors()
-    )
+    collect_logits = any(get_detector(n).requires_logits for n in list_detectors())
 
     bundle = extract_all(
         model_variant=model_variant,
@@ -132,14 +130,16 @@ def run_ncd_pipeline(
         name_to_label = {c: i for i, c in enumerate(all_names)}
 
         # Remap test labels to consistent label space
-        remapped_test_labels = np.array([name_to_label[bundle.test_class_names[l]] for l in bundle.test_labels])
+        remapped_test_labels = np.array([name_to_label[bundle.test_class_names[label]] for label in bundle.test_labels])
 
         combined_emb = np.vstack([bundle.train_embeddings, bundle.test_embeddings])
         combined_labels = np.hstack([bundle.train_labels, remapped_test_labels])
         combined_n_classes = len(all_names)
         logger.info(
             "Combined labels: %d classes (%s), remapped test labels for %d train + %d novel",
-            combined_n_classes, all_names, len(bundle.train_class_names),
+            combined_n_classes,
+            all_names,
+            len(bundle.train_class_names),
             combined_n_classes - len(bundle.train_class_names),
         )
     else:
@@ -222,9 +222,7 @@ def run_ncd_pipeline(
                         bundle.test_class_names,
                     )
                 else:
-                    results["detectors"][det_name] = evaluate_loo(
-                        scores, bundle.test_labels, bundle.test_class_names
-                    )
+                    results["detectors"][det_name] = evaluate_loo(scores, bundle.test_labels, bundle.test_class_names)
             except Exception as e:
                 logger.warning("Detector %s fallito: %s", det_name, e)
                 import traceback
@@ -243,6 +241,7 @@ def run_ncd_pipeline(
     if combined_emb.shape[1] > 2:
         try:
             from sklearn.manifold import TSNE
+
             from app.core.ncd.reporting import plot_tsne_known_vs_unknown
 
             tsne = TSNE(
@@ -251,11 +250,7 @@ def run_ncd_pipeline(
                 perplexity=max(5, min(30, len(combined_emb) // 5)),
             )
             emb_2d = tsne.fit_transform(combined_emb)
-            known_mask = (
-                combined_labels < num_classes
-                if ncd_mode
-                else np.ones(len(combined_labels), dtype=bool)
-            )
+            known_mask = combined_labels < num_classes if ncd_mode else np.ones(len(combined_labels), dtype=bool)
             if ncd_mode:
                 combined_class_names = list(bundle.train_class_names)
                 if novel_name:

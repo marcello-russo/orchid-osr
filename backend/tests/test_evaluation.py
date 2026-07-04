@@ -1,6 +1,6 @@
 import numpy as np
-import pytest
-from app.core.ncd.evaluation import evaluate_novel, evaluate_loo
+
+from app.core.ncd.evaluation import evaluate_loo, evaluate_novel
 
 
 def test_novel_auroc_perfect():

@@ -3,16 +3,12 @@
 import json
 import sqlite3
 import time
-from pathlib import Path
-
-import pytest
 
 from app.core.db import (
     _init_schema,
-    _read_ncd_metrics,
     _migrate_schema,
+    _read_ncd_metrics,
     sync_experiment,
-    DB_PATH,
 )
 
 
@@ -154,9 +150,7 @@ def test_sync_ncd_with_mtime_resync(tmp_path):
     sync_experiment(str(exp_dir), conn)
 
     # Aggiungi ncd_results.json dopo primo sync
-    (exp_dir / "ncd_results.json").write_text(
-        json.dumps({"detectors": {"KNN": {"auroc": 0.85}}})
-    )
+    (exp_dir / "ncd_results.json").write_text(json.dumps({"detectors": {"KNN": {"auroc": 0.85}}}))
     # Aggiorna mtime di results.json per forzare resync
     time.sleep(0.1)
     (exp_dir / "results.json").write_text(json.dumps({"mean_f1": 0.70}))

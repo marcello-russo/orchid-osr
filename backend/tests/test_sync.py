@@ -109,6 +109,7 @@ def test_sync_updated_if_mtime_changes(tmp_path):
 
     # Modifica results.json (aggiorna mtime)
     import time
+
     time.sleep(0.1)
     with open(exp_dir / "results.json", "w") as f:
         json.dump({"mean_f1": 0.92}, f)

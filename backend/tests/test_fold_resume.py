@@ -2,10 +2,6 @@
 
 import json
 import os
-import tempfile
-from pathlib import Path
-
-import pytest
 
 
 def _make_fake_exp(tmp_path, folds_configs):
@@ -15,9 +11,7 @@ def _make_fake_exp(tmp_path, folds_configs):
     """
     exp_dir = tmp_path / "exp_test_resume"
     exp_dir.mkdir()
-    (exp_dir / "config.json").write_text(
-        json.dumps({"model_variant": "resnet18", "num_classes": 6})
-    )
+    (exp_dir / "config.json").write_text(json.dumps({"model_variant": "resnet18", "num_classes": 6}))
     for fc in folds_configs:
         path = exp_dir / f"fold_{fc['idx']}.json"
         if fc.get("valid", True):
@@ -47,11 +41,14 @@ def _check_completed(exp_dir):
 
 def test_fold_json_corrupted_removed_and_retried(tmp_path):
     """JSON corrotto di fold viene rimosso e non considerato completato."""
-    exp_dir = _make_fake_exp(tmp_path, [
-        {"idx": 0, "valid": True},
-        {"idx": 1, "valid": False},  # corrotto
-        {"idx": 2, "valid": True},
-    ])
+    exp_dir = _make_fake_exp(
+        tmp_path,
+        [
+            {"idx": 0, "valid": True},
+            {"idx": 1, "valid": False},  # corrotto
+            {"idx": 2, "valid": True},
+        ],
+    )
     completed = _check_completed(exp_dir)
     assert 0 in completed
     assert 1 not in completed  # è stato rimosso
@@ -63,12 +60,8 @@ def test_fold_json_atomic_write_survives_crash(tmp_path):
     """Simula crash durante scrittura JSON: .tmp non completa = fold non esiste."""
     exp_dir = tmp_path / "exp_test_atomic"
     exp_dir.mkdir()
-    (exp_dir / "config.json").write_text(
-        json.dumps({"model_variant": "resnet18", "num_classes": 6})
-    )
-    (exp_dir / "results.json").write_text(
-        json.dumps({"mean_f1": 0.85})
-    )
+    (exp_dir / "config.json").write_text(json.dumps({"model_variant": "resnet18", "num_classes": 6}))
+    (exp_dir / "results.json").write_text(json.dumps({"mean_f1": 0.85}))
 
     # Simula crash: .tmp scritto ma mai rinominato in .json
     fold_path = exp_dir / "fold_0.json"
@@ -76,7 +69,7 @@ def test_fold_json_atomic_write_survives_crash(tmp_path):
     tmp.write_text('{"best_f1": 0.8')  # JSON troncato!
 
     assert not fold_path.exists()  # fold_0.json NON esiste
-    assert tmp.exists()            # solo il .tmp rimane
+    assert tmp.exists()  # solo il .tmp rimane
 
     # Il resume cerca fold_*.json → non matcha .tmp → fold rifatto
 
@@ -85,17 +78,11 @@ def test_fold_json_clean_tmp_on_restart(tmp_path):
     """All'avvio, i file .tmp residui non interferiscono col resume."""
     exp_dir = tmp_path / "exp_test_cleanup"
     exp_dir.mkdir()
-    (exp_dir / "config.json").write_text(
-        json.dumps({"model_variant": "resnet18", "num_classes": 6})
-    )
-    (exp_dir / "results.json").write_text(
-        json.dumps({"mean_f1": 0.85})
-    )
+    (exp_dir / "config.json").write_text(json.dumps({"model_variant": "resnet18", "num_classes": 6}))
+    (exp_dir / "results.json").write_text(json.dumps({"mean_f1": 0.85}))
 
     # Crea fold_0 valido
-    (exp_dir / "fold_0.json").write_text(
-        json.dumps({"best_f1": 0.9, "fold": 0})
-    )
+    (exp_dir / "fold_0.json").write_text(json.dumps({"best_f1": 0.9, "fold": 0}))
     # Lascia un .tmp orfano
     (exp_dir / "fold_1.json.tmp").write_text("garbage")
 

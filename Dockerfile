@@ -12,6 +12,10 @@ RUN npm ci || npm install
 COPY frontend/ ./
 RUN npm run build
 
+# Stage: shared scripts (avoids duplicate COPY across cpu/gpu/training targets)
+FROM scratch AS scripts-stage
+COPY backend/scripts/ /scripts/
+
 # Stage 2a: CPU target — HF Spaces (default)
 FROM docker.io/python:3.11-slim AS cpu
 
@@ -32,6 +36,7 @@ RUN mkdir -p models dataset
 COPY backend/app/ app/
 COPY backend/server.py .
 COPY backend/cli.py .
+COPY --from=scripts-stage /scripts/ scripts/
 COPY --from=frontend-builder /workspace/frontend/dist /workspace/backend/frontend/dist
 COPY entrypoint.sh .
 RUN chmod +x entrypoint.sh
@@ -55,6 +60,7 @@ RUN mkdir -p models dataset
 COPY backend/app/ app/
 COPY backend/server.py .
 COPY backend/cli.py .
+COPY --from=scripts-stage /scripts/ scripts/
 # experiments/ contains only metadata from the build context (see .dockerignore).
 COPY backend/experiments/ experiments/
 COPY --from=frontend-builder /workspace/frontend/dist /workspace/backend/frontend/dist
@@ -80,7 +86,7 @@ RUN pip install --no-cache-dir --default-timeout=1000 . --constraint constraints
     pip install --no-cache-dir transformers==4.43.0 tokenizers==0.19.1
 
 COPY backend/data/ data/
-COPY backend/scripts/ scripts/
+COPY --from=scripts-stage /scripts/ scripts/
 COPY backend/dataset/ dataset/
 RUN mkdir -p models dataset
 COPY backend/app/ app/

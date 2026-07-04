@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useExperiment } from "@/features/explorer/hooks/useExperiment";
+import type { NcdClusteringResult } from "@/lib/types";
 import { FoldSelector } from "@/features/explorer/components/FoldSelector";
 import { LossCurvesChart } from "@/features/explorer/components/LossCurvesChart";
 import { MetricCurvesChart } from "@/features/explorer/components/MetricCurvesChart";
@@ -272,8 +273,6 @@ function ChartCarousel({ folds, selectedFold, meanF1, stdF1, confusionMatrix, ex
   const { t } = useTranslation();
   // Nascondi overfitting se val_loss e' tutto zero (training SupCon)
   const hasOverfitting = folds.some(f => f.history?.val_loss?.some((v: number) => v > 0));
-  const overfittingIdx = 3;
-  const cmIdx = confusionMatrix ? (hasOverfitting ? 4 : 3) : -1;
   const total = (hasOverfitting ? 1 : 0) + (confusionMatrix ? 1 : 0) + 3; // loss + metrics + folds + (overfitting?) + (cm?)
   const [active, setActive] = useState(0);
 
@@ -464,20 +463,20 @@ function NcdDetail({ modelVariant, exp }: { modelVariant: string; exp?: number }
   if (isLoading) return <div className="flex justify-center py-8"><div className="size-5 rounded-full border-2 border-primary border-t-transparent animate-spin" /></div>;
   if (error || !data) return <p className="text-sm text-muted-foreground text-center py-8">{t("experiment_detail.ncd_no_data")}</p>;
 
-  const detectors = data.detectors ?? {};
-  const openset = data.openset ?? {};
+  const detectors = data.detectors;
+  const openset = data.openset;
   const clustering = data.clustering ?? {};
-  const meanAuroc = detectors.Ensemble?.auroc ?? detectors.Ensemble?.mean_auroc ?? openset.mean_auroc ?? 0;
-  const napoliAuroc = detectors.Ensemble?.auroc ?? openset.novel_class?.auroc;
-  const ablation = openset.ablation;
-  const perClass = openset.per_class_metrics ?? [];
+  const meanAuroc = detectors?.Ensemble?.auroc ?? openset?.mean_auroc ?? 0;
+  const napoliAuroc = detectors?.Ensemble?.auroc ?? openset?.novel_class?.auroc;
+  const ablation = openset?.ablation;
+  const perClass = openset?.per_class_metrics ?? [];
   const tsne2d = data.tsne_2d as [number, number][] | undefined;
   const tsne3d = data.tsne_3d as [number, number, number][] | undefined;
   const labels = data.novel_class_label as number[] | undefined;
 
   // Compute best clustering ACC
-  const bestClustering = Object.values(clustering).reduce(
-    (best: any, c: any) => (c.acc && c.acc > (best.acc ?? 0) ? c : best), {}
+  const bestClustering = Object.values(clustering).reduce<NcdClusteringResult | null>(
+    (best, c) => (c.acc && c.acc > (best?.acc ?? 0) ? c : best), null
   );
   const silhouette = clustering.kmeans_best?.silhouette ?? null;
 
@@ -506,7 +505,7 @@ function NcdDetail({ modelVariant, exp }: { modelVariant: string; exp?: number }
           </div>
           <div className="flex flex-wrap justify-center gap-1.5 mt-1.5">
             {["Ensemble", "Mahalanobis", "KNN", "Energy"].map((d) => {
-              const val = detectors[d]?.auroc ?? detectors[d]?.mean_auroc;
+              const val = detectors?.[d]?.auroc;
               return val != null ? (
                 <span key={d} className="text-[10px] px-1.5 py-0.5 rounded bg-muted font-mono">
                   {d[0]}: {(val * 100).toFixed(1)}%
@@ -530,9 +529,9 @@ function NcdDetail({ modelVariant, exp }: { modelVariant: string; exp?: number }
         <div className="rounded-xl border border-border/40 bg-background p-4 text-center">
           <div className="text-xs text-muted-foreground uppercase font-bold mb-1">{t("experiment_detail.ncd_best_acc")}</div>
           <div className="text-2xl font-black text-green-500">
-            {bestClustering.acc ? `${(bestClustering.acc * 100).toFixed(1)}%` : "—"}
+            {bestClustering?.acc ? `${(bestClustering.acc * 100).toFixed(1)}%` : "—"}
           </div>
-          <div className="text-[10px] text-muted-foreground mt-0.5">{bestClustering.k ? `k=${bestClustering.k}` : ""}</div>
+          <div className="text-[10px] text-muted-foreground mt-0.5">{bestClustering?.k ? `k=${bestClustering.k}` : ""}</div>
         </div>
         <div className="rounded-xl border border-border/40 bg-background p-4 text-center">
           <div className="text-xs text-muted-foreground uppercase font-bold mb-1">{t("experiment_detail.ncd_silhouette")}</div>
@@ -600,7 +599,7 @@ function NcdDetail({ modelVariant, exp }: { modelVariant: string; exp?: number }
               </tr>
             </thead>
             <tbody className="divide-y divide-border/30">
-              {Object.entries(clustering).map(([key, val]: [string, any]) => (
+              {Object.entries(clustering).map(([key, val]) => (
                 <tr key={key}>
                   <td className="py-2 px-4 font-bold">{key}</td>
                   <td className="text-center py-2 px-2 font-mono">{val.acc?.toFixed(4) ?? "—"}</td>
@@ -636,7 +635,7 @@ function NcdDetail({ modelVariant, exp }: { modelVariant: string; exp?: number }
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/30">
-                {perClass.map((pc: any) => (
+                {perClass.map((pc) => (
                   <tr key={pc.left_out}
                     className={pc.left_out.toLowerCase().includes("majellensis") ? "bg-red-500/10 font-bold" : ""}>
                     <td className="py-2 px-4 font-bold">{pc.left_out}</td>
@@ -656,7 +655,7 @@ function NcdDetail({ modelVariant, exp }: { modelVariant: string; exp?: number }
                     <td className="text-center py-2 px-2 font-mono text-red-500">{(napoliAuroc * 100).toFixed(1)}%</td>
                     <td className="text-center py-2 px-2 font-mono">—</td>
                     <td className="text-center py-2 px-2 font-mono">
-                      {novelClass?.unknown_recall ? `${(novelClass.unknown_recall * 100).toFixed(1)}%` : "—"}
+                      {openset?.novel_class?.unknown_recall ? `${(openset.novel_class.unknown_recall * 100).toFixed(1)}%` : "—"}
                     </td>
                   </tr>
                 )}

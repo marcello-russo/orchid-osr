@@ -111,9 +111,16 @@ class DINOv2Classifier(ClassifierModel):
             from transformers import Dinov2Model
             base = Dinov2Model.from_pretrained(base_model_id)
             self._backbone = PeftModel.from_pretrained(base, adapter_dir)
-            self._head.load_state_dict(torch.load(path, map_location="cpu"))
+            try:
+                head_sd = torch.load(path, map_location="cpu", weights_only=True)
+            except Exception:
+                head_sd = torch.load(path, map_location="cpu", weights_only=False)
+            self._head.load_state_dict(head_sd)
         else:
-            state_dict = torch.load(path, map_location="cpu")
+            try:
+                state_dict = torch.load(path, map_location="cpu", weights_only=True)
+            except Exception:
+                state_dict = torch.load(path, map_location="cpu", weights_only=False)
             self.load_state_dict(state_dict)
 
     def save_weights(self, path: str) -> None:
