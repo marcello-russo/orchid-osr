@@ -1,8 +1,8 @@
 """Test schema SQLite."""
 
+import os
 import sqlite3
 import tempfile
-import os
 
 from app.core.db import _init_schema
 

@@ -59,8 +59,8 @@ EXPERIMENTS = {
         "loss_type": "ce",
         "phases": ["CE"],
         "recipe": "Standard Cross-Entropy training con backbone intero. "
-                  "Una fase sola: loss CE su 6 classi. Backbone e testa addestrati insieme. "
-                  "150 epoche, Adam, LR 0.001, batch 8. Baseline per confronto.",
+        "Una fase sola: loss CE su 6 classi. Backbone e testa addestrati insieme. "
+        "150 epoche, Adam, LR 0.001, batch 8. Baseline per confronto.",
         "description": "Clean split: no data leakage, balanced test (50/class), all 6 classes",
     },
     7: {
@@ -72,11 +72,11 @@ EXPERIMENTS = {
         "loss_type": "supcon",
         "phases": ["SupCon", "CE fine-tune"],
         "recipe": "Due fasi: (1) SupCon contrastive pretraining: organizza lo spazio di embedding "
-                  "attraendo campioni della stessa specie e respingendo specie diverse. "
-                  "Loss: SupConLoss con temperatura τ=0.07, proiezione a 128 dim. "
-                  "Backbone + projection head addestrati. "
-                  "(2) CE fine-tuning: backbone congelato, sola testa lineare addestrata "
-                  "con CrossEntropyLoss. AdamW, LR 0.001 per SupCon, 0.01 per CE.",
+        "attraendo campioni della stessa specie e respingendo specie diverse. "
+        "Loss: SupConLoss con temperatura τ=0.07, proiezione a 128 dim. "
+        "Backbone + projection head addestrati. "
+        "(2) CE fine-tuning: backbone congelato, sola testa lineare addestrata "
+        "con CrossEntropyLoss. AdamW, LR 0.001 per SupCon, 0.01 per CE.",
         "description": "Supervised Contrastive pretraining + CE fine-tuning (Exp 7)",
     },
     8: {
@@ -89,11 +89,11 @@ EXPERIMENTS = {
         "ncd_mode": True,
         "phases": ["SupCon + SpHOR", "CE fine-tune"],
         "recipe": "Due fasi: (1) SupCon + SpHOR: come Exp 7 ma con prototipi ortogonali sferici "
-                  "(Spherical Orthogonal Prototypes). Loss addizionale repulsiva "
-                  "L_rep = (1/K(K-1)) Σ_{i≠j} cos(θ_ij)² che forza i prototipi "
-                  "ad essere ortogonali, massimizzando la copertura angolare sulla sfera. "
-                  "(2) CE fine-tuning: backbone congelato, testa lineare. "
-                  "Novel class: O. sphegodes_Napoli (solo in test).",
+        "(Spherical Orthogonal Prototypes). Loss addizionale repulsiva "
+        "L_rep = (1/K(K-1)) Σ_{i≠j} cos(θ_ij)² che forza i prototipi "
+        "ad essere ortogonali, massimizzando la copertura angolare sulla sfera. "
+        "(2) CE fine-tuning: backbone congelato, testa lineare. "
+        "Novel class: O. sphegodes_Napoli (solo in test).",
         "description": "SupCon + Spherical Orthogonal Prototypes (SpHOR-style, Exp 8)",
     },
     9: {
@@ -106,8 +106,8 @@ EXPERIMENTS = {
         "ncd_mode": True,
         "phases": ["SupCon + SpHOR", "CE fine-tune"],
         "recipe": "Come Exp 8. Novità: NCD mode attivo — la novel class "
-                  "(O. sphegodes_Napoli) è esclusa dal training e usata solo in test "
-                  "per valutare la scoperta di nuove specie.",
+        "(O. sphegodes_Napoli) è esclusa dal training e usata solo in test "
+        "per valutare la scoperta di nuove specie.",
         "description": "SpHOR with O. sphegodes_Napoli as hidden novel class (NCD)",
     },
     10: {
@@ -120,14 +120,14 @@ EXPERIMENTS = {
         "ncd_mode": True,
         "phases": ["MGH-SupCon", "CE fine-tune"],
         "recipe": "Due fasi con Multi-Granularity Hard-negative mining: "
-                  "(1) SupCon modificato: coppie (majellensis, sphegodes) pesate 5×, "
-                  "(sphegodes, sphegodes_Palena) pesate 3× — forza la separazione "
-                  "delle specie più simili. "
-                  "Features multi-granularità: per ViT (DINOv2) si concatenano "
-                  "CLS finale + patch pool + CLS intermedio; per CNN (ResNet, ConvNeXt) "
-                  "si concatenano features penultimo e ultimo stadio. "
-                  "Backbone congelato dopo SupCon. "
-                  "(2) CE fine-tuning: testa lineare, backbone frozen.",
+        "(1) SupCon modificato: coppie (majellensis, sphegodes) pesate 5×, "
+        "(sphegodes, sphegodes_Palena) pesate 3× — forza la separazione "
+        "delle specie più simili. "
+        "Features multi-granularità: per ViT (DINOv2) si concatenano "
+        "CLS finale + patch pool + CLS intermedio; per CNN (ResNet, ConvNeXt) "
+        "si concatenano features penultimo e ultimo stadio. "
+        "Backbone congelato dopo SupCon. "
+        "(2) CE fine-tuning: testa lineare, backbone frozen.",
         "description": (
             "MGH-NCD: Multi-Granularity Hard-negative Novel Class Discovery. "
             "6 known species; O. sphegodes_Napoli is the novel class (test only)."

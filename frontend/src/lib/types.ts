@@ -82,6 +82,7 @@ export interface ExperimentSummary {
   type: "baseline" | "kfold";
   status: "completed" | "partial";
   num_folds: number | null;
+  folds_completed: number | null;
   test_accuracy: number | null;
   mean_f1: number | null;
   std_f1: number | null;
@@ -314,11 +315,18 @@ export interface NcdOsrResults {
   ablation?: Record<string, number>;
 }
 
+export interface NcdDetectorResult {
+  auroc: number;
+  /** unused in frontend, kept for API completeness */
+  detection_rate_at_10pct_fpr?: number;
+}
+
 export interface NcdResults {
   model_variant: string;
   exp: number;
   clustering: Record<string, NcdClusteringResult>;
-  openset: NcdOsrResults;
+  openset?: NcdOsrResults;
+  detectors?: Record<string, NcdDetectorResult>;
   class_names?: string[];
   tsne_2d?: number[][];
   tsne_3d?: number[][];

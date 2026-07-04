@@ -41,9 +41,14 @@ def _handle_auth_commands(args) -> int | None:
     if not any([args.list_users, args.gen_invites is not None, args.add_user is not None]):
         return None
     from app.core.auth import (
-        generate_invite, list_users_and_invites, hash_password,
-        _load_data, _save_data, ensure_admin_exists,
+        generate_invite,
+        list_users_and_invites,
+        hash_password,
+        _load_data,
+        _save_data,
+        ensure_admin_exists,
     )
+
     ensure_admin_exists()
     if args.list_users:
         data = list_users_and_invites()
@@ -72,11 +77,13 @@ def _handle_auth_commands(args) -> int | None:
         if any(u["username"] == username for u in data["users"]):
             print(f"User '{username}' already exists")
             return 1
-        data["users"].append({
-            "username": username,
-            "password_hash": hash_password(args.password),
-            "role": args.role,
-        })
+        data["users"].append(
+            {
+                "username": username,
+                "password_hash": hash_password(args.password),
+                "role": args.role,
+            }
+        )
         _save_data(data)
         print(f"User '{username}' created with role '{args.role}'")
         return 0
@@ -139,8 +146,10 @@ def _run_split_step(cropped_dir: str, internet_dir: str) -> None:
         cropped_dir=cropped_dir,
         internet_dir=internet_dir,
         output_dir=os.path.join(str(PROJECT_ROOT), "dataset", "cropped"),
-        class_names=cfg.class_names, internet_classes=cfg.internet_classes,
-        test_per_class=cfg.test_per_class, seed=cfg.split_seed,
+        class_names=cfg.class_names,
+        internet_classes=cfg.internet_classes,
+        test_per_class=cfg.test_per_class,
+        seed=cfg.split_seed,
     )
 
 
@@ -205,7 +214,17 @@ def _resolve_phases(args) -> list[str]:
             logging.warning("--embeddings is standalone; other phase flags will be ignored")
         return ["embeddings"]
     if args.embeddings_missing:
-        if any([args.train, args.test, args.cross_validate, args.explain, args.embeddings, args.ncd, args.ncd_comparison]):
+        if any(
+            [
+                args.train,
+                args.test,
+                args.cross_validate,
+                args.explain,
+                args.embeddings,
+                args.ncd,
+                args.ncd_comparison,
+            ]
+        ):
             logging.warning("--embeddings-missing is standalone; other phase flags will be ignored")
         return ["embeddings_missing"]
     if args.ncd:
@@ -219,10 +238,14 @@ def _resolve_phases(args) -> list[str]:
     if args.all:
         return ["train", "test"]
     phases = []
-    if args.train: phases.append("train")
-    if args.test: phases.append("test")
-    if args.cross_validate: phases.append("cross-validate")
-    if args.explain: phases.append("explain")
+    if args.train:
+        phases.append("train")
+    if args.test:
+        phases.append("test")
+    if args.cross_validate:
+        phases.append("cross-validate")
+    if args.explain:
+        phases.append("explain")
     return phases
 
 
@@ -234,6 +257,7 @@ def _resolve_experiments(args, phases: list[str]) -> list[int] | None:
         return [args.exp]
     if args.all:
         from app.cli.definitions import EXPERIMENTS
+
         return list(EXPERIMENTS.keys())
     print("Error: Specify --exp ID or --all to run all experiments")
     return None
@@ -266,11 +290,12 @@ def _log_config(args, phases: list[str], exp_ids: list[int]) -> None:
 
 def _run_embeddings_missing(args, valid_models: list[str]) -> int:
     """Scan experiments and generate missing embeddings."""
-    from app.cli.definitions import ALL_CLASSES, PROJECT_ROOT, EXPERIMENTS
+    from app.cli.definitions import ALL_CLASSES, PROJECT_ROOT
     from app.core.models import get_registry_entry
     from app.core.ncd.extract import run_embedding_extraction
     from app.core.hf_sync import parse_exp_dir_name
-    import json, torch
+    import json
+    import torch
 
     if not torch.cuda.is_available():
         logging.error("--embeddings-missing requires CUDA (GPU). Aborting.")
@@ -336,15 +361,19 @@ def _run_embeddings_missing(args, valid_models: list[str]) -> int:
                     skipped += 1
                     continue
             run_embedding_extraction(
-                exp_dir=full_path, model_variant=model_variant,
+                exp_dir=full_path,
+                model_variant=model_variant,
                 num_classes=config["num_classes"],
                 class_names=config.get("test_classes", ALL_CLASSES),
-                data_dir=data_dir, batch_size=8,
+                data_dir=data_dir,
+                batch_size=8,
             )
             generated += 1
         except Exception as e:
             logging.error(f"FAIL {d}: {e}")
-            import traceback; traceback.print_exc()
+            import traceback
+
+            traceback.print_exc()
             skipped += 1
 
     print(f"\nEmbeddings generated: {generated}, skipped: {skipped}")
@@ -357,22 +386,33 @@ def _run_experiment_loop(args, phases: list[str], exp_ids: list[int]) -> int:
     for exp_id in exp_ids:
         try:
             run_experiment(
-                exp_id=exp_id, phases=phases, model_variant=args.model,
-                epochs=args.epochs, batch_size=args.batch_size,
-                learning_rate=args.lr, num_folds=args.folds,
-                fold_index=args.fold, aggregate_only=args.aggregate_only,
-                patience=args.patience, tag=args.tag,
+                exp_id=exp_id,
+                phases=phases,
+                model_variant=args.model,
+                epochs=args.epochs,
+                batch_size=args.batch_size,
+                learning_rate=args.lr,
+                num_folds=args.folds,
+                fold_index=args.fold,
+                aggregate_only=args.aggregate_only,
+                patience=args.patience,
+                tag=args.tag,
                 gradient_accumulation_steps=args.accumulation,
-                proj_dim=args.proj_dim, temperature=args.temperature,
-                ce_epochs=args.ce_epochs, use_prototypes=args.sphor,
+                proj_dim=args.proj_dim,
+                temperature=args.temperature,
+                ce_epochs=args.ce_epochs,
+                use_prototypes=args.sphor,
                 repulse_weight=args.repulse_weight,
                 pair_weights=_build_pair_weights(args.hard_weight) if args.hard_weight > 0 else None,
-                full_finetune=args.full_finetune, osr_ensemble=args.osr_ensemble,
+                full_finetune=args.full_finetune,
+                osr_ensemble=args.osr_ensemble,
             )
             success_count += 1
         except Exception as e:
             logging.error(f"Failed to run experiment {exp_id}: {e}")
-            import traceback; traceback.print_exc()
+            import traceback
+
+            traceback.print_exc()
             if len(exp_ids) == 1:
                 return 1
     logging.info(f"\nCOMPLETED: {success_count}/{len(exp_ids)} experiments")
@@ -591,6 +631,7 @@ def main():
 
     if "ncd_comparison" in phases:
         from scripts.ncd_comparison import main as _ncd_comp
+
         _ncd_comp()
         return 0
 

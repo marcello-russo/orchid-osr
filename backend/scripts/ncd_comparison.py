@@ -18,8 +18,12 @@ EXPERIMENTS = [
 ]
 
 MODELS = [
-    "resnet18", "resnet50", "convnext_tiny", "convnext_small",
-    "dinov2_small", "dinov2_base",
+    "resnet18",
+    "resnet50",
+    "convnext_tiny",
+    "convnext_small",
+    "dinov2_small",
+    "dinov2_base",
 ]
 
 DETECTOR_NAMES = ["Ensemble", "Mahalanobis", "KNN", "Energy"]

@@ -12,7 +12,7 @@ if [ -d "$DATA_DIR" ]; then
 
     # Persistent users.json (auth) — scarica/sincronizza da dataset privato
     echo "Sincronizzo users.json da dataset privato..."
-        python3 -c "
+    python3 -c "
 from huggingface_hub import hf_hub_download
 import os
 try:
@@ -29,6 +29,8 @@ except Exception as e:
     print(f'users.json non disponibile: {e}')
 " 2>&1
     export USERS_PATH="$DATA_DIR/users.json"
+    # JWT secret path: persist in /data per sopravvivere ai restart
+    export JWT_SECRET_PATH="$DATA_DIR/.jwt_secret"
 fi
 
 # Check frontend dist (prima di operazioni lente)
@@ -47,8 +49,12 @@ fi
 
 # Download dataset if not present (uses HF_TOKEN from Secrets at runtime)
 if [ ! -d "dataset/cropped_256x512/train" ] || [ ! -d "dataset/cropped_224x224/train" ]; then
-    echo "Dataset non trovato — download in corso..."
-    python scripts/hf_tools/download_cache.py || echo "Download fallito (forse HF_TOKEN mancante)"
+    if [ -n "$HF_TOKEN" ]; then
+        echo "Dataset non trovato — download in corso..."
+        python3 scripts/hf_tools/download_cache.py || echo "Download fallito"
+    else
+        echo "HF_TOKEN non impostato, skip download dataset (demo senza dataset locale)"
+    fi
 fi
 
 # Avvia server (--reload in dev mode)
@@ -57,4 +63,4 @@ if [ "$API_RELOAD" = "true" ]; then
     EXTRA_ARGS=" --reload"
 fi
 
-exec python server.py$EXTRA_ARGS
+exec python3 server.py$EXTRA_ARGS

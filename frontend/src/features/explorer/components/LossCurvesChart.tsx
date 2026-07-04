@@ -28,7 +28,7 @@ interface LossCurvesChartProps {
 export function LossCurvesChart({ folds, selectedFold }: LossCurvesChartProps) {
   const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
-  const { width, height } = useChartSize(ref);
+  const { height } = useChartSize(ref);
   const chartColors = useChartColors();
   const [mode, setMode] = useState<"train" | "val">("train");
 

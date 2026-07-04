@@ -3,6 +3,7 @@
 Downloads missing config.json, results.json, fold_*.json, best_fold_N.pt
 for experiment directories that lack these metadata files.
 """
+
 import os
 import sys
 from pathlib import Path
@@ -100,8 +101,7 @@ def main():
 
             path_parts = hf_path.split("/")
             if any(
-                p.startswith("embeddings") or p == "logs"
-                or (p.startswith("best_fold_") and "_adapter" in p)
+                p.startswith("embeddings") or p == "logs" or (p.startswith("best_fold_") and "_adapter" in p)
                 for p in path_parts
             ):
                 continue

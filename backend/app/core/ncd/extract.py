@@ -19,7 +19,7 @@ def load_trained_model(
     exp_dir: str | None = None,
 ):
     """Load a trained model from best fold weights.
-    
+
     If exp_dir is provided, reads config.json to determine model-specific settings
     (e.g., multi_grain for DINOv2).
     """
@@ -30,6 +30,7 @@ def load_trained_model(
         config_path = os.path.join(exp_dir, "config.json")
         if os.path.exists(config_path):
             import json
+
             cfg = json.load(open(config_path))
         else:
             cfg = {}

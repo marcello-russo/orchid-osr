@@ -10,6 +10,7 @@ import "./lib/i18n";
 
 // Suppress harmless THREE.Clock deprecation warning from @react-three/fiber
 const _origWarn = console.warn;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 console.warn = (...args: any[]) => {
   if (typeof args[0] === "string" && args[0].includes("THREE.Clock")) return;
   _origWarn(...args);

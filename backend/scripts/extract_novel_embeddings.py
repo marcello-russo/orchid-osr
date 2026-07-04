@@ -16,13 +16,15 @@ from app.core.ncd.extract import (
     compute_tsne,
     compute_umap,
     extract_embeddings,
-    load_trained_model,
-    save_embeddings,
 )
 
 KNOWN_CLASSES = [
-    "O. exaltata", "O. garganica", "O. incubacea",
-    "O. majellensis", "O. sphegodes", "O. sphegodes_Palena",
+    "O. exaltata",
+    "O. garganica",
+    "O. incubacea",
+    "O. majellensis",
+    "O. sphegodes",
+    "O. sphegodes_Palena",
 ]
 NOVEL_CLASS = "O. sphegodes_Napoli"
 
@@ -72,8 +74,6 @@ def main():
     # Combine train + test embeddings for t-SNE
     combined_emb = np.vstack([train_emb, test_emb])
     combined_labels = np.concatenate([train_labels, test_labels])
-    combined_species = KNOWN_CLASSES + [s for s in test_species if s != NOVEL_CLASS] + [NOVEL_CLASS]
-
     print(f"\nCombined: {combined_emb.shape}")
     print("Computing t-SNE...")
     tsne_2d = compute_tsne(combined_emb, n_components=2)

@@ -31,9 +31,7 @@ class OSRDetector(ABC):
         """Fit su training embeddings + labels. Non vede test data."""
 
     @abstractmethod
-    def score(
-        self, embeddings: NDArray, logits: NDArray | None = None
-    ) -> NDArray[np.float32]:
+    def score(self, embeddings: NDArray, logits: NDArray | None = None) -> NDArray[np.float32]:
         """Restituisce (N,) con higher = more novel."""
 
 
@@ -60,6 +58,7 @@ def get_detector(name: str) -> OSRDetector:
 
 # --- Mahalanobis ---
 
+
 @register
 class MahalanobisDetector(OSRDetector):
     name = "Mahalanobis"
@@ -78,7 +77,9 @@ class MahalanobisDetector(OSRDetector):
             if len(cls_emb) < 2:
                 logger.warning(
                     "%s: classe %s ha solo %d campioni — cov stima imprecisa",
-                    self.name, int(c), len(cls_emb),
+                    self.name,
+                    int(c),
+                    len(cls_emb),
                 )
             mean = cls_emb.mean(axis=0)
             self.class_means_[int(c)] = mean
@@ -88,7 +89,9 @@ class MahalanobisDetector(OSRDetector):
         self.pooled_precision_ = lw.precision_
         logger.debug(
             "%s: fit completato, %d classi, embedding dim %d",
-            self.name, len(unique), embeddings.shape[1],
+            self.name,
+            len(unique),
+            embeddings.shape[1],
         )
 
     def score(self, embeddings, logits=None):
@@ -101,6 +104,7 @@ class MahalanobisDetector(OSRDetector):
 
 
 # --- KNN ---
+
 
 @register
 class KNNDetector(OSRDetector):
@@ -122,6 +126,7 @@ class KNNDetector(OSRDetector):
 
 
 # --- Energy ---
+
 
 @register
 class EnergyDetector(OSRDetector):
@@ -145,6 +150,7 @@ class EnergyDetector(OSRDetector):
 
 
 # --- Ensemble ---
+
 
 @register
 class EnsembleDetector(OSRDetector):

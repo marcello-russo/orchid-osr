@@ -4,9 +4,6 @@ Verifica che i campi is_ncd, ncd_auroc, test_accuracy siano corretti.
 """
 
 import json
-import os
-import shutil
-from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -26,55 +23,86 @@ def _fake_experiments(tmp_path, monkeypatch):
     # list_experiments legge da JSON, non dal DB.
 
     # Crea esperimenti finti
-    _make_exp(tmp_path, "exp6_clean_resnet18", {
-        "model_variant": "resnet18", "num_classes": 6, "timestamp": "2026-01-01T00:00:00"
-    }, {
-        "mean_f1": 0.85, "std_f1": 0.02, "mean_accuracy": 0.83,
-        "test_metrics": {"accuracy": 0.79, "f1_macro": 0.82},
-        "best_fold": 0,
-    }, folds=5)
+    _make_exp(
+        tmp_path,
+        "exp6_clean_resnet18",
+        {"model_variant": "resnet18", "num_classes": 6, "timestamp": "2026-01-01T00:00:00"},
+        {
+            "mean_f1": 0.85,
+            "std_f1": 0.02,
+            "mean_accuracy": 0.83,
+            "test_metrics": {"accuracy": 0.79, "f1_macro": 0.82},
+            "best_fold": 0,
+        },
+        folds=5,
+    )
 
-    _make_exp(tmp_path, "exp7_supcon_resnet18", {
-        "model_variant": "resnet18", "num_classes": 6, "timestamp": "2026-01-02T00:00:00"
-    }, {
-        "mean_f1": 0.38, "std_f1": 0.04, "mean_accuracy": 0.38,
-        "test_metrics": {"accuracy": 0.47, "f1_macro": 0.36},
-        "best_fold": 2,
-    }, folds=5)
+    _make_exp(
+        tmp_path,
+        "exp7_supcon_resnet18",
+        {"model_variant": "resnet18", "num_classes": 6, "timestamp": "2026-01-02T00:00:00"},
+        {
+            "mean_f1": 0.38,
+            "std_f1": 0.04,
+            "mean_accuracy": 0.38,
+            "test_metrics": {"accuracy": 0.47, "f1_macro": 0.36},
+            "best_fold": 2,
+        },
+        folds=5,
+    )
 
-    _make_exp(tmp_path, "exp8_sphor_convnext_tiny", {
-        "model_variant": "convnext_tiny", "num_classes": 6, "timestamp": "2026-01-03T00:00:00"
-    }, {
-        "mean_f1": 0.81, "std_f1": 0.05, "mean_accuracy": 0.80,
-        "test_metrics": {"accuracy": 0.83, "f1_macro": 0.80},
-        "best_fold": 1,
-    }, folds=5, ncd={
-        "detectors": {"Ensemble": {"auroc": 0.95}},
-        "clustering": {"kmeans_best": {"nmi": 0.30}},
-    })
+    _make_exp(
+        tmp_path,
+        "exp8_sphor_convnext_tiny",
+        {"model_variant": "convnext_tiny", "num_classes": 6, "timestamp": "2026-01-03T00:00:00"},
+        {
+            "mean_f1": 0.81,
+            "std_f1": 0.05,
+            "mean_accuracy": 0.80,
+            "test_metrics": {"accuracy": 0.83, "f1_macro": 0.80},
+            "best_fold": 1,
+        },
+        folds=5,
+        ncd={
+            "detectors": {"Ensemble": {"auroc": 0.95}},
+            "clustering": {"kmeans_best": {"nmi": 0.30}},
+        },
+    )
 
-    _make_exp(tmp_path, "exp10_mgh_ncd_dinov2_base", {
-        "model_variant": "dinov2_base", "num_classes": 6, "ncd_mode": True,
-        "timestamp": "2026-01-04T00:00:00"
-    }, {
-        "mean_f1": 0.86, "std_f1": 0.01, "mean_accuracy": 0.86,
-        "test_metrics": {"accuracy": 0.14, "f1_macro": 0.05},
-        "best_fold": 0,
-    }, folds=5, ncd={
-        "detectors": {"Ensemble": {"auroc": 0.91}, "KNN": {"auroc": 0.89}},
-        "clustering": {"spectral": {"nmi": 0.51}},
-    })
+    _make_exp(
+        tmp_path,
+        "exp10_mgh_ncd_dinov2_base",
+        {"model_variant": "dinov2_base", "num_classes": 6, "ncd_mode": True, "timestamp": "2026-01-04T00:00:00"},
+        {
+            "mean_f1": 0.86,
+            "std_f1": 0.01,
+            "mean_accuracy": 0.86,
+            "test_metrics": {"accuracy": 0.14, "f1_macro": 0.05},
+            "best_fold": 0,
+        },
+        folds=5,
+        ncd={
+            "detectors": {"Ensemble": {"auroc": 0.91}, "KNN": {"auroc": 0.89}},
+            "clustering": {"spectral": {"nmi": 0.51}},
+        },
+    )
 
-    _make_exp(tmp_path, "exp10_mgh_ncd_resnet18", {
-        "model_variant": "resnet18", "num_classes": 6, "ncd_mode": True,
-        "timestamp": "2026-01-05T00:00:00"
-    }, {
-        "mean_f1": 0.38, "std_f1": 0.02, "mean_accuracy": 0.38,
-        "test_metrics": {"accuracy": 0.24, "f1_macro": 0.12},
-        "best_fold": 2,
-    }, folds=3, ncd={
-        "detectors": {"Mahalanobis": {"auroc": 0.77}},
-    })
+    _make_exp(
+        tmp_path,
+        "exp10_mgh_ncd_resnet18",
+        {"model_variant": "resnet18", "num_classes": 6, "ncd_mode": True, "timestamp": "2026-01-05T00:00:00"},
+        {
+            "mean_f1": 0.38,
+            "std_f1": 0.02,
+            "mean_accuracy": 0.38,
+            "test_metrics": {"accuracy": 0.24, "f1_macro": 0.12},
+            "best_fold": 2,
+        },
+        folds=3,
+        ncd={
+            "detectors": {"Mahalanobis": {"auroc": 0.77}},
+        },
+    )
 
 
 def _make_exp(base_dir, name, config, results, folds=5, ncd=None):
@@ -172,9 +200,19 @@ class TestExperimentsListStructure:
         """Ogni experimento deve avere i campi base."""
         resp = client.get("/api/experiments")
         data = resp.json()
-        required = {"id", "name", "model_variant", "type", "status",
-                     "num_folds", "folds_completed", "test_accuracy",
-                     "mean_f1", "std_f1", "is_ncd"}
+        required = {
+            "id",
+            "name",
+            "model_variant",
+            "type",
+            "status",
+            "num_folds",
+            "folds_completed",
+            "test_accuracy",
+            "mean_f1",
+            "std_f1",
+            "is_ncd",
+        }
         for e in data:
             assert required.issubset(e.keys()), f"Mancano: {required - e.keys()}"
 

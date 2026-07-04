@@ -2,6 +2,8 @@
 import logging
 import threading
 import uuid
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Request
@@ -42,10 +44,75 @@ def _req_id(request: Request) -> str:
     return _REQUEST_IDS.get(id(request), "???")
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
+    """Startup: sync pesi, DB, periodico. Shutdown: cleanup HTTP client.
+
+    Background threads (weights sync, periodic DB sync) are daemon=True:
+    they terminate with the process and do not require explicit shutdown.
+    The only resource that needs cleanup is _http_client (aiohttp session).
+    """
+    from app.api.deps import download_all_weights
+    from app.core.auth import ensure_admin_exists
+
+    ensure_admin_exists()
+
+    def _sync():
+        try:
+            download_all_weights(background=False)
+        except Exception as e:
+            logger.error(f"Weight sync failed: {e}")
+
+    thread = threading.Thread(target=_sync, daemon=True)
+    thread.start()
+    logger.info("Background weight sync started")
+
+    # Lazy DB sync (se DB vuoto, popola da JSON in background)
+    try:
+        from app.core.db import get_db, sync_all
+
+        conn = get_db()
+        count = conn.execute("SELECT COUNT(*) FROM experiments").fetchone()[0]
+        conn.close()
+        if count == 0:
+            logger.info("DB vuoto — sync da JSON in background...")
+            thread = threading.Thread(target=sync_all, daemon=True)
+            thread.start()
+        else:
+            logger.info("DB ha gia' %d esperimenti — skip sync", count)
+    except Exception as e:
+        logger.warning("Lazy sync fallita (non bloccante): %s", e)
+
+    # Periodic DB sync ogni 60 secondi (rileva nuovi esperimenti/fold completati)
+    def _periodic_sync():
+        while True:
+            try:
+                from app.core.db import sync_all
+
+                n = sync_all()
+                if n > 0:
+                    logger.info("Sync periodico DB: %d esperimenti aggiornati", n)
+            except Exception as e:
+                logger.debug("Sync periodico DB: %s", e)
+            threading.Event().wait(60)
+
+    thread = threading.Thread(target=_periodic_sync, daemon=True)
+    thread.start()
+    logger.info("Periodic DB sync started (every 60s)")
+
+    yield
+
+    from app.api.routes.dataset import _http_client
+
+    if _http_client is not None:
+        await _http_client.aclose()
+
+
 app = FastAPI(
     title="Orchid Classification API",
     description="API per classificare specie di orchidee Ophrys con modelli multi-architettura",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 
@@ -89,65 +156,6 @@ async def general_exception_handler(request, exc):
             "request_id": rid,
         },
     )
-
-
-@app.on_event("startup")
-async def _startup_sync_weights():
-    """Pre-download all model weights from HuggingFace Hub in background."""
-    from app.api.deps import download_all_weights
-    from app.core.auth import ensure_admin_exists
-
-    ensure_admin_exists()
-
-    def _sync():
-        try:
-            download_all_weights(background=False)
-        except Exception as e:
-            logger.error(f"Weight sync failed: {e}")
-
-    thread = threading.Thread(target=_sync, daemon=True)
-    thread.start()
-    logger.info("Background weight sync started")
-
-    # Lazy DB sync (se DB vuoto, popola da JSON in background)
-    try:
-        from app.core.db import get_db, sync_all
-
-        conn = get_db()
-        count = conn.execute("SELECT COUNT(*) FROM experiments").fetchone()[0]
-        conn.close()
-        if count == 0:
-            logger.info("DB vuoto — sync da JSON in background...")
-            thread = threading.Thread(target=sync_all, daemon=True)
-            thread.start()
-        else:
-            logger.info("DB ha gia' %d esperimenti — skip sync", count)
-    except Exception as e:
-        logger.warning("Lazy sync fallita (non bloccante): %s", e)
-
-    # Periodic DB sync ogni 60 secondi (rileva nuovi esperimenti/fold completati)
-    def _periodic_sync():
-        while True:
-            try:
-                from app.core.db import sync_all
-                n = sync_all()
-                if n > 0:
-                    logger.info("Sync periodico DB: %d esperimenti aggiornati", n)
-            except Exception as e:
-                logger.debug("Sync periodico DB: %s", e)
-            threading.Event().wait(60)
-
-    thread = threading.Thread(target=_periodic_sync, daemon=True)
-    thread.start()
-    logger.info("Periodic DB sync started (every 60s)")
-
-
-@app.on_event("shutdown")
-async def shutdown():
-    from app.api.routes.dataset import _http_client
-
-    if _http_client is not None:
-        await _http_client.aclose()
 
 
 # CORS — allow Vite dev server

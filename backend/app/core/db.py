@@ -87,10 +87,7 @@ _NCD_COLUMNS = [
 
 def _migrate_schema(conn: sqlite3.Connection) -> None:
     """Aggiunge colonne mancanti (migrazione backward-compatibile)."""
-    existing = {
-        row[1]
-        for row in conn.execute("PRAGMA table_info(experiments)").fetchall()
-    }
+    existing = {row[1] for row in conn.execute("PRAGMA table_info(experiments)").fetchall()}
     for col_name, col_type in _NCD_COLUMNS:
         if col_name not in existing:
             try:
@@ -199,9 +196,7 @@ def sync_experiment(exp_dir: str, conn: sqlite3.Connection | None = None) -> boo
                 if m > max_mtime:
                     max_mtime = m
 
-        existing = conn.execute(
-            "SELECT mtime FROM experiments WHERE id = ?", (exp_id,)
-        ).fetchone()
+        existing = conn.execute("SELECT mtime FROM experiments WHERE id = ?", (exp_id,)).fetchone()
         if existing and existing["mtime"] is not None and existing["mtime"] >= max_mtime:
             return False
 
@@ -224,9 +219,24 @@ def sync_experiment(exp_dir: str, conn: sqlite3.Connection | None = None) -> boo
 
         # Build column list dynamically per includere campi NCD
         base_cols = [
-            "id", "name", "model_variant", "num_folds", "num_classes", "loss_type",
-            "phases", "recipe", "mean_f1", "std_f1", "mean_accuracy",
-            "test_f1", "test_accuracy", "best_fold", "status", "started_at", "completed_at", "mtime",
+            "id",
+            "name",
+            "model_variant",
+            "num_folds",
+            "num_classes",
+            "loss_type",
+            "phases",
+            "recipe",
+            "mean_f1",
+            "std_f1",
+            "mean_accuracy",
+            "test_f1",
+            "test_accuracy",
+            "best_fold",
+            "status",
+            "started_at",
+            "completed_at",
+            "mtime",
         ]
         ncd_cols = ["ncd_auroc", "ncd_aupr", "ncd_detector", "ncd_clustering_nmi", "is_ncd"]
         all_cols = base_cols + ncd_cols

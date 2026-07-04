@@ -2,6 +2,7 @@
 
 Usage: python upload_models.py [--cleanup] [--exp all|exp6_ce|exp7_supcon]
 """
+
 import json
 import os
 import sys
@@ -94,7 +95,7 @@ def upload_model(api, model, exp, exp_prefix):
 
     emb_dir = os.path.join(local_dir, "embeddings")
     if os.path.isdir(emb_dir):
-        print(f"    embeddings/")
+        print("    embeddings/")
         api.upload_folder(
             repo_id=HF_REPO,
             folder_path=emb_dir,
@@ -132,7 +133,7 @@ def cleanup_old_files(api):
             for f in all_files:
                 if not f.startswith(prefix):
                     continue
-                fname = f[len(prefix):]
+                fname = f[len(prefix) :]
 
                 if fname in ("results.json", "config.json", best_pt):
                     continue
@@ -181,9 +182,13 @@ def _build_results_yaml(exp6_rows, exp7_rows, exp8_rows, exp9_rows=None, exp10_r
     """Generate structured YAML for model evaluation results."""
     lines = ["model-index:"]
     all_rows = []
-    for exp_label, rows in [("Exp 6 (CE)", exp6_rows), ("Exp 7 (SupCon)", exp7_rows),
-                             ("Exp 8 (SpHOR)", exp8_rows), ("Exp 9 (NCD)", exp9_rows or []),
-                             ("Exp 10 (Ultimate)", exp10_rows or [])]:
+    for exp_label, rows in [
+        ("Exp 6 (CE)", exp6_rows),
+        ("Exp 7 (SupCon)", exp7_rows),
+        ("Exp 8 (SpHOR)", exp8_rows),
+        ("Exp 9 (NCD)", exp9_rows or []),
+        ("Exp 10 (Ultimate)", exp10_rows or []),
+    ]:
         for row in rows:
             model_name = row.split("|")[1].strip()
             f1_val = row.split("|")[2].strip().split(" ")[0]
@@ -198,15 +203,15 @@ def _build_results_yaml(exp6_rows, exp7_rows, exp8_rows, exp9_rows=None, exp10_r
         lines.append("      - task:")
         lines.append("          type: image-classification")
         lines.append("        dataset:")
-        lines.append('          name: orchid-ncd-dataset')
-        lines.append('          type: marcellorusso/orchid-ncd-dataset')
+        lines.append("          name: orchid-ncd-dataset")
+        lines.append("          type: marcellorusso/orchid-ncd-dataset")
         lines.append("        metrics:")
         lines.append("          - name: Macro F1 Score")
         lines.append("            type: f1_macro")
         lines.append(f"            value: {f1}")
         lines.append("        source:")
         lines.append(f"          name: {exp}")
-        lines.append(f"          url: https://huggingface.co/datasets/marcellorusso/orchid-ncd-dataset")
+        lines.append("          url: https://huggingface.co/datasets/marcellorusso/orchid-ncd-dataset")
 
     return "\n".join(lines)
 
@@ -228,7 +233,8 @@ def update_readme(api):
 
 5-fold stratified cross-validation on deduplicated clean split (2,232 train, 300 test).
 
-**Training recipe:** epochs=100, patience=15, effective batch=32 (gradient accumulation ×4), per-architecture LR from registry.
+**Training recipe:** epochs=100, patience=15, effective batch=32
+(gradient accumulation ×4), per-architecture LR from registry.
 
 {header}
 {chr(10).join(exp6_rows)}""")
@@ -268,7 +274,8 @@ NCD scenario: O. majellensis excluded from training (hidden novel class).
 
 Final experiment combining multi-granularity features, hard negative mining, deep fine-tuning, and OSR ensemble.
 
-**Recipe:** LoRA r=32 + partial unfreeze for DINOv2, full fine-tuning for ConvNeXt/ResNet. Hard negative weight 5.0 on (majellensis, sphegodes) pairs.
+**Recipe:** LoRA r=32 + partial unfreeze for DINOv2, full fine-tuning for
+ConvNeXt/ResNet. Hard negative weight 5.0 on (majellensis, sphegodes) pairs.
 
 {header}
 {chr(10).join(exp10_rows)}""")
@@ -294,9 +301,12 @@ pipeline_tag: image-classification
 
 # OrchID-NCD Models
 
-Trained model weights for the [OrchID-NCD](https://huggingface.co/spaces/marcellorusso/orchid-ncd) project — ultra-fine-grained visual classification of *Ophrys* orchids.
+Trained model weights for the [OrchID-NCD](https://huggingface.co/spaces/marcellorusso/orchid-ncd)
+project — ultra-fine-grained visual classification of *Ophrys* orchids.
 
-Fine-grained classification of six cryptic *Ophrys* species (*O. exaltata, O. garganica, O. incubacea, O. majellensis, O. sphegodes, O. sphegodes* Palena) using ResNet-18/50, ConvNeXt-Tiny/Small, and DINOv2-Small/Base.
+Fine-grained classification of six cryptic *Ophrys* species
+(*O. exaltata, O. garganica, O. incubacea, O. majellensis, O. sphegodes, O. sphegodes* Palena)
+using ResNet-18/50, ConvNeXt-Tiny/Small, and DINOv2-Small/Base.
 
 {chr(10).join(sections)}
 
@@ -325,7 +335,8 @@ exp10_mgh_ncd/                     — Exp 10 (MGH-NCD)
 
 ## Usage
 
-The classifier in the [OrchID-NCD Space](https://huggingface.co/spaces/marcellorusso/orchid-ncd) downloads these weights at startup and uses them for inference.
+The classifier in the [OrchID-NCD Space](https://huggingface.co/spaces/marcellorusso/orchid-ncd)
+downloads these weights at startup and uses them for inference.
 
 ## Links
 
@@ -335,6 +346,7 @@ The classifier in the [OrchID-NCD Space](https://huggingface.co/spaces/marcellor
 """
 
     import tempfile
+
     with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
         f.write(readme)
         f.flush()

@@ -41,9 +41,7 @@ def test_get_classifier_known_variants():
     assert callable(_get_classifier(model, "resnet18"))
     assert callable(_get_classifier(model, "resnet50"))
 
-    model._backbone.classifier = torch.nn.Sequential(
-        torch.nn.LayerNorm(8), torch.nn.Flatten(), torch.nn.Linear(8, 6)
-    )
+    model._backbone.classifier = torch.nn.Sequential(torch.nn.LayerNorm(8), torch.nn.Flatten(), torch.nn.Linear(8, 6))
     assert callable(_get_classifier(model, "convnext_tiny"))
     assert callable(_get_classifier(model, "convnext_small"))
 
