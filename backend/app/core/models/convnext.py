@@ -20,7 +20,7 @@ _CONVNEXT_EMBEDDING_DIM = {
 
 # Multi-grano: Stage 3 GAP + Stage 4 GAP
 _MULTI_GRAIN_DIM = {
-    "convnext_tiny": 384 + 768,    # stage3=384, stage4=768
+    "convnext_tiny": 384 + 768,  # stage3=384, stage4=768
     "convnext_small": 384 + 768,
 }
 
@@ -34,7 +34,6 @@ class ConvNeXtConfig(ModelConfig):
 
 
 class ConvNeXtClassifier(ClassifierModel):
-
     def __init__(self, config: ConvNeXtConfig):
         super().__init__(config)
         self._variant = config.variant
@@ -84,8 +83,10 @@ class ConvNeXtClassifier(ClassifierModel):
     def get_embeddings(self, x: torch.Tensor) -> torch.Tensor:
         if not self._multi_grain:
             embeddings = []
+
             def hook_fn(module, input, output):
                 embeddings.append(output.flatten(1))
+
             handle = self._backbone.classifier[0].register_forward_hook(hook_fn)
             try:
                 self._backbone(x)

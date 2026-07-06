@@ -43,7 +43,7 @@ DEFAULT_CONFIG = {
     "epochs": 26,
     "batch_size": 8,
     "learning_rate": 0.001,
-    "seed": 57,
+    "seed": 57,  # aligned with MASTER_SEED in config.py
     "pretrained": True,
     "num_folds": 5,
 }

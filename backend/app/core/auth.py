@@ -76,6 +76,8 @@ def create_jwt(username: str, role: str) -> str:
     payload = {
         "sub": username,
         "role": role,
+        "aud": "orchid-ncd",
+        "iss": "orchid-ncd-api",
         "iat": int(time.time()),
         "exp": int(time.time()) + 86400,
     }
@@ -84,7 +86,14 @@ def create_jwt(username: str, role: str) -> str:
 
 def decode_jwt(token: str) -> dict:
     try:
-        return jwt.decode(token, settings.jwt_secret, algorithms=[JWT_ALGORITHM])
+        payload = jwt.decode(
+            token,
+            settings.jwt_secret,
+            algorithms=[JWT_ALGORITHM],
+            audience="orchid-ncd",
+            issuer="orchid-ncd-api",
+        )
+        return payload
     except jwt.PyJWTError:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid or expired token")
 

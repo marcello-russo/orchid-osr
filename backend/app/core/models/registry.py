@@ -31,10 +31,7 @@ def register_model(name: str, entry: ModelRegistryEntry) -> None:
 
 def get_registry_entry(model_type: str) -> ModelRegistryEntry:
     if model_type not in MODEL_REGISTRY:
-        raise ValueError(
-            f"Unknown model type: {model_type}. "
-            f"Available: {list(MODEL_REGISTRY.keys())}"
-        )
+        raise ValueError(f"Unknown model type: {model_type}. Available: {list(MODEL_REGISTRY.keys())}")
     return MODEL_REGISTRY[model_type]
 
 
@@ -48,9 +45,7 @@ def create_model(
     kwargs.setdefault("variant", model_type)
     valid = entry.config_cls.model_fields.keys()
     filtered = {k: v for k, v in kwargs.items() if k in valid}
-    config = entry.config_cls(
-        num_classes=num_classes, pretrained=pretrained, **filtered
-    )
+    config = entry.config_cls(num_classes=num_classes, pretrained=pretrained, **filtered)
     return config.create_model()
 
 
@@ -61,11 +56,13 @@ def create_transform(model_type: str):
 
     entry = get_registry_entry(model_type)
     w, h = entry.input_size
-    return T.Compose([
-        ResizeImageTransform(w, h),
-        T.ToTensor(),
-        T.Normalize(mean=entry.norm_mean, std=entry.norm_std),
-    ])
+    return T.Compose(
+        [
+            ResizeImageTransform(w, h),
+            T.ToTensor(),
+            T.Normalize(mean=entry.norm_mean, std=entry.norm_std),
+        ]
+    )
 
 
 def available_models() -> list[str]:

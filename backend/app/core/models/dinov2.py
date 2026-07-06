@@ -19,7 +19,7 @@ _DINOV2_EMBEDDING_DIM = {
 # Multi-grano embedding = CLS final + CLS mid-layer + attention-pooled patches
 _MULTI_GRAIN_DIM = {
     "dinov2_small": 384 + 384 + 384,  # 1152
-    "dinov2_base": 768 + 768 + 768,   # 2304
+    "dinov2_base": 768 + 768 + 768,  # 2304
 }
 
 
@@ -36,7 +36,6 @@ class DINOv2Config(ModelConfig):
 
 
 class DINOv2Classifier(ClassifierModel):
-
     def __init__(self, config: DINOv2Config):
         super().__init__(config)
         self._variant = config.variant
@@ -103,11 +102,14 @@ class DINOv2Classifier(ClassifierModel):
 
     def load_weights(self, path: str) -> None:
         import os
+
         adapter_dir = os.path.splitext(path)[0] + "_adapter"
         if os.path.isdir(adapter_dir):
             from peft import PeftModel
+
             base_model_id = _DINOV2_MODEL_IDS[self._variant]
             from transformers import Dinov2Model
+
             base = Dinov2Model.from_pretrained(base_model_id)
             self._backbone = PeftModel.from_pretrained(base, adapter_dir)
             head_sd = torch.load(path, map_location="cpu", weights_only=True)
@@ -118,6 +120,7 @@ class DINOv2Classifier(ClassifierModel):
 
     def save_weights(self, path: str) -> None:
         import os
+
         adapter_dir = os.path.splitext(path)[0] + "_adapter"
         self._backbone.save_pretrained(adapter_dir)
         torch.save(self._head.state_dict(), path)

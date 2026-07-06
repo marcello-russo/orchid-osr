@@ -12,7 +12,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from sklearn.metrics import accuracy_score, f1_score
 from sklearn.model_selection import StratifiedKFold
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Subset
 
 logger = logging.getLogger(__name__)
 
@@ -550,8 +550,24 @@ def train_fold_supcon(
         logger.info("  === SpHOR Prototype Probe (nearest centroid) ===")
         model.eval()
         centroids, all_preds, all_labels, embed_dim = {}, [], [], None
+
+        # Split val_loader: prima metà per centroidi, seconda per evaluation
+        val_dataset = val_loader.dataset
+        n = len(val_dataset)
+        mid = n // 2
+        centroid_loader = DataLoader(
+            Subset(val_dataset, range(mid)),
+            batch_size=val_loader.batch_size,
+            shuffle=False,
+        )
+        eval_loader = DataLoader(
+            Subset(val_dataset, range(mid, n)),
+            batch_size=val_loader.batch_size,
+            shuffle=False,
+        )
+
         with torch.no_grad():
-            for inputs, labels, _ in val_loader:
+            for inputs, labels, _ in centroid_loader:
                 inputs = inputs.to(device, non_blocking=True)
                 labels = labels.to(device, non_blocking=True)
                 embeddings = model.get_embeddings(inputs)
@@ -572,7 +588,7 @@ def train_fold_supcon(
         proto = F.normalize(proto, p=2, dim=1)
 
         with torch.no_grad():
-            for inputs, labels, _ in val_loader:
+            for inputs, labels, _ in eval_loader:
                 inputs = inputs.to(device, non_blocking=True)
                 labels = labels.to(device, non_blocking=True)
                 embeddings = model.get_embeddings(inputs)

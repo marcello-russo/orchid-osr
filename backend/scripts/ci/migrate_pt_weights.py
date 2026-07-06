@@ -1,4 +1,5 @@
 """One-time migration: re-save all .pt weights with PyTorch >=2.6 compatible format."""
+
 import os
 import sys
 from pathlib import Path
@@ -21,7 +22,8 @@ def main():
 
     print("Downloading .pt files from HF...")
     snapshot_download(
-        HF_REPO, repo_type="model",
+        HF_REPO,
+        repo_type="model",
         local_dir=LOCAL_CACHE,
         allow_patterns=["*.pt", "*_adapter/*"],
         token=token,
