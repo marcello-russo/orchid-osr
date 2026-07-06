@@ -175,10 +175,6 @@ export async function fetchEmbeddings(experiment?: string, method: string = "tsn
   return fetchApi<import("./types").EmbeddingResponse>(`/api/embeddings?${params}`);
 }
 
-export async function fetchExpComparison() {
-  return fetchApi<import("./types").ExperimentComparisonResponse>("/api/comparison/experiments");
-}
-
 export async function fetchExperimentComparison() {
   return fetchApi<import("./types").ExperimentComparisonResponse>("/api/comparison/experiments");
 }

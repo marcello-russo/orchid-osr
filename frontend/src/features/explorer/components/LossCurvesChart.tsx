@@ -56,17 +56,11 @@ export function LossCurvesChart({ folds, selectedFold }: LossCurvesChartProps) {
 
   const maxLen = merged.length;
 
-  // Debug: mostra info dati in alto a destra
-  const firstPoint = merged.length > 0 ? merged[0] : null;
-  const debugInfo = `${visibleFolds.length} folds, ${maxLen} epochs, mode=${mode}`;
-  const dataPreview = firstPoint ? JSON.stringify(firstPoint).slice(0, 80) : "empty";
-
   return (
     <Card>
       <CardHeader className="pb-2 border-b border-border/50">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base">{t("experiment_detail.charts.loss")}</CardTitle>
-          <span className="text-[10px] text-muted-foreground font-mono">{debugInfo} | {dataPreview}</span>
           <div className="flex gap-1">
             {(["train", "val"] as const).map((m) => (
               <button

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from app.core.models.registry import MODEL_REGISTRY
 
 if TYPE_CHECKING:
-    from app.core.models.base import ClassifierModel, ModelConfig
+    from app.core.models.base import ClassifierModel, ModelConfig  # noqa: F401
 
 __REGISTERED = False
 
@@ -20,12 +20,10 @@ def _register_all():
     from app.core.models import convnext as _convnext_mod
     from app.core.models import dinov2 as _dinov2_mod
     from app.core.models import resnet as _resnet_mod
-    from app.core.models.base import ClassifierModel as _ClassifierModel, ModelConfig as _ModelConfig
+    from app.core.models.base import ClassifierModel as _ClassifierModel
+    from app.core.models.base import ModelConfig as _ModelConfig
     from app.core.models.registry import (
         ModelRegistryEntry,
-        create_model,
-        create_transform,
-        get_registry_entry,
         register_model,
     )
 

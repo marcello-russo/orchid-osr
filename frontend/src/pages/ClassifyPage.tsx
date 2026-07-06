@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Loader2, Sparkles, Eye, X, ScanSearch,
@@ -199,18 +199,20 @@ export function ClassifyPage() {
   const classify = useClassify();
   const explain = useExplain();
   const { data: modelsData, isLoading, isError, error } = useModels();
-  const models = modelsData?.models ?? [];
+  const models = useMemo(() => modelsData?.models ?? [], [modelsData?.models]);
+  const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!selectedModelId && models.length > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSelectedModelId(models[0].id);
+    }
+  }, [models, selectedModelId]);
 
   const cacheQuery = useQuery({
     queryKey: ["cache-status"],
     queryFn: fetchCacheStatus,
     refetchInterval: (q) => q.state.data?.is_downloading ? 2000 : false,
   });
-
-  const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
-  if (!selectedModelId && models.length > 0) {
-    setSelectedModelId(models[0].id);
-  }
 
   const isWorking = classify.isPending || explain.isPending;
   const cache = cacheQuery.data;

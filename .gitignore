@@ -5,7 +5,6 @@
 *_adapter/
 !app/core/models/
 archive/
-!backend/app/core/models/
 # Backend data dirs
 backend/dataset*/
 backend/experiments/
@@ -35,7 +34,7 @@ inference*/
 .ipynb_checkpoints/
 # K-fold temporary directories
 *.log
-models*/
+backend/models*/
 *.npy
 frontend/src/stores/
 backend/users.json

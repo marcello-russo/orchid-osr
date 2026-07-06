@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import secrets
 import threading
@@ -139,6 +140,14 @@ def login_user(username: str, password: str) -> dict:
 
 
 def ensure_admin_exists() -> None:
+    if not settings.admin_username or not settings.admin_password:
+        logger = logging.getLogger(__name__)
+        logger.warning(
+            "ADMIN_USERNAME/ADMIN_PASSWORD not configured — admin account disabled. "
+            "Set these via .env, HF Spaces Secrets, or ensure users.json provides an admin."
+        )
+        return
+
     def _modify(data):
         if not any(u["role"] == "admin" for u in data["users"]):
             data["users"].append(

@@ -109,10 +109,7 @@ class ResNetClassifier(ClassifierModel):
         return torch.cat([layer3_gap, layer4_gap], dim=1)
 
     def load_weights(self, path: str) -> None:
-        try:
-            state_dict = torch.load(path, map_location="cpu", weights_only=True)
-        except Exception:
-            state_dict = torch.load(path, map_location="cpu", weights_only=False)
+        state_dict = torch.load(path, map_location="cpu", weights_only=True)
         self.load_state_dict(state_dict)
 
     def save_weights(self, path: str) -> None:

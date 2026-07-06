@@ -5,9 +5,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Type
 
 if TYPE_CHECKING:
-    from torchvision import transforms as T
-
-    from app.core.models.base import ClassifierModel, ModelConfig
+    from app.core.models.base import ClassifierModel, ModelConfig  # noqa: F401
 
 
 @dataclass
@@ -46,8 +44,6 @@ def create_model(
     pretrained: bool = True,
     **kwargs,
 ) -> ClassifierModel:
-    from app.core.models.base import ClassifierModel  # noqa: F811
-
     entry = get_registry_entry(model_type)
     kwargs.setdefault("variant", model_type)
     valid = entry.config_cls.model_fields.keys()
