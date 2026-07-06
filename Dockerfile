@@ -81,8 +81,8 @@ ENV HOME=/workspace
 COPY backend/pyproject.toml .
 # KEEP IN SYNC with gpu/training targets
 # Relax torch pinning for OVH/cloud env
-COPY constraints-training.txt .
-RUN pip install --no-cache-dir --default-timeout=1000 . --constraint constraints-training.txt && \
+COPY backend/constraints-training.txt .
+RUN     pip install --no-cache-dir --default-timeout=1000 . --constraint constraints-training.txt && \
     pip install --no-cache-dir transformers==4.43.0 tokenizers==0.19.1
 
 COPY backend/data/ data/

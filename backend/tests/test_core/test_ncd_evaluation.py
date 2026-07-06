@@ -1,6 +1,6 @@
 import numpy as np
 
-from app.core.ncd.metrics import compute_ami, compute_f_measure, compute_silhouette
+from app.core.ncd.evaluation import compute_ami, compute_f_measure, compute_silhouette
 
 
 def test_compute_ami_perfect():

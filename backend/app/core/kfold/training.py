@@ -335,8 +335,8 @@ def _train_head_only(
     gradient_accumulation_steps=1,
 ):
     """Train only the classifier head with backbone frozen. Lightweight loop for SupCon Phase 2."""
-    from app.core.metrics import MulticlassAccuracy, MulticlassF1Score
     from app.core.models.registry import get_registry_entry
+    from app.core.torch_metrics import MulticlassAccuracy, MulticlassF1Score
 
     model = model.to(device)
     criterion = torch.nn.CrossEntropyLoss()

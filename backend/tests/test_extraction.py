@@ -30,7 +30,7 @@ def mock_model():
 
 def test_get_classifier_known_variants():
     """_get_classifier riconosce tutte e 3 le architetture."""
-    from app.core.ncd.extraction import _get_classifier
+    from app.core.ncd.extract import _get_classifier
 
     model = MockModel()
     assert callable(_get_classifier(model, "dinov2_small"))
@@ -48,7 +48,7 @@ def test_get_classifier_known_variants():
 
 def test_get_classifier_unknown_raises():
     """_get_classifier su modello sconosciuto alza ValueError."""
-    from app.core.ncd.extraction import _get_classifier
+    from app.core.ncd.extract import _get_classifier
 
     model = MockModel()
     with pytest.raises(ValueError, match="Unknown model_variant"):
@@ -57,7 +57,7 @@ def test_get_classifier_unknown_raises():
 
 def test_extraction_bundle_creation():
     """ExtractionBundle si crea correttamente."""
-    from app.core.ncd.extraction import ExtractionBundle
+    from app.core.ncd.extract import ExtractionBundle
 
     bundle = ExtractionBundle(
         train_embeddings=np.zeros((10, 8)),
@@ -77,7 +77,7 @@ def test_extraction_bundle_creation():
 
 def test_extraction_bundle_with_logits():
     """ExtractionBundle con logits."""
-    from app.core.ncd.extraction import ExtractionBundle
+    from app.core.ncd.extract import ExtractionBundle
 
     bundle = ExtractionBundle(
         train_embeddings=np.zeros((10, 8)),

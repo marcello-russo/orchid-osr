@@ -85,7 +85,7 @@ def grid_search_kmeans(
     """
     from sklearn.metrics import silhouette_score
 
-    from app.core.ncd.metrics import compute_all_metrics
+    from app.core.ncd.evaluation import compute_all_metrics
 
     best = {"silhouette": -2.0, "k": None, "labels": None}
     all_results = []

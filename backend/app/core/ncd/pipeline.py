@@ -12,7 +12,7 @@ import torch
 
 from app.core.ncd.detector import get_detector, list_detectors
 from app.core.ncd.evaluation import evaluate_loo, evaluate_novel
-from app.core.ncd.extraction import extract_all
+from app.core.ncd.extract import extract_all
 
 logger = logging.getLogger(__name__)
 
@@ -153,7 +153,7 @@ def run_ncd_pipeline(
         kmeans_clustering,
         spectral_clustering,
     )
-    from app.core.ncd.metrics import compute_all_metrics
+    from app.core.ncd.evaluation import compute_all_metrics
 
     logger.info("\n--- K-means grid search ---")
     best_kmeans = grid_search_kmeans(combined_emb, combined_labels, k_range)
