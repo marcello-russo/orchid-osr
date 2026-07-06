@@ -6,17 +6,8 @@ import torch
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from PIL import Image
 
-from app.api.deps import (
-    CLASS_NAMES,
-    clear_cache,
-    delete_cached_weight,
-    download_all_weights,
-    get_cache_status,
-    get_device,
-    get_model,
-    get_model_options,
-    require_role,
-)
+from app.api.cache import get_model
+from app.api.deps import require_role
 from app.api.routes.auth import limiter
 from app.api.schemas import (
     CacheStatus,
@@ -26,6 +17,15 @@ from app.api.schemas import (
     ExplainResponse,
     ModelListResponse,
     TopPrediction,
+)
+from app.api.weights import (
+    CLASS_NAMES,
+    clear_cache,
+    delete_cached_weight,
+    download_all_weights,
+    get_cache_status,
+    get_device,
+    get_model_options,
 )
 from app.core.models import available_models, create_transform, get_registry_entry
 
@@ -175,7 +175,7 @@ async def cache_download_all(request: Request, admin=Depends(require_role("admin
 @limiter.limit("5/minute")
 async def cache_download_one(model_id: str, request: Request, admin=Depends(require_role("admin"))):
     """Download a single model's weights."""
-    from app.api.deps import _resolve_weights
+    from app.api.weights import _resolve_weights
 
     result = _resolve_weights(model_id)
     if result is None:

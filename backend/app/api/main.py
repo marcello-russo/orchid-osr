@@ -52,7 +52,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     they terminate with the process and do not require explicit shutdown.
     The only resource that needs cleanup is _http_client (aiohttp session).
     """
-    from app.api.deps import download_all_weights
+    from app.api.weights import download_all_weights
     from app.core.auth import ensure_admin_exists
 
     ensure_admin_exists()

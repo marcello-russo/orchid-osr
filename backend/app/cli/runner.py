@@ -93,6 +93,7 @@ def run_experiment(
     import logging
 
     from app.cli.definitions import ALL_CLASSES, DATASET_PATHS, EXPERIMENTS, PROJECT_ROOT
+    from app.cli.phases import detect_phase
     from app.core.kfold.testing import aggregate_results
 
     logger = logging.getLogger(__name__)
@@ -106,7 +107,6 @@ def run_experiment(
     exp_handler = logging.FileHandler(exp_log)
     exp_handler.setFormatter(logging.Formatter("%(asctime)s | %(levelname)s | %(message)s"))
     logging.getLogger().addHandler(exp_handler)
-    # Force flush dopo ogni log
     orig_emit = exp_handler.emit
 
     def flushing_emit(record):
@@ -114,13 +114,12 @@ def run_experiment(
         exp_handler.flush()
 
     exp_handler.emit = flushing_emit
-
     logger.info(f"Log file: {exp_log}")
 
+    phase = detect_phase(phases, aggregate_only)
     is_supcon = config.get("loss_type") == "supcon"
 
-    # Embedding extraction phase (standalone)
-    if phases and "embeddings" in phases:
+    if phase == "embeddings":
         logger.info(f"Extracting embeddings for {model_variant}...")
         from app.core.models import get_registry_entry
         from app.core.ncd.extract import run_embedding_extraction
@@ -141,9 +140,7 @@ def run_experiment(
         )
         return
 
-    # NCD phase (standalone)
-    if phases and "ncd" in phases:
-        logger.info(f"Running NCD pipeline for {model_variant}...")
+    if phase == "ncd":
         from app.core.models import get_registry_entry
         from app.core.ncd.pipeline import run_ncd_pipeline
 
@@ -169,15 +166,13 @@ def run_experiment(
         )
         return
 
-    if aggregate_only:
+    if phase == "aggregate":
         logger.info(f"Aggregating results for {model_variant}...")
         import json as _json
 
-        from app.cli.definitions import ALL_CLASSES, DATASET_PATHS
         from app.core.kfold.reporting import generate_report as gen_report
         from app.core.kfold.testing import final_test
 
-        # Read fold results
         fold_results = []
         for fi in range(num_folds):
             fp = os.path.join(output_dir, f"fold_{fi}.json")
@@ -191,7 +186,6 @@ def run_experiment(
 
         agg = aggregate_results(fold_results)
 
-        # Run final test on best fold
         best_fold = agg.get("best_fold", 0)
         best_model_path = os.path.join(output_dir, f"best_fold_{best_fold}.pt")
         test_key = config["test_dataset"]
@@ -203,7 +197,6 @@ def run_experiment(
             best_model_path, model_variant, num_classes_val, test_dir, class_names, batch_size, get_device()
         )
 
-        # Save combined results
         results = {**agg, "test_metrics": test_metrics, "model_variant": model_variant}
         json_path = os.path.join(output_dir, "results.json")
         with open(json_path, "w") as f:
@@ -211,12 +204,12 @@ def run_experiment(
 
         gen_report(results, model_variant, output_dir)
 
-        # Upload to HF
         from app.core.kfold.testing import _upload_to_hf
 
         _upload_to_hf(output_dir, model_variant)
         return
 
+    # Training phase (default)
     def _resolve_path(key: str) -> str:
         paths = DATASET_PATHS.get(config.get(key, ""), {})
         return str(PROJECT_ROOT / paths.get("train", paths.get("raw", paths.get("test", ""))))
@@ -267,7 +260,6 @@ def run_experiment(
             pair_weights=pair_weights,
             full_finetune=full_finetune,
             ncd_mode=config.get("ncd_mode", False),
-            # optimizer_type non passato → None → usa registry (adamw per ConvNeXt/DINOv2)
         )
     else:
         from app.core.kfold import kfold_experiment
