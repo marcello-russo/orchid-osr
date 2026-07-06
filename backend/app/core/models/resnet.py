@@ -14,7 +14,7 @@ _RESNET_WEIGHTS = {
 
 # Multi-grano: Layer 3 GAP + Layer 4 GAP
 _MULTI_GRAIN_DIM = {
-    "resnet18": 256 + 512,    # layer3=256, layer4=512
+    "resnet18": 256 + 512,  # layer3=256, layer4=512
     "resnet50": 1024 + 2048,  # layer3=1024, layer4=2048
 }
 
@@ -28,7 +28,6 @@ class ResNetConfig(ModelConfig):
 
 
 class ResNetClassifier(ClassifierModel):
-
     def __init__(self, config: ResNetConfig):
         super().__init__(config)
         self._variant = config.variant
@@ -83,8 +82,10 @@ class ResNetClassifier(ClassifierModel):
     def get_embeddings(self, x: torch.Tensor) -> torch.Tensor:
         if not self._multi_grain:
             embeddings = []
+
             def hook_fn(module, input, output):
                 embeddings.append(output.flatten(1))
+
             handle = self._backbone.avgpool.register_forward_hook(hook_fn)
             try:
                 self._backbone(x)

@@ -8,6 +8,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 logger = logging.getLogger(__name__)
 
+MASTER_SEED: int = 57
+
 
 class Settings(BaseSettings):
     """Application settings loaded from environment variables.
@@ -40,7 +42,7 @@ class Settings(BaseSettings):
 
     # Clean split config
     test_per_class: int = 50
-    split_seed: int = 42
+    split_seed: int = MASTER_SEED
 
     # Normalization (dataset-specific, used by ResNet variants)
     norm_mean: str = "0.5364 0.5518 0.3866"
@@ -50,7 +52,7 @@ class Settings(BaseSettings):
     epochs: int = 26
     batch_size: int = 8
     learning_rate: float = 0.001
-    seed: int = 42
+    seed: int = MASTER_SEED
     patience: int = 0
 
     # Path configuration

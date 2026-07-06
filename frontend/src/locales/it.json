@@ -29,8 +29,8 @@
       "rateLimited": "Troppi tentativi. Aspetta qualche minuto.",
       "networkError": "Errore di connessione. Controlla Internet."
     },
-    "hidePassword": "Hide password",
-    "showPassword": "Show password"
+    "hidePassword": "Nascondi password",
+    "showPassword": "Mostra password"
   },
   "common": {
     "success": "Operazione completata!",

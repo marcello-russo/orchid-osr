@@ -2,9 +2,10 @@
 
 import logging
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 
 from app.api.deps import require_role
+from app.api.routes.auth import limiter
 from app.core.db import sync_all
 
 logger = logging.getLogger(__name__)
@@ -12,7 +13,8 @@ router = APIRouter(prefix="/api/admin", tags=["admin"])
 
 
 @router.post("/sync-db")
-async def sync_database(admin=Depends(require_role("admin"))):
+@limiter.limit("5/minute")
+async def sync_database(request: Request, admin=Depends(require_role("admin"))):
     try:
         synced = sync_all()
         return {"synced": synced, "status": "ok"}

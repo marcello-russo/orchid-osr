@@ -11,7 +11,9 @@ def test_settings_defaults():
     assert settings.epochs == 26
     assert settings.batch_size == 8
     assert settings.learning_rate == 0.001
-    assert settings.seed == 42
+    from app.config import MASTER_SEED
+
+    assert settings.seed == MASTER_SEED
 
 
 def test_settings_from_env(monkeypatch):

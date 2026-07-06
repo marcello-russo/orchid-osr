@@ -51,15 +51,15 @@ export function AblationChart({ ablation }: { ablation: Record<string, number> }
       <h3 className="text-lg font-bold mb-4">{t("experiment_detail.ncd_ablation")}</h3>
       <ResponsiveContainer width="100%" height={280}>
         <BarChart data={data} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
-          <XAxis dataKey="name" tick={{ fill: "#888", fontSize: 12 }} />
-          <YAxis domain={[0, 0.6]} tick={{ fill: "#888", fontSize: 11 }} />
-          <ReferenceLine y={0.5} stroke="#666" strokeDasharray="5 5" label={{ value: "Random (0.50)", fill: "#666", fontSize: 11 }} />
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+          <XAxis dataKey="name" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
+          <YAxis domain={[0, 0.6]} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+          <ReferenceLine y={0.5} stroke="hsl(var(--muted-foreground))" strokeDasharray="5 5" label={{ value: "Random (0.50)", fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
           <Bar dataKey="auroc" radius={[4, 4, 0, 0]}>
             {data.map((_, i) => <Cell key={i} fill={CHART_COLORS[i]} />)}
           </Bar>
           <Tooltip
-            contentStyle={{ background: "#1a1a1a", border: "1px solid #333", borderRadius: 8 }}
+            contentStyle={{ background: "hsl(var(--background))", border: "1px solid hsl(var(--border))", borderRadius: 8 }}
             formatter={(value) => [`${(Number(value ?? 0) * 100).toFixed(1)}%`, "AUROC"]}
           />
         </BarChart>
@@ -87,14 +87,14 @@ export function ClusteringComparisonChart({ clustering }: { clustering: Record<s
       <h3 className="text-lg font-bold mb-4">{t("experiment_detail.ncd_clustering")}</h3>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
-          <XAxis dataKey="name" tick={{ fill: "#888", fontSize: 12 }} />
-          <YAxis domain={[0, 1]} tick={{ fill: "#888", fontSize: 11 }} />
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+          <XAxis dataKey="name" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
+          <YAxis domain={[0, 1]} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
           {CLUSTER_LABELS.map((l, i) => (
             <Bar key={l} dataKey={l} fill={CLUSTER_PALETTE[i]} radius={[2, 2, 0, 0]} />
           ))}
           <Tooltip
-            contentStyle={{ background: "#1a1a1a", border: "1px solid #333", borderRadius: 8 }}
+            contentStyle={{ background: "hsl(var(--background))", border: "1px solid hsl(var(--border))", borderRadius: 8 }}
             formatter={(value) => [`${(Number(value ?? 0) * 100).toFixed(1)}%`]}
           />
           <Legend wrapperStyle={{ fontSize: 12 }} />
@@ -133,17 +133,17 @@ export function PerClassAurocChart({
       </h3>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={data} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#2a2a2a" />
-          <XAxis dataKey="name" tick={{ fill: "#888", fontSize: 10 }} angle={-20} textAnchor="end" />
-          <YAxis domain={[0, 0.6]} tick={{ fill: "#888", fontSize: 11 }} />
-          <ReferenceLine y={0.5} stroke="#666" strokeDasharray="5 5" label={{ value: t("experiment_detail.ncd_random_chance"), fill: "#666", fontSize: 11 }} />
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+          <XAxis dataKey="name" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }} angle={-20} textAnchor="end" />
+          <YAxis domain={[0, 0.6]} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+          <ReferenceLine y={0.5} stroke="hsl(var(--muted-foreground))" strokeDasharray="5 5" label={{ value: t("experiment_detail.ncd_random_chance"), fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
           <Bar dataKey="auroc" radius={[4, 4, 0, 0]}>
             {data.map((d, i) => (
               <Cell key={i} fill={d.isNovel ? "#EF4444" : "#3B82F6"} />
             ))}
           </Bar>
           <Tooltip
-            contentStyle={{ background: "#1a1a1a", border: "1px solid #333", borderRadius: 8 }}
+            contentStyle={{ background: "hsl(var(--background))", border: "1px solid hsl(var(--border))", borderRadius: 8 }}
             formatter={(value) => [`${(Number(value ?? 0) * 100).toFixed(1)}%`]}
           />
         </BarChart>
