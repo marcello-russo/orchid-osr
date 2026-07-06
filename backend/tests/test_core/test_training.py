@@ -4,7 +4,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 
 from app.core.models.resnet import ResNetClassifier, ResNetConfig
-from app.core.training import cross_validate, train, train_one_epoch, validate_one_epoch
+from app.core.training import train, train_one_epoch, validate_one_epoch
 from app.preprocessing.reproducibility import set_seed
 
 
@@ -161,49 +161,3 @@ class TestTraining:
         )
 
         assert len(history["train_loss"]) == 5
-
-
-class TestCrossValidate:
-    """Tests for cross_validate()."""
-
-    def test_cross_validate_returns_expected_keys(self, tiny_dataset, device):
-        """cross_validate returns mean_f1, std_f1, mean_accuracy, std_accuracy."""
-        set_seed(42)
-
-        config = ResNetConfig(num_classes=2, pretrained=False)
-
-        results = cross_validate(
-            model_config=config,
-            dataset=tiny_dataset,
-            num_folds=2,
-            num_epochs=2,
-            learning_rate=0.01,
-            batch_size=5,
-            device=device,
-            num_classes=2,
-        )
-
-        assert "mean_f1" in results
-        assert "std_f1" in results
-        assert "mean_accuracy" in results
-        assert "std_accuracy" in results
-
-    def test_cross_validate_metrics_in_range(self, tiny_dataset, device):
-        """Mean metrics should be in [0, 1]."""
-        set_seed(42)
-
-        config = ResNetConfig(num_classes=2, pretrained=False)
-
-        results = cross_validate(
-            model_config=config,
-            dataset=tiny_dataset,
-            num_folds=2,
-            num_epochs=2,
-            learning_rate=0.01,
-            batch_size=5,
-            device=device,
-            num_classes=2,
-        )
-
-        assert 0.0 <= results["mean_f1"] <= 1.0
-        assert 0.0 <= results["mean_accuracy"] <= 1.0

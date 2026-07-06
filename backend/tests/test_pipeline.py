@@ -8,7 +8,7 @@ from unittest.mock import patch
 import numpy as np
 import torch
 
-from app.core.ncd.extraction import ExtractionBundle
+from app.core.ncd.extract import ExtractionBundle
 
 
 def test_run_ncd_pipeline_validates_params():

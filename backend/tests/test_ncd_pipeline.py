@@ -59,7 +59,7 @@ class TestNcdPipelineValidation:
                 patch("app.core.ncd.clustering.kmeans_clustering") as mock_km,
                 patch("app.core.ncd.clustering.dbscan_clustering") as mock_db,
                 patch("app.core.ncd.clustering.spectral_clustering") as mock_sp,
-                patch("app.core.ncd.metrics.compute_all_metrics") as mock_metrics,
+                patch("app.core.ncd.evaluation.compute_all_metrics") as mock_metrics,
                 patch("app.core.ncd.pipeline.logger"),
             ):
                 mock_grid.return_value = {
@@ -123,7 +123,7 @@ class TestNcdPipelineValidation:
                 patch("app.core.ncd.clustering.kmeans_clustering") as mock_km,
                 patch("app.core.ncd.clustering.dbscan_clustering") as mock_db,
                 patch("app.core.ncd.clustering.spectral_clustering") as mock_sp,
-                patch("app.core.ncd.metrics.compute_all_metrics") as mock_metrics,
+                patch("app.core.ncd.evaluation.compute_all_metrics") as mock_metrics,
                 patch("sklearn.manifold.TSNE") as mock_tsne,
                 patch("app.core.ncd.pipeline.logger"),
             ):

@@ -8,13 +8,12 @@ from typing import Optional
 import numpy as np
 import torch
 import torch.nn as nn
-from sklearn.model_selection import StratifiedKFold
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
 
-from app.core.metrics import MulticlassAccuracy, MulticlassF1Score
-from app.core.models.base import ClassifierModel, ModelConfig
+from app.core.models.base import ClassifierModel
+from app.core.torch_metrics import MulticlassAccuracy, MulticlassF1Score
 
 logger = logging.getLogger(__name__)
 
@@ -275,101 +274,3 @@ def train(
         os.remove(ckpt_path)
 
     return model, history
-
-
-def cross_validate(
-    model_config: "ModelConfig",
-    dataset: torch.utils.data.Dataset,
-    num_folds: int,
-    num_epochs: int,
-    learning_rate: float,
-    batch_size: int,
-    device: torch.device,
-    num_classes: int,
-    patience: int = 0,
-) -> dict:
-    """
-    Perform k-fold cross validation.
-
-    Creates a new model for each fold, trains it, and aggregates results.
-
-    Returns:
-        Dict with fold_results, mean_metrics, and std_metrics
-    """
-    # Extract labels for stratified split
-    labels = []
-    for i in range(len(dataset)):
-        _, label, _ = dataset[i]
-        labels.append(label)
-    labels = np.array(labels)
-
-    # Create stratified k-fold
-    skf = StratifiedKFold(n_splits=num_folds, shuffle=True, random_state=42)
-
-    fold_results = []
-
-    for fold_idx, (train_idx, val_idx) in enumerate(skf.split(np.zeros(len(labels)), labels)):
-        logger.info(f"\n{'=' * 50}")
-        logger.info(f"FOLD {fold_idx}/{num_folds}")
-        logger.info(f"{'=' * 50}")
-
-        # Create new model for this fold using config's factory method
-        model = model_config.create_model()
-
-        # Create subset dataloaders
-        train_subset = torch.utils.data.Subset(dataset, train_idx)
-        val_subset = torch.utils.data.Subset(dataset, val_idx)
-
-        train_loader = DataLoader(train_subset, batch_size=batch_size, shuffle=True)
-        val_loader = DataLoader(val_subset, batch_size=batch_size, shuffle=False)
-
-        # Train
-        model, history = train(
-            model=model,
-            train_loader=train_loader,
-            val_loader=val_loader,
-            num_epochs=num_epochs,
-            learning_rate=learning_rate,
-            device=device,
-            num_classes=num_classes,
-            patience=patience,
-        )
-
-        # Get best metrics for this fold
-        best_f1 = max(history["val_f1"])
-        best_acc = max(history["val_accuracy"])
-
-        fold_results.append(
-            {
-                "fold": fold_idx,
-                "best_f1": best_f1,
-                "best_accuracy": best_acc,
-                "history": history,
-            }
-        )
-
-        logger.info(f"Fold {fold_idx} - Best F1: {best_f1:.4f}, Best Acc: {best_acc:.4f}")
-
-        # Clean up between folds
-        del model, train_loader, val_loader, train_subset, val_subset
-        cleanup_gpu()
-
-    # Calculate mean and std
-    all_f1 = [r["best_f1"] for r in fold_results]
-    all_acc = [r["best_accuracy"] for r in fold_results]
-
-    summary = {
-        "fold_results": fold_results,
-        "mean_f1": np.mean(all_f1),
-        "std_f1": np.std(all_f1),
-        "mean_accuracy": np.mean(all_acc),
-        "std_accuracy": np.std(all_acc),
-    }
-
-    logger.info(f"\n{'=' * 50}")
-    logger.info(f"CROSS-VALIDATION RESULTS ({num_folds} folds)")
-    logger.info(f"{'=' * 50}")
-    logger.info(f"F1 Score: {summary['mean_f1']:.4f} ± {summary['std_f1']:.4f}")
-    logger.info(f"Accuracy: {summary['mean_accuracy']:.4f} ± {summary['std_accuracy']:.4f}")
-
-    return summary

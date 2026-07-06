@@ -65,3 +65,4 @@ docs/training-status.md
 
 docs/superpowers/
 backend/data/orchid.db
+backend/data/jwt_secret.txt
