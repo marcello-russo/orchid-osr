@@ -1,5 +1,5 @@
 // frontend/src/features/dataset/components/ClassGallery.tsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -97,9 +97,10 @@ export function ClassGallery({ classInfo, split, totalImages }: ClassGalleryProp
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 animate-in fade-in zoom-in-95 duration-300">
             {data.images.map((img) => (
                 <div key={img.filename} className="group relative aspect-[1/2] overflow-hidden rounded-md bg-muted/50">
-                <ImageWithFade 
-                  src={`${img.url}?size=300&token=${useAppStore.getState().token}`} 
-                  alt={img.filename} 
+                <ImageWithAuth
+                  imageUrl={`${img.url}?size=300`}
+                  token={useAppStore.getState().token ?? ""}
+                  alt={img.filename}
                 />
               </div>
             ))}
@@ -112,22 +113,42 @@ export function ClassGallery({ classInfo, split, totalImages }: ClassGalleryProp
   );
 }
 
-function ImageWithFade({ src, alt }: { src: string; alt: string }) {
+function ImageWithAuth({ imageUrl, token, alt }: { imageUrl: string; token: string; alt: string }) {
+  const [src, setSrc] = useState<string>("");
   const [isLoaded, setIsLoaded] = useState(false);
+  const blobUrlRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!token) return;
+    let cancelled = false;
+    fetch(imageUrl, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.blob())
+      .then(blob => {
+        if (cancelled) return;
+        if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
+        blobUrlRef.current = URL.createObjectURL(blob);
+        setSrc(blobUrlRef.current);
+      });
+    return () => { cancelled = true; };
+  }, [imageUrl, token]);
+
+  useEffect(() => {
+    return () => { if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current); };
+  }, []);
 
   return (
     <div className="h-full w-full">
       {!isLoaded && <Skeleton className="absolute inset-0 h-full w-full" />}
-      <img
-        src={src}
-        alt={alt}
-        loading="lazy"
-        onLoad={() => setIsLoaded(true)}
-        className={cn(
-          "h-full w-full object-cover transition-all duration-500 group-hover:scale-105",
-          isLoaded ? "opacity-100 scale-100" : "opacity-0 scale-95"
-        )}
-      />
+      {src && (
+        <img
+          src={src}
+          alt={alt}
+          onLoad={() => setIsLoaded(true)}
+          className={cn(
+            "h-full w-full object-cover transition-all duration-500 group-hover:scale-105",
+            isLoaded ? "opacity-100 scale-100" : "opacity-0 scale-95"
+          )}
+        />
+      )}
     </div>
   );
 }

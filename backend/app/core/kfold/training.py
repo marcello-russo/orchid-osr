@@ -243,7 +243,7 @@ def train_fold(
     patience=0,
     gradient_accumulation_steps=1,
     resume=False,
-    optimizer_type="adam",
+    optimizer_type=None,
     weight_decay=0.0,
 ):
     """
@@ -265,7 +265,7 @@ def train_fold(
 
     # Use architecture-specific optimizer settings from registry
     entry = get_registry_entry(model_variant)
-    opt_type = optimizer_type or entry.optimizer
+    opt_type = entry.optimizer if optimizer_type is None else optimizer_type
     wd = weight_decay if weight_decay > 0 else entry.weight_decay
     lr = entry.learning_rate if entry.learning_rate else learning_rate
 
@@ -436,7 +436,7 @@ def train_fold_supcon(
     patience=0,
     gradient_accumulation_steps=1,
     resume=False,
-    optimizer_type="adam",
+    optimizer_type=None,
     weight_decay=0.0,
     use_prototypes=False,
     repulse_weight=0.05,
@@ -469,7 +469,7 @@ def train_fold_supcon(
     else:
         model = create_model(model_variant, num_classes=num_classes, pretrained=True)
     entry = get_registry_entry(model_variant)
-    opt_type = optimizer_type or entry.optimizer
+    opt_type = entry.optimizer if optimizer_type is None else optimizer_type
     wd = weight_decay if weight_decay > 0 else entry.weight_decay
     lr = entry.learning_rate if entry.learning_rate else learning_rate
 

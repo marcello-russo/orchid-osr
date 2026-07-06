@@ -92,11 +92,6 @@ def run_experiment(
     """Run a single experiment (k-fold cross-validation or single fold)."""
     import logging
 
-    # cuDNN auto-tuner: seleziona l'algoritmo più veloce per le convolution
-    # (non altera i risultati numerici, solo la velocità di esecuzione)
-    if torch.cuda.is_available():
-        torch.backends.cudnn.benchmark = True
-
     from app.cli.definitions import ALL_CLASSES, DATASET_PATHS, EXPERIMENTS, PROJECT_ROOT
     from app.core.kfold.testing import aggregate_results
 
@@ -272,6 +267,7 @@ def run_experiment(
             pair_weights=pair_weights,
             full_finetune=full_finetune,
             ncd_mode=config.get("ncd_mode", False),
+            # optimizer_type non passato → None → usa registry (adamw per ConvNeXt/DINOv2)
         )
     else:
         from app.core.kfold import kfold_experiment
@@ -294,5 +290,6 @@ def run_experiment(
             patience=patience,
             gradient_accumulation_steps=gradient_accumulation_steps,
             loss_type="ce",
+            optimizer_type="adam",
             exclude_classes=config.get("exclude_classes"),
         )

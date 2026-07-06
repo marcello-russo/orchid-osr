@@ -114,8 +114,8 @@ class Settings(BaseSettings):
             logger.warning("Could not persist JWT_SECRET to %s", secret_file)
         return self
 
-    admin_username: str = "marcello"
-    admin_password: str = "orchid-2026"
+    admin_username: str = ""
+    admin_password: str = ""
 
     @model_validator(mode="after")
     def _validate_admin_credentials(self):

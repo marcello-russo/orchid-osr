@@ -235,11 +235,6 @@ export interface ExperimentGroup {
   models: Record<string, ExperimentModelEntry>;
 }
 
-export interface ExperimentComparisonResponse {
-  groups: ExperimentGroup[];
-  architectures: string[];
-}
-
 export interface SeriesModelEntry {
   variant: string;
   display_name: string;

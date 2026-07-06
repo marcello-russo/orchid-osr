@@ -58,9 +58,12 @@ def kfold_experiment(
     exclude_classes=None,
     pair_weights=None,
     full_finetune=False,
+    optimizer_type=None,
     ncd_mode=False,
 ):
-    """K-fold cross-validation con augmentation bilanciata per fold."""
+    """K-fold cross-validation con augmentation bilanciata per fold.
+    optimizer_type: None = usa entry.optimizer dal registry, 'adam' = forza Adam per CE baseline.
+    """
     from app.preprocessing.reproducibility import set_seed
 
     if class_names is None:
@@ -235,6 +238,7 @@ def kfold_experiment(
                         patience=patience,
                         gradient_accumulation_steps=gradient_accumulation_steps,
                         resume=True,
+                        optimizer_type=optimizer_type,
                         use_prototypes=use_prototypes,
                         repulse_weight=repulse_weight,
                         pair_weights=pair_weights,
@@ -254,6 +258,7 @@ def kfold_experiment(
                         patience=patience,
                         gradient_accumulation_steps=gradient_accumulation_steps,
                         resume=True,
+                        optimizer_type=optimizer_type,
                     )
 
                 fold_metrics["fold"] = fold_idx

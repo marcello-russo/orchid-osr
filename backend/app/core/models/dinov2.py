@@ -3,7 +3,6 @@ from typing import Literal
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 from app.core.models.base import ClassifierModel, ModelConfig
 
@@ -111,16 +110,10 @@ class DINOv2Classifier(ClassifierModel):
             from transformers import Dinov2Model
             base = Dinov2Model.from_pretrained(base_model_id)
             self._backbone = PeftModel.from_pretrained(base, adapter_dir)
-            try:
-                head_sd = torch.load(path, map_location="cpu", weights_only=True)
-            except Exception:
-                head_sd = torch.load(path, map_location="cpu", weights_only=False)
+            head_sd = torch.load(path, map_location="cpu", weights_only=True)
             self._head.load_state_dict(head_sd)
         else:
-            try:
-                state_dict = torch.load(path, map_location="cpu", weights_only=True)
-            except Exception:
-                state_dict = torch.load(path, map_location="cpu", weights_only=False)
+            state_dict = torch.load(path, map_location="cpu", weights_only=True)
             self.load_state_dict(state_dict)
 
     def save_weights(self, path: str) -> None:
