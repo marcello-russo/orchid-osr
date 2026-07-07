@@ -5,7 +5,17 @@ from unittest.mock import patch
 import pytest
 from fastapi import HTTPException
 
-from app.core.auth import MAX_LOGIN_ATTEMPTS, hash_password, login_user, verify_password
+from app.core.auth import LOGIN_ATTEMPTS_CACHE, MAX_LOGIN_ATTEMPTS, hash_password, login_user, verify_password
+
+
+@pytest.fixture(autouse=True)
+def _reset_login_cache():
+    """Pulisce la cache dei tentativi di login prima di ogni test."""
+    import app.core.auth as auth_mod
+
+    LOGIN_ATTEMPTS_CACHE.clear()
+    auth_mod._CACHE_LAST_SYNC = 0.0
+    yield
 
 
 class TestPasswordHashing:
@@ -25,7 +35,11 @@ class TestLoginLockout:
         return pytest.raises(HTTPException, match=match)
 
     def test_lockout_after_max_attempts(self):
-        with patch("app.core.auth._load_data") as mock_load:
+        with (
+            patch("app.core.auth._load_data") as mock_load,
+            patch("app.core.auth._load_attempts", return_value={}),
+            patch("app.core.auth._save_attempts"),
+        ):
             mock_load.return_value = {"users": [], "invites": []}
             for _ in range(MAX_LOGIN_ATTEMPTS):
                 with pytest.raises(HTTPException, match="Credenziali non valide"):
@@ -34,7 +48,11 @@ class TestLoginLockout:
                 login_user("target_user", "wrong")
 
     def test_successful_login_resets_counter(self):
-        with patch("app.core.auth._load_data") as mock_load:
+        with (
+            patch("app.core.auth._load_data") as mock_load,
+            patch("app.core.auth._load_attempts", return_value={}),
+            patch("app.core.auth._save_attempts"),
+        ):
             mock_user = {
                 "username": "valid_user",
                 "password_hash": hash_password("correct"),

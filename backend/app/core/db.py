@@ -71,6 +71,12 @@ CREATE TABLE IF NOT EXISTS invites (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS login_attempts (
+    username TEXT PRIMARY KEY,
+    attempts INTEGER NOT NULL DEFAULT 0,
+    last_attempt REAL NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS idx_folds_experiment ON folds(experiment_id);
 CREATE INDEX IF NOT EXISTS idx_folds_experiment_fold ON folds(experiment_id, fold_idx);
 """
