@@ -217,7 +217,14 @@ def kfold_experiment(
                     all_paths, all_labels, train_class_names, train_idx, val_idx, fold_dir
                 )
                 augmented_dir = augment_fold_train(train_dir, train_class_names, w, h, cache_dir=aug_cache_dir)
-                train_loader, val_loader = prepare_fold_data(augmented_dir, val_dir, batch_size, seed, model_variant)
+                train_loader, val_loader = prepare_fold_data(
+                    augmented_dir,
+                    val_dir,
+                    batch_size,
+                    seed,
+                    model_variant,
+                    stratified=(loss_type == "supcon"),
+                )
                 checkpoint_path = os.path.join(kfold_dir, f"best_fold_{fold_idx}.pt")
                 if loss_type == "supcon":
                     from app.core.kfold.training import train_fold_supcon

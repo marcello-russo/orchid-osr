@@ -3,6 +3,7 @@ import logging
 import os
 import secrets
 import threading
+import time
 from collections import OrderedDict
 from datetime import datetime, timezone
 from pathlib import Path
@@ -17,9 +18,44 @@ USERS_PATH = Path(os.environ.get("USERS_PATH", "data/users.json"))
 _HF_DATASET_REPO = "marcellorusso/orchid-ncd-dataset"
 JWT_ALGORITHM = "HS256"
 _LOGIN_ATTEMPTS: OrderedDict[str, int] = OrderedDict()
+LOGIN_ATTEMPTS_CACHE: dict[str, int] = {}
+_CACHE_LAST_SYNC: float = 0.0
 MAX_LOGIN_ATTEMPTS = 5
 _MAX_TRACKED_USERS = 1000
 _LOGIN_LOCK = threading.Lock()
+
+
+def _load_attempts() -> dict[str, int]:
+    global _CACHE_LAST_SYNC
+    if time.time() - _CACHE_LAST_SYNC < 5.0:
+        return LOGIN_ATTEMPTS_CACHE
+    try:
+        from app.core.db import get_db
+
+        conn = get_db()
+        rows = conn.execute("SELECT username, attempts FROM login_attempts").fetchall()
+        LOGIN_ATTEMPTS_CACHE.clear()
+        LOGIN_ATTEMPTS_CACHE.update({r[0]: r[1] for r in rows})
+        _CACHE_LAST_SYNC = time.time()
+    except Exception:
+        pass
+    return LOGIN_ATTEMPTS_CACHE
+
+
+def _save_attempts(username: str, count: int) -> None:
+    try:
+        from app.core.db import get_db
+
+        conn = get_db()
+        conn.execute(
+            "INSERT OR REPLACE INTO login_attempts (username, attempts, last_attempt) VALUES (?, ?, ?)",
+            (username, count, time.time()),
+        )
+        conn.commit()
+    except Exception:
+        pass
+
+
 _DATA_LOCK = threading.Lock()
 
 
@@ -126,8 +162,9 @@ def register_user(invite_code: str, username: str, password: str) -> dict:
 
 
 def login_user(username: str, password: str) -> dict:
+    _load_attempts()
     with _LOGIN_LOCK:
-        if _LOGIN_ATTEMPTS.get(username, 0) >= MAX_LOGIN_ATTEMPTS:
+        if LOGIN_ATTEMPTS_CACHE.get(username, 0) >= MAX_LOGIN_ATTEMPTS:
             raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, "Account temporarily locked. Try again later.")
 
     with _DATA_LOCK:
@@ -135,16 +172,17 @@ def login_user(username: str, password: str) -> dict:
     user = next((u for u in data["users"] if u["username"] == username), None)
     if not user or not verify_password(password, user["password_hash"]):
         with _LOGIN_LOCK:
-            if len(_LOGIN_ATTEMPTS) >= _MAX_TRACKED_USERS:
-                _LOGIN_ATTEMPTS.popitem(last=False)
-            _LOGIN_ATTEMPTS[username] = _LOGIN_ATTEMPTS.get(username, 0) + 1
+            count = LOGIN_ATTEMPTS_CACHE.get(username, 0) + 1
+            LOGIN_ATTEMPTS_CACHE[username] = count
+        _save_attempts(username, count)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Credenziali non valide. Username o password errati.",
         )
 
     with _LOGIN_LOCK:
-        _LOGIN_ATTEMPTS.pop(username, None)
+        LOGIN_ATTEMPTS_CACHE.pop(username, None)
+    _save_attempts(username, 0)
     return {"username": user["username"], "role": user["role"]}
 
 

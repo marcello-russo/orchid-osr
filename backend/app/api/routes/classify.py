@@ -3,14 +3,12 @@ import base64
 import io
 
 import torch
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from PIL import Image
 
 from app.api.cache import get_model
 from app.api.deps import require_role
-from app.api.routes.auth import limiter
 from app.api.schemas import (
-    CacheStatus,
     ClassifyRequest,
     ClassifyResponse,
     ClassifyUploadResponse,
@@ -18,15 +16,7 @@ from app.api.schemas import (
     ModelListResponse,
     TopPrediction,
 )
-from app.api.weights import (
-    CLASS_NAMES,
-    clear_cache,
-    delete_cached_weight,
-    download_all_weights,
-    get_cache_status,
-    get_device,
-    get_model_options,
-)
+from app.api.weights import CLASS_NAMES, get_device, get_model_options
 from app.core.models import available_models, create_transform, get_registry_entry
 
 MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10 MB
@@ -154,51 +144,6 @@ async def classify_upload(file: UploadFile = File(...), model_id: str = Form(Non
         predicted_species=CLASS_NAMES[predicted_idx],
         confidence=confidence,
     )
-
-
-@router.get("/classify/cache", response_model=CacheStatus)
-@limiter.limit("10/minute")
-async def cache_status(request: Request, admin=Depends(require_role("admin"))):
-    """Get cache status: which models are downloaded, sizes, progress."""
-    return get_cache_status()
-
-
-@router.post("/classify/cache/download")
-@limiter.limit("2/minute")
-async def cache_download_all(request: Request, admin=Depends(require_role("admin"))):
-    """Download all missing model weights in the background."""
-    download_all_weights(background=True)
-    return {"status": "started"}
-
-
-@router.post("/classify/cache/download/{model_id}")
-@limiter.limit("5/minute")
-async def cache_download_one(model_id: str, request: Request, admin=Depends(require_role("admin"))):
-    """Download a single model's weights."""
-    from app.api.weights import _resolve_weights
-
-    result = _resolve_weights(model_id)
-    if result is None:
-        raise HTTPException(404, f"Model {model_id} not found")
-    return {"status": "ok", "model_id": model_id}
-
-
-@router.delete("/classify/cache/{model_id}")
-@limiter.limit("10/minute")
-async def cache_delete_one(model_id: str, request: Request, admin=Depends(require_role("admin"))):
-    """Delete a single model's cached weights."""
-    deleted = delete_cached_weight(model_id)
-    if not deleted:
-        raise HTTPException(404, f"No cached weights for {model_id}")
-    return {"status": "deleted", "model_id": model_id}
-
-
-@router.delete("/classify/cache")
-@limiter.limit("5/minute")
-async def cache_clear(request: Request, admin=Depends(require_role("admin"))):
-    """Delete all cached model weights."""
-    count = clear_cache()
-    return {"status": "cleared", "files_removed": count}
 
 
 @router.post("/classify/explain", response_model=ExplainResponse)

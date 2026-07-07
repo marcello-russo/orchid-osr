@@ -138,23 +138,23 @@ export async function fetchModels() {
 }
 
 export async function fetchCacheStatus() {
-  return fetchApi<import("./types").CacheStatus>("/classify/cache");
+  return fetchApi<import("./types").CacheStatus>("/api/admin/cache");
 }
 
 export async function downloadAllModels() {
-  return fetchApi<{ status: string }>("/classify/cache/download");
+  return fetchApi<{ status: string }>("/api/admin/cache/download");
 }
 
 export async function downloadModel(id: string) {
-  return fetchApi<{ status: string; model_id: string }>(`/classify/cache/download/${encodeURIComponent(id)}`);
+  return fetchApi<{ status: string; model_id: string }>(`/api/admin/cache/download/${encodeURIComponent(id)}`);
 }
 
 export async function deleteCachedModel(id: string) {
-  return fetchApi<{ status: string; model_id: string }>(`/classify/cache/${encodeURIComponent(id)}`, { method: "DELETE" });
+  return fetchApi<{ status: string; model_id: string }>(`/api/admin/cache/${encodeURIComponent(id)}`, { method: "DELETE" });
 }
 
 export async function clearModelCache() {
-  return fetchApi<{ status: string; files_removed: number }>("/classify/cache", { method: "DELETE" });
+  return fetchApi<{ status: string; files_removed: number }>("/api/admin/cache", { method: "DELETE" });
 }
 
 export async function fetchSpecies() {

@@ -20,7 +20,7 @@ def test_schema_creates_tables():
         assert "folds" in names
         assert "users" in names
         assert "invites" in names
-        assert len(names) == 4
+        assert len(names) == 5
     finally:
         os.unlink(db)
 
@@ -47,6 +47,6 @@ def test_schema_idempotent():
         tables = conn.execute(
             "SELECT count(*) FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
         ).fetchone()[0]
-        assert tables == 4
+        assert tables == 5
     finally:
         os.unlink(db)

@@ -188,9 +188,13 @@ def augment_fold_train(fold_train_dir, class_names, width, height, cache_dir=Non
     return augmented_dir
 
 
-def prepare_fold_data(augmented_train_dir, val_dir, batch_size, seed, model_variant):
+def prepare_fold_data(augmented_train_dir, val_dir, batch_size, seed, model_variant, stratified=False):
     """
     Crea DataLoaders per un fold.
+
+    Args:
+        stratified: Se True, usa StratifiedBatchSampler per garantire ≥2 campioni/classe/batch.
+                    Utile per SupConLoss (evita batch degeneri con gradiente zero).
 
     Returns:
         tuple: (train_loader, val_loader)
@@ -204,16 +208,30 @@ def prepare_fold_data(augmented_train_dir, val_dir, batch_size, seed, model_vari
     train_dataset = ImageFolderWithName(augmented_train_dir, transform=transform)
     val_dataset = ImageFolderWithName(val_dir, transform=transform)
 
-    train_loader = DataLoader(
-        train_dataset,
-        batch_size=batch_size,
-        shuffle=True,
-        num_workers=2,
-        pin_memory=True,
-        persistent_workers=True,
-        multiprocessing_context="spawn",
-        worker_init_fn=seed_worker,
-    )
+    if stratified:
+        from app.core.kfold.sampler import StratifiedBatchSampler
+
+        sampler = StratifiedBatchSampler(train_dataset.targets, batch_size, shuffle=True)
+        train_loader = DataLoader(
+            train_dataset,
+            batch_sampler=sampler,
+            num_workers=2,
+            pin_memory=True,
+            persistent_workers=True,
+            multiprocessing_context="spawn",
+            worker_init_fn=seed_worker,
+        )
+    else:
+        train_loader = DataLoader(
+            train_dataset,
+            batch_size=batch_size,
+            shuffle=True,
+            num_workers=2,
+            pin_memory=True,
+            persistent_workers=True,
+            multiprocessing_context="spawn",
+            worker_init_fn=seed_worker,
+        )
     val_loader = DataLoader(
         val_dataset,
         batch_size=batch_size,
