@@ -7,73 +7,14 @@ services:
     restart: unless-stopped
     ports:
       - "7860:7860"
-    env_file:
-      - .env
     environment:
       - API_PORT=7860
-      - API_RELOAD=true
+      - HF_TOKEN=${HF_TOKEN}
+      - ADMIN_USERNAME=${ADMIN_USERNAME}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
     volumes:
-      - ./backend/app:/workspace/backend/app
-      - ./backend/server.py:/workspace/backend/server.py
-      - ./backend/cli.py:/workspace/backend/cli.py
-      - ./frontend/dist:/workspace/backend/frontend/dist
-      - dataset:/workspace/backend/dataset
-      - models:/workspace/backend/models
-      - experiments:/workspace/backend/experiments
-
-  # Servizio GPU per training/inferenza interattivo (nessun restart: l'utente lo avvia e ferma manualmente)
-  gpu:
-    profiles: [gpu]
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: gpu
-    env_file:
-      - .env
-    environment:
-      - API_PORT=7860
-    volumes:
-      - ./backend:/workspace/backend
-      - dataset:/workspace/backend/dataset
-      - models:/workspace/backend/models
-      - experiments:/workspace/backend/experiments
-    stdin_open: true
-    tty: true
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
-
-  # Servizio training per cloud/OVH (nessun restart: comando singolo bash, non un demone)
-  train:
-    profiles: [train]
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: training
-    env_file:
-      - .env
-    environment:
-      - HF_HOME=/workspace/backend/.hf_cache
-      - TORCH_HOME=/workspace/backend/.torch_cache
-    volumes:
-      - ./backend:/workspace/backend
-      - dataset:/workspace/backend/dataset
-      - models:/workspace/backend/models
-      - experiments:/workspace/backend/experiments
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
-    command: ["./scripts/cloud-train.sh"]
+      - orchid-data:/data
 
 volumes:
-  dataset:
-  models:
-  experiments:
+  orchid-data:
