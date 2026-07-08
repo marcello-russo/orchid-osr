@@ -13,38 +13,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_branch }}
+          ref: main
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install huggingface_hub
-        run: pip install huggingface_hub==0.24.6
-
-      - name: Sync to HF Spaces
+      - name: Push to HF Spaces
+        run: |
+          git remote add hf https://marcellorusso:$HF_TOKEN@huggingface.co/spaces/marcellorusso/orchid-ncd
+          git push hf main
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: |
-          python3 -c "
-          from huggingface_hub import HfApi
-          import os
-          api = HfApi(token=os.environ['HF_TOKEN'])
-          repo = 'marcellorusso/orchid-ncd'
-
-          api.upload_folder(
-              folder_path='.',
-              repo_id=repo,
-              repo_type='space',
-              commit_message=f'Sync from GitHub: {os.environ.get(\"GITHUB_SHA\", \"manual\")[:7]}',
-              ignore_patterns=[
-                  '.git/*',
-                  'backend/dataset/*',
-                  'backend/models/*',
-                  '*.pt',
-                  '*.safetensors',
-              ],
-          )
-          print('Space sync complete')
-          "
