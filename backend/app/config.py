@@ -21,7 +21,7 @@ class Settings(BaseSettings):
 
     # Model configuration
     model_type: str = "resnet18"
-    num_classes: int = 7
+    num_classes: int = 6  # 6 training species; the novel class (sphegodes_Napoli) is only used for OSR evaluation
     class_names: list[str] = [
         "O. exaltata",
         "O. garganica",
@@ -29,8 +29,8 @@ class Settings(BaseSettings):
         "O. majellensis",
         "O. sphegodes",
         "O. sphegodes_Palena",
-        "O. sphegodes_Napoli",
     ]
+    novel_class_name: str = "O. sphegodes_Napoli"
 
     # Classes that have internet-sourced images (test set comes from internet)
     internet_classes: list[str] = [

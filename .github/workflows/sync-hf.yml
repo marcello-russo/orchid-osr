@@ -1,20 +1,19 @@
 name: Sync to Hugging Face
 
 on:
-  push:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
     branches: [main]
-  workflow_dispatch:
-    inputs:
-      upload_weights:
-        description: "Also upload model weights to HF models repo"
-        type: boolean
-        default: false
 
 jobs:
   sync-space:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -48,77 +47,4 @@ jobs:
               ],
           )
           print('Space sync complete')
-          "
-
-  sync-models:
-    runs-on: ubuntu-latest
-    needs: sync-space
-    if: ${{ github.event.inputs.upload_weights == 'true' }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          lfs: true
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install huggingface_hub
-        run: pip install huggingface_hub==0.24.6
-
-      - name: Upload model weights to HF
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: |
-          python3 -c "
-          from huggingface_hub import HfApi
-          import os, glob
-
-          api = HfApi(token=os.environ['HF_TOKEN'])
-          repo = 'marcellorusso/orchid-ncd-models'
-          base = 'exp6_ce'
-
-          uploaded = 0
-          for exp_dir in sorted(glob.glob('backend/experiments/exp6_*')):
-              model_name = os.path.basename(exp_dir)
-              prefix = f'{base}/{model_name}'
-
-              for f in sorted(os.listdir(exp_dir)):
-                  if f.endswith(('.json', '.txt')):
-                      path = os.path.join(exp_dir, f)
-                      api.upload_file(
-                          path_or_fileobj=path,
-                          path_in_repo=f'{prefix}/{f}',
-                          repo_id=repo,
-                          repo_type='model',
-                      )
-                      uploaded += 1
-
-                  elif f == 'best_fold_*.pt' or (f.startswith('best_fold_') and f.endswith('.pt')):
-                      path = os.path.join(exp_dir, f)
-                      api.upload_file(
-                          path_or_fileobj=path,
-                          path_in_repo=f'{prefix}/{f}',
-                          repo_id=repo,
-                          repo_type='model',
-                      )
-                      uploaded += 1
-
-                  # DINOv2 adapter directories
-                  elif os.path.isdir(os.path.join(exp_dir, f)) and f.endswith('_adapter'):
-                      adapter_dir = os.path.join(exp_dir, f)
-                      for af in os.listdir(adapter_dir):
-                          if af.endswith(('.json', '.safetensors')):
-                              path = os.path.join(adapter_dir, af)
-                              api.upload_file(
-                                  path_or_fileobj=path,
-                                  path_in_repo=f'{prefix}/{f}/{af}',
-                                  repo_id=repo,
-                                  repo_type='model',
-                              )
-                              uploaded += 1
-
-          print(f'Uploaded {uploaded} files to {repo}')
           "

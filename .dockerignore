@@ -1,4 +1,8 @@
-# Data and models (mounted as volumes in dev, not needed in prod image)
+# Heavy dev/experiment data (not needed for inference image)
+backend/experiments/
+backend/models/
+backend/dataset/
+backend/test_dataset/
 dataset/
 models/
 models_1/
@@ -8,15 +12,19 @@ results_1/
 logs/
 logs_1/
 logs_2/
-backend/dataset/cropped_*/test/
-backend/models/
-backend/experiments/**/*.pt
-backend/experiments/**/embeddings/
-backend/experiments/**/ncd_figures/
-backend/experiments/**/.cache/
-backend/experiments/**/*.log
 
-backend/test_dataset/
+# Tests and CI (not needed in prod)
+backend/tests/
+backend/scripts/ci/
+.github/
+
+# Upload scripts (only needed on dev machine)
+backend/scripts/hf_tools/upload_*
+
+# Docs
+docs/
+*.md
+README*
 
 # Git
 .git/
@@ -42,22 +50,22 @@ env/
 .ipynb_checkpoints/
 *.ipynb_checkpoints
 
-# Docs
-docs/
-
 # Docker
 .docker/
+Dockerfile
+docker-compose.yml
 
-# Frontend dev artifacts (not needed in build, dockerfile runs npm ci + build)
+# Frontend dev (built separately in Docker multi-stage)
 node_modules/
 frontend/node_modules/
 frontend/dist/
 
-# Misc
 # Secrets
 .env
+
+# Misc
 *.log
 *.tmp
 **/.DS_Store
-README*.md
 superpowers/
+assets/
