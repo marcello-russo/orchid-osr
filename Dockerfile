@@ -92,11 +92,13 @@ RUN mkdir -p models dataset
 COPY backend/app/ app/
 COPY backend/server.py .
 COPY backend/cli.py .
-# experiments/ contains only metadata from the build context (see .dockerignore).
-COPY backend/experiments/ experiments/
 COPY entrypoint.sh .
 RUN chmod +x entrypoint.sh && chown -R 42420:42420 /workspace
 
 ENV HF_HOME=/workspace/backend/.hf_cache
 ENV TORCH_HOME=/workspace/backend/.torch_cache
 CMD ["./entrypoint.sh"]
+
+# Final stage — HF Spaces builds the last target by default.
+# Declaring this ensures 'docker build .' uses the CPU target.
+FROM cpu AS final
