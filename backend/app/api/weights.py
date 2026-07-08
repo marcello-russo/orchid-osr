@@ -15,7 +15,8 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-CLASS_NAMES = settings.class_names
+CLASS_NAMES = settings.class_names  # 6 training classes
+NOVEL_CLASS_NAME = settings.novel_class_name
 HF_MODELS_REPO = "marcellorusso/orchid-ncd-models"
 
 # Mapping from experiment directory prefix → human label + number
@@ -237,22 +238,54 @@ def _resolve_weights(model_id: str) -> tuple[Path, str] | None:
 
 
 def _find_weights(model_type: str) -> Path | None:
+    """Find the best available weights for a model type.
+
+    Scans all discovered experiments for the given model type and returns
+    the path to the best-performing checkpoint (highest test F1).
+    Falls back to HF Hub download if not found locally.
+    """
     experiments_dir = Path(settings.results_dir)
     best_score = -1.0
     best_path: Path | None = None
-    for results_json in experiments_dir.rglob(f"*_kfold_{model_type}/results.json"):
+    for results_json in experiments_dir.rglob("results.json"):
         results = _safe_json_load(results_json)
         if results is None:
             continue
+        mv = results.get("model_variant", "")
+        if mv != model_type:
+            continue
         parent = results_json.parent
+        dir_name = parent.name
+        if "exp9_" in dir_name:
+            continue
         best_fold = results.get("best_fold")
-        if best_fold is not None:
-            candidate = parent / f"best_fold_{best_fold}.pt"
-            if candidate.exists():
-                score = _get_mean_f1(results) or 0
-                if score > best_score:
-                    best_score = score
-                    best_path = candidate
+        if best_fold is None:
+            continue
+        candidate = parent / f"best_fold_{best_fold}.pt"
+        if candidate.exists():
+            score = _get_mean_f1(results) or 0
+            if score > best_score:
+                best_score = score
+                best_path = candidate
+        else:
+            # Try downloading from HF
+            try:
+                hf_path = _hf_path_for(dir_name, f"best_fold_{best_fold}.pt")
+                if hf_path:
+                    downloaded = hf_hub_download(
+                        repo_id=HF_MODELS_REPO,
+                        filename=hf_path,
+                        token=settings.hf_token or None,
+                    )
+                    cache_pt = _get_cache_dir() / f"{dir_name}_best_fold_{best_fold}.pt"
+                    if not cache_pt.exists():
+                        shutil.copy2(downloaded, cache_pt)
+                    score = _get_mean_f1(results) or 0
+                    if score > best_score:
+                        best_score = score
+                        best_path = cache_pt
+            except Exception:
+                continue
     return best_path
 
 
