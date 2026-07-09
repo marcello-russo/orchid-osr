@@ -1,55 +1,36 @@
 # Deployment Architecture Design — OrchID NCD
 
-## Panoramica
+## Architettura
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│                        Cloudflare                                │
-│                                                                  │
-│  ┌──────────────────────────────┐  ┌──────────────────────────┐ │
-│  │    Cloudflare Pages          │  │  Cloudflare Tunnel Edge  │ │
-│  │  orchid-ncd.pages.dev        │  │  <tunnel-uuid>.cfargot...│ │
-│  │                              │  │                          │ │
-│  │  Frontend React SPA          │  │  Termine SSL/TLS         │ │
-│  │  Build: npm run build        │  │  Connette al container   │ │
-│  │  Env: VITE_API_URL =         │  │  cloudflared sul VPS     │ │
-│  │    https://<tunnel-id>.      │  │                          │ │
-│  │    cfargotunnel.com          │  │                          │ │
-│  └──────────────────────────────┘  └──────────┬───────────────┘ │
-└─────────────────────────────────────────────────────┬────────────┘
-                                                      │ tunnel protetto
-                                                      │ (outbound-only)
-                                                      ▼
-┌──────────────────────────────────────────────────────────────────┐
-│                 VPS OVH (Dokploy)                                │
-│                                                                  │
-│  ┌─────────────────────────────┐  ┌───────────────────────────┐  │
-│  │  Backend Container          │  │  Tunnel Container          │  │
-│  │  orchid-ncd:latest          │  │  cloudflare/cloudflared    │  │
-│  │                             │  │                            │  │
-│  │  FastAPI + PyTorch CPU      │  │  cloudflared tunnel run    │  │
-│  │  Porta 7860 (internal)      │  │  --token $TUNNEL_TOKEN     │  │
-│  │                             │  │                            │  │
-│  │  /api/* → classificazione   │  │  Connessione persistente   │  │
-│  │  /classify → inferenza      │  │  a Cloudflare edge         │  │
-│  │  /health → monitoring       │  │  (websocket-based)         │  │
-│  │                             │  │                            │  │
-│  │  Volumi:                    │  │  Rete: orchid-net           │  │
-│  │  /data → pesi, dataset, DB  │  │  Dipende da: backend        │  │
-│  └─────────────────────────────┘  └────────────────────────────┘  │
-│                                                                  │
-│  Network: orchid-net (docke内部r network, backend ↔ tunnel via hostname)              │
-│                                                                  │
-└──────────────────────────────────────────────────────────────────┘
+Cloudflare Pages ──HTTPS──> orchid-ncd.pages.dev
+(Frontend React, CDN globale)
+      │
+      │ VITE_API_URL = https://<random>.trycloudflare.com
+      │
+      ▼ (browser chiama tunnel URL)
+      
+Cloudflare Edge ─── HTTPS ─── cloudflared (container)
+                                      │ http://backend:7860
+                                      ▼
+                              Backend container (FastAPI)
+                              orchid:latest, rete interna Docker
 ```
+
+## Componenti
+
+| Componente | Ruolo | Costo |
+|---|---|---|
+| **Cloudflare Pages** | Serve il frontend React | 0€ |
+| **Cloudflare Tunnel (Quick)** | Espone backend via HTTPS con URL temporaneo | 0€ |
+| **VPS OVH** | Esegue backend + tunnel via Docker | ~5€/mese |
+| **Dokploy** | Gestisce deploy e container | 0€ (self-hosted) |
 
 ## Modifiche al codice necessarie
 
-Prima del deploy, applicare queste modifiche:
-
 ### Dockerfile: rimuovere frontend-builder stage
 
-Poiché il frontend è servito da Cloudflare Pages, non serve più buildarlo nell'immagine Docker. Rimuovere dal `Dockerfile` lo stage `frontend-builder` e la riga `COPY --from=frontend-builder`. Il target `cpu` diventa:
+Il frontend ora va su Cloudflare Pages. Il target `cpu` si semplifica:
 
 ```dockerfile
 FROM docker.io/python:3.11-slim AS cpu
@@ -71,83 +52,28 @@ EXPOSE 7860
 CMD ["./entrypoint.sh"]
 ```
 
-### Backend main.py: aggiungere CORS middleware
-
-Aggiungere in `app/api/main.py`, prima della creazione delle route:
+### Backend main.py: aggiungere CORS
 
 ```python
 from fastapi.middleware.cors import CORSMiddleware
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://orchid-ncd.pages.dev",
-        "http://localhost:5173",
-    ],
+    allow_origins=["*"],  # in dev va bene; in produzione limitare a orchid-ncd.pages.dev
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 ```
 
-La SPA serving (route `/{full_path:path}`) resta dov'è — il codice già controlla se `frontend/dist/` esiste prima di montarla. Sull'immagine Docker senza frontend, non verrà montata. Nessun errore.
+La SPA serving (`/{full_path:path}`) resta. Il codice già controlla se `frontend/dist/` esiste — sull'immagine senza frontend non viene montata. Nessun errore.
 
 ### Frontend api.ts: già pronto
 
 ```typescript
 const API_BASE = import.meta.env.VITE_API_URL ?? "";
 ```
-
-`VITE_API_URL` vuoto = sviluppo (proxy Vite). Valorizzato = produzione (chiamate assolute al tunnel).
-
-## Perché questa è la soluzione perfetta
-
-| Requisito | Come viene soddisfatto |
-|---|---|
-| **Zero domini a pagamento** | Tunnel named su `cfargotunnel.com` (gratuito, stabile, incluso in ogni account Cloudflare) |
-| **HTTPS end-to-end** | Cloudflare Pages (frontend) + Tunnel edge (backend) |
-| **Nessuna porta esposta sul VPS** | cloudflared fa solo connessione uscente verso Cloudflare |
-| **URL stabile (non random)** | Named tunnel → `<tunnel-uuid>.cfargotunnel.com` permanente |
-| **Frontend veloce** | CDN globale di Cloudflare |
-| **Backend sicuro** | Container in rete Docker isolata, invisibile dall'esterno |
-| **Costo** | 0€ (salvo VPS ~5€/mese) |
-
-## Setup Cloudflare Tunnel (una tantum)
-
-### Prerequisito: Account Cloudflare gratuito
-
-Se non hai un account Cloudflare, crealo su `https://dash.cloudflare.com/sign-up`. Serve solo per gestire il tunnel — non serve nessun dominio acquistato.
-
-### Comandi di setup (da eseguire UNA VOLTA SOLA)
-
-```bash
-# 1. Autentica cloudflared con il tuo account Cloudflare
-#    Questo apre il browser per il login OAuth.
-#    Genera ~/.cloudflared/cert.pem (le credenziali del tuo account)
-docker run -it --rm -v ~/.cloudflared:/home/nonroot/.cloudflared \
-  cloudflare/cloudflared:latest tunnel login
-
-# 2. Crea un tunnel named
-#    Restituisce un UUID tipo "6c3089b0-4a5f-4b8d-8c9a-0e1f2a3b4c5d"
-#    Il tunnel è subito accessibile su https://<UUID>.cfargotunnel.com
-#    Genera ~/.cloudflared/<UUID>.json (credenziali del tunnel)
-docker run -it --rm -v ~/.cloudflared:/home/nonroot/.cloudflared \
-  cloudflare/cloudflared:latest tunnel create orchid-ncd
-
-# 3. Estrai il tunnel token (lo userai in Dokploy come TUNNEL_TOKEN)
-#    Il token è la stringa che permette a cloudflared di connettersi
-#    senza bisogno del file credentials.json
-TOKEN=$(docker run -it --rm -v ~/.cloudflared:/home/nonroot/.cloudflared \
-  cloudflare/cloudflared:latest tunnel token orchid-ncd)
-echo "TUNNEL_TOKEN=$TOKEN"
-
-# 4. (Opzionale) Verifica l'URL del tunnel
-#    Puoi trovarlo nella dashboard Cloudflare → Zero Trust → Tunnels
-#    Oppure: cat ~/.cloudflared/<UUID>.json | grep tunnel_id
-#    URL: https://<UUID>.cfargotunnel.com
-```
-
-**Output**: `TUNNEL_TOKEN` da copiare in Dokploy. URL stabile: `https://<tunnel-uuid>.cfargotunnel.com`
+`VITE_API_URL` vuoto = sviluppo (proxy Vite). Valorizzato = tunnel URL.
 
 ## docker-compose.yml (per Dokploy)
 
@@ -164,9 +90,6 @@ services:
     environment:
       - API_PORT=7860
       - HF_TOKEN=${HF_TOKEN}
-      - ADMIN_USERNAME=${ADMIN_USERNAME}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
-      - JWT_SECRET=${JWT_SECRET}
     volumes:
       - orchid-data:/data
     networks:
@@ -181,10 +104,7 @@ services:
   tunnel:
     image: cloudflare/cloudflared:latest
     restart: unless-stopped
-    command: tunnel --no-autoupdate run --token ${TUNNEL_TOKEN}
-    environment:
-      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
-      - TUNNEL_METRICS=localhost:9090
+    command: tunnel --url http://backend:7860
     depends_on:
       backend:
         condition: service_healthy
@@ -199,87 +119,40 @@ networks:
     driver: bridge
 ```
 
-## Frontend — Cloudflare Pages
+## Quick Tunnel: come funziona
 
-### Build configuration
+Al primo avvio, `cloudflared tunnel --url http://backend:7860` stampa:
+
+```
+2026-07-08T10:00:00Z INF +--------------------------------------------------------------------------------------------+
+2026-07-08T10:00:00Z INF |  Your free tunnel has started! Visit it:                                                    |
+2026-07-08T10:00:00Z INF |    https://random-string.trycloudflare.com                                                   |
+2026-07-08T10:00:00Z INF +--------------------------------------------------------------------------------------------+
+```
+
+L'URL `https://random-string.trycloudflare.com` va copiato in Cloudflare Pages come `VITE_API_URL`.
+
+L'URL cambia SOLO se il container tunnel viene ricreato (deploy). Tra un deploy e l'altro, è stabile.
+
+## Cloudflare Pages setup
 
 | Campo | Valore |
 |---|---|
-| Framework preset | None |
+| Framework | None |
 | Build command | `cd frontend && npm ci && npm run build` |
-| Build output directory | `frontend/dist` |
-| Root directory | (lasciare vuoto) |
+| Output | `frontend/dist` |
+| Branch | `main` |
+| Env variable | `VITE_API_URL` = URL del tunnel |
 
-### Environment variable
+## Costi finali
 
-```
-VITE_API_URL = https://<tunnel-uuid>.cfargotunnel.com
-```
+| Componente | Costo |
+|---|---|
+| VPS OVH 4GB | ~5€/mese |
+| Cloudflare Pages | 0€ |
+| Cloudflare Tunnel | 0€ |
+| **Totale** | **~5€/mese** |
 
-### GitHub connection
+## Nota: se un giorno volessi un URL stabile
 
-`https://github.com/squidslab/OrchID` → branch `main`
-
-### Cosa succede nel codice
-
-In `frontend/src/lib/api.ts`:
-
-```typescript
-const API_BASE = import.meta.env.VITE_API_URL ?? "";
-// → "https://<tunnel-uuid>.cfargotunnel.com"
-// Tutte le chiamate diventano:
-// fetch("https://<tunnel-uuid>.cfargotunnel.com/api/experiments")
-```
-
-## CI/CD Flow Completo
-
-```
-── Push su main ──
-        │
-        ▼
-┌─────────────────────────┐
-│  GitHub Actions: CI      │
-│  • ruff check + format   │
-│  • pytest                │
-│  • tsc + eslint          │
-│  • docker build (syntax) │
-└─────────┬───────────────┘
-          │ pass
-          ▼
-┌─────────────────────────┐     ┌─────────────────────────────┐
-│  Cloudflare Pages        │     │  Dokploy (VPS)              │
-│  • npm ci                │     │  • git pull da GitHub       │
-│  • npm run build         │     │  • docker compose build     │
-│  • deploy a .pages.dev   │     │  • docker compose up -d     │
-│  • VITE_API_URL iniettato│     │  • backend + tunnel partono │
-└─────────────────────────┘     └─────────────────────────────┘
-          │                              │
-          ▼                              ▼
-   orchid-ncd.pages.dev          <tunnel-uuid>.cfargotunnel.com
-   (CDN globale)                 → backend:7860 (rete interna)
-```
-
-## Verifica Funzionamento
-
-```bash
-# 1. Backend raggiungibile via tunnel
-curl https://<tunnel-uuid>.cfargotunnel.com/health
-# → {"status":"ok"}
-
-# 2. Frontend risponde
-curl https://orchid-ncd.pages.dev
-# → HTML della SPA
-
-# 3. Classifica via browser
-# Apri https://orchid-ncd.pages.dev → carica foto → API chiama tunnel → backend
-```
-
-## Costi Finali
-
-| Componente | Costo/mese | Note |
-|---|---|---|
-| VPS OVH 4GB | ~5€ | CPU + RAM per PyTorch CPU |
-| Cloudflare Pages | 0€ | Build gratuite, CDN globale |
-| Cloudflare Tunnel | 0€ | Banda illimitata, incluso in ogni account Cloudflare |
-| Domini | 0€ | `cfargotunnel.com` e `pages.dev` sono gratis di Cloudflare |
-| **Totale** | **~5€** | Solo il costo del VPS |
+Compra un dominio (`.it` ~1€/anno su Aruba o simili), aggiungilo a Cloudflare, e passa da Quick Tunnel a Named Tunnel con routing DNS. Il passaggio richiede 5 minuti e non cambia nient'altro nello stack.
