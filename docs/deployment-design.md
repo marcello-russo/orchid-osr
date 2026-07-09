@@ -59,8 +59,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # in dev va bene; in produzione limitare a orchid-ncd.pages.dev
-    allow_credentials=True,
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -143,6 +142,7 @@ L'URL cambia SOLO se il container tunnel viene ricreato (deploy). Tra un deploy 
 | Output | `frontend/dist` |
 | Branch | `main` |
 | Env variable | `VITE_API_URL` = URL del tunnel |
+| Env variable | `NODE_VERSION = 22` (il default di Cloudflare è obsoleto) |
 
 ## Costi finali
 
