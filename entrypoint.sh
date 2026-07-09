@@ -43,7 +43,7 @@ fi
 if [ -d "$DATA_DIR" ]; then
     mkdir -p "$DATA_DIR/experiments"
     echo "Download experiment results..."
-    python3 scripts/sync_experiments.py || echo "Experiment sync failed (non-fatal)"
+    PYTHONPATH=/workspace/backend python3 scripts/sync_experiments.py || echo "Experiment sync failed (non-fatal)"
     [ ! -L experiments ] && ln -sfn "$DATA_DIR/experiments" experiments 2>/dev/null || true
 fi
 
