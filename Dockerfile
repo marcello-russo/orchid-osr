@@ -1,17 +1,6 @@
 # OrchID NCD — Unified Dockerfile
 # Targets: cpu (HF Space, default), gpu (local), training (OVH/cloud)
 
-# Stage 1: Build frontend (shared across all targets)
-FROM docker.io/node:22-slim AS frontend-builder
-
-WORKDIR /workspace/frontend
-
-COPY frontend/package.json frontend/package-lock.json ./
-RUN npm ci || npm install
-
-COPY frontend/ ./
-RUN npm run build
-
 # Stage: shared scripts (avoids duplicate COPY across cpu/gpu/training targets)
 FROM scratch AS scripts-stage
 COPY backend/scripts/ /scripts/
@@ -37,7 +26,6 @@ COPY backend/app/ app/
 COPY backend/server.py .
 COPY backend/cli.py .
 COPY --from=scripts-stage /scripts/ scripts/
-COPY --from=frontend-builder /workspace/frontend/dist /workspace/backend/frontend/dist
 COPY entrypoint.sh .
 RUN chmod +x entrypoint.sh
 
@@ -61,9 +49,6 @@ COPY backend/app/ app/
 COPY backend/server.py .
 COPY backend/cli.py .
 COPY --from=scripts-stage /scripts/ scripts/
-# experiments/ contains only metadata from the build context (see .dockerignore).
-COPY backend/experiments/ experiments/
-COPY --from=frontend-builder /workspace/frontend/dist /workspace/backend/frontend/dist
 COPY entrypoint.sh .
 RUN chmod +x entrypoint.sh
 
