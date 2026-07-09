@@ -130,7 +130,7 @@ Al primo avvio, `cloudflared tunnel --url http://backend:7860` stampa:
 2026-07-08T10:00:00Z INF +--------------------------------------------------------------------------------------------+
 ```
 
-L'URL `https://random-string.trycloudflare.com` va copiato in Cloudflare Pages come `VITE_API_URL`.
+L'URL `https://random-string.trycloudflare.com` va copiato in Cloudflare Pages come `VITE_API_URL`. Per trovarlo dopo l'avvio, guarda i log del container `tunnel` su Dokploy (o `docker logs <container-id>`).
 
 L'URL cambia SOLO se il container tunnel viene ricreato (deploy). Tra un deploy e l'altro, è stabile.
 
