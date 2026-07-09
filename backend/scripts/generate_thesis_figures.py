@@ -10,10 +10,10 @@ All figures: 600 DPI, white background, colorblind-safe palette, seaborn style.
 """
 
 import json
-import os
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
@@ -34,50 +34,81 @@ EXPS_ALL = ["exp6", "exp7", "exp8", "exp10"]
 EXPS_OSR = ["exp8", "exp10"]
 
 MODEL_LABELS = {
-    "resnet18": "ResNet-18", "resnet50": "ResNet-50",
-    "convnext_tiny": "ConvNeXt-T", "convnext_small": "ConvNeXt-S",
-    "dinov2_small": "DINOv2-S", "dinov2_base": "DINOv2-B",
+    "resnet18": "ResNet-18",
+    "resnet50": "ResNet-50",
+    "convnext_tiny": "ConvNeXt-T",
+    "convnext_small": "ConvNeXt-S",
+    "dinov2_small": "DINOv2-S",
+    "dinov2_base": "DINOv2-B",
 }
 EXP_LABELS = {
-    "exp6": "Exp 6 (CE)", "exp7": "Exp 7 (SupCon)",
-    "exp8": "Exp 8 (SpHOR)", "exp10": "Exp 10 (MGH-NCD)",
+    "exp6": "Exp 6 (CE)",
+    "exp7": "Exp 7 (SupCon)",
+    "exp8": "Exp 8 (SpHOR)",
+    "exp10": "Exp 10 (MGH-NCD)",
 }
 EXP_PREFIXES = {
-    "exp6": "exp6_clean_split", "exp7": "exp7_supcon",
-    "exp8": "exp8_sphor", "exp10": "exp10_mgh_ncd",
+    "exp6": "exp6_clean_split",
+    "exp7": "exp7_supcon",
+    "exp8": "exp8_sphor",
+    "exp10": "exp10_mgh_ncd",
 }
 
 # Colorblind-friendly palette (ibm / tableau-inspired)
 CB = ["#0072B2", "#E69F00", "#009E73", "#CC79A7", "#56B4E9", "#F0E442"]
 SPECIES_COLORS = {
-    "O. exaltata": CB[0], "O. garganica": CB[1], "O. incubacea": CB[2],
-    "O. majellensis": CB[3], "O. sphegodes": CB[4], "O. sphegodes_Palena": CB[5],
+    "O. exaltata": CB[0],
+    "O. garganica": CB[1],
+    "O. incubacea": CB[2],
+    "O. majellensis": CB[3],
+    "O. sphegodes": CB[4],
+    "O. sphegodes_Palena": CB[5],
 }
 SPECIES_SHORT = {
-    "O. exaltata": "EXA", "O. garganica": "GAR", "O. incubacea": "INC",
-    "O. majellensis": "MAJ", "O. sphegodes": "SPH", "O. sphegodes_Palena": "PAL",
+    "O. exaltata": "EXA",
+    "O. garganica": "GAR",
+    "O. incubacea": "INC",
+    "O. majellensis": "MAJ",
+    "O. sphegodes": "SPH",
+    "O. sphegodes_Palena": "PAL",
     NOVEL_CLASS: "NAP",
 }
 MODEL_COLORS = {
-    "resnet18": "#E69F00", "resnet50": "#D55E00",
-    "convnext_tiny": "#009E73", "convnext_small": "#56B4E9",
-    "dinov2_small": "#0072B2", "dinov2_base": "#CC79A7",
+    "resnet18": "#E69F00",
+    "resnet50": "#D55E00",
+    "convnext_tiny": "#009E73",
+    "convnext_small": "#56B4E9",
+    "dinov2_small": "#0072B2",
+    "dinov2_base": "#CC79A7",
 }
 FOLD_COLORS = ["#4C72B0", "#DD8452", "#55A868", "#C44E52", "#8172B3"]
 
 # ── Matplotlib style ──────────────────────────────────────────────────
 plt.style.use("seaborn-v0_8-whitegrid")
-plt.rcParams.update({
-    "figure.dpi": 300, "savefig.dpi": 600, "savefig.bbox": "tight",
-    "font.family": "sans-serif", "font.size": 12,
-    "axes.titlesize": 14, "axes.titleweight": "bold",
-    "axes.labelsize": 12, "xtick.labelsize": 10, "ytick.labelsize": 10,
-    "legend.fontsize": 10, "figure.facecolor": "white", "axes.facecolor": "white",
-    "axes.grid": True, "grid.alpha": 0.2, "grid.color": "#cccccc",
-})
+plt.rcParams.update(
+    {
+        "figure.dpi": 300,
+        "savefig.dpi": 600,
+        "savefig.bbox": "tight",
+        "font.family": "sans-serif",
+        "font.size": 12,
+        "axes.titlesize": 14,
+        "axes.titleweight": "bold",
+        "axes.labelsize": 12,
+        "xtick.labelsize": 10,
+        "ytick.labelsize": 10,
+        "legend.fontsize": 10,
+        "figure.facecolor": "white",
+        "axes.facecolor": "white",
+        "axes.grid": True,
+        "grid.alpha": 0.2,
+        "grid.color": "#cccccc",
+    }
+)
 
 
 # ── Helpers ────────────────────────────────────────────────────────────
+
 
 def _save(fig, name):
     path = FIGURES / name
@@ -176,8 +207,13 @@ def load_embeddings(exp, model):
         tsne = np.load(tsne_file)
     else:
         print(f"    Computing t-SNE for {exp}/{model} ({embeddings.shape[0]} pts)...")
-        tsne = TSNE(n_components=2, random_state=42, perplexity=min(30, embeddings.shape[0] - 1),
-                    init="random", learning_rate="auto").fit_transform(embeddings)
+        tsne = TSNE(
+            n_components=2,
+            random_state=42,
+            perplexity=min(30, embeddings.shape[0] - 1),
+            init="random",
+            learning_rate="auto",
+        ).fit_transform(embeddings)
 
     return embeddings, labels, tsne, class_names
 
@@ -185,6 +221,7 @@ def load_embeddings(exp, model):
 # ══════════════════════════════════════════════════════════════════════
 #  FIGURE 1: Benchmark Heatmap
 # ══════════════════════════════════════════════════════════════════════
+
 
 def fig_benchmark_heatmap():
     """Test F1 heatmap: models × experiments."""
@@ -219,6 +256,7 @@ def fig_benchmark_heatmap():
 #  FIGURE 2: Confusion Matrices (Exp 7, 8, 10 — exp6 has no test CM)
 # ══════════════════════════════════════════════════════════════════════
 
+
 def fig_confusion_matrices():
     """Confusion matrices for best model in each experiment (exp7/8/10 only)."""
     panels = [
@@ -237,16 +275,15 @@ def fig_confusion_matrices():
             continue
 
         cm = np.array(res["test_metrics"]["confusion_matrix"])
-        labels_raw = res["test_metrics"].get("confusion_matrix_labels",
-                     list(res.get("class_names", [f"C{i}" for i in range(len(cm))])))
-        short = [short_species(l) for l in labels_raw]
+        labels_raw = res["test_metrics"].get(
+            "confusion_matrix_labels", list(res.get("class_names", [f"C{i}" for i in range(len(cm))]))
+        )
+        short = [short_species(label) for label in labels_raw]
 
         row_sums = cm.sum(axis=1)
         is_trainset = any(rs > 100 for rs in row_sums)
-        cm_display = cm if not is_trainset else np.zeros_like(cm)
 
-        im = ax.imshow(cm_display if is_trainset else cm, cmap="Blues", interpolation="nearest",
-                      vmin=0 if is_trainset else None, vmax=50 if is_trainset else None)
+        ax.imshow(cm if not is_trainset else np.zeros_like(cm), cmap="Blues", interpolation="nearest")
         ax.set_title(title, fontweight="bold", fontsize=10)
 
         for row in range(len(cm)):
@@ -265,11 +302,19 @@ def fig_confusion_matrices():
         ax.set_yticklabels(short, fontsize=8)
         ax.set_xlabel("Predicted", fontsize=9)
         ax.set_ylabel("Actual", fontsize=9)
-        ax.text(-0.25, -0.1, f"({chr(97+j)})", transform=ax.transAxes, fontsize=11, fontweight="bold")
+        ax.text(-0.25, -0.1, f"({chr(97 + j)})", transform=ax.transAxes, fontsize=11, fontweight="bold")
 
         if is_trainset:
-            ax.text(0.5, -0.25, "Note: Exp 6 stored training-set CM (no test CM available)",
-                   transform=ax.transAxes, ha="center", fontsize=7, fontstyle="italic", color="gray")
+            ax.text(
+                0.5,
+                -0.25,
+                "Note: Exp 6 stored training-set CM (no test CM available)",
+                transform=ax.transAxes,
+                ha="center",
+                fontsize=7,
+                fontstyle="italic",
+                color="gray",
+            )
 
     fig.suptitle("Confusion Matrices on Test Set", fontweight="bold", y=1.08)
     fig.tight_layout()
@@ -279,6 +324,7 @@ def fig_confusion_matrices():
 # ══════════════════════════════════════════════════════════════════════
 #  FIGURE 3: t-SNE Comparison (CE vs SupCon vs SpHOR, computed on fly)
 # ══════════════════════════════════════════════════════════════════════
+
 
 def fig_tsne_comparison():
     """t-SNE of DINOv2-Small: CE -> SupCon -> SpHOR."""
@@ -292,7 +338,7 @@ def fig_tsne_comparison():
         if tsne is None:
             ax.text(0.5, 0.5, "Embeddings N/A", ha="center", va="center", transform=ax.transAxes)
             ax.set_title(EXP_LABELS[exp], fontweight="bold")
-            ax.text(-0.15, -0.1, f"({chr(97+j)})", transform=ax.transAxes, fontsize=11, fontweight="bold")
+            ax.text(-0.15, -0.1, f"({chr(97 + j)})", transform=ax.transAxes, fontsize=11, fontweight="bold")
             continue
 
         labels = np.load(EXPERIMENTS / f"{EXP_PREFIXES[exp]}_{model}" / "embeddings" / "labels.npy")
@@ -302,14 +348,13 @@ def fig_tsne_comparison():
             name = cnames[int(cls)] if int(cls) < len(cnames) else f"C{cls}"
             sn = short_species(name)
             c = SPECIES_COLORS.get(name, CB[int(cls) % len(CB)])
-            ax.scatter(tsne[mask, 0], tsne[mask, 1], c=c, label=sn,
-                      s=12, alpha=0.6, edgecolors="none", rasterized=True)
+            ax.scatter(tsne[mask, 0], tsne[mask, 1], c=c, label=sn, s=12, alpha=0.6, edgecolors="none", rasterized=True)
 
         ax.set_title(EXP_LABELS[exp], fontweight="bold")
         ax.set_xlabel("t-SNE 1")
         ax.set_ylabel("t-SNE 2")
         ax.legend(loc="upper left", bbox_to_anchor=(1.01, 1), markerscale=2, framealpha=0.9)
-        ax.text(-0.15, -0.1, f"({chr(97+j)})", transform=ax.transAxes, fontsize=11, fontweight="bold")
+        ax.text(-0.15, -0.1, f"({chr(97 + j)})", transform=ax.transAxes, fontsize=11, fontweight="bold")
 
     fig.suptitle("t-SNE Embedding Space — DINOv2-Small", fontweight="bold", y=1.02)
     fig.tight_layout()
@@ -319,6 +364,7 @@ def fig_tsne_comparison():
 # ══════════════════════════════════════════════════════════════════════
 #  FIGURE 4: Closed-Set vs Open-Set Scatter
 # ══════════════════════════════════════════════════════════════════════
+
 
 def fig_closed_vs_open_scatter():
     """Scatter: test F1 vs detection_rate@10%FPR. Shows exp8+10 (only ones with OSR data)."""
@@ -330,11 +376,18 @@ def fig_closed_vs_open_scatter():
         for model in MODELS:
             f1 = get_test_f1(load_results(exp, model))
             dr = get_detection_rate(exp, model)
-            ax.scatter(f1, dr, s=130, c=colors_exp[exp], marker=shapes[exp],
-                      label=EXP_LABELS[exp] if model == MODELS[0] else "",
-                      zorder=3, edgecolors="black", linewidths=0.5)
-            ax.annotate(short_model(model), (f1, dr),
-                       textcoords="offset points", xytext=(5, 4), fontsize=7, alpha=0.8)
+            ax.scatter(
+                f1,
+                dr,
+                s=130,
+                c=colors_exp[exp],
+                marker=shapes[exp],
+                label=EXP_LABELS[exp] if model == MODELS[0] else "",
+                zorder=3,
+                edgecolors="black",
+                linewidths=0.5,
+            )
+            ax.annotate(short_model(model), (f1, dr), textcoords="offset points", xytext=(5, 4), fontsize=7, alpha=0.8)
 
     ax.axhline(y=0.5, color="gray", linestyle=":", alpha=0.4)
     ax.axvline(x=0.7, color="gray", linestyle=":", alpha=0.4)
@@ -354,11 +407,11 @@ def fig_closed_vs_open_scatter():
 #  FIGURE 5: Per-Species F1 (best model per experiment)
 # ══════════════════════════════════════════════════════════════════════
 
+
 def fig_per_species_f1():
     """Grouped bar chart: F1 per species, best model per experiment."""
     best = {"exp6": "dinov2_base", "exp7": "dinov2_small", "exp8": "dinov2_small", "exp10": "dinov2_base"}
-    order = ["O. exaltata", "O. garganica", "O. incubacea",
-             "O. majellensis", "O. sphegodes", "O. sphegodes_Palena"]
+    order = ["O. exaltata", "O. garganica", "O. incubacea", "O. majellensis", "O. sphegodes", "O. sphegodes_Palena"]
     short = [short_species(s) for s in order]
     fig, ax = plt.subplots(figsize=(10, 5))
     n_exp, n_sp = len(best), len(order)
@@ -372,8 +425,15 @@ def fig_per_species_f1():
         off = (j - n_exp / 2 + 0.5) * width
         bars = ax.bar(x + off, vals, width, label=EXP_LABELS[exp], color=plt.cm.Set2(j / n_exp))
         for bar, v in zip(bars, vals):
-            ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.01,
-                    f"{v:.2f}", ha="center", va="bottom", fontsize=7, rotation=90)
+            ax.text(
+                bar.get_x() + bar.get_width() / 2,
+                bar.get_height() + 0.01,
+                f"{v:.2f}",
+                ha="center",
+                va="bottom",
+                fontsize=7,
+                rotation=90,
+            )
 
     ax.set_xticks(x)
     ax.set_xticklabels(short)
@@ -389,10 +449,17 @@ def fig_per_species_f1():
 #  FIGURE 6: CV-Test Gap (annotated, clearer)
 # ══════════════════════════════════════════════════════════════════════
 
+
 def fig_cv_test_gap():
     """Scatter: model params vs CV-test F1 gap with double-descent annotation."""
-    params = {"resnet18": 11, "resnet50": 25, "convnext_tiny": 28,
-              "convnext_small": 50, "dinov2_small": 21, "dinov2_base": 86}
+    params = {
+        "resnet18": 11,
+        "resnet50": 25,
+        "convnext_tiny": 28,
+        "convnext_small": 50,
+        "dinov2_small": 21,
+        "dinov2_base": 86,
+    }
     fig, ax = plt.subplots(figsize=(8, 5))
 
     for exp in ["exp6", "exp7"]:
@@ -404,11 +471,20 @@ def fig_cv_test_gap():
             gaps.append(test - cv)
 
         c = CB[0] if exp == "exp6" else CB[1]
-        ax.scatter([params[m] for m in MODELS], gaps, s=90, c=c, zorder=3,
-                  label=EXP_LABELS[exp], edgecolors="black", linewidths=0.3)
+        ax.scatter(
+            [params[m] for m in MODELS],
+            gaps,
+            s=90,
+            c=c,
+            zorder=3,
+            label=EXP_LABELS[exp],
+            edgecolors="black",
+            linewidths=0.3,
+        )
         for i, m in enumerate(MODELS):
-            ax.annotate(short_model(m), (params[m], gaps[i]),
-                       textcoords="offset points", xytext=(5, 5), fontsize=7, alpha=0.7)
+            ax.annotate(
+                short_model(m), (params[m], gaps[i]), textcoords="offset points", xytext=(5, 5), fontsize=7, alpha=0.7
+            )
 
     ax.axhline(y=0, color="gray", linestyle="--", alpha=0.5, linewidth=1)
     ax.text(60, 0.03, "Overfits on val\n(test > CV)", fontsize=8, color="gray", fontstyle="italic")
@@ -425,6 +501,7 @@ def fig_cv_test_gap():
 # ══════════════════════════════════════════════════════════════════════
 #  FIGURE 7: Loss Curves — aggregated mean±std per experiment
 # ══════════════════════════════════════════════════════════════════════
+
 
 def fig_loss_curves_aggregated():
     """Validation loss: one panel, one colored line per experiment.
@@ -445,8 +522,7 @@ def fig_loss_curves_aggregated():
         mean = aligned.mean(axis=0)
         std = aligned.std(axis=0)
         epochs = np.arange(1, min_len + 1)
-        ax.plot(epochs, mean, color=exp_colors[exp], linestyle=exp_styles[exp],
-                label=EXP_LABELS[exp], linewidth=2)
+        ax.plot(epochs, mean, color=exp_colors[exp], linestyle=exp_styles[exp], label=EXP_LABELS[exp], linewidth=2)
         ax.fill_between(epochs, mean - std, mean + std, color=exp_colors[exp], alpha=0.1)
 
     ax.set_xlabel("Epoch")
@@ -460,6 +536,7 @@ def fig_loss_curves_aggregated():
 # ══════════════════════════════════════════════════════════════════════
 #  FIGURE 8: OSR Detection Rate — all models, Exp 8
 # ══════════════════════════════════════════════════════════════════════
+
 
 def fig_osr_detection_rate():
     """Detection rate @ 10% FPR per detector, all models, Exp 8."""
@@ -498,6 +575,7 @@ def fig_osr_detection_rate():
 #  FIGURE 9: OSR Detection Rate — Exp 8 vs Exp 10 side-by-side
 # ══════════════════════════════════════════════════════════════════════
 
+
 def fig_osr_detection_comparison():
     """Detection rate: Exp 8 vs Exp 10, all detectors, all models."""
     detectors = ["Mahalanobis", "KNN", "Energy", "Ensemble"]
@@ -528,7 +606,7 @@ def fig_osr_detection_comparison():
         ax.axhline(y=0.5, color="gray", linestyle="--", alpha=0.5)
         ax.set_ylim(0, 1.05)
         ax.legend(loc="upper left", bbox_to_anchor=(1.01, 1), framealpha=0.9, fontsize=8)
-        ax.text(-0.15, -0.1, f"({chr(97+idx)})", transform=ax.transAxes, fontsize=11, fontweight="bold")
+        ax.text(-0.15, -0.1, f"({chr(97 + idx)})", transform=ax.transAxes, fontsize=11, fontweight="bold")
 
     fig.suptitle("Known-Class Recognition Rate: SpHOR vs MGH-NCD", fontweight="bold", y=1.05)
     fig.tight_layout()
@@ -539,10 +617,10 @@ def fig_osr_detection_comparison():
 #  FIGURE 10: Exp 8 per-species F1 — all models
 # ══════════════════════════════════════════════════════════════════════
 
+
 def fig_exp8_per_species():
     """Per-species F1, all models, Exp 8."""
-    order = ["O. exaltata", "O. garganica", "O. incubacea",
-             "O. majellensis", "O. sphegodes", "O. sphegodes_Palena"]
+    order = ["O. exaltata", "O. garganica", "O. incubacea", "O. majellensis", "O. sphegodes", "O. sphegodes_Palena"]
     short = [short_species(s) for s in order]
     fig, ax = plt.subplots(figsize=(10, 5))
     width = 0.8 / len(MODELS)
@@ -555,8 +633,15 @@ def fig_exp8_per_species():
         off = (i - len(MODELS) / 2 + 0.5) * width
         bars = ax.bar(x + off, vals, width, label=short_model(model), color=MODEL_COLORS.get(model, CB[i]))
         for bar, v in zip(bars, vals):
-            ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.01,
-                    f"{v:.2f}", ha="center", va="bottom", fontsize=6, rotation=90)
+            ax.text(
+                bar.get_x() + bar.get_width() / 2,
+                bar.get_height() + 0.01,
+                f"{v:.2f}",
+                ha="center",
+                va="bottom",
+                fontsize=6,
+                rotation=90,
+            )
 
     ax.set_xticks(x)
     ax.set_xticklabels(short)
@@ -572,10 +657,10 @@ def fig_exp8_per_species():
 #  FIGURE 11: Exp 10 per-species F1 — all models
 # ══════════════════════════════════════════════════════════════════════
 
+
 def fig_exp10_per_species():
     """Per-species F1, all models, Exp 10."""
-    order = ["O. exaltata", "O. garganica", "O. incubacea",
-             "O. majellensis", "O. sphegodes", "O. sphegodes_Palena"]
+    order = ["O. exaltata", "O. garganica", "O. incubacea", "O. majellensis", "O. sphegodes", "O. sphegodes_Palena"]
     short = [short_species(s) for s in order]
     fig, ax = plt.subplots(figsize=(10, 5))
     width = 0.8 / len(MODELS)
@@ -588,8 +673,15 @@ def fig_exp10_per_species():
         off = (i - len(MODELS) / 2 + 0.5) * width
         bars = ax.bar(x + off, vals, width, label=short_model(model), color=MODEL_COLORS.get(model, CB[i]))
         for bar, v in zip(bars, vals):
-            ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.01,
-                    f"{v:.2f}", ha="center", va="bottom", fontsize=6, rotation=90)
+            ax.text(
+                bar.get_x() + bar.get_width() / 2,
+                bar.get_height() + 0.01,
+                f"{v:.2f}",
+                ha="center",
+                va="bottom",
+                fontsize=6,
+                rotation=90,
+            )
 
     ax.set_xticks(x)
     ax.set_xticklabels(short)
@@ -604,6 +696,7 @@ def fig_exp10_per_species():
 # ══════════════════════════════════════════════════════════════════════
 #  FIGURE 12: Exp 8 t-SNE — multiple architectures
 # ══════════════════════════════════════════════════════════════════════
+
 
 def fig_tsne_exp8_multimodel():
     """t-SNE for 3 architectures in Exp 8."""
@@ -625,14 +718,13 @@ def fig_tsne_exp8_multimodel():
             name = cnames[int(cls)] if int(cls) < len(cnames) else f"C{cls}"
             sn = short_species(name)
             c = SPECIES_COLORS.get(name, CB[int(cls) % len(CB)])
-            ax.scatter(tsne[mask, 0], tsne[mask, 1], c=c, label=sn,
-                      s=10, alpha=0.6, edgecolors="none", rasterized=True)
+            ax.scatter(tsne[mask, 0], tsne[mask, 1], c=c, label=sn, s=10, alpha=0.6, edgecolors="none", rasterized=True)
 
         ax.set_title(label, fontweight="bold")
         ax.set_xlabel("t-SNE 1")
         ax.set_ylabel("t-SNE 2")
         ax.legend(loc="upper left", bbox_to_anchor=(1.01, 1), markerscale=2, framealpha=0.9)
-        ax.text(-0.15, -0.1, f"({chr(97+j)})", transform=ax.transAxes, fontsize=11, fontweight="bold")
+        ax.text(-0.15, -0.1, f"({chr(97 + j)})", transform=ax.transAxes, fontsize=11, fontweight="bold")
 
     fig.suptitle("Exp 8 (SpHOR): t-SNE per Architecture", fontweight="bold", y=1.02)
     fig.tight_layout()
@@ -642,6 +734,7 @@ def fig_tsne_exp8_multimodel():
 # ══════════════════════════════════════════════════════════════════════
 #  FIGURE 13: Benchmark bar chart (legend outside)
 # ══════════════════════════════════════════════════════════════════════
+
 
 def fig_benchmark_bar():
     """Grouped bar chart: all models × all experiments."""
@@ -668,6 +761,7 @@ def fig_benchmark_bar():
 #  FIGURE 14: Clustering comparison (SpHOR vs MGH-NCD)
 # ══════════════════════════════════════════════════════════════════════
 
+
 def fig_clustering_comparison():
     """Clustering metrics: SpHOR vs MGH-NCD for DINOv2-Base."""
     fig, ax = plt.subplots(figsize=(8, 4.5))
@@ -691,8 +785,14 @@ def fig_clustering_comparison():
         off = (j - 0.5) * width
         bars = ax.bar(x + off, vals, width, label=label, color=CB[j * 3 % len(CB)])
         for bar, v in zip(bars, vals):
-            ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.01,
-                    f"{v:.3f}", ha="center", va="bottom", fontsize=9)
+            ax.text(
+                bar.get_x() + bar.get_width() / 2,
+                bar.get_height() + 0.01,
+                f"{v:.3f}",
+                ha="center",
+                va="bottom",
+                fontsize=9,
+            )
 
     ax.set_xticks(x)
     ax.set_xticklabels(metric_labels)
@@ -707,6 +807,7 @@ def fig_clustering_comparison():
 # ══════════════════════════════════════════════════════════════════════
 #  FIGURE 15: Summary dual heatmap
 # ══════════════════════════════════════════════════════════════════════
+
 
 def fig_summary_dual_heatmap():
     """Closed-set F1 + open-set detection rate side by side."""
@@ -726,12 +827,10 @@ def fig_summary_dual_heatmap():
     cmap.set_bad("#f0f0f0")
 
     for ax, data, title, vmin, vmax, labels in [
-        (axes[0], data_f1, "Closed-Set Test F1", 0.3, 1.0,
-         [EXP_LABELS[e] for e in EXPS_ALL]),
-        (axes[1], data_det, "OSR Detection@10%FPR", 0.0, 1.0,
-         ["Exp 8 (SpHOR)", "Exp 10 (MGH-NCD)"]),
+        (axes[0], data_f1, "Closed-Set Test F1", 0.3, 1.0, [EXP_LABELS[e] for e in EXPS_ALL]),
+        (axes[1], data_det, "OSR Detection@10%FPR", 0.0, 1.0, ["Exp 8 (SpHOR)", "Exp 10 (MGH-NCD)"]),
     ]:
-        im = ax.imshow(data, cmap=cmap, vmin=vmin, vmax=vmax, aspect="auto")
+        ax.imshow(data, cmap=cmap, vmin=vmin, vmax=vmax, aspect="auto")
         ax.set_xticks(range(data.shape[1]))
         ax.set_xticklabels(labels, fontsize=8, rotation=25, ha="right")
         ax.set_yticks(range(len(MODELS)))
@@ -753,6 +852,7 @@ def fig_summary_dual_heatmap():
 # ══════════════════════════════════════════════════════════════════════
 #  FIGURE 16: OSR detection heatmap (Exp 8 vs Exp 10)
 # ══════════════════════════════════════════════════════════════════════
+
 
 def fig_osr_detection_heatmap():
     """Ensemble detection rate for all models, Exp 8 vs Exp 10."""
@@ -787,6 +887,7 @@ def fig_osr_detection_heatmap():
 #  SPOTLIGHT 17: ConvNeXt-Tiny — the OSR champion
 # ══════════════════════════════════════════════════════════════════════
 
+
 def fig_spotlight_convnext_osr():
     """Spotlight: ConvNeXt-Tiny achieves 0.907 detection rate in Exp 8.
     Shows detection rate across ALL detectors + models, highlighting ConvNeXt-Tiny."""
@@ -810,15 +911,28 @@ def fig_spotlight_convnext_osr():
         c = "#D55E00" if model == "convnext_tiny" else MODEL_COLORS.get(model, CB[i])
         lw = 2.5 if model == "convnext_tiny" else 0.8
         alpha_val = 1.0 if model == "convnext_tiny" else 0.4
-        bars = ax.bar(x + off, vals, width, label=short_model(model), color=c,
-                     linewidth=lw, edgecolor="black" if model == "convnext_tiny" else None, alpha=alpha_val)
+        ax.bar(
+            x + off,
+            vals,
+            width,
+            label=short_model(model),
+            color=c,
+            linewidth=lw,
+            edgecolor="black" if model == "convnext_tiny" else None,
+            alpha=alpha_val,
+        )
 
     # Annotate the champion
-    ax.annotate("ConvNeXt-Tiny: 0.907\n(Ensemble detector)",
-               xy=(3 + (MODELS.index("convnext_tiny") - len(MODELS)/2 + 0.5) * width, 0.907),
-               xytext=(4.5, 0.85), fontsize=10, fontweight="bold", color="#D55E00",
-               arrowprops=dict(arrowstyle="->", color="#D55E00", lw=1.5),
-               bbox=dict(boxstyle="round,pad=0.3", facecolor="white", edgecolor="#D55E00", alpha=0.9))
+    ax.annotate(
+        "ConvNeXt-Tiny: 0.907\n(Ensemble detector)",
+        xy=(3 + (MODELS.index("convnext_tiny") - len(MODELS) / 2 + 0.5) * width, 0.907),
+        xytext=(4.5, 0.85),
+        fontsize=10,
+        fontweight="bold",
+        color="#D55E00",
+        arrowprops=dict(arrowstyle="->", color="#D55E00", lw=1.5),
+        bbox=dict(boxstyle="round,pad=0.3", facecolor="white", edgecolor="#D55E00", alpha=0.9),
+    )
 
     ax.set_xticks(x)
     ax.set_xticklabels(detectors)
@@ -835,15 +949,17 @@ def fig_spotlight_convnext_osr():
 #  SPOTLIGHT 18: Exp 10 collapse to sphegodes_Palena
 # ══════════════════════════════════════════════════════════════════════
 
+
 def fig_spotlight_exp10_collapse():
     """Focused figure: Exp 10 causes most species to be classified as Palena.
     Shows per-species accuracy breakdown highlighting the collapse."""
     model = "dinov2_base"
     res = load_results("exp10", model)
     cm = np.array(res["test_metrics"]["confusion_matrix"])
-    labels_raw = res["test_metrics"].get("confusion_matrix_labels",
-                 list(res.get("class_names", [f"C{i}" for i in range(len(cm))])))
-    short = [short_species(l) for l in labels_raw]
+    labels_raw = res["test_metrics"].get(
+        "confusion_matrix_labels", list(res.get("class_names", [f"C{i}" for i in range(len(cm))]))
+    )
+    short = [short_species(label) for label in labels_raw]
     n = len(cm)
 
     # Per-class accuracy (correct / total)
@@ -858,7 +974,7 @@ def fig_spotlight_exp10_collapse():
 
     # Panel (a): confusion matrix heatmap
     ax = axes[0]
-    im = ax.imshow(cm, cmap="Reds", interpolation="nearest", vmin=0, vmax=50)
+    ax.imshow(cm, cmap="Reds", interpolation="nearest", vmin=0, vmax=50)
     ax.set_xticks(range(n))
     ax.set_yticks(range(n))
     ax.set_xticklabels(short, fontsize=8, rotation=45, ha="right")
@@ -870,11 +986,12 @@ def fig_spotlight_exp10_collapse():
         for j in range(n):
             v = cm[i, j]
             c = "white" if v > 25 else "black"
-            ax.text(j, i, str(v), ha="center", va="center", fontsize=9, color=c, fontweight="bold" if j == n-1 else "normal")
+            fw = "bold" if j == n - 1 else "normal"
+            ax.text(j, i, str(v), ha="center", va="center", fontsize=9, color=c, fontweight=fw)
 
     # Highlight the Palena column
     for i in range(n):
-        rect = plt.Rectangle((n-1 - 0.5, i - 0.5), 1, 1, fill=False, edgecolor="#D55E00", linewidth=3, linestyle="--")
+        rect = plt.Rectangle((n - 1 - 0.5, i - 0.5), 1, 1, fill=False, edgecolor="#D55E00", linewidth=3, linestyle="--")
         ax.add_patch(rect)
 
     ax.set_title("(a) Confusion Matrix — Collapse to Palena", fontweight="bold", fontsize=11)
@@ -884,15 +1001,29 @@ def fig_spotlight_exp10_collapse():
     ax = axes[1]
     x = np.arange(n)
     width = 0.35
-    bars1 = ax.bar(x - width/2, accuracy, width, label="Correct class", color="#0072B2")
-    bars2 = ax.bar(x + width/2, palena_frac, width, label="Classified as Palena", color="#D55E00")
+    bars1 = ax.bar(x - width / 2, accuracy, width, label="Correct class", color="#0072B2")
+    bars2 = ax.bar(x + width / 2, palena_frac, width, label="Classified as Palena", color="#D55E00")
 
     for bar, v in zip(bars1, accuracy):
-        ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.02,
-               f"{v:.0%}", ha="center", va="bottom", fontsize=8, fontweight="bold")
+        ax.text(
+            bar.get_x() + bar.get_width() / 2,
+            bar.get_height() + 0.02,
+            f"{v:.0%}",
+            ha="center",
+            va="bottom",
+            fontsize=8,
+            fontweight="bold",
+        )
     for bar, v in zip(bars2, palena_frac):
-        ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.02,
-               f"{v:.0%}", ha="center", va="bottom", fontsize=8, color="#D55E00")
+        ax.text(
+            bar.get_x() + bar.get_width() / 2,
+            bar.get_height() + 0.02,
+            f"{v:.0%}",
+            ha="center",
+            va="bottom",
+            fontsize=8,
+            color="#D55E00",
+        )
 
     ax.set_xticks(x)
     ax.set_xticklabels(short)
@@ -911,12 +1042,12 @@ def fig_spotlight_exp10_collapse():
 #  SPOTLIGHT 19: Per-species F1 evolution across experiments
 # ══════════════════════════════════════════════════════════════════════
 
+
 def fig_spotlight_species_evolution():
     """How per-species F1 changes across experiments for DINOv2-Small.
     Shows the journey from CE → SupCon → SpHOR → MGH-NCD for each species."""
     model = "dinov2_small"
-    order = ["O. exaltata", "O. garganica", "O. incubacea",
-             "O. majellensis", "O. sphegodes", "O. sphegodes_Palena"]
+    order = ["O. exaltata", "O. garganica", "O. incubacea", "O. majellensis", "O. sphegodes", "O. sphegodes_Palena"]
     short = [short_species(s) for s in order]
     n_sp = len(order)
 
@@ -929,12 +1060,28 @@ def fig_spotlight_species_evolution():
         res = load_results(exp, model)
         f1pc = res["test_metrics"].get("f1_per_class", {}) if res and "test_metrics" in res else {}
         vals = [f1pc.get(s, 0) for s in order]
-        ax.plot(x, vals, color=exp_colors[exp], marker=markers[exp],
-               label=EXP_LABELS[exp], linewidth=1.5, markersize=8, zorder=3)
+        ax.plot(
+            x,
+            vals,
+            color=exp_colors[exp],
+            marker=markers[exp],
+            label=EXP_LABELS[exp],
+            linewidth=1.5,
+            markersize=8,
+            zorder=3,
+        )
         # Annotate values
         for i, v in enumerate(vals):
-            ax.annotate(f"{v:.2f}", (x[i], v), textcoords="offset points",
-                       xytext=(0, 8), ha="center", fontsize=6, color=exp_colors[exp], alpha=0.7)
+            ax.annotate(
+                f"{v:.2f}",
+                (x[i], v),
+                textcoords="offset points",
+                xytext=(0, 8),
+                ha="center",
+                fontsize=6,
+                color=exp_colors[exp],
+                alpha=0.7,
+            )
 
     ax.set_xticks(x)
     ax.set_xticklabels(short)
@@ -950,6 +1097,7 @@ def fig_spotlight_species_evolution():
 # ══════════════════════════════════════════════════════════════════════
 #  MAIN
 # ══════════════════════════════════════════════════════════════════════
+
 
 def main():
     print("=" * 60)
@@ -992,6 +1140,7 @@ def main():
         except Exception as e:
             print(f"  ✗ ERROR: {e}")
             import traceback
+
             traceback.print_exc()
 
     n = len(list(FIGURES.glob("*.png")))
