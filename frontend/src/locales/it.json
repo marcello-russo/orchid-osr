@@ -466,5 +466,27 @@
   "header": {
     "logout": "Esci",
     "login": "Accedi"
+  },
+  "invites": {
+    "title": "Gestione Inviti",
+    "description": "Genera e gestisci i codici invito per la registrazione degli utenti.",
+    "generate_title": "Genera nuovi inviti",
+    "generate_description": "Crea codici invito per permettere a nuovi utenti di registrarsi.",
+    "count": "Quantità",
+    "role": "Ruolo",
+    "generate": "Genera",
+    "list_title": "Codici invito",
+    "list_description": "{total} inviti totali, {available} disponibili, {used} utilizzati • {users} utenti registrati",
+    "empty": "Nessun codice invito generato.",
+    "code": "Codice",
+    "status": "Stato",
+    "status_available": "Disponibile",
+    "status_used": "Usato",
+    "created_at": "Creato il",
+    "used_by": "Usato da",
+    "users_title": "Utenti registrati",
+    "users_description": "{count} utenti registrati",
+    "username": "Username",
+    "sidebar": "Inviti"
   }
 }

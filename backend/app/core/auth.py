@@ -147,6 +147,7 @@ def register_user(invite_code: str, username: str, password: str) -> dict:
             raise HTTPException(status.HTTP_409_CONFLICT, "Username already taken")
 
         invite["used"] = True
+        invite["used_by"] = username
         role = invite["role"]
         data["users"].append(
             {
@@ -232,5 +233,14 @@ def list_users_and_invites() -> dict:
     data = _load_data()
     return {
         "users": [{"username": u["username"], "role": u["role"]} for u in data["users"]],
-        "invites": [{"code": i["code"], "used": i["used"], "role": i["role"]} for i in data["invites"]],
+        "invites": [
+            {
+                "code": i["code"],
+                "role": i["role"],
+                "used": i["used"],
+                "used_by": i.get("used_by"),
+                "created_at": i.get("created_at"),
+            }
+            for i in data["invites"]
+        ],
     }

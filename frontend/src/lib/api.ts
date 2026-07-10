@@ -231,6 +231,29 @@ export async function register(inviteCode: string, username: string, password: s
   return res.json();
 }
 
+export async function fetchInvites(): Promise<{
+  invites: Array<{
+    code: string;
+    role: string;
+    used: boolean;
+    used_by: string | null;
+    created_at: string | null;
+  }>;
+  users: Array<{ username: string; role: string }>;
+}> {
+  return fetchApi("/auth/invites");
+}
+
+export async function generateInvites(
+  count: number,
+  role: string
+): Promise<{ codes: string[] }> {
+  return fetchApi("/auth/invites/generate", {
+    method: "POST",
+    body: JSON.stringify({ count, role }),
+  });
+}
+
 export async function fetchMe(): Promise<{ username: string; role: string }> {
   const res = await apiFetch("/auth/me");
   if (!res.ok) throw new Error("Not authenticated");

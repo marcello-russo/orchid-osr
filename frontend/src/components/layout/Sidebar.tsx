@@ -9,6 +9,7 @@ import {
   Box,
   Database,
   BookOpen,
+  KeyRound,
   X,
 } from "lucide-react";
 import { useAppStore } from "@/stores/useAppStore";
@@ -24,7 +25,7 @@ const navItems = [
 ];
 
 export function Sidebar() {
-  const { setSidebarOpen } = useAppStore();
+  const { user, setSidebarOpen } = useAppStore();
   const { t } = useTranslation();
 
   return (
@@ -69,6 +70,23 @@ export function Sidebar() {
             <span>{t(key)}</span>
           </NavLink>
         ))}
+        {user?.role === "admin" && (
+          <NavLink
+            to="/invites"
+            onClick={() => setSidebarOpen(false)}
+            className={({ isActive }) =>
+              cn(
+                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors duration-150 cursor-pointer",
+                isActive
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )
+            }
+          >
+            <KeyRound className="size-5 shrink-0" />
+            <span>{t("invites.sidebar")}</span>
+          </NavLink>
+        )}
       </nav>
     </aside>
   );
