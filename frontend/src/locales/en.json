@@ -476,7 +476,7 @@
     "role": "Role",
     "generate": "Generate",
     "list_title": "Invite codes",
-    "list_description": "{total} total invites, {available} available, {used} used • {users} registered users",
+    "list_description": "{{total}} total invites, {{available}} available, {{used}} used • {{users}} registered users",
     "empty": "No invite codes generated yet.",
     "code": "Code",
     "status": "Status",
@@ -485,7 +485,7 @@
     "created_at": "Created",
     "used_by": "Used by",
     "users_title": "Registered users",
-    "users_description": "{count} registered users",
+    "users_description": "{{count}} registered users",
     "username": "Username",
     "sidebar": "Invites"
   }

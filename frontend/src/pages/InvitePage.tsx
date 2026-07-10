@@ -20,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Copy, Plus, RefreshCw } from "lucide-react";
+import { Copy, KeyRound, Plus, RefreshCw, Users } from "lucide-react";
 
 interface Invite {
   code: string;
@@ -79,11 +79,16 @@ export function InvitePage() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">
-          {t("invites.title")}
-        </h1>
-        <p className="text-muted-foreground">{t("invites.description")}</p>
+      <div className="flex items-center gap-3">
+        <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <KeyRound className="size-5" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {t("invites.title")}
+          </h1>
+          <p className="text-muted-foreground">{t("invites.description")}</p>
+        </div>
       </div>
 
       <Card>
@@ -223,7 +228,10 @@ export function InvitePage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>{t("invites.users_title")}</CardTitle>
+          <div className="flex items-center gap-2">
+            <Users className="size-5 text-muted-foreground" />
+            <CardTitle>{t("invites.users_title")}</CardTitle>
+          </div>
           <CardDescription>
             {t("invites.users_description", { count: users.length })}
           </CardDescription>
