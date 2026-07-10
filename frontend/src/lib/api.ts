@@ -16,7 +16,7 @@ async function apiFetch(url: string, options: RequestInit = {}): Promise<Respons
     ...(options.headers as Record<string, string> || {}),
     ...getAuthHeaders(),
   };
-  if (url.startsWith("/auth/")) {
+  if (url.startsWith("/auth/login") || url.startsWith("/auth/register")) {
     delete headers.Authorization;
   }
   return fetch(url, { ...options, headers });
