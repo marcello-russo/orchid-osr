@@ -1,12 +1,25 @@
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
-from app.core.auth import create_jwt, decode_jwt, login_user, register_user
+from app.api.deps import require_role
+from app.core.auth import (
+    create_jwt,
+    decode_jwt,
+    generate_invite,
+    list_users_and_invites,
+    login_user,
+    register_user,
+)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 limiter = Limiter(key_func=get_remote_address)
+
+
+class GenerateInviteRequest(BaseModel):
+    count: int = Field(default=1, ge=1, le=10, description="Numero di inviti da generare (1-10)")
+    role: str = Field(default="user", pattern=r"^(user|admin)$")
 
 
 class RegisterRequest(BaseModel):
@@ -43,3 +56,16 @@ def me(request: Request):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Missing token")
     payload = decode_jwt(auth[7:])
     return {"username": payload["sub"], "role": payload["role"]}
+
+
+@router.get("/invites")
+def list_invites(request: Request, admin=Depends(require_role("admin"))):
+    return list_users_and_invites()
+
+
+@router.post("/invites/generate")
+def create_invites(
+    request: Request, body: GenerateInviteRequest, admin=Depends(require_role("admin"))
+):
+    codes = generate_invite(role=body.role, count=body.count)
+    return {"codes": codes}

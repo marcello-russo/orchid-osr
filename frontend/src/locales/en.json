@@ -466,5 +466,27 @@
   "header": {
     "logout": "Log out",
     "login": "Log in"
+  },
+  "invites": {
+    "title": "Invite Management",
+    "description": "Generate and manage invite codes for user registration.",
+    "generate_title": "Generate new invites",
+    "generate_description": "Create invite codes to allow new users to register.",
+    "count": "Count",
+    "role": "Role",
+    "generate": "Generate",
+    "list_title": "Invite codes",
+    "list_description": "{total} total invites, {available} available, {used} used • {users} registered users",
+    "empty": "No invite codes generated yet.",
+    "code": "Code",
+    "status": "Status",
+    "status_available": "Available",
+    "status_used": "Used",
+    "created_at": "Created",
+    "used_by": "Used by",
+    "users_title": "Registered users",
+    "users_description": "{count} registered users",
+    "username": "Username",
+    "sidebar": "Invites"
   }
 }

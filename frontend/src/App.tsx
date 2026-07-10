@@ -26,6 +26,9 @@ const DatasetPage = lazy(() =>
 const ResearchPage = lazy(() =>
   import("@/pages/ResearchPage").then((m) => ({ default: m.ResearchPage }))
 );
+const InvitePage = lazy(() =>
+  import("@/pages/InvitePage").then((m) => ({ default: m.InvitePage }))
+);
 
 function PageFallback() {
   return (
@@ -70,6 +73,10 @@ function App() {
             <Route
               path="/dataset"
               element={<ErrorBoundary><Suspense fallback={<PageFallback />}><DatasetPage /></Suspense></ErrorBoundary>}
+            />
+            <Route
+              path="/invites"
+              element={<ErrorBoundary><Suspense fallback={<PageFallback />}><InvitePage /></Suspense></ErrorBoundary>}
             />
           </Route>
         </Route>
