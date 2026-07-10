@@ -13,6 +13,7 @@ function getAuthHeaders(): Record<string, string> {
 
 async function apiFetch(url: string, options: RequestInit = {}): Promise<Response> {
   const headers: Record<string, string> = {
+    "Content-Type": "application/json",
     ...(options.headers as Record<string, string> || {}),
     ...getAuthHeaders(),
   };
