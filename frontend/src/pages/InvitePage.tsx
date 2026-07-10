@@ -20,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Copy, KeyRound, Plus, RefreshCw, Users } from "lucide-react";
+import { Copy, KeyRound, Plus, Users } from "lucide-react";
 
 interface Invite {
   code: string;
@@ -130,10 +130,7 @@ export function InvitePage() {
               <Plus className="mr-2 size-4" />
               {generating ? t("common.loading") : t("invites.generate")}
             </Button>
-            <Button variant="outline" onClick={load} disabled={loading}>
-              <RefreshCw className="mr-2 size-4" />
-              {t("common.refresh")}
-            </Button>
+
           </div>
         </CardContent>
       </Card>
