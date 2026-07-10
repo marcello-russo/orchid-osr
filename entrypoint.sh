@@ -47,20 +47,23 @@ if [ -d "$DATA_DIR" ]; then
     [ ! -L experiments ] && ln -sfn "$DATA_DIR/experiments" experiments 2>/dev/null || true
 fi
 
-# Download dataset if not present (uses HF_TOKEN from Secrets at runtime)
-if [ ! -d "dataset/cropped_256x512/train" ] || [ ! -d "dataset/cropped_224x224/train" ]; then
-    if [ -n "$HF_TOKEN" ]; then
-        echo "Dataset non trovato — download in corso..."
-        python3 scripts/hf_tools/download_cache.py || echo "Download fallito"
-    else
-        echo "HF_TOKEN non impostato, skip download dataset (demo senza dataset locale)"
-    fi
-fi
-
-# Avvia server (--reload in dev mode)
+# Avvia server SUBITO (prima del download del dataset)
 EXTRA_ARGS=""
 if [ "$API_RELOAD" = "true" ]; then
     EXTRA_ARGS=" --reload"
 fi
 
-exec python3 server.py$EXTRA_ARGS
+python3 server.py$EXTRA_ARGS &
+SERVER_PID=$!
+
+# Download dataset in background (non blocca il server)
+if [ ! -d "dataset/cropped_256x512/train" ] || [ ! -d "dataset/cropped_224x224/train" ]; then
+    if [ -n "$HF_TOKEN" ]; then
+        echo "Dataset non trovato — download in background..."
+        (python3 scripts/hf_tools/download_cache.py && echo "Dataset scaricato") &
+    else
+        echo "HF_TOKEN non impostato, skip download dataset (demo senza dataset locale)"
+    fi
+fi
+
+wait $SERVER_PID
