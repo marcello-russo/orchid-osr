@@ -476,7 +476,7 @@
     "role": "Ruolo",
     "generate": "Genera",
     "list_title": "Codici invito",
-    "list_description": "{total} inviti totali, {available} disponibili, {used} utilizzati • {users} utenti registrati",
+    "list_description": "{{total}} inviti totali, {{available}} disponibili, {{used}} utilizzati • {{users}} utenti registrati",
     "empty": "Nessun codice invito generato.",
     "code": "Codice",
     "status": "Stato",
@@ -485,7 +485,7 @@
     "created_at": "Creato il",
     "used_by": "Usato da",
     "users_title": "Utenti registrati",
-    "users_description": "{count} utenti registrati",
+    "users_description": "{{count}} utenti registrati",
     "username": "Username",
     "sidebar": "Inviti"
   }
