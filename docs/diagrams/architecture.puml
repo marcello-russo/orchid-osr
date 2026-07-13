@@ -1,0 +1,33 @@
+@startuml
+skinparam backgroundColor white
+skinparam componentStyle rectangle
+
+title System Architecture — OrchID NCD
+
+actor "User / Browser" as user
+
+package "Cloudflare" {
+  component "Cloudflare Pages\nFrontend SPA" as pages
+  component "Cloudflare Tunnel\nEdge" as tunnel_edge
+}
+
+package "VPS (OVH / Dokploy)" {
+  component "FastAPI Backend" as api
+  component "Classifier\nModel" as model
+  database "HF Hub\nModel Weights" as hf_models
+  database "HF Hub\nDataset Images" as hf_data
+  database "Local Cache\n/data" as cache
+}
+
+user --> pages : HTTPS
+pages --> tunnel_edge : API calls\n(VITE_API_URL)
+
+tunnel_edge --> api : HTTP (internal)
+
+api --> model : load & predict
+model --> hf_models : download .pt\n(on demand)
+api --> hf_data : download images\n(background)
+hf_data --> cache : persist
+api --> cache : read/write
+
+@enduml
