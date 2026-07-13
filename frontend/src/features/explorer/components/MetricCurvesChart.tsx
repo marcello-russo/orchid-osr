@@ -17,7 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { FoldData } from "@/lib/types";
 import { foldToEpochPoints } from "../types";
 import { useChartSize } from "../hooks/useChartSize";
-import { useChartColors } from "../hooks/useChartColors";
+
 import { cn } from "@/lib/utils";
 
 interface MetricCurvesChartProps {
@@ -29,7 +29,7 @@ export function MetricCurvesChart({ folds, selectedFold }: MetricCurvesChartProp
   const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
   const { height } = useChartSize(ref);
-  const chartColors = useChartColors();
+  const CHART_COLORS = ["#3B82F6","#D97706","#10B981","#8B5CF6","#EF4444"];
   const [metric, setMetric] = useState<"f1" | "accuracy">("f1");
 
   const visibleFolds = useMemo(
@@ -100,9 +100,9 @@ export function MetricCurvesChart({ folds, selectedFold }: MetricCurvesChartProp
             {metric === "f1" && meanBestF1 > 0 && (
               <ReferenceLine
                 y={meanBestF1}
-                stroke={chartColors[1]}
+                stroke={CHART_COLORS[1]}
                 strokeDasharray="4 4"
-                label={{ value: `${t("experiment_detail.charts.mean_best_f1")}${(meanBestF1 * 100).toFixed(2)}%`, fontSize: 13, fill: chartColors[1] }}
+                label={{ value: `${t("experiment_detail.charts.mean_best_f1")}${(meanBestF1 * 100).toFixed(2)}%`, fontSize: 13, fill: CHART_COLORS[1] }}
               />
             )}
             {visibleFolds.map((f) => (
@@ -110,7 +110,7 @@ export function MetricCurvesChart({ folds, selectedFold }: MetricCurvesChartProp
                 key={`metric_${f.fold}`}
                 dataKey={`${f.fold}`}
                 name={`${f.fold}`}
-                stroke={chartColors[f.fold % chartColors.length]}
+                stroke={CHART_COLORS[f.fold % CHART_COLORS.length]}
                 dot={false}
                 strokeWidth={1.5}
                 isAnimationActive={false}

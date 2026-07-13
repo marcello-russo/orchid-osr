@@ -14,7 +14,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { FoldData } from "@/lib/types";
 import { useChartSize } from "../hooks/useChartSize";
-import { useChartColors } from "../hooks/useChartColors";
+
 
 interface FoldSummaryChartProps {
   folds: FoldData[];
@@ -26,7 +26,7 @@ export function FoldSummaryChart({ folds, meanF1, stdF1 }: FoldSummaryChartProps
   const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
   const { width, height } = useChartSize(ref);
-  const chartColors = useChartColors();
+  const CHART_COLORS = ["#3B82F6","#D97706","#10B981","#8B5CF6","#EF4444"];
 
   const data = useMemo(
     () => folds.map((f) => ({
@@ -59,8 +59,8 @@ export function FoldSummaryChart({ folds, meanF1, stdF1 }: FoldSummaryChartProps
               formatter={(value) => (Number(value) * 100).toFixed(2) + "%"}
             />
             <Legend wrapperStyle={{ fontSize: 13 }} align="right" />
-            <Bar dataKey="F1" fill={chartColors[0]} radius={[0, 4, 4, 0]} barSize={20} isAnimationActive={false} />
-            <Bar dataKey="Accuracy" fill={chartColors[1]} radius={[0, 4, 4, 0]} barSize={20} isAnimationActive={false} />
+            <Bar dataKey="F1" fill={CHART_COLORS[0]} radius={[0, 4, 4, 0]} barSize={20} isAnimationActive={false} />
+            <Bar dataKey="Accuracy" fill={CHART_COLORS[1]} radius={[0, 4, 4, 0]} barSize={20} isAnimationActive={false} />
           </BarChart>
         </div>
         <p className="mt-2 text-xs text-muted-foreground">
