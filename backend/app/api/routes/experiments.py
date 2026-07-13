@@ -413,4 +413,5 @@ async def get_fold(experiment_id: str, fold_number: int):
     if not fold_file.exists():
         raise HTTPException(status_code=404, detail=f"Fold {fold_number} not found")
 
-    return _load_json(fold_file)
+    from app.api.routes.comparison import _normalize_fold
+    return _normalize_fold(_load_json(fold_file))
