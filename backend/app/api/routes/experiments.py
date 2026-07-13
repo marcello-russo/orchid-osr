@@ -156,44 +156,8 @@ async def get_experiment(experiment_id: str):
     if not exp_dir.exists() or not exp_dir.is_dir():
         raise HTTPException(status_code=404, detail=f"Experiment '{experiment_id}' not found")
 
-    # Try DB first
-    try:
-        from app.core.db import _row_to_dict, get_db
-
-        conn = get_db()
-        try:
-            row = conn.execute("SELECT * FROM experiments WHERE id = ?", (experiment_id,)).fetchone()
-            if row:
-                exp_data = _row_to_dict(row)
-                folds_rows = conn.execute(
-                    "SELECT * FROM folds WHERE experiment_id = ? ORDER BY fold_idx",
-                    (experiment_id,),
-                ).fetchall()
-                folds = [_row_to_dict(r) for r in folds_rows]
-
-                config = {
-                    k: exp_data.get(k)
-                    for k in [
-                        "model_variant",
-                        "num_folds",
-                        "num_classes",
-                        "loss_type",
-                        "phases",
-                        "recipe",
-                    ]
-                }
-                config = {k: v for k, v in config.items() if v is not None}
-
-                return _build_experiment_response(
-                    exp_id=experiment_id,
-                    config=config,
-                    folds=folds,
-                    exp_data=exp_data,
-                )
-        finally:
-            conn.close()
-    except Exception as e:
-        logger.warning("DB fallito per %s — fallback a JSON: %s", experiment_id, e)
+    # Always use JSON files as source of truth (DB is read-only cache)
+    # so we get complete fold data including supcon_phase
 
     config_path = exp_dir / "config.json"
     results_path = exp_dir / "results.json"
@@ -353,10 +317,20 @@ def _build_experiment_response(
         results.setdefault("test_metrics", {})["accuracy"] = ncd_auroc
         results.setdefault("test_metrics", {})["f1_macro"] = ncd_auroc
 
+    # Normalize all folds (handles SupCon two-phase → flat + phase_epochs)
+    from app.api.routes.comparison import _normalize_fold
+
+    normalized_folds = []
+    for f in folds:
+        if isinstance(f, dict):
+            normalized_folds.append(_normalize_fold(f))
+        else:
+            normalized_folds.append(f)
+
     return {
         "id": exp_id,
         "config": config,
-        "folds": folds,
+        "folds": normalized_folds,
         "results": results,
         "last_modified": last_modified,
         "summary": {
