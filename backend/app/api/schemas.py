@@ -98,6 +98,8 @@ class FoldDataResponse(BaseModel):
     history: FoldHistory
     train_size: int
     val_size: int
+    phase_epochs: list[int] | None = None
+    phase_names: list[str] | None = None
 
 
 class TopPrediction(BaseModel):

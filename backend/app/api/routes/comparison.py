@@ -250,7 +250,7 @@ def _normalize_fold(fold: dict) -> dict:
 
     sp = fold["supcon_phase"]
     supcon_hist = sp.get("supcon_history", {})
-    ce_hist = sp.get("ce_phase", {}).get("ce_history", {})
+    ce_hist = sp.get("ce_phase", {}).get("ce_history", {}) or fold.get("history", {})
 
     # SupCon phase: train_loss + val_knn_acc (no val_loss)
     # CE phase: train_loss + val_loss + val_f1 (if present)
