@@ -1,63 +1,9 @@
 import os
-import shutil
 from pathlib import Path
 
 from huggingface_hub import snapshot_download
 
 DATASET_REPO = "marcellorusso/orchid-ncd-dataset"
-MODELS_REPO = "marcellorusso/orchid-ncd-models"
-
-EXP_PATHS = ["exp6_ce", "exp7_supcon", "exp8_sphor", "exp9_ncd", "exp10_mgh_ncd"]
-
-
-def _download_and_flatten_models(local_base, token):
-    """Download all experiments from HF and flatten into experiments/."""
-    snapshot_download(
-        MODELS_REPO,
-        repo_type="model",
-        local_dir=local_base,
-        allow_patterns=[
-            "exp6_ce/**/*.pt",
-            "exp6_ce/**/*.json",
-            "exp6_ce/**/*.safetensors",
-            "exp6_ce/**/embeddings/*",
-            "exp7_supcon/**/*.pt",
-            "exp7_supcon/**/*.json",
-            "exp7_supcon/**/*.safetensors",
-            "exp7_supcon/**/embeddings/*",
-            "exp8_sphor/**/*.pt",
-            "exp8_sphor/**/*.json",
-            "exp8_sphor/**/*.safetensors",
-            "exp8_sphor/**/embeddings/*",
-            "exp9_ncd/**/*.pt",
-            "exp9_ncd/**/*.json",
-            "exp9_ncd/**/*.safetensors",
-            "exp9_ncd/**/embeddings/*",
-            "exp10_mgh_ncd/**/*.pt",
-            "exp10_mgh_ncd/**/*.json",
-            "exp10_mgh_ncd/**/*.safetensors",
-            "exp10_mgh_ncd/**/embeddings/*",
-        ],
-        token=token,
-    )
-
-    for exp in EXP_PATHS:
-        src = os.path.join(local_base, exp)
-        if not os.path.isdir(src):
-            print(f"  {exp}/ not found on HF, skipping")
-            continue
-        for d in os.listdir(src):
-            s = os.path.join(src, d)
-            t = os.path.join(local_base, d)
-            if os.path.isdir(s):
-                shutil.copytree(s, t, dirs_exist_ok=True)
-                print(f"  Merged {exp}/{d}")
-        shutil.rmtree(src)
-
-    open(os.path.join(local_base, ".models_synced"), "w").close()
-    print("Models synced successfully.")
-
-
 def _load_token() -> str | None:
     secret_path = "/run/secrets/HF_TOKEN"
     if os.path.exists(secret_path):
@@ -88,10 +34,10 @@ def main():
             DATASET_REPO,
             repo_type="dataset",
             local_dir="dataset",
+            resume=True,
             allow_patterns=[
                 "cropped/*/train/**",
                 "cropped/*/test/**",
-                # Backward compat: still download test_clean/ during HF transition
                 "cropped/*/test_clean/**",
             ],
             token=token,
@@ -114,14 +60,6 @@ def main():
         print("Dataset downloaded successfully.")
     except Exception as e:
         print(f"Dataset download failed: {e}")
-
-    # --- Models ---
-    print("\nDownloading model weights from HuggingFace...")
-    try:
-        _download_and_flatten_models("experiments", token)
-    except Exception as e:
-        print(f"Model download failed: {e}")
-
 
 if __name__ == "__main__":
     main()
