@@ -16,7 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { FoldData } from "@/lib/types";
 import { foldToEpochPoints } from "../types";
 import { useChartSize } from "../hooks/useChartSize";
-import { useChartColors } from "../hooks/useChartColors";
+
 
 interface OverfittingProxyChartProps {
   folds: FoldData[];
@@ -27,7 +27,7 @@ export function OverfittingProxyChart({ folds, selectedFold }: OverfittingProxyC
   const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
   const { width, height } = useChartSize(ref);
-  const chartColors = useChartColors();
+  const CHART_COLORS = ["#3B82F6","#D97706","#10B981","#8B5CF6","#EF4444"];
 
   const visibleFolds = useMemo(
     () => selectedFold === null ? folds : folds.filter((f) => f.fold === selectedFold),
@@ -66,9 +66,9 @@ export function OverfittingProxyChart({ folds, selectedFold }: OverfittingProxyC
             <Legend wrapperStyle={{ fontSize: 13 }} align="right" />
             <ReferenceLine
               y={1}
-              stroke={chartColors[4]}
+              stroke={CHART_COLORS[4]}
               strokeDasharray="4 4"
-              label={{ value: t("experiment_detail.charts.overfitting_threshold"), fontSize: 13, fill: chartColors[4] }}
+              label={{ value: t("experiment_detail.charts.overfitting_threshold"), fontSize: 13, fill: CHART_COLORS[4] }}
             />
             {visibleFolds.length > 0 && visibleFolds[0].phase_epochs?.map((ep, i) => {
               if (i === 0 || ep <= 0 || ep > (merged.length || 1)) return null;
@@ -88,7 +88,7 @@ export function OverfittingProxyChart({ folds, selectedFold }: OverfittingProxyC
                 key={`ratio_${f.fold}`}
                 dataKey={`ratio_${f.fold}`}
                 name={`${t("experiment_detail.fold_selector.fold")}${f.fold}`}
-                stroke={chartColors[f.fold % chartColors.length]}
+                stroke={CHART_COLORS[f.fold % CHART_COLORS.length]}
                 dot={false}
                 strokeWidth={1.5}
                 isAnimationActive={false}

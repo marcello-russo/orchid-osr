@@ -17,8 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { FoldData } from "@/lib/types";
 import { foldToEpochPoints } from "../types";
 import { useChartSize } from "../hooks/useChartSize";
-import { useChartColors } from "../hooks/useChartColors";
-import { cn } from "@/lib/utils";
+//import { cn } from "@/lib/utils";
 
 interface LossCurvesChartProps {
   folds: FoldData[];
@@ -29,7 +28,7 @@ export function LossCurvesChart({ folds, selectedFold }: LossCurvesChartProps) {
   const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
   const { height } = useChartSize(ref);
-  const chartColors = useChartColors();
+  const CHART_COLORS = ["#3B82F6", "#D97706", "#10B981", "#8B5CF6", "#EF4444"];
   const [mode, setMode] = useState<"train" | "val">("train");
 
   const visibleFolds = useMemo(
@@ -96,7 +95,7 @@ export function LossCurvesChart({ folds, selectedFold }: LossCurvesChartProps) {
               align="right"
             />
             {visibleFolds.map((f) => {
-              const color = chartColors[f.fold % chartColors.length];
+              const color = CHART_COLORS[f.fold % CHART_COLORS.length];
               return (
                 <Line
                   key={`loss_${f.fold}`}
@@ -111,7 +110,7 @@ export function LossCurvesChart({ folds, selectedFold }: LossCurvesChartProps) {
             })}
             {visibleFolds.map((f) => {
               if (f.best_epoch <= 0 || f.best_epoch > maxLen) return null;
-              const color = chartColors[f.fold % chartColors.length];
+              const color = CHART_COLORS[f.fold % CHART_COLORS.length];
               return (
                 <ReferenceLine
                   key={`best_${f.fold}`}
@@ -122,7 +121,7 @@ export function LossCurvesChart({ folds, selectedFold }: LossCurvesChartProps) {
                 />
               );
             })}
-            {visibleFolds.length > 0 && visibleFolds[0].phase_epochs && visibleFolds[0].phase_names && visibleFolds[0].phase_epochs.length > 0 && (
+            {visibleFolds.length > 0 && visibleFolds[0].phase_epochs && visibleFolds[0].phase_epochs.length > 0 && (
               visibleFolds[0].phase_epochs.slice(0, -1).map((epoch, idx) => {
                 if (epoch <= 0 || epoch > maxLen) return null;
                 return (
@@ -131,7 +130,6 @@ export function LossCurvesChart({ folds, selectedFold }: LossCurvesChartProps) {
                     x={epoch}
                     stroke="#94a3b8"
                     strokeDasharray="4 4"
-                    label={{ value: visibleFolds[0].phase_names![idx], position: "top", fontSize: 10, fill: "#94a3b8" }}
                   />
                 );
               })
