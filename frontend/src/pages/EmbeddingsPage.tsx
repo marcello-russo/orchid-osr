@@ -105,25 +105,25 @@ export function EmbeddingsPage() {
       {/* Selectors — always visible */}
       <div className="flex flex-wrap gap-2">
         <select value={experiment} onChange={(e) => setExperiment(e.target.value)}
-          className="text-xs bg-muted/30 border border-border/50 rounded-lg px-2 py-1.5 text-foreground">
+          className="text-xs bg-card border border-border/50 rounded-lg px-2.5 py-1.5 text-foreground cursor-pointer appearance-auto">
           {EXP_OPTIONS.map((g) => (
             <optgroup key={g.group} label={g.group}>
-              {g.options.map((o) => <option key={o.value} value={o.value}>{g.prefix} — {o.label}</option>)}
+              {g.options.map((o) => <option key={o.value} value={o.value} className="bg-card text-foreground">{g.prefix} — {o.label}</option>)}
             </optgroup>
           ))}
         </select>
         <select value={method} onChange={(e) => setMethod(e.target.value)}
-          className="text-xs bg-muted/30 border border-border/50 rounded-lg px-2 py-1.5 text-foreground">
-          <option value="tsne_3d">t-SNE 3D</option>
-          <option value="tsne_2d">t-SNE 2D</option>
-          <option value="umap_2d">UMAP 2D</option>
-          <option value="umap_3d">UMAP 3D</option>
+          className="text-xs bg-card border border-border/50 rounded-lg px-2.5 py-1.5 text-foreground cursor-pointer appearance-auto">
+          <option value="tsne_3d" className="bg-card text-foreground">t-SNE 3D</option>
+          <option value="tsne_2d" className="bg-card text-foreground">t-SNE 2D</option>
+          <option value="umap_2d" className="bg-card text-foreground">UMAP 2D</option>
+          <option value="umap_3d" className="bg-card text-foreground">UMAP 3D</option>
         </select>
         <select value={split} onChange={(e) => setSplit(e.target.value)}
-          className="text-xs bg-muted/30 border border-border/50 rounded-lg px-2 py-1.5 text-foreground">
-          <option value="all">All data</option>
-          <option value="train">Train only</option>
-          <option value="test">Test only</option>
+          className="text-xs bg-card border border-border/50 rounded-lg px-2.5 py-1.5 text-foreground cursor-pointer appearance-auto">
+          <option value="all" className="bg-card text-foreground">All data</option>
+          <option value="train" className="bg-card text-foreground">Train only</option>
+          <option value="test" className="bg-card text-foreground">Test only</option>
         </select>
         <Link to={`/experiments/${experiment}`}
           className="text-xs text-primary hover:underline px-2 py-1.5 font-medium">
