@@ -122,19 +122,20 @@ export function LossCurvesChart({ folds, selectedFold }: LossCurvesChartProps) {
                 />
               );
             })}
-            {visibleFolds.length > 0 && visibleFolds[0].phase_epochs?.map((ep, i) => {
-              if (i === 0 || ep <= 0 || ep > maxLen) return null;
-              return (
-                <ReferenceLine
-                  key={`phase_${i}`}
-                  x={ep}
-                  stroke="var(--muted-foreground)"
-                  strokeDasharray="4 4"
-                  strokeOpacity={0.6}
-                  label={visibleFolds[0].phase_names?.[i] ?? `Phase ${i+1}`}
-                />
-              );
-            })}
+            {visibleFolds.length > 0 && visibleFolds[0].phase_epochs && visibleFolds[0].phase_names && visibleFolds[0].phase_epochs.length > 0 && (
+              visibleFolds[0].phase_epochs.slice(0, -1).map((epoch, idx) => {
+                if (epoch <= 0 || epoch > maxLen) return null;
+                return (
+                  <ReferenceLine
+                    key={`phase_${idx}`}
+                    x={epoch}
+                    stroke="#94a3b8"
+                    strokeDasharray="4 4"
+                    label={{ value: visibleFolds[0].phase_names![idx], position: "top", fontSize: 10, fill: "#94a3b8" }}
+                  />
+                );
+              })
+            )}
           </LineChart>
           </ResponsiveContainer>
         </div>

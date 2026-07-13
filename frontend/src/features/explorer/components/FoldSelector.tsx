@@ -3,9 +3,10 @@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTranslation } from "react-i18next";
 import { useChartColors } from "../hooks/useChartColors";
+import type { FoldData } from "@/lib/types";
 
 interface FoldSelectorProps {
-  folds: { fold: number }[];
+  folds: FoldData[];
   selectedFold: number | null; // null = "all"
   onSelect: (fold: number | null) => void;
 }
@@ -29,6 +30,11 @@ export function FoldSelector({ folds, selectedFold, onSelect }: FoldSelectorProp
                 style={{ backgroundColor: chartColors[i % chartColors.length] }}
               />
               {t("experiment_detail.fold_selector.fold")}{f.fold}
+              {f.phase_names && f.phase_names.length > 1 && (
+                <span className="ml-1.5 rounded bg-muted px-1 text-[10px] text-muted-foreground">
+                  {f.phase_names.join(" + ")}
+                </span>
+              )}
             </TabsTrigger>
           ))}
         </TabsList>
