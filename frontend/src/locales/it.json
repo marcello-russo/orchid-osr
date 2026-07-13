@@ -78,7 +78,7 @@
     }
   },
   "experiments": {
-    "title": "Esploratore Esperimenti",
+    "title": "Esperimenti",
     "subtitle": "Esplora tutti i run di training e confronta le performance tra esperimenti.",
     "filters": {
       "all": "Tutti",
