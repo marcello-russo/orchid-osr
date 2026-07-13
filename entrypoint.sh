@@ -39,15 +39,13 @@ if [ ! -d "frontend/dist" ]; then
     echo "   Esegui 'cd frontend && npm run build' prima di avviare."
 fi
 
-# Sync experiments/models to persistent storage
+# Pre-crea symlink per experiments (prima del server)
 if [ -d "$DATA_DIR" ]; then
     mkdir -p "$DATA_DIR/experiments"
-    echo "Download experiment results..."
-    PYTHONPATH=/workspace/backend python3 scripts/sync_experiments.py || echo "Experiment sync failed (non-fatal)"
     [ ! -L experiments ] && ln -sfn "$DATA_DIR/experiments" experiments 2>/dev/null || true
 fi
 
-# Avvia server SUBITO (prima del download del dataset)
+# Avvia server SUBITO
 EXTRA_ARGS=""
 if [ "$API_RELOAD" = "true" ]; then
     EXTRA_ARGS=" --reload"
@@ -56,7 +54,15 @@ fi
 python3 server.py$EXTRA_ARGS &
 SERVER_PID=$!
 
-# Download dataset in background (non blocca il server)
+# Sync experiments/models in background (non blocca il server)
+if [ -d "$DATA_DIR" ]; then
+    (
+        echo "Download experiment results..."
+        PYTHONPATH=/workspace/backend python3 scripts/sync_experiments.py || echo "Experiment sync failed (non-fatal)"
+    ) &
+fi
+
+# Download dataset in background
 if [ ! -d "dataset/cropped_256x512/train" ] || [ ! -d "dataset/cropped_224x224/train" ]; then
     if [ -n "$HF_TOKEN" ]; then
         echo "Dataset non trovato — download in background..."

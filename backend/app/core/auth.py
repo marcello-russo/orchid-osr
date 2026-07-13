@@ -197,14 +197,18 @@ def ensure_admin_exists() -> None:
         return
 
     def _modify(data):
-        if not any(u["role"] == "admin" for u in data["users"]):
-            data["users"].append(
-                {
-                    "username": settings.admin_username,
-                    "password_hash": hash_password(settings.admin_password),
-                    "role": "admin",
-                }
-            )
+        existing = next((u for u in data["users"] if u["username"] == settings.admin_username), None)
+        if existing:
+            existing["password_hash"] = hash_password(settings.admin_password)
+            existing["role"] = "admin"
+            return
+        data["users"].append(
+            {
+                "username": settings.admin_username,
+                "password_hash": hash_password(settings.admin_password),
+                "role": "admin",
+            }
+        )
 
     _atomic_modify(_modify)
 
