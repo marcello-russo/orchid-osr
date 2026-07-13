@@ -87,8 +87,6 @@ async def list_classes(user=Depends(require_role("user"))):
                 continue
             seen.add(class_dir.name)
             class_name = class_dir.name
-            if class_name not in _VALID_CLASSES:
-                continue
             train_count = await run_in_threadpool(_count_images, train_dir / class_name)
             test_count = await run_in_threadpool(_count_images, test_dir / class_name)
             if train_count + test_count > 0:
