@@ -60,7 +60,8 @@ export function Scatter2D({ points, speciesColors, onSelect }: Scatter2DProps) {
       sy: cy + (py - (b.minY + b.maxY) / 2) * scale,
     });
 
-    const r = Math.max(2, Math.min(6, scale * 0.008));
+    const pointDensity = points.length / (s.w * s.h);
+    const r = Math.max(1.5, Math.min(4, 3 - pointDensity * 5000));
 
     for (const p of points) {
       const { sx, sy } = toScreen(p.x, p.y);
@@ -101,7 +102,8 @@ export function Scatter2D({ points, speciesColors, onSelect }: Scatter2DProps) {
     const scale = Math.min(scaleX, scaleY);
     const cx = s.w / 2 + panRef.current.x;
     const cy = s.h / 2 + panRef.current.y;
-    const r = Math.max(2, Math.min(6, scale * 0.008));
+    const pointDensity = points.length / (s.w * s.h);
+    const r = Math.max(1.5, Math.min(4, 3 - pointDensity * 5000));
     const threshold = Math.max(10, r * 3);
 
     for (const p of points) {
