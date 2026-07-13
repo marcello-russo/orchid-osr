@@ -27,6 +27,11 @@ export function ClassGallery({ classInfo, split, totalImages }: ClassGalleryProp
   
   useEffect(() => { setOffset(0); }, [split]);
 
+  const total = split === "train" ? classInfo.train_count : classInfo.test_count;
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+  // Skip API call if this split has 0 images for this class
+  const skipQuery = total === 0;
+
   const { data, isLoading, isPlaceholderData } = useClassImages(
     classInfo.name, 
     split, 
@@ -34,12 +39,6 @@ export function ClassGallery({ classInfo, split, totalImages }: ClassGalleryProp
     offset,
     isInView && !skipQuery // Pass isInView to enable the query, skip if 0 images
   );
-  
-  const total = split === "train" ? classInfo.train_count : classInfo.test_count;
-  const totalPages = Math.ceil(total / PAGE_SIZE);
-
-  // Skip API call if this split has 0 images for this class
-  const skipQuery = total === 0;
 
   const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
   const hasMore = offset + PAGE_SIZE < total;
