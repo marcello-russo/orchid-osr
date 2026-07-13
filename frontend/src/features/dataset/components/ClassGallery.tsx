@@ -32,11 +32,15 @@ export function ClassGallery({ classInfo, split, totalImages }: ClassGalleryProp
     split, 
     PAGE_SIZE, 
     offset,
-    isInView // Pass isInView to enable the query
+    isInView && !skipQuery // Pass isInView to enable the query, skip if 0 images
   );
   
   const total = split === "train" ? classInfo.train_count : classInfo.test_count;
   const totalPages = Math.ceil(total / PAGE_SIZE);
+
+  // Skip API call if this split has 0 images for this class
+  const skipQuery = total === 0;
+
   const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
   const hasMore = offset + PAGE_SIZE < total;
   const isFetchingNext = isLoading || isPlaceholderData;
