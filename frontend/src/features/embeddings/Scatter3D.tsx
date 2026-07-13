@@ -51,11 +51,14 @@ const PointsMesh = React.memo(function PointsMesh({
   const ref = useRef<THREE.Points>(null!);
 
   const positions = useMemo(() => {
+    const cx = points.reduce((s, p) => s + p.x, 0) / points.length;
+    const cy = points.reduce((s, p) => s + p.y, 0) / points.length;
+    const cz = points.reduce((s, p) => s + p.z, 0) / points.length;
     const pos = new Float32Array(points.length * 3);
     for (let i = 0; i < points.length; i++) {
-      pos[i * 3] = points[i].x;
-      pos[i * 3 + 1] = points[i].y;
-      pos[i * 3 + 2] = points[i].z;
+      pos[i * 3] = points[i].x - cx;
+      pos[i * 3 + 1] = points[i].y - cy;
+      pos[i * 3 + 2] = points[i].z - cz;
     }
     return pos;
   }, [points]);
