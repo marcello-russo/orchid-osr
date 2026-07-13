@@ -78,7 +78,7 @@
     }
   },
   "experiments": {
-    "title": "Experiments Explorer",
+    "title": "Experiments",
     "subtitle": "Browse all training runs and compare model performance across experiments.",
     "filters": {
       "all": "All",
