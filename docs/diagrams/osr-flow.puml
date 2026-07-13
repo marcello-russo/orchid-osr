@@ -1,0 +1,48 @@
+@startuml
+skinparam backgroundColor white
+skinparam rectangle {
+  BackgroundColor #f0f4ff
+  BorderColor #3b82f6
+}
+skinparam database {
+  BackgroundColor #f0fdf4
+  BorderColor #22c55e
+}
+skinparam diamond {
+  BackgroundColor #fef3c7
+  BorderColor #f59e0b
+}
+skinparam arrow {
+  Color #64748b
+}
+
+title Open-Set Recognition Pipeline
+
+rectangle "Input Image" as input
+rectangle "Backbone\n(CNN / ViT)" as backbone
+database "Training Embeddings\n(6 species)" as train_emb
+rectangle "Mahalanobis\nDetector" as maha
+rectangle "KNN\n(k=5)\nDetector" as knn
+rectangle "Energy\nDetector" as energy
+rectangle "Ensemble\n(score avg)" as ensemble
+rectangle "Decision\n(threshold)" as decision
+rectangle "Known Species\n(6 classes)" as known
+rectangle "Novel Species\n(rejected)" as novel
+
+input --> backbone : forward pass
+backbone --> maha : embedding
+backbone --> knn : embedding
+backbone --> energy : logits
+train_emb --> maha : fit centroids
+train_emb --> knn : fit neighbours
+train_emb --> energy : fit distribution
+
+maha --> ensemble : novelty score
+knn --> ensemble : novelty score
+energy --> ensemble : novelty score
+
+ensemble --> decision
+decision --> known : score < threshold
+decision --> novel : score > threshold
+
+@enduml
