@@ -61,11 +61,13 @@ async def list_species():
     """List all species in the dataset with image counts."""
     dataset_dirs = _get_dataset_dirs()
     if dataset_dirs:
+        valid = set(settings.class_names)
         all_species: dict[str, int] = {}
         for d in dataset_dirs:
             species_counts = await run_in_threadpool(_count_species_files, d)
             for name, count in species_counts.items():
-                all_species[name] = all_species.get(name, 0) + count
+                if name in valid:
+                    all_species[name] = all_species.get(name, 0) + count
         total_images = sum(all_species.values())
         return SpeciesListResponse(
             species=[SpeciesInfo(name=k, image_count=v) for k, v in sorted(all_species.items())],
@@ -77,10 +79,12 @@ async def list_species():
     if _COUNTS_FILE.exists():
         with open(_COUNTS_FILE) as f:
             data = json.load(f)
+        valid = set(settings.class_names)
+        filtered = {k: v for k, v in data["species"].items() if k in valid}
         return SpeciesListResponse(
-            species=[SpeciesInfo(name=k, image_count=v) for k, v in data["species"].items()],
-            total_images=data["total_images"],
-            total_species=data["total_species"],
+            species=[SpeciesInfo(name=k, image_count=v) for k, v in sorted(filtered.items())],
+            total_images=sum(filtered.values()),
+            total_species=len(filtered),
         )
 
     return SpeciesListResponse(species=[], total_images=0, total_species=0)
