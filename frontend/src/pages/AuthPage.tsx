@@ -79,7 +79,7 @@ export default function AuthPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const from = (location.state as { from?: string })?.from || "/";
+  const from = (location.state as { from?: string })?.from ?? "/";
   const schemas = useMemo(() => createSchemas(t), [t]);
   const fieldErrors = getFieldErrors(zodError);
   const strength = getPasswordStrength(password);

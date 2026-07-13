@@ -10,7 +10,7 @@ export default function ProtectedRoute({ role = "user" }: ProtectedRouteProps) {
   const location = useLocation();
 
   if (!token || !user) {
-    return <Navigate to="/auth" state={{ from: location }} replace />;
+    return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
   }
 
   if (role === "admin" && user.role !== "admin") {
