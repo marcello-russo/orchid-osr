@@ -1,9 +1,10 @@
-"""Download experiment metadata from HuggingFace models repo at startup.
+"""Download experiment data from HuggingFace models repo at startup.
 
 Production-grade sync:
-- Downloads all JSON files (needed for explorer dashboard)
-- Does NOT download .pt weights (handled on-demand by weights.py)
-- Skips embeddings/, ncd_figures/, .cache/ (not needed for inference)
+- Downloads all JSON files (experiments, ncd_results, configs)
+- Downloads embedding files (.npy, metadata.json) for latent space viewer
+- Does NOT download .pt/.safetensors weights (handled on-demand by weights.py)
+- Skips ncd_figures/, .cache/ directories and old/ prefix
 - Uses atomic writes to prevent corruption on partial downloads
 """
 
@@ -17,15 +18,26 @@ from app.core.hf_sync import download_file, list_repo_files
 
 
 def _is_essential(path: str) -> bool:
-    """Filter: only JSON files (metadata), skip heavy artifacts."""
-    if not path.endswith(".json"):
-        return False
+    """Filter files needed for the explorer dashboard and latent space viewer."""
     parts = path.split("/")
-    # Skip embeddings, ncd_figures, .cache directories
-    for skip in ("embeddings", "ncd_figures", ".cache"):
+    # Skip old prefix, ncd_figures, .cache
+    if parts[0] in ("old",):
+        return False
+    for skip in ("ncd_figures", ".cache"):
         if skip in parts:
             return False
-    return True
+
+    # JSON files: results, config, ncd/osr results
+    if path.endswith(".json"):
+        return True
+
+    # Embedding files for latent space viewer (.npy + metadata)
+    if "embeddings" in parts:
+        filename = parts[-1]
+        if filename.endswith((".npy", ".json")):
+            return True
+
+    return False
 
 
 def main():
@@ -45,8 +57,7 @@ def main():
         return
 
     essential = [p for p in all_paths if _is_essential(p)]
-    n_json = len(essential)
-    print(f"Found {len(all_paths)} files total, syncing {n_json} essential JSONs...")
+    print(f"Found {len(all_paths)} files total, syncing {len(essential)} essential files (JSONs + embeddings)...")
 
     count = 0
     skipped = 0
@@ -54,10 +65,6 @@ def main():
 
     for src in essential:
         parts = src.split("/")
-        if parts[0] in ("old",):
-            skipped += 1
-            continue
-
         if len(parts) < 2:
             flat = src
         else:
