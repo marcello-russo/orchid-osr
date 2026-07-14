@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useExperiment } from "@/features/explorer/hooks/useExperiment";
 import type { NcdClusteringResult } from "@/lib/types";
+import { PhaseSection } from "@/features/explorer/components/PhaseSection";
 import { FoldSelector } from "@/features/explorer/components/FoldSelector";
 import { LossCurvesChart } from "@/features/explorer/components/LossCurvesChart";
 import { MetricCurvesChart } from "@/features/explorer/components/MetricCurvesChart";
@@ -227,6 +228,24 @@ export function ExperimentDetailPage() {
 
       {/* Content — hidden in compare mode */}
       {!isCompareMode && activeTab === "charts" && (hasFolds ? (
+        <>
+        {/* Phase 1: SupCon section (for two-phase experiments) */}
+        {hasFolds && folds[0]?.fold_phases && folds[0].fold_phases.length > 0 && (
+          <div className="space-y-4 mb-8">
+            <div className="flex items-center gap-3 border-b border-border/50 pb-3">
+              <div className="flex size-8 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-500">
+                <span className="text-xs font-bold">P1</span>
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold">Phase 1: Contrastive Learning</h2>
+                <p className="text-xs text-muted-foreground">SupCon training dynamics — shown for the selected fold</p>
+              </div>
+            </div>
+            {folds[0].fold_phases.map((phase, idx) => (
+              <PhaseSection key={idx} phase={phase} epochs={phase.epochs} />
+            ))}
+          </div>
+        )}
         <ChartCarousel
           folds={folds}
           selectedFold={selectedFold}
@@ -239,6 +258,7 @@ export function ExperimentDetailPage() {
           }
           experimentId={id}
         />
+        </>
       ) : hasResults && results.test_metrics ? (
         <BaselineResults metrics={results.test_metrics} />
       ) : (

@@ -30,11 +30,7 @@ export function FoldSelector({ folds, selectedFold, onSelect }: FoldSelectorProp
                 style={{ backgroundColor: chartColors[i % chartColors.length] }}
               />
               {t("experiment_detail.fold_selector.fold")}{f.fold}
-              {f.phase_names && f.phase_names.length > 1 && (
-                <span className="ml-1.5 rounded bg-muted px-1 text-[10px] text-muted-foreground">
-                  {f.phase_names.join(" + ")}
-                </span>
-              )}
+
             </TabsTrigger>
           ))}
         </TabsList>
