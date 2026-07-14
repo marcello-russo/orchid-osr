@@ -222,6 +222,7 @@ async def compare_experiments():
 def _normalize_fold(fold: dict) -> dict:
     """Normalize fold data, separating SupCon and CE phases into fold_phases.
 
+    If fold already has fold_phases (already normalized), return as-is.
     Single-phase (CE baseline, exp6):
       - Truncates history to best_epoch + patience
       - fold_phases = None
@@ -231,6 +232,8 @@ def _normalize_fold(fold: dict) -> dict:
       - Phase 2 (CE): top-level history metrics (truncated)
       - Returns fold_phases array with Phase 1 data
     """
+    if "fold_phases" in fold:
+        return fold
     if "supcon_phase" not in fold:
         # Single phase (CE baseline, exp6) — truncate history
         flat = dict(fold)
