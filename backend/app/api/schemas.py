@@ -19,6 +19,7 @@ class ClassifyResponse(BaseModel):
     predicted_class_id: int
     confidence: float
     probabilities: Dict[str, float]
+    novelty: dict | None = None
 
 
 class HealthResponse(BaseModel):
@@ -114,6 +115,7 @@ class ClassifyUploadResponse(BaseModel):
     top_predictions: list[TopPrediction]
     predicted_species: str
     confidence: float
+    novelty: dict | None = None
 
 
 class ExplainResponse(BaseModel):

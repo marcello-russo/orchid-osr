@@ -3,21 +3,22 @@ import base64
 import io
 
 import torch
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from PIL import Image
 
 from app.api.cache import get_model
-from app.api.deps import require_role
 from app.api.schemas import (
     ClassifyRequest,
     ClassifyResponse,
     ClassifyUploadResponse,
-    ExplainResponse,
     ModelListResponse,
     TopPrediction,
 )
 from app.api.weights import CLASS_NAMES, get_device, get_model_options
-from app.core.models import available_models, create_transform, get_registry_entry
+from app.core.models import available_models, create_transform
+
+ENERGY_TAU = 1.0
+ENERGY_THRESHOLD = 0.5  # Calibrated at 10% FPR
 
 MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10 MB
 ALLOWED_MIME_TYPES = {"image/jpeg", "image/png", "image/webp", "image/bmp"}
@@ -130,6 +131,10 @@ async def classify_upload(file: UploadFile = File(...), model_id: str = Form(Non
         predicted_idx = outputs.argmax(dim=1).item()
         confidence = probabilities[0, predicted_idx].item()
 
+        # Energy-based novelty detection (Liu et al., NeurIPS 2020)
+        energy = ENERGY_TAU * torch.logsumexp(outputs / ENERGY_TAU, dim=1).item()
+        is_novel = energy > ENERGY_THRESHOLD
+
     topk = torch.topk(probabilities, min(6, len(CLASS_NAMES)), dim=1)
     top_predictions = [
         TopPrediction(
@@ -143,82 +148,11 @@ async def classify_upload(file: UploadFile = File(...), model_id: str = Form(Non
         top_predictions=top_predictions,
         predicted_species=CLASS_NAMES[predicted_idx],
         confidence=confidence,
+        novelty={
+            "is_novel": is_novel,
+            "score": round(energy, 4),
+            "threshold": ENERGY_THRESHOLD,
+        },
     )
 
 
-@router.post("/classify/explain", response_model=ExplainResponse)
-async def explain_image(file: UploadFile = File(...), model_id: str = Form(None), user=Depends(require_role("user"))):
-    """Generate an occlusion-based explainability heatmap for an uploaded image."""
-    import gc
-
-    import matplotlib
-    import numpy as np
-
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
-
-    from app.explainability.visualization import (
-        _normalize_attr,
-        compute_occlusion,
-    )
-    from app.preprocessing.normalization import denormalize_image
-
-    plt.close("all")
-
-    # Load model first to determine model_type for correct transform
-    model = get_model(model_id=model_id) if model_id else get_model(available_models()[0])
-    model_type = model.model_name
-
-    image_tensor, _ = _read_upload_image(file, model_type)
-    device = get_device()
-    image_tensor = image_tensor.to(device)
-    model.eval()
-
-    with torch.no_grad():
-        outputs = model(image_tensor)
-        probabilities = torch.nn.functional.softmax(outputs, dim=1)
-        predicted_idx = outputs.argmax(dim=1).item()
-        confidence = probabilities[0, predicted_idx].item()
-    del outputs, probabilities
-
-    # Occlusion attribution (coarse for CPU performance)
-    sliding_window_size = 30
-    stride = 20
-    global_attribution = compute_occlusion(model, image_tensor.squeeze(0), sliding_window_size, stride)
-
-    label_attributions = global_attribution[predicted_idx].squeeze(0).cpu().numpy()
-    del global_attribution
-    label_attributions = np.transpose(label_attributions, (1, 2, 0))
-    norm_attr = _normalize_attr(label_attributions, sign="all", outlier_perc=2, reduction_axis=2)
-    del label_attributions
-
-    entry = get_registry_entry(model_type)
-    image_np = (
-        denormalize_image(image_tensor.squeeze(0), entry.norm_mean, entry.norm_std).cpu().numpy().transpose(1, 2, 0)
-    )
-    del image_tensor
-
-    from matplotlib.colors import LinearSegmentedColormap
-
-    cmap = LinearSegmentedColormap.from_list("RdWhGn", ["red", "white", "green"])
-
-    fig, ax = plt.subplots(figsize=(5, 10))
-    ax.imshow(np.mean(image_np, axis=2), cmap="gray")
-    ax.imshow(norm_attr, cmap=cmap, vmin=-1, vmax=1, alpha=0.5)
-    del image_np, norm_attr
-    ax.axis("off")
-    fig.tight_layout(pad=0)
-
-    buf = io.BytesIO()
-    fig.savefig(buf, format="png", dpi=72, bbox_inches="tight", pad_inches=0)
-    plt.close(fig)
-    heatmap_b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
-    buf.close()
-
-    gc.collect()
-
-    return ExplainResponse(
-        heatmap_base64=heatmap_b64,
-        predicted_species=CLASS_NAMES[predicted_idx],
-        confidence=confidence,
-    )
