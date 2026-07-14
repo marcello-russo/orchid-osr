@@ -1,9 +1,12 @@
 import os
+import shutil
 from pathlib import Path
 
 from huggingface_hub import snapshot_download
 
 DATASET_REPO = "marcellorusso/orchid-ncd-dataset"
+
+
 def _load_token() -> str | None:
     secret_path = "/run/secrets/HF_TOKEN"
     if os.path.exists(secret_path):
@@ -60,6 +63,7 @@ def main():
         print("Dataset downloaded successfully.")
     except Exception as e:
         print(f"Dataset download failed: {e}")
+
 
 if __name__ == "__main__":
     main()

@@ -154,5 +154,3 @@ async def classify_upload(file: UploadFile = File(...), model_id: str = Form(Non
             "threshold": ENERGY_THRESHOLD,
         },
     )
-
-

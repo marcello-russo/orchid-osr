@@ -269,13 +269,13 @@ interface ChartCarouselProps {
 
 function ChartCarousel({ folds, selectedFold, meanF1, stdF1, confusionMatrix, experimentId }: ChartCarouselProps) {
   const { t } = useTranslation();
-  const hasPhases = folds.length > 0 && folds[0]?.fold_phases?.length > 0;
+  const hasPhases = folds.length > 0 && folds[0]?.fold_phases?.length ? folds[0].fold_phases.length > 0 : false;
   const hasOverfitting = folds.some(f => f.history?.val_loss?.some((v: number) => v > 0));
   const [active, setActive] = useState(0);
 
   /* ---------- Phase 1 (SupCon) helper ---------- */
   const COLORS = ["#3B82F6", "#D97706", "#10B981", "#8B5CF6", "#EF4444"];
-  const supconData = hasPhases ? folds[0].fold_phases[0] : null;
+  const supconData = hasPhases ? folds[0]?.fold_phases?.[0] : null;
   const supconEpochs = supconData?.epochs ?? 0;
   const ceEpochs = folds.length > 0 ? folds[0].history.train_loss.length : 0;
 

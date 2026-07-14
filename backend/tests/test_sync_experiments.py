@@ -1,7 +1,8 @@
 """Test for sync_experiments._is_essential — filters files for HF sync."""
 
-from pathlib import Path
 import sys
+from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from scripts.sync_experiments import _is_essential

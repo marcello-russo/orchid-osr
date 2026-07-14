@@ -8,10 +8,11 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
-  Card, CardContent, CardHeader, CardTitle,
+  Card, CardContent,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useClassify } from "@/features/classify/hooks/useClassify";
 import { useModels } from "@/features/classify/hooks/useModels";
 import {
@@ -19,6 +20,30 @@ import {
 } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import type { ModelOption } from "@/lib/types";
+
+/* ── Tag display ── */
+
+const TAG_LABELS: Record<string, { label: string; hint: string; variant: "default" | "secondary" | "outline" }> = {
+  ncd: { label: "NCD", hint: "Can detect novel/unseen Ophrys species", variant: "secondary" },
+  best_f1: { label: "★ Best F1", hint: "Highest classification accuracy across all models", variant: "default" },
+};
+
+function TagBadge({ tag }: { tag: string }) {
+  const meta = TAG_LABELS[tag];
+  if (!meta) return null;
+  return (
+    <Tooltip>
+      <TooltipTrigger>
+        <Badge variant={meta.variant} className="text-[10px] px-1.5 py-0 cursor-help">
+          {meta.label}
+        </Badge>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="max-w-48 text-balance text-xs">
+        {meta.hint}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
 
 /* ── Model Select Dropdown ── */
 
@@ -43,6 +68,7 @@ function ModelSelect({
   });
 
   return (
+    <TooltipProvider delay={200}>
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
@@ -56,6 +82,7 @@ function ModelSelect({
               <Badge variant="outline" className="text-[10px] font-mono px-1.5 py-0">
                 F1 {(sel.mean_f1! * 100).toFixed(1)}%
               </Badge>
+              {sel.tags?.map((tag) => <TagBadge key={tag} tag={tag} />)}
               {!sel.is_cached && (
                 <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
                   {t("classify.cache.not_cached")}
@@ -114,8 +141,11 @@ function ModelSelect({
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="font-medium truncate">{m.name}</div>
-                      <div className="text-[11px] text-muted-foreground">
-                        F1 {(m.mean_f1! * 100).toFixed(1)}%
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-[11px] text-muted-foreground">
+                          F1 {(m.mean_f1! * 100).toFixed(1)}%
+                        </span>
+                        {m.tags?.map((tag) => <TagBadge key={tag} tag={tag} />)}
                       </div>
                     </div>
                     {selected === m.id && <CheckCircle className="size-4 text-primary shrink-0" />}
@@ -127,6 +157,7 @@ function ModelSelect({
         </>
       )}
     </div>
+    </TooltipProvider>
   );
 }
 
