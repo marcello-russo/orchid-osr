@@ -116,6 +116,12 @@ export interface ExperimentDetail {
 
 // Classification types
 
+export interface NoveltyInfo {
+  is_novel: boolean;
+  score: number;
+  threshold: number;
+}
+
 export interface TopPrediction {
   species: string;
   confidence: number;
@@ -125,6 +131,7 @@ export interface ClassifyUploadResponse {
   top_predictions: TopPrediction[];
   predicted_species: string;
   confidence: number;
+  novelty?: NoveltyInfo;
 }
 
 export interface ExplainResponse {

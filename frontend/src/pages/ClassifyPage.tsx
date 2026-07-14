@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Loader2, Sparkles, Eye, X, ScanSearch,
+  Loader2, Sparkles, X, ScanSearch,
   Download, HardDrive, RefreshCw, ChevronDown,
   CheckCircle, AlertCircle, Flower2, Image as ImageIcon,
 } from "lucide-react";
@@ -13,7 +13,6 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useClassify } from "@/features/classify/hooks/useClassify";
-import { useExplain } from "@/features/classify/hooks/useExplain";
 import { useModels } from "@/features/classify/hooks/useModels";
 import {
   fetchCacheStatus, downloadAllModels, downloadModel,
@@ -131,29 +130,6 @@ function ModelSelect({
   );
 }
 
-/* ── Confidence Bar ── */
-
-function ConfidenceBar({ species, confidence, isTop }: { species: string; confidence: number; isTop: boolean }) {
-  return (
-    <div className="space-y-1">
-      <div className="flex items-center justify-between text-sm">
-        <span className={cn("font-medium", isTop && "text-primary font-semibold")}>
-          {species}
-        </span>
-        <span className={cn("font-mono text-xs", isTop ? "text-primary font-bold" : "text-muted-foreground")}>
-          {(confidence * 100).toFixed(1)}%
-        </span>
-      </div>
-      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-        <div
-          className={cn("h-full rounded-full transition-all duration-500", isTop ? "bg-primary" : "bg-primary/20")}
-          style={{ width: `${Math.max(confidence * 100, 2)}%` }}
-        />
-      </div>
-    </div>
-  );
-}
-
 /* ── Empty Drop State ── */
 
 function DropZone({ onClick, onDrop, onDragOver, onChange, inputRef, t }: {
@@ -192,12 +168,9 @@ export function ClassifyPage() {
   const { t } = useTranslation();
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [heatmapUrl, setHeatmapUrl] = useState<string | null>(null);
-  const [showHeatmap, setShowHeatmap] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const classify = useClassify();
-  const explain = useExplain();
   const { data: modelsData, isLoading, isError, error } = useModels();
   const models = useMemo(() => modelsData?.models ?? [], [modelsData?.models]);
   const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
@@ -214,17 +187,14 @@ export function ClassifyPage() {
     refetchInterval: (q) => q.state.data?.is_downloading ? 2000 : false,
   });
 
-  const isWorking = classify.isPending || explain.isPending;
+  const isWorking = classify.isPending;
   const cache = cacheQuery.data;
 
   const handleFile = useCallback((f: File) => {
     if (!f.type.startsWith("image/")) return;
     setFile(f);
     setPreviewUrl((prev) => { if (prev) URL.revokeObjectURL(prev); return URL.createObjectURL(f); });
-    setHeatmapUrl(null);
-    setShowHeatmap(false);
     classify.reset();
-    explain.reset();
   }, [classify, explain]);
 
   const onDrop = useCallback((e: React.DragEvent) => {
@@ -252,29 +222,14 @@ export function ClassifyPage() {
     classify.mutate({ file, modelId: selectedModelId ?? undefined });
   };
 
-  const handleExplain = () => {
-    if (!file) return;
-    explain.mutate(
-      { file, modelId: selectedModelId ?? undefined },
-      { onSuccess: (data) => {
-        setHeatmapUrl(`data:image/png;base64,${data.heatmap_base64}`);
-        setShowHeatmap(true);
-      }},
-    );
-  };
-
   const clearAll = () => {
     setFile(null);
     setPreviewUrl((prev) => { if (prev) URL.revokeObjectURL(prev); return null; });
-    setHeatmapUrl(null);
-    setShowHeatmap(false);
     classify.reset();
-    explain.reset();
     if (inputRef.current) inputRef.current.value = "";
   };
 
   const topPredictions = classify.data?.top_predictions ?? [];
-  const top = topPredictions[0];
 
   return (
     <div className="max-w-5xl mx-auto px-4 md:px-8 py-8 md:py-12 animate-in fade-in duration-500 space-y-6">
@@ -345,9 +300,6 @@ export function ClassifyPage() {
             onChange={(id) => {
               setSelectedModelId(id);
               classify.reset();
-              explain.reset();
-              setHeatmapUrl(null);
-              setShowHeatmap(false);
               const m = models.find((x) => x.id === id);
               if (m && !m.is_cached) {
                 downloadModel(m.id).then(() => cacheQuery.refetch());
@@ -384,33 +336,11 @@ export function ClassifyPage() {
           <Card className="lg:col-span-3 overflow-hidden">
             <div className="relative bg-muted/30">
               <img
-                src={showHeatmap && heatmapUrl ? heatmapUrl : previewUrl!}
+                src={previewUrl!}
                 alt={t("classify.upload.alt")}
                 className="w-full h-full object-contain max-h-[480px]"
               />
-              {/* Image overlay actions */}
-              {heatmapUrl && (
-                <div className="absolute bottom-3 left-3 flex gap-2">
-                  <button
-                    onClick={() => setShowHeatmap(true)}
-                    className={cn(
-                      "px-3 py-1.5 rounded-lg text-xs font-medium backdrop-blur-sm transition-colors cursor-pointer",
-                      showHeatmap ? "bg-primary text-primary-foreground" : "bg-background/80 text-foreground hover:bg-background"
-                    )}
-                  >
-                    {t("classify.heatmap")}
-                  </button>
-                  <button
-                    onClick={() => setShowHeatmap(false)}
-                    className={cn(
-                      "px-3 py-1.5 rounded-lg text-xs font-medium backdrop-blur-sm transition-colors cursor-pointer",
-                      !showHeatmap ? "bg-primary text-primary-foreground" : "bg-background/80 text-foreground hover:bg-background"
-                    )}
-                  >
-                    {t("classify.original")}
-                  </button>
-                </div>
-              )}
+
             </div>
           </Card>
 
@@ -422,12 +352,6 @@ export function ClassifyPage() {
                 {classify.isPending ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Sparkles className="mr-2 size-4" />}
                 {t("common.classify")}
               </Button>
-              {classify.data && (
-                <Button variant="outline" onClick={handleExplain} disabled={isWorking}>
-                  {explain.isPending ? <Loader2 className="mr-2 size-4 animate-spin" /> : <Eye className="mr-2 size-4" />}
-                  {t("classify.actions.explain")}
-                </Button>
-              )}
             </div>
 
             {/* Upload progress */}
@@ -451,51 +375,56 @@ export function ClassifyPage() {
 
             {/* Classification Results */}
             {classify.data && (
-              <Card>
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <Flower2 className="size-4 text-primary" />
-                      {t("classify.results.predicted")}
-                    </CardTitle>
-                    {top && (
-                      <Badge className="text-xs font-mono">
-                        {(top.confidence * 100).toFixed(1)}%
-                      </Badge>
-                    )}
+              <div className="space-y-4">
+                {/* Novelty warning */}
+                {classify.data.novelty?.is_novel && (
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950">
+                    <div className="flex items-start gap-3">
+                      <span className="text-xl">⚠️</span>
+                      <div>
+                        <p className="font-semibold text-amber-800 dark:text-amber-200">
+                          Possible New Species
+                        </p>
+                        <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                          This flower doesn't match any known species. It could be undocumented.
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  {top && (
-                    <p className="text-xl font-bold text-primary mt-1">{top.species}</p>
-                  )}
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {topPredictions.map((pred, i) => (
-                    <ConfidenceBar
-                      key={pred.species}
-                      species={pred.species}
-                      confidence={pred.confidence}
-                      isTop={i === 0}
-                    />
-                  ))}
-                </CardContent>
-              </Card>
-            )}
+                )}
 
-            {/* Explain results note */}
-            {explain.data && (
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    <Eye className="size-4 text-primary" />
-                    {t("classify.results.explainability")}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    {t("classify.results.heatmap_explanation")}
-                  </p>
-                </CardContent>
-              </Card>
+                {/* Species prediction + confidence bars */}
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="text-lg">
+                      {classify.data.novelty?.is_novel ? "?" : "✅"}
+                    </span>
+                    <span className="text-2xl font-bold">
+                      {classify.data.predicted_species}
+                    </span>
+                    <span className="text-lg text-muted-foreground">
+                      {(classify.data.confidence * 100).toFixed(1)}%
+                    </span>
+                  </div>
+
+                  <div className="space-y-2">
+                    {topPredictions.map((p, i) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <span className="w-36 text-sm truncate shrink-0">{p.species}</span>
+                        <div className="flex-1 h-6 rounded bg-muted overflow-hidden">
+                          <div
+                            className="h-full rounded bg-primary/80 transition-all"
+                            style={{ width: `${p.confidence * 100}%` }}
+                          />
+                        </div>
+                        <span className="w-14 text-xs text-right text-muted-foreground shrink-0">
+                          {(p.confidence * 100).toFixed(1)}%
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
             )}
 
             {/* Error */}

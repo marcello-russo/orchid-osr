@@ -118,22 +118,6 @@ export async function classifyUpload(
   );
 }
 
-export async function explainImage(
-  file: File,
-  modelId?: string,
-  onProgress?: ProgressCallback
-) {
-  const form = new FormData();
-  form.append("file", file);
-  if (modelId) form.append("model_id", modelId);
-  return uploadXHR<import("./types").ExplainResponse>(
-    "/classify/explain",
-    form,
-    300_000,
-    onProgress
-  );
-}
-
 export async function fetchModels() {
   return fetchApi<{ models: import("./types").ModelOption[] }>("/classify/models");
 }
