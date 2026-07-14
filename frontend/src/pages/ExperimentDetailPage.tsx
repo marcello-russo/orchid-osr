@@ -277,6 +277,7 @@ function ChartCarousel({ folds, selectedFold, meanF1, stdF1, confusionMatrix, ex
   const COLORS = ["#3B82F6", "#D97706", "#10B981", "#8B5CF6", "#EF4444"];
   const supconData = hasPhases ? folds[0].fold_phases[0] : null;
   const supconEpochs = supconData?.epochs ?? 0;
+  const ceEpochs = folds.length > 0 ? folds[0].history.train_loss.length : 0;
 
   const supconChartData = React.useMemo(() => {
     if (!supconData) return [];
@@ -295,7 +296,7 @@ function ChartCarousel({ folds, selectedFold, meanF1, stdF1, confusionMatrix, ex
 
   /* ---------- Titles ---------- */
   const chart_titles = [
-    ...(hasPhases ? ["SupCon Loss", "KNN Accuracy"] : []),
+    ...(hasPhases ? [`SupCon Loss (${supconEpochs}ep)`, `KNN Accuracy (${supconEpochs}ep)`] : []),
     t("experiment_detail.charts.loss"),
     t("experiment_detail.charts.metrics"),
     t("experiment_detail.charts.folds"),
@@ -317,7 +318,10 @@ function ChartCarousel({ folds, selectedFold, meanF1, stdF1, confusionMatrix, ex
             <CardHeader className="pb-2">
               <div className="flex items-center gap-2">
                 <span className="flex size-5 items-center justify-center rounded bg-indigo-500/10 text-indigo-500 text-[10px] font-bold">P1</span>
-                <CardTitle className="text-sm">SupCon Training Loss</CardTitle>
+                <div>
+                  <CardTitle className="text-sm">SupCon Training Loss</CardTitle>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">Phase 1: {supconEpochs} epochs | Phase 2 (CE): {ceEpochs} epochs | Total: {supconEpochs + ceEpochs}</p>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="pt-2">
@@ -346,7 +350,10 @@ function ChartCarousel({ folds, selectedFold, meanF1, stdF1, confusionMatrix, ex
             <CardHeader className="pb-2">
               <div className="flex items-center gap-2">
                 <span className="flex size-5 items-center justify-center rounded bg-indigo-500/10 text-indigo-500 text-[10px] font-bold">P1</span>
-                <CardTitle className="text-sm">KNN Validation Accuracy</CardTitle>
+                <div>
+                  <CardTitle className="text-sm">KNN Validation Accuracy</CardTitle>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">Phase 1: {supconEpochs} epochs | Phase 2 (CE): {ceEpochs} epochs | Total: {supconEpochs + ceEpochs}</p>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="pt-2">
