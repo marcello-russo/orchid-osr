@@ -166,6 +166,7 @@ export interface ModelOption {
   size_mb?: number | null;
   exp_num?: number;
   exp_label?: string;
+  tags?: string[];
 }
 
 export interface CacheStatus {

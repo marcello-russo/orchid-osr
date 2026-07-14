@@ -154,6 +154,7 @@ class ModelOption(BaseModel):
     size_mb: float | None = None
     exp_num: int = 0
     exp_label: str = ""
+    tags: list[str] = []
 
 
 class ModelListResponse(BaseModel):

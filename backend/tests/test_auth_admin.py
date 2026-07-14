@@ -1,10 +1,11 @@
 """Tests for ensure_admin_exists in auth.py."""
 
 import json
+import sys
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
-import sys
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 
@@ -27,6 +28,7 @@ def test_creates_admin_when_missing():
             mock_settings.hf_configured = False
 
             from app.core.auth import ensure_admin_exists
+
             ensure_admin_exists()
 
             with open(path) as f:
@@ -49,6 +51,7 @@ def test_updates_password_when_exists():
             mock_settings.hf_configured = False
 
             from app.core.auth import ensure_admin_exists, verify_password
+
             ensure_admin_exists()
 
             with open(path) as f:
@@ -67,6 +70,7 @@ def test_skips_when_no_env():
             mock_settings.hf_configured = False
 
             from app.core.auth import ensure_admin_exists
+
             ensure_admin_exists()
 
             with open(path) as f:
@@ -87,6 +91,7 @@ def test_preserves_existing_users():
             mock_settings.hf_configured = False
 
             from app.core.auth import ensure_admin_exists
+
             ensure_admin_exists()
 
             with open(path) as f:

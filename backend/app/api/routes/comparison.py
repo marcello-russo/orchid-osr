@@ -281,15 +281,17 @@ def _normalize_fold(fold: dict) -> dict:
     }
     best_epoch = ce_cut - 1 if ce_cut > 0 else 0
 
-    fold_phases = [{
-        "name": "SupCon",
-        "type": "contrastive",
-        "epochs": len(supcon_train),
-        "metrics": {
-            "train_loss": supcon_train,
-            "val_knn_acc": supcon_knn,
-        },
-    }]
+    fold_phases = [
+        {
+            "name": "SupCon",
+            "type": "contrastive",
+            "epochs": len(supcon_train),
+            "metrics": {
+                "train_loss": supcon_train,
+                "val_knn_acc": supcon_knn,
+            },
+        }
+    ]
 
     result = {
         "fold": fold.get("fold", 0),

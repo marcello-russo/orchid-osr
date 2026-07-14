@@ -11,6 +11,7 @@ from pathlib import Path
 from huggingface_hub import hf_hub_download
 
 from app.api.schemas import CacheStatus, ModelOption
+from app.cli.definitions import EXPERIMENTS
 from app.config import settings
 
 logger = logging.getLogger(__name__)
@@ -179,6 +180,20 @@ def _discover_models() -> list[ModelOption]:
         if m.id not in seen:
             seen.add(m.id)
             deduped.append(m)
+
+    # Compute tags on deduped models only
+    ncd_exps = {num for num, cfg in EXPERIMENTS.items() if cfg.get("ncd_mode")}
+    for m in deduped:
+        if m.exp_num in ncd_exps:
+            m.tags.append("ncd")
+
+    best_f1 = max((m.mean_f1 for m in deduped if m.mean_f1 is not None), default=None)
+    if best_f1 is not None:
+        for m in deduped:
+            if m.mean_f1 == best_f1:
+                m.tags.append("best_f1")
+                break
+
     deduped.sort(key=lambda m: (-m.exp_num, -(m.mean_f1 or 0)))
     return deduped
 

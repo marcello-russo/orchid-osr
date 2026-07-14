@@ -64,8 +64,6 @@ def list_invites(request: Request, admin=Depends(require_role("admin"))):
 
 
 @router.post("/invites/generate")
-def create_invites(
-    request: Request, body: GenerateInviteRequest, admin=Depends(require_role("admin"))
-):
+def create_invites(request: Request, body: GenerateInviteRequest, admin=Depends(require_role("admin"))):
     codes = generate_invite(role=body.role, count=body.count)
     return {"codes": codes}
