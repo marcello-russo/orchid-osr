@@ -17,7 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { FoldData } from "@/lib/types";
 import { foldToEpochPoints } from "../types";
 import { useChartSize } from "../hooks/useChartSize";
-//import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 interface LossCurvesChartProps {
   folds: FoldData[];
