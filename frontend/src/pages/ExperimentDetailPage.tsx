@@ -1,3 +1,4 @@
+import * as React from "react";
 import { useState, useCallback } from "react";
 import { useParams, Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -12,7 +13,6 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useExperiment } from "@/features/explorer/hooks/useExperiment";
 import type { NcdClusteringResult } from "@/lib/types";
-import { PhaseSection } from "@/features/explorer/components/PhaseSection";
 import { FoldSelector } from "@/features/explorer/components/FoldSelector";
 import { LossCurvesChart } from "@/features/explorer/components/LossCurvesChart";
 import { MetricCurvesChart } from "@/features/explorer/components/MetricCurvesChart";
@@ -37,12 +37,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
+  BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from "recharts";
 import { useRef } from "react";
 import { useChartSize } from "@/features/explorer/hooks/useChartSize";
@@ -229,23 +224,6 @@ export function ExperimentDetailPage() {
       {/* Content — hidden in compare mode */}
       {!isCompareMode && activeTab === "charts" && (hasFolds ? (
         <>
-        {/* Phase 1: SupCon section (for two-phase experiments) */}
-        {hasFolds && folds[0]?.fold_phases && folds[0].fold_phases.length > 0 && (
-          <div className="space-y-4 mb-8">
-            <div className="flex items-center gap-3 border-b border-border/50 pb-3">
-              <div className="flex size-8 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-500">
-                <span className="text-xs font-bold">P1</span>
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold">Phase 1: Contrastive Learning</h2>
-                <p className="text-xs text-muted-foreground">SupCon training dynamics — shown for the selected fold</p>
-              </div>
-            </div>
-            {folds[0].fold_phases.map((phase, idx) => (
-              <PhaseSection key={idx} phase={phase} epochs={phase.epochs} />
-            ))}
-          </div>
-        )}
         <ChartCarousel
           folds={folds}
           selectedFold={selectedFold}
@@ -291,82 +269,148 @@ interface ChartCarouselProps {
 
 function ChartCarousel({ folds, selectedFold, meanF1, stdF1, confusionMatrix, experimentId }: ChartCarouselProps) {
   const { t } = useTranslation();
-  // Nascondi overfitting se val_loss e' tutto zero (training SupCon)
+  const hasPhases = folds.length > 0 && folds[0]?.fold_phases?.length > 0;
   const hasOverfitting = folds.some(f => f.history?.val_loss?.some((v: number) => v > 0));
-  const total = (hasOverfitting ? 1 : 0) + (confusionMatrix ? 1 : 0) + 3; // loss + metrics + folds + (overfitting?) + (cm?)
   const [active, setActive] = useState(0);
 
+  /* ---------- Phase 1 (SupCon) helper ---------- */
+  const COLORS = ["#3B82F6", "#D97706", "#10B981", "#8B5CF6", "#EF4444"];
+  const supconData = hasPhases ? folds[0].fold_phases[0] : null;
+  const supconEpochs = supconData?.epochs ?? 0;
+
+  const supconChartData = React.useMemo(() => {
+    if (!supconData) return [];
+    return Array.from({ length: supconEpochs }, (_, ep) => {
+      const row: Record<string, number | string> = { epoch: ep + 1 };
+      for (const f of folds) {
+        const m = f.fold_phases?.[0]?.metrics ?? {};
+        const tl = m["train_loss"]?.[ep];
+        const ka = m["val_knn_acc"]?.[ep];
+        if (tl !== undefined) row[`tl_${f.fold}`] = tl;
+        if (ka !== undefined) row[`ka_${f.fold}`] = ka;
+      }
+      return row;
+    });
+  }, [folds, supconData, supconEpochs]);
+
+  /* ---------- Titles ---------- */
   const chart_titles = [
+    ...(hasPhases ? ["SupCon Loss", "KNN Accuracy"] : []),
     t("experiment_detail.charts.loss"),
     t("experiment_detail.charts.metrics"),
     t("experiment_detail.charts.folds"),
     ...(hasOverfitting ? [t("experiment_detail.charts.overfitting")] : []),
     ...(confusionMatrix ? [t("experiment_detail.charts.confusion")] : []),
   ];
-
+  const total = chart_titles.length;
   const clamp = useCallback((i: number) => Math.max(0, Math.min(total - 1, i)), [total]);
+
+  /* ---------- Chart renderer ---------- */
+  const renderChart = (idx: number) => {
+    let offset = 0;
+
+    if (hasPhases) {
+      if (idx === 0) {
+        // SupCon Training Loss
+        return (
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <span className="flex size-5 items-center justify-center rounded bg-indigo-500/10 text-indigo-500 text-[10px] font-bold">P1</span>
+                <CardTitle className="text-sm">SupCon Training Loss</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-2">
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={supconChartData}>
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                  <XAxis dataKey="epoch" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} domain={["auto", "auto"]} />
+                  <Tooltip />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  {folds.map((f, i) => (
+                    <Line key={`tl_${f.fold}`} type="monotone" dataKey={`tl_${f.fold}`}
+                      name={`Fold ${f.fold}`} stroke={COLORS[i % COLORS.length]}
+                      dot={false} strokeWidth={1.5} isAnimationActive={false} />
+                  ))}
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        );
+      }
+      if (idx === 1) {
+        // KNN Validation Accuracy
+        return (
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <span className="flex size-5 items-center justify-center rounded bg-indigo-500/10 text-indigo-500 text-[10px] font-bold">P1</span>
+                <CardTitle className="text-sm">KNN Validation Accuracy</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-2">
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={supconChartData}>
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                  <XAxis dataKey="epoch" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} domain={[0, 1]} />
+                  <Tooltip />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  {folds.map((f, i) => (
+                    <Line key={`ka_${f.fold}`} type="monotone" dataKey={`ka_${f.fold}`}
+                      name={`Fold ${f.fold}`} stroke={COLORS[i % COLORS.length]}
+                      dot={false} strokeWidth={1.5} isAnimationActive={false} />
+                  ))}
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        );
+      }
+      offset = 2;
+    }
+
+    switch (idx - offset) {
+      case 0: return <LossCurvesChart folds={folds} selectedFold={selectedFold} />;
+      case 1: return <MetricCurvesChart folds={folds} selectedFold={selectedFold} />;
+      case 2: return <FoldSummaryChart folds={folds} meanF1={meanF1} stdF1={stdF1} />;
+      case 3: return hasOverfitting ? <OverfittingProxyChart folds={folds} selectedFold={selectedFold} /> : null;
+      case 4: return confusionMatrix ? <ConfusionMatrixChart matrix={confusionMatrix.matrix} labels={confusionMatrix.labels} /> : null;
+      default: return null;
+    }
+  };
 
   return (
     <div className="space-y-3">
-      {/* Nav bar — chip buttons */}
       <div className="flex items-center gap-2 overflow-x-auto scrollbar-none">
-        <Button
-          variant="ghost"
-          size="icon-sm"
+        <Button variant="ghost" size="icon-sm"
           onClick={() => setActive((a) => clamp(a - 1))}
-          disabled={active === 0}
-          className="shrink-0 hidden sm:flex"
-        >
-          <ChevronLeft className="size-4" />
-        </Button>
-        {Array.from({ length: total }, (_, i) => (
-          <button
-            key={i}
-            onClick={() => setActive(i)}
-            className={cn(
-              "shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap min-h-[44px] cursor-pointer",
-              i === active
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground bg-muted/50 hover:bg-muted"
-            )}
-          >
-            {chart_titles[i]}
-          </button>
-        ))}
-        <Button
-          variant="ghost"
-          size="icon-sm"
+          disabled={active === 0} className="shrink-0 hidden sm:flex"
+        ><ChevronLeft className="size-4" /></Button>
+        {Array.from({ length: total }, (_, i) => {
+          const isPhase1 = hasPhases && i < 2;
+          return (
+            <button key={i} onClick={() => setActive(i)}
+              className={cn(
+                "shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap min-h-[44px] cursor-pointer",
+                i === active ? "bg-primary text-primary-foreground" : "text-muted-foreground bg-muted/50 hover:bg-muted",
+                isPhase1 && i !== active ? "text-indigo-500 bg-indigo-500/10 hover:bg-indigo-500/20" : ""
+              )}
+            >{chart_titles[i]}</button>
+          );
+        })}
+        <Button variant="ghost" size="icon-sm"
           onClick={() => setActive((a) => clamp(a + 1))}
-          disabled={active >= total - 1}
-          className="shrink-0 hidden sm:flex"
-        >
-          <ChevronRight className="size-4" />
-        </Button>
+          disabled={active >= total - 1} className="shrink-0 hidden sm:flex"
+        ><ChevronRight className="size-4" /></Button>
         {experimentId && (
-          <Link
-            to={`/embeddings?experiment=${experimentId}`}
+          <Link to={`/embeddings?experiment=${experimentId}`}
             className="shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500/20 border border-indigo-500/20"
-          >
-            🧬 {t("experiment_detail.latent_space")}
-          </Link>
+          >🧬 {t("experiment_detail.latent_space")}</Link>
         )}
       </div>
-
-      {/* Chart area — only active chart is rendered */}
-      <div>
-        {(() => {
-          const charts = [
-            <LossCurvesChart folds={folds} selectedFold={selectedFold} />,
-            <MetricCurvesChart folds={folds} selectedFold={selectedFold} />,
-            <FoldSummaryChart folds={folds} meanF1={meanF1} stdF1={stdF1} />,
-          ];
-          if (hasOverfitting) charts.push(<OverfittingProxyChart folds={folds} selectedFold={selectedFold} />);
-          if (confusionMatrix) charts.push(
-            <ConfusionMatrixChart matrix={confusionMatrix.matrix} labels={confusionMatrix.labels} />
-          );
-          return active < charts.length ? charts[active] : null;
-        })()}
-      </div>
+      <div>{renderChart(active)}</div>
     </div>
   );
 }
