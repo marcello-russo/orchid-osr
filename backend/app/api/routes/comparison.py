@@ -220,89 +220,90 @@ async def compare_experiments():
 
 
 def _normalize_fold(fold: dict) -> dict:
-    """Normalize SupCon two-phase fold format to flat format expected by frontend.
+    """Normalize fold data, separating SupCon and CE phases into fold_phases.
 
-    SupCon format (exp 7+):
-      { best_f1, supcon_phase: { supcon_history: { train_loss, val_loss, ... },
-                                 ce_phase: { ce_history: { train_loss, val_loss, val_f1, ... } } } }
+    Single-phase (CE baseline, exp6):
+      - Truncates history to best_epoch + patience
+      - fold_phases = None
 
-    Flat format (exp 6):
-      { best_f1, best_accuracy, best_epoch, final_train_loss, final_val_loss,
-        history: { train_loss, val_loss, val_accuracy, val_f1 } }
-
-    This function merges supcon + ce sequences into a single history array,
-    tracking the phase boundary via phase_epochs.
+    Two-phase (SupCon, exp7+):
+      - Phase 1 (contrastive): supcon_history metrics
+      - Phase 2 (CE): top-level history metrics (truncated)
+      - Returns fold_phases array with Phase 1 data
     """
     if "supcon_phase" not in fold:
-        # Flat format (e.g., exp6 CE) — apply truncation directly
-        flat = fold
-        total_f = len(flat.get("history", {}).get("train_loss", []))
-        best_f = flat.get("best_epoch", 0)
-        cap_f = min(best_f, total_f - 1) if best_f > 0 and total_f > 0 else 0
-        cut_f = min(cap_f + 15, total_f) if cap_f > 0 else total_f
-        if cap_f > 0 and cut_f < cap_f + 1:
-            cut_f = min(cap_f + 1, total_f)
-        if cut_f < total_f:
+        # Single phase (CE baseline, exp6) — truncate history
+        flat = dict(fold)
+        total = len(flat.get("history", {}).get("train_loss", []))
+        best = flat.get("best_epoch", 0)
+        cap = min(best, total - 1) if best > 0 and total > 0 else 0
+        cut = min(cap + 15, total) if cap > 0 else total
+        if cap > 0 and cut < cap + 1:
+            cut = min(cap + 1, total)
+        if cut < total:
             h = flat.get("history", {})
-            flat["history"] = {k: v[:cut_f] for k, v in h.items() if isinstance(v, list)}
-            flat["best_epoch"] = cut_f - 1
+            flat["history"] = {k: v[:cut] for k, v in h.items() if isinstance(v, list)}
+            flat["best_epoch"] = cut - 1
+        flat["fold_phases"] = None
         return flat
 
+    # Two-phase (SupCon, exp7+)
     sp = fold["supcon_phase"]
-    supcon_hist = sp.get("supcon_history", {})
-    ce_hist = sp.get("ce_phase", {}).get("ce_history", {}) or fold.get("history", {})
+    sh = sp.get("supcon_history", {})
+    ce_hist = fold.get("history", {})
 
-    # SupCon phase: train_loss + val_knn_acc (no val_loss)
-    # CE phase: train_loss + val_loss + val_f1 (if present)
-    supcon_train = supcon_hist.get("train_loss", []) or []
-    supcon_val_knn = supcon_hist.get("val_knn_acc", []) or []
+    # Phase 1: SupCon
+    supcon_train = sh.get("train_loss", []) or []
+    supcon_knn = sh.get("val_knn_acc", []) or []
+
+    # Phase 2: CE
     ce_train = ce_hist.get("train_loss", []) or []
     ce_val_loss = ce_hist.get("val_loss", []) or []
     ce_val_f1 = ce_hist.get("val_f1", []) or []
+    ce_val_acc = ce_hist.get("val_accuracy", []) or []
 
-    # Concatenate — use flattened dummy val_loss for SupCon (val_knn_acc as F1 proxy)
-    n_supcon = len(supcon_train)
+    # Truncate Phase 2 to best_epoch + patience
     n_ce = len(ce_train)
-    train_loss = supcon_train + ce_train
-    val_loss = [0.0] * n_supcon + ce_val_loss if ce_val_loss else [0.0] * (n_supcon + n_ce)
-    val_f1 = supcon_val_knn + (ce_val_f1 if ce_val_f1 else [0.0] * n_ce)
-    val_accuracy = [0.0] * (n_supcon + n_ce)
-
-    # Truncate history: show only up to best_epoch + patience (15).
-    total = len(train_loss)
     best_raw = fold.get("best_epoch", 0)
-    best_cap = min(best_raw, total - 1) if best_raw > 0 and total > 0 else 0
-    cutoff = min(best_cap + 15, total) if best_cap > 0 else total
-    if best_cap > 0 and cutoff < best_cap + 1:
-        cutoff = min(best_cap + 1, total)
+    ce_cap = min(best_raw, n_ce - 1) if best_raw > 0 and n_ce > 0 else 0
+    ce_cut = min(ce_cap + 15, n_ce) if ce_cap > 0 else n_ce
+    if ce_cap > 0 and ce_cut < ce_cap + 1:
+        ce_cut = min(ce_cap + 1, n_ce)
+
+    ce_history = {
+        "train_loss": ce_train[:ce_cut],
+        "val_loss": ce_val_loss[:ce_cut],
+        "val_f1": ce_val_f1[:ce_cut],
+        "val_accuracy": ce_val_acc[:ce_cut],
+    }
+    best_epoch = ce_cut - 1 if ce_cut > 0 else 0
+
+    fold_phases = [{
+        "name": "SupCon",
+        "type": "contrastive",
+        "epochs": len(supcon_train),
+        "metrics": {
+            "train_loss": supcon_train,
+            "val_knn_acc": supcon_knn,
+        },
+    }]
 
     result = {
         "fold": fold.get("fold", 0),
-        "best_f1": fold.get("best_f1", fold.get("best_knn_acc", 0)),
-        "best_accuracy": fold.get("best_accuracy", fold.get("sphor_probe_accuracy", 0)),
-        "best_epoch": cutoff - 1 if cutoff > 0 else 0,
-        "final_train_loss": (
-            train_loss[cutoff - 1]
-            if cutoff > 0 and cutoff <= total
-            else ce_hist.get("train_loss", [None])[-1] or supcon_hist.get("train_loss", [None])[-1]
-        ),
-        "final_val_loss": (
-            val_loss[cutoff - 1]
-            if cutoff > 0 and cutoff <= len(val_loss)
-            else ce_hist.get("val_loss", [None])[-1] or supcon_hist.get("val_loss", [None])[-1]
-        ),
-        "history": {
-            "train_loss": train_loss[:cutoff],
-            "val_loss": val_loss[:cutoff],
-            "val_f1": val_f1[:cutoff],
-            "val_accuracy": (val_accuracy if val_accuracy else [0.0] * total)[:cutoff],
-        },
+        "best_f1": fold.get("best_f1", 0),
+        "best_accuracy": fold.get("best_accuracy", 0),
+        "best_epoch": best_epoch,
+        "final_train_loss": ce_history["train_loss"][-1] if ce_history["train_loss"] else 0,
+        "final_val_loss": ce_history["val_loss"][-1] if ce_history["val_loss"] else 0,
+        "history": ce_history,
         "train_size": fold.get("train_size", 0),
         "val_size": fold.get("val_size", 0),
+        "fold_phases": fold_phases,
     }
-    if n_ce > 0:
-        result["phase_epochs"] = [n_supcon, n_supcon + n_ce]
-        result["phase_names"] = ["SupCon", "CE"]
+    # Preserve optional fields from original fold
+    for key in ("phase_epochs", "phase_names"):
+        if key in fold:
+            result[key] = fold[key]
     return result
 
 

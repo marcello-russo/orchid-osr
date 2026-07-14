@@ -23,6 +23,13 @@ export interface ExperimentConfig {
   weight_decay?: number;
 }
 
+export interface FoldPhase {
+  name: string;
+  type: "contrastive" | "classification";
+  epochs: number;
+  metrics: Record<string, number[]>;
+}
+
 export interface FoldData {
   fold: number;
   best_f1: number;
@@ -38,6 +45,7 @@ export interface FoldData {
   };
   train_size: number;
   val_size: number;
+  fold_phases?: FoldPhase[];
   phase_epochs?: number[];
   phase_names?: string[];
 }
