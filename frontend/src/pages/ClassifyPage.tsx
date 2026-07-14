@@ -195,7 +195,7 @@ export function ClassifyPage() {
     setFile(f);
     setPreviewUrl((prev) => { if (prev) URL.revokeObjectURL(prev); return URL.createObjectURL(f); });
     classify.reset();
-  }, [classify, explain]);
+  }, [classify]);
 
   const onDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
