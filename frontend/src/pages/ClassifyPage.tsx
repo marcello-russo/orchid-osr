@@ -376,54 +376,51 @@ export function ClassifyPage() {
             {/* Classification Results */}
             {classify.data && (
               <div className="space-y-4">
-                {/* Novelty warning */}
-                {classify.data.novelty?.is_novel && (
-                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950">
-                    <div className="flex items-start gap-3">
-                      <span className="text-xl">⚠️</span>
+                {classify.data.novelty?.is_novel ? (
+                  /* Novel — show warning only, hide predictions */
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-6 dark:border-amber-800 dark:bg-amber-950">
+                    <div className="flex items-start gap-4">
+                      <span className="text-3xl">⚠️</span>
                       <div>
-                        <p className="font-semibold text-amber-800 dark:text-amber-200">
+                        <p className="text-lg font-bold text-amber-800 dark:text-amber-200">
                           Possible New Species
                         </p>
-                        <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
-                          This flower doesn't match any known species. It could be undocumented.
+                        <p className="text-sm text-amber-700 dark:text-amber-300 mt-2">
+                          This flower does not match any known Ophrys species with sufficient confidence.
+                          It may represent an undocumented taxon or a variant not present in the training set.
+                        </p>
+                        <p className="text-xs text-amber-600 dark:text-amber-400 mt-3">
+                          Closest match: {classify.data.predicted_species} ({(classify.data.confidence * 100).toFixed(1)}%)
                         </p>
                       </div>
                     </div>
                   </div>
-                )}
-
-                {/* Species prediction + confidence bars */}
-                <div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className="text-lg">
-                      {classify.data.novelty?.is_novel ? "?" : "✅"}
-                    </span>
-                    <span className="text-2xl font-bold">
-                      {classify.data.predicted_species}
-                    </span>
-                    <span className="text-lg text-muted-foreground">
-                      {(classify.data.confidence * 100).toFixed(1)}%
-                    </span>
-                  </div>
-
-                  <div className="space-y-2">
-                    {topPredictions.map((p, i) => (
-                      <div key={i} className="flex items-center gap-3">
-                        <span className="w-36 text-sm truncate shrink-0">{p.species}</span>
-                        <div className="flex-1 h-6 rounded bg-muted overflow-hidden">
-                          <div
-                            className="h-full rounded bg-primary/80 transition-all"
-                            style={{ width: `${p.confidence * 100}%` }}
-                          />
+                ) : (
+                  /* Known — show predictions */
+                  <div>
+                    <div className="flex items-center gap-2 mb-4">
+                      <span className="text-lg">✅</span>
+                      <span className="text-2xl font-bold">{classify.data.predicted_species}</span>
+                      <span className="text-lg text-muted-foreground">
+                        {(classify.data.confidence * 100).toFixed(1)}%
+                      </span>
+                    </div>
+                    <div className="space-y-2">
+                      {topPredictions.map((p, i) => (
+                        <div key={i} className="flex items-center gap-3">
+                          <span className="w-36 text-sm truncate shrink-0">{p.species}</span>
+                          <div className="flex-1 h-6 rounded bg-muted overflow-hidden">
+                            <div className="h-full rounded bg-primary/80 transition-all"
+                              style={{ width: `${p.confidence * 100}%` }} />
+                          </div>
+                          <span className="w-14 text-xs text-right text-muted-foreground shrink-0">
+                            {(p.confidence * 100).toFixed(1)}%
+                          </span>
                         </div>
-                        <span className="w-14 text-xs text-right text-muted-foreground shrink-0">
-                          {(p.confidence * 100).toFixed(1)}%
-                        </span>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             )}
 
