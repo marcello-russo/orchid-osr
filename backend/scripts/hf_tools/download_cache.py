@@ -1,10 +1,13 @@
 import os
+import random
 import shutil
 from pathlib import Path
 
 from huggingface_hub import snapshot_download
 
 DATASET_REPO = "marcellorusso/orchid-ncd-dataset"
+
+SAMPLE_RATIO = float(os.environ.get("DATASET_SAMPLE_RATIO", "1.0"))
 
 
 def _load_token() -> str | None:
@@ -24,9 +27,26 @@ def _load_token() -> str | None:
     return None
 
 
+def _sample_directory(path: str, ratio: float):
+    """Keep only `ratio` of files in each class subdirectory."""
+    if ratio >= 1.0:
+        return
+    base = Path(path)
+    if not base.exists():
+        return
+    for class_dir in base.iterdir():
+        if not class_dir.is_dir():
+            continue
+        files = [f for f in class_dir.iterdir() if f.is_file()]
+        random.shuffle(files)
+        keep = max(1, int(len(files) * ratio))
+        for f in files[keep:]:
+            f.unlink()
+        print(f"  {class_dir.name}: {len(files)} → {keep} file (ratio={ratio})")
+
+
 def main():
     token = _load_token()
-
     if not token:
         print("Warning: HF_TOKEN not found. Downloads might hit rate limits or fail if repos are private.")
 
@@ -59,6 +79,16 @@ def main():
                             shutil.copytree(s, t, dirs_exist_ok=True)
                     shutil.rmtree(src)
                     print(f"  cropped/{size}/{hf_split} -> cropped_{size}/{hf_split.replace('_clean', '')}")
+
+        # Sample dataset if ratio < 1.0
+        if SAMPLE_RATIO < 1.0:
+            print(f"Dataset sampling attivo: ratio={SAMPLE_RATIO}")
+            for size in ["256x512", "224x224"]:
+                for split in ["train", "test"]:
+                    p = os.path.join("dataset", f"cropped_{size}", split)
+                    if os.path.isdir(p):
+                        print(f"  Campionamento {p}...")
+                        _sample_directory(p, SAMPLE_RATIO)
 
         print("Dataset downloaded successfully.")
     except Exception as e:
