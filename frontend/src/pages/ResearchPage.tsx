@@ -403,9 +403,9 @@ export function ResearchPage() {
           </P>
 
           <Figure
-            src="/figures/tsne_comparison.webp"
-            alt="t-SNE CE, SupCon, SpHOR"
-            caption="Proiezioni t-SNE degli embedding di DINOv2-Small attraverso i tre paradigmi: (a) CE — embedding scarsamente strutturati, (b) SupCon — cluster marcatamente più coesi, (c) SpHOR — regioni angolarmente separate. La progressione mostra il miglioramento verso uno spazio metricamente significativo."
+            src="/figures/loss_curves_exp6_dinov2b.webp"
+            alt="Loss curves DINOv2-B Exp 6"
+            caption="Curve di training e validazione per DINOv2-Base in Exp 6 (CE). Convergenza stabile intorno a 60 epoche, early stopping a 75."
           />
         </Section>
 
