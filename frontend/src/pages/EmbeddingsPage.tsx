@@ -48,6 +48,7 @@ export function EmbeddingsPage() {
   const [split, setSplit] = useState("all");
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
+  const [imgError, setImgError] = useState(false);
 
   const { data, isLoading, error } = useEmbeddings(experiment, method);
 
@@ -147,10 +148,10 @@ export function EmbeddingsPage() {
           {/* 3D Viewer */}
           <div className="rounded-2xl border border-border/50 bg-background/50 p-1 h-[500px] md:h-[600px]">
             {method.includes("3d") ? (
-              <Scatter3D points={visiblePoints} species={data.species} speciesColors={speciesColors} onSelect={setSelectedIdx} />
+              <Scatter3D points={visiblePoints} species={data.species} speciesColors={speciesColors} onSelect={(i: number | null) => { setSelectedIdx(i); setImgError(false); }} />
             ) : (
               <Scatter2D points={visiblePoints.map((p) => ({ x: p.x, y: p.y, species: p.species, idx: p.idx }))}
-                speciesColors={speciesColors} onSelect={setSelectedIdx} />
+                speciesColors={speciesColors} onSelect={(i: number | null) => { setSelectedIdx(i); setImgError(false); }} />
             )}
           </div>
 
@@ -185,13 +186,19 @@ export function EmbeddingsPage() {
             {selectedPoint && (
               <div className="rounded-xl border border-border/40 bg-muted/20 overflow-hidden">
                 <div className="aspect-square bg-muted/30 flex items-center justify-center relative">
-                  <img src={`${API_BASE}${selectedPoint.image_url}`} alt={selectedPoint.species}
-                    className="w-full h-full object-contain"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                    loading="lazy" />
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <ImageIcon className="size-8 text-muted-foreground/20" />
-                  </div>
+                  {imgError ? (
+                    <div className="flex flex-col items-center gap-2 p-4 text-center">
+                      <ImageIcon className="size-8 text-muted-foreground/30" />
+                      <p className="text-xs text-muted-foreground/60">Immagine non disponibile localmente</p>
+                      <p className="text-[10px] text-muted-foreground/40">Scarica il dataset completo per visualizzare tutte le immagini</p>
+                    </div>
+                  ) : (
+                    <img src={`${API_BASE}${selectedPoint.image_url}`} alt={selectedPoint.species}
+                      className="w-full h-full object-contain"
+                      onError={() => setImgError(true)}
+                      onLoad={() => setImgError(false)}
+                      loading="lazy" />
+                  )}
                 </div>
                 <div className="p-3 space-y-1">
                   <div className="flex items-center gap-2">
