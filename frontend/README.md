@@ -1,18 +1,33 @@
-# 🌸 OrchID — Frontend Explorer
+# 🌸 OrchID — Frontend
 
-React Single Page Application (SPA) for exploring and analyzing the results of *Ophrys* orchid classification models.
+React SPA per la classificazione e l'esplorazione dei risultati delle orchidee *Ophrys*.
 
-## 🚀 Tech Stack
+## Tech Stack
 
-- **Core**: React 19, TypeScript, Vite
-- **Styling**: Tailwind CSS v4, Shadcn/ui
-- **State & Data**: Zustand, React Query, Recharts
+React 19, TypeScript, Vite, Tailwind CSS v4, Shadcn/ui, React Query, Recharts
 
-## 🛠️ Quick Start
+## Quick Start
 
 ```bash
 npm install
-npm run dev
+npm run dev     # → http://localhost:5175
 ```
 
-The frontend will be available at `http://localhost:5175`. It requires the OrchID backend running on port `5000` (API calls are proxied automatically via `vite.config.ts`).
+Richiede il backend OrchID su porta 5000 (proxy API in `vite.config.ts`).
+
+## Build per produzione
+
+```bash
+npm run build   # → frontend/dist/
+```
+
+## Pagine
+
+| Route | Pagina |
+|-------|--------|
+| `/` | Dashboard |
+| `/classify` | Classificazione immagini |
+| `/explorer` | Explorer esperimenti |
+| `/research` | Riassunto della tesi |
+| `/dataset` | Galleria dataset |
+| `/embeddings` | Spazio latente 2D/3D |
