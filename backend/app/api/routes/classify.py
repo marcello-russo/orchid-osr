@@ -14,7 +14,8 @@ from app.api.schemas import (
     ModelListResponse,
     TopPrediction,
 )
-from app.api.weights import CLASS_NAMES, get_device, get_model_options
+from app.api.weights import CLASS_NAMES, _get_exp_num, get_device, get_model_options
+from app.cli.definitions import EXPERIMENTS
 from app.core.models import available_models, create_transform
 
 ENERGY_TAU = 1.0
@@ -131,9 +132,17 @@ async def classify_upload(file: UploadFile = File(...), model_id: str = Form(Non
         predicted_idx = outputs.argmax(dim=1).item()
         confidence = probabilities[0, predicted_idx].item()
 
-        # Energy-based novelty detection (Liu et al., NeurIPS 2020)
-        energy = ENERGY_TAU * torch.logsumexp(outputs / ENERGY_TAU, dim=1).item()
-        is_novel = energy > ENERGY_THRESHOLD
+        # Energy-based novelty detection — solo per esperimenti con ncd_mode (Exp 8, 10)
+        exp_num = _get_exp_num(model_id) if model_id else None
+        novelties = EXPERIMENTS.get(exp_num, {}).get("ncd_mode", False) if exp_num else False
+        novelty = None
+        if novelties:
+            energy = ENERGY_TAU * torch.logsumexp(outputs / ENERGY_TAU, dim=1).item()
+            novelty = {
+                "is_novel": energy > ENERGY_THRESHOLD,
+                "score": round(energy, 4),
+                "threshold": ENERGY_THRESHOLD,
+            }
 
     topk = torch.topk(probabilities, min(6, len(CLASS_NAMES)), dim=1)
     top_predictions = [
@@ -148,9 +157,5 @@ async def classify_upload(file: UploadFile = File(...), model_id: str = Form(Non
         top_predictions=top_predictions,
         predicted_species=CLASS_NAMES[predicted_idx],
         confidence=confidence,
-        novelty={
-            "is_novel": is_novel,
-            "score": round(energy, 4),
-            "threshold": ENERGY_THRESHOLD,
-        },
+        novelty=novelty,
     )

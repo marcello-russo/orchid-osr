@@ -11,7 +11,7 @@ from pathlib import Path
 from huggingface_hub import hf_hub_download
 
 from app.api.schemas import CacheStatus, ModelOption
-from app.cli.definitions import EXPERIMENTS
+from app.cli.definitions import EXPERIMENTS as _EXPERIMENTS
 from app.config import settings
 
 logger = logging.getLogger(__name__)
@@ -36,6 +36,13 @@ _HF_PREFIX_MAP: dict[str, str] = {
     "exp9_ncd": "exp9_ncd",
     "exp10_mgh_ncd": "exp10_mgh_ncd",
 }
+
+def _get_exp_num(model_id: str) -> int | None:
+    """Extract experiment number from a model_id (e.g. 'exp8_sphor_resnet18' → 8)."""
+    for prefix, (_, num) in _EXP_META.items():
+        if model_id.startswith(prefix):
+            return num
+    return None
 
 _VARIANT_DISPLAY = {
     "resnet18": "ResNet-18",
@@ -182,7 +189,7 @@ def _discover_models() -> list[ModelOption]:
             deduped.append(m)
 
     # Compute tags on deduped models only
-    ncd_exps = {num for num, cfg in EXPERIMENTS.items() if cfg.get("ncd_mode")}
+    ncd_exps = {num for num, cfg in _EXPERIMENTS.items() if cfg.get("ncd_mode")}
     for m in deduped:
         if m.exp_num in ncd_exps:
             m.tags.append("ncd")
