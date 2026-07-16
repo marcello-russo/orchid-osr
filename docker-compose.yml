@@ -42,7 +42,7 @@ services:
     restart: unless-stopped
     command: tunnel --config /home/nonroot/.cloudflared/config.yml run
     volumes:
-      - ~/.cloudflared:/home/nonroot/.cloudflared
+      - /home/user/.cloudflared:/home/nonroot/.cloudflared
     depends_on:
       - nginx
     networks:
