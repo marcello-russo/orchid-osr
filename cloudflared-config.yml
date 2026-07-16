@@ -1,6 +1,6 @@
 tunnel: TUNNEL_UUID
 credentials-file: /home/nonroot/.cloudflared/TUNNEL_UUID.json
 ingress:
-  - hostname: orchid.klad.ml
+  -     hostname: orchid-ncd.klad.ml
     service: http://nginx:80
   - service: http_status:404
