@@ -62,15 +62,6 @@ if [ -d "$DATA_DIR" ]; then
     ) &
 fi
 
-# Download dataset in background (campionato al 15% per risparmiare spazio)
-DATASET_SAMPLE_RATIO="${DATASET_SAMPLE_RATIO:-0.15}" export DATASET_SAMPLE_RATIO
-if [ ! -d "dataset/cropped_256x512/train" ] || [ ! -d "dataset/cropped_224x224/train" ]; then
-    if [ -n "$HF_TOKEN" ]; then
-        echo "Dataset non trovato — download in background (sample=$DATASET_SAMPLE_RATIO)..."
-        (python3 scripts/hf_tools/download_cache.py && echo "Dataset scaricato") &
-    else
-        echo "HF_TOKEN non impostato, skip download dataset (demo senza dataset locale)"
-    fi
-fi
+# Dataset non scaricato: le immagini vengono proxyate da HuggingFace CDN al volo
 
 wait $SERVER_PID
