@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-MAX_CACHED_MODELS = 5
+MAX_CACHED_MODELS = 2
 _model_cache: OrderedDict[str, ClassifierModel] = OrderedDict()
 _cache_lock = threading.Lock()
 
