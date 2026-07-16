@@ -40,7 +40,7 @@ export function ExperimentsPage() {
     <div className="space-y-6 max-w-7xl mx-auto px-4 md:px-12 animate-in fade-in duration-700">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
-          <div className="size-10 md:size-12 rounded-2xl bg-purple-500/10 flex items-center justify-center text-purple-500">
+          <div className="size-10 md:size-12 rounded-2xl bg-purple-500/10 flex items-center justify-center shrink-0 text-purple-500">
             <FlaskConical className="size-6" />
           </div>
           <div>
