@@ -40,7 +40,9 @@ services:
   tunnel:
     image: cloudflare/cloudflared:latest
     restart: unless-stopped
-    command: tunnel --no-autoupdate --url http://nginx:80
+    command: tunnel --config /home/nonroot/.cloudflared/config.yml run
+    volumes:
+      - ~/.cloudflared:/home/nonroot/.cloudflared
     depends_on:
       - nginx
     networks:
