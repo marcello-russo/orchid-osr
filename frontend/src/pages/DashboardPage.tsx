@@ -46,7 +46,7 @@ export function DashboardPage() {
   return (
     <div className="space-y-8 max-w-7xl mx-auto px-4 md:px-12 animate-in fade-in duration-700">
       <div className="flex items-center gap-4">
-        <div className="size-10 md:size-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+        <div className="size-10 md:size-12 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0 text-primary">
           <LayoutDashboard className="size-6" />
         </div>
         <div>
