@@ -1,3 +1,4 @@
+import json
 import mimetypes
 from pathlib import Path
 
@@ -19,8 +20,10 @@ _VALID_CLASSES = set(settings.class_names)
 _CROPPED_DIR = "cropped_256x512"
 _HF_DATASET = "marcellorusso/orchid-ncd-dataset"
 _HF_BRANCH = "main"
+_LISTING_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "dataset_listing.json"
 
 _http_client: httpx.AsyncClient | None = None
+_listing_cache: dict | None = None
 
 
 async def _get_http_client() -> httpx.AsyncClient:
@@ -30,16 +33,15 @@ async def _get_http_client() -> httpx.AsyncClient:
     return _http_client
 
 
-def _count_images(directory: Path) -> int:
-    if not directory.is_dir():
-        return 0
-    return sum(1 for f in directory.iterdir() if f.is_file() and f.suffix.lower() in _IMAGE_EXTS)
-
-
-def _list_image_files(directory: Path) -> list[str]:
-    if not directory.is_dir():
-        return []
-    return sorted(f.name for f in directory.iterdir() if f.is_file() and f.suffix.lower() in _IMAGE_EXTS)
+def _get_listing() -> dict:
+    global _listing_cache
+    if _listing_cache is not None:
+        return _listing_cache
+    if _LISTING_PATH.is_file():
+        with open(_LISTING_PATH) as f:
+            _listing_cache = json.load(f)
+        return _listing_cache
+    return {"classes": {}, "files": {"train": {}, "test": {}}, "total_images": 0}
 
 
 def _hf_token() -> str | None:
@@ -57,7 +59,6 @@ def _get_dataset_base() -> Path:
 
 
 def _validate_segment(value: str) -> str:
-    """Reject path traversal in URL segments."""
     if ".." in value or "/" in value or "\\" in value:
         raise HTTPException(status_code=400, detail="Invalid path segment")
     return value
@@ -65,42 +66,40 @@ def _validate_segment(value: str) -> str:
 
 @router.get("/classes", response_model=DatasetClassesResponse)
 async def list_classes(user=Depends(require_role("user"))):
-    """List all classes with train/test counts."""
-    base = _get_dataset_base()
+    listing = _get_listing()
     classes: list[DatasetClassInfo] = []
     total_train = 0
     total_test = 0
-
-    train_dir = base / "train"
-    test_dir = base / "test"
-
-    if not train_dir.is_dir() and not test_dir.is_dir():
-        return DatasetClassesResponse(classes=[], total_train=0, total_test=0)
-
-    # Discover classes from both train and test (a class may exist only in test, e.g. NCD novel class)
-    seen = set()
-    for base_dir in [train_dir, test_dir]:
-        if not base_dir.is_dir():
-            continue
-        for class_dir in sorted(base_dir.iterdir()):
-            if not class_dir.is_dir() or class_dir.name in seen:
-                continue
-            seen.add(class_dir.name)
-            class_name = class_dir.name
-            train_count = await run_in_threadpool(_count_images, train_dir / class_name)
-            test_count = await run_in_threadpool(_count_images, test_dir / class_name)
-            if train_count + test_count > 0:
-                classes.append(
-                    DatasetClassInfo(
-                        name=class_name,
-                        train_count=train_count,
-                        test_count=test_count,
-                        total=train_count + test_count,
-                    )
-                )
-                total_train += train_count
-                total_test += test_count
-
+    for class_name, counts in sorted(listing.get("classes", {}).items()):
+        classes.append(DatasetClassInfo(
+            name=class_name,
+            train_count=counts.get("train", 0),
+            test_count=counts.get("test", 0),
+            total=counts.get("train", 0) + counts.get("test", 0),
+        ))
+        total_train += counts.get("train", 0)
+        total_test += counts.get("test", 0)
+    # Fallback: scan filesystem if listing is empty
+    if not classes:
+        base = _get_dataset_base()
+        train_dir = base / "train"
+        test_dir = base / "test"
+        if train_dir.is_dir() or test_dir.is_dir():
+            for base_dir in [train_dir, test_dir]:
+                if not base_dir.is_dir():
+                    continue
+                for class_dir in sorted(base_dir.iterdir()):
+                    if not class_dir.is_dir():
+                        continue
+                    cn = class_dir.name
+                    if any(c["name"] == cn for c in classes):
+                        continue
+                    train_count = len(list((train_dir / cn).iterdir())) if (train_dir / cn).is_dir() else 0
+                    test_count = len(list((test_dir / cn).iterdir())) if (test_dir / cn).is_dir() else 0
+                    if train_count + test_count > 0:
+                        classes.append(DatasetClassInfo(name=cn, train_count=train_count, test_count=test_count, total=train_count + test_count))
+                        total_train += train_count
+                        total_test += test_count
     return DatasetClassesResponse(classes=classes, total_train=total_train, total_test=total_test)
 
 
@@ -112,32 +111,32 @@ async def list_class_images(
     offset: int = 0,
     user=Depends(require_role("user")),
 ):
-    """List images for a class in a given split."""
     class_name = _validate_segment(class_name)
     if class_name not in _VALID_CLASSES:
         raise HTTPException(status_code=400, detail=f"Unknown class: {class_name}")
     if split not in _VALID_SPLITS:
         raise HTTPException(status_code=400, detail="Invalid split. Use: train or test")
 
-    base = _get_dataset_base()
-    class_dir = base / split / class_name
+    listing = _get_listing()
+    all_files = listing.get("files", {}).get(split, {}).get(class_name, [])
 
-    if not class_dir.is_dir():
-        return ClassImagesResponse(class_name=class_name, split=split, total=0, images=[])
+    # Fallback: scan filesystem if listing is empty
+    if not all_files:
+        base = _get_dataset_base()
+        class_dir = base / split / class_name
+        if class_dir.is_dir():
+            all_files = sorted(f.name for f in class_dir.iterdir() if f.is_file() and f.suffix.lower() in _IMAGE_EXTS)
 
-    all_files = await run_in_threadpool(_list_image_files, class_dir)
     total = len(all_files)
     page = all_files[offset : offset + limit]
-
     images = [DatasetImage(filename=f, url=f"/api/dataset/images/{split}/{class_name}/{f}") for f in page]
     return ClassImagesResponse(class_name=class_name, split=split, total=total, images=images)
 
 
-async def _hf_proxy(class_name: str, filename: str) -> Response:
-    """Proxy image from the HuggingFace dataset CDN via the backend."""
+async def _hf_proxy(class_name: str, filename: str, cache_dir: Path | None = None) -> Response:
+    """Proxy image from HuggingFace dataset CDN, optionally caching to disk."""
     token = _hf_token()
     headers = {"Authorization": f"Bearer {token}"} if token else {}
-    # Try all crop directories the image could live in
     for crop in [
         "cropped/224x224/train",
         "cropped/224x224/test",
@@ -148,21 +147,37 @@ async def _hf_proxy(class_name: str, filename: str) -> Response:
         client = await _get_http_client()
         resp = await client.get(hf_url, headers=headers)
         if resp.status_code == 200:
-            return Response(content=resp.content, media_type=resp.headers.get("content-type", "image/jpeg"))
+            # Cache to disk if requested
+            if cache_dir:
+                cache_dir.mkdir(parents=True, exist_ok=True)
+                (cache_dir / filename).write_bytes(resp.content)
+            content_type = resp.headers.get("content-type", "image/jpeg")
+            return Response(content=resp.content, media_type=content_type)
     raise HTTPException(status_code=404, detail="Image not found locally or on HuggingFace")
 
 
-async def _serve_resized(file_path: Path, size: int, base: Path, split: str, class_name: str, filename: str):
-    """Generate and serve a resized WebP thumbnail."""
-    cache_dir = base / ".thumbnails" / str(size) / split / class_name
+async def _serve_resized(file_path: Path, size: int, split: str, class_name: str, filename: str):
+    """Generate and serve a resized WebP thumbnail, fetching from HF if needed."""
+    cache_base = _get_dataset_base().parent / ".thumbnails" / str(size)
+    cache_dir = cache_base / split / class_name
     cache_path = cache_dir / f"{file_path.stem}.webp"
     if cache_path.is_file():
         return FileResponse(cache_path, media_type="image/webp")
 
+    # Load image from local file or HF
+    if file_path.is_file():
+        img_path = file_path
+    else:
+        img_path = cache_dir / filename
+        if not img_path.is_file():
+            await _hf_proxy(class_name, filename, cache_dir)
+        if not img_path.is_file():
+            raise HTTPException(status_code=404, detail="Image not found")
+
     def _generate():
         try:
             cache_dir.mkdir(parents=True, exist_ok=True)
-            with Image.open(file_path) as img:
+            with Image.open(img_path) as img:
                 w, h = img.size
                 if w > size:
                     new_h = int(h * (size / w))
@@ -176,8 +191,12 @@ async def _serve_resized(file_path: Path, size: int, base: Path, split: str, cla
     success = await run_in_threadpool(_generate)
     if success and cache_path.is_file():
         return FileResponse(cache_path, media_type="image/webp")
-    media_type = mimetypes.guess_type(str(file_path))[0] or "image/jpeg"
-    return FileResponse(file_path, media_type=media_type)
+
+    # Fallback: serve original without resize
+    if file_path.is_file():
+        media_type = mimetypes.guess_type(str(file_path))[0] or "image/jpeg"
+        return FileResponse(file_path, media_type=media_type)
+    raise HTTPException(status_code=404, detail="Image not found")
 
 
 @router.get("/images/{split}/{class_name}/{filename}")
@@ -187,7 +206,11 @@ async def serve_image(
     filename: str,
     size: int = Query(None, gt=0, le=1024),
 ):
-    """Serve a dataset image file, optionally resized and converted to WebP."""
+    """Serve a dataset image file, optionally resized and converted to WebP.
+
+    Checks local filesystem first, then falls back to HuggingFace CDN proxy.
+    Images fetched from CDN are cached locally for subsequent requests.
+    """
     split = _validate_segment(split)
     class_name = _validate_segment(class_name)
     filename = _validate_segment(filename)
@@ -197,17 +220,16 @@ async def serve_image(
     base = _get_dataset_base()
     file_path = base / split / class_name / filename
 
-    # Ensure resolved path stays within the dataset directory
     try:
         file_path.resolve().relative_to(base.resolve())
     except ValueError:
         raise HTTPException(status_code=403, detail="Path traversal denied")
 
-    if not file_path.is_file():
-        return await _hf_proxy(class_name, filename)
+    if size is not None:
+        return await _serve_resized(file_path, size, split, class_name, filename)
 
-    if size is None:
+    if file_path.is_file():
         media_type = mimetypes.guess_type(str(file_path))[0] or "image/jpeg"
         return FileResponse(file_path, media_type=media_type)
 
-    return await _serve_resized(file_path, size, base, split, class_name, filename)
+    return await _hf_proxy(class_name, filename)
