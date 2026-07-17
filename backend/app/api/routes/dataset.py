@@ -145,7 +145,7 @@ async def _hf_proxy(class_name: str, filename: str, cache_dir: Path | None = Non
     ]:
         hf_url = f"https://huggingface.co/datasets/{_HF_DATASET}/resolve/{_HF_BRANCH}/{crop}/{class_name}/{filename}"
         client = await _get_http_client()
-        resp = await client.get(hf_url, headers=headers)
+        resp = await client.get(hf_url, headers=headers, follow_redirects=True)
         if resp.status_code == 200:
             # Cache to disk if requested
             if cache_dir:
