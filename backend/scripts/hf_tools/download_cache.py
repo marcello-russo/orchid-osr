@@ -57,7 +57,6 @@ def main():
             DATASET_REPO,
             repo_type="dataset",
             local_dir="dataset",
-            resume=True,
             allow_patterns=[
                 "cropped/*/train/**",
                 "cropped/*/test/**",
