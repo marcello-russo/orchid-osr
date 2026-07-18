@@ -112,8 +112,6 @@ async def list_class_images(
     user=Depends(require_role("user")),
 ):
     class_name = _validate_segment(class_name)
-    if class_name not in _VALID_CLASSES:
-        raise HTTPException(status_code=400, detail=f"Unknown class: {class_name}")
     if split not in _VALID_SPLITS:
         raise HTTPException(status_code=400, detail="Invalid split. Use: train or test")
 
