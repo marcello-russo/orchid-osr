@@ -37,12 +37,14 @@ _HF_PREFIX_MAP: dict[str, str] = {
     "exp10_mgh_ncd": "exp10_mgh_ncd",
 }
 
+
 def _get_exp_num(model_id: str) -> int | None:
     """Extract experiment number from a model_id (e.g. 'exp8_sphor_resnet18' → 8)."""
     for prefix, (_, num) in _EXP_META.items():
         if model_id.startswith(prefix):
             return num
     return None
+
 
 _VARIANT_DISPLAY = {
     "resnet18": "ResNet-18",
