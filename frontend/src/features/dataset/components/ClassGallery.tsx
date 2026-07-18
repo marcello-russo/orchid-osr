@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useClassImages } from "@/features/dataset/hooks/useDataset";
-import { cn } from "@/lib/utils";
 import type { DatasetClassInfo } from "@/lib/types";
 
 const PAGE_SIZE = 8;
@@ -139,17 +138,24 @@ function ImageWithAuth({ imageUrl, token, alt }: { imageUrl: string; token: stri
   }, []);
 
   return (
-    <div className="h-full w-full">
-      {!isLoaded && <Skeleton className="absolute inset-0 h-full w-full" />}
-      {src && (
+    <div className="relative h-full w-full">
+      {!src && <Skeleton className="h-full w-full rounded-md" />}
+      {src && !isLoaded && (
+        <>
+          <Skeleton className="absolute inset-0 h-full w-full rounded-md" />
+          <img
+            src={src}
+            alt={alt}
+            onLoad={() => setIsLoaded(true)}
+            className="absolute inset-0 h-full w-full object-cover opacity-0 scale-95"
+          />
+        </>
+      )}
+      {src && isLoaded && (
         <img
           src={src}
           alt={alt}
-          onLoad={() => setIsLoaded(true)}
-          className={cn(
-            "h-full w-full object-cover transition-all duration-500 group-hover:scale-105",
-            isLoaded ? "opacity-100 scale-100" : "opacity-0 scale-95"
-          )}
+          className="h-full w-full object-cover transition-all duration-500 group-hover:scale-105 opacity-100 scale-100"
         />
       )}
     </div>
