@@ -1,10 +1,13 @@
 # app/core/models/dinov2.py
+import logging
 from typing import Literal
 
 import torch
 import torch.nn as nn
 
 from app.core.models.base import ClassifierModel, ModelConfig
+
+logger = logging.getLogger(__name__)
 
 _DINOV2_MODEL_IDS = {
     "dinov2_small": "facebook/dinov2-small",
@@ -100,6 +103,10 @@ class DINOv2Classifier(ClassifierModel):
 
         return torch.cat([cls_final, patch_pooled, cls_mid], dim=1)
 
+    def _get_backbone(self) -> "Dinov2Model":
+        from transformers import Dinov2Model
+        return Dinov2Model.from_pretrained(_DINOV2_MODEL_IDS[self._variant])
+
     def load_weights(self, path: str) -> None:
         import os
 
@@ -107,16 +114,50 @@ class DINOv2Classifier(ClassifierModel):
         if os.path.isdir(adapter_dir):
             from peft import PeftModel
 
-            base_model_id = _DINOV2_MODEL_IDS[self._variant]
-            from transformers import Dinov2Model
-
-            base = Dinov2Model.from_pretrained(base_model_id)
+            base = self._get_backbone()
             self._backbone = PeftModel.from_pretrained(base, adapter_dir)
             head_sd = torch.load(path, map_location="cpu", weights_only=True)
             self._head.load_state_dict(head_sd)
-        else:
-            state_dict = torch.load(path, map_location="cpu", weights_only=True)
-            self.load_state_dict(state_dict)
+            return
+
+        state_dict = torch.load(path, map_location="cpu", weights_only=True)
+        keys = set(state_dict.keys())
+
+        # Case 1: full model state_dict (backbone + head)
+        if any(k.startswith("_backbone.") for k in keys):
+            result = self.load_state_dict(state_dict, strict=False)
+            if result.missing_keys:
+                logger.warning("DINOv2 load_weights missing keys: %s", result.missing_keys)
+            if result.unexpected_keys:
+                logger.warning("DINOv2 load_weights unexpected keys: %s", result.unexpected_keys)
+            return
+
+        # Case 2: only head weights (weight + bias) — backbone from base model
+        head_w = state_dict.get("weight")
+        head_b = state_dict.get("bias")
+        if head_w is not None and head_b is not None and len(keys) == 2:
+            if head_w.shape != self._head.weight.shape or head_b.shape != self._head.bias.shape:
+                raise RuntimeError(
+                    f"Head weight shape mismatch: expected "
+                    f"{self._head.weight.shape}/{self._head.bias.shape}, "
+                    f"got {head_w.shape}/{head_b.shape}"
+                )
+            self._head.weight.data.copy_(head_w)
+            self._head.bias.data.copy_(head_b)
+            return
+
+        # Case 3: head weights with _head. prefix
+        head_sd = {k.replace("_head.", ""): v for k, v in state_dict.items() if k.startswith("_head.")}
+        if head_sd:
+            self._head.load_state_dict(head_sd)
+            return
+
+        result = self.load_state_dict(state_dict, strict=False)
+        if result.missing_keys or result.unexpected_keys:
+            logger.warning(
+                "DINOv2 load_weights fallback: %d missing, %d unexpected",
+                len(result.missing_keys), len(result.unexpected_keys),
+            )
 
     def save_weights(self, path: str) -> None:
         import os
