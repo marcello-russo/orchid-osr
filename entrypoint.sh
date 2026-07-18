@@ -62,15 +62,6 @@ if [ -d "$DATA_DIR" ]; then
     ) &
 fi
 
-# Download dataset in background (15% per risparmiare spazio)
-DATASET_SAMPLE_RATIO="${DATASET_SAMPLE_RATIO:-1.0}" export DATASET_SAMPLE_RATIO
-if [ ! -d "dataset/cropped_256x512/train" ] || [ ! -d "dataset/cropped_224x224/train" ]; then
-    if [ -n "$HF_TOKEN" ]; then
-        echo "Download dataset in background (sample=$DATASET_SAMPLE_RATIO)..."
-        (python3 scripts/hf_tools/download_cache.py && echo "Dataset scaricato") &
-    else
-        echo "HF_TOKEN non impostato — immagini proxyate da HF CDN"
-    fi
-fi
+# Dataset non scaricato localmente: le immagini vengono servite via proxy HF CDN
 
 wait $SERVER_PID
