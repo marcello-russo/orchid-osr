@@ -19,7 +19,7 @@ from app.cli.definitions import EXPERIMENTS
 from app.core.models import available_models, create_transform
 
 ENERGY_TAU = 1.0
-ENERGY_THRESHOLD = 0.5  # Calibrated at 10% FPR
+ENERGY_THRESHOLD = 0.7  # Calibrated at ~1% FPR on most models (0.5 = 10% FPR per thesis, but too sensitive in practice)
 
 MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10 MB
 ALLOWED_MIME_TYPES = {"image/jpeg", "image/png", "image/webp", "image/bmp"}
