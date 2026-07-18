@@ -71,12 +71,14 @@ async def list_classes(user=Depends(require_role("user"))):
     total_train = 0
     total_test = 0
     for class_name, counts in sorted(listing.get("classes", {}).items()):
-        classes.append(DatasetClassInfo(
-            name=class_name,
-            train_count=counts.get("train", 0),
-            test_count=counts.get("test", 0),
-            total=counts.get("train", 0) + counts.get("test", 0),
-        ))
+        classes.append(
+            DatasetClassInfo(
+                name=class_name,
+                train_count=counts.get("train", 0),
+                test_count=counts.get("test", 0),
+                total=counts.get("train", 0) + counts.get("test", 0),
+            )
+        )
         total_train += counts.get("train", 0)
         total_test += counts.get("test", 0)
     # Fallback: scan filesystem if listing is empty
@@ -97,7 +99,14 @@ async def list_classes(user=Depends(require_role("user"))):
                     train_count = len(list((train_dir / cn).iterdir())) if (train_dir / cn).is_dir() else 0
                     test_count = len(list((test_dir / cn).iterdir())) if (test_dir / cn).is_dir() else 0
                     if train_count + test_count > 0:
-                        classes.append(DatasetClassInfo(name=cn, train_count=train_count, test_count=test_count, total=train_count + test_count))
+                        classes.append(
+                            DatasetClassInfo(
+                                name=cn,
+                                train_count=train_count,
+                                test_count=test_count,
+                                total=train_count + test_count,
+                            )
+                        )
                         total_train += train_count
                         total_test += test_count
     return DatasetClassesResponse(classes=classes, total_train=total_train, total_test=total_test)
