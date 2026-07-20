@@ -115,10 +115,11 @@ async def classify_image(request: ClassifyRequest):
 
 
 def _compute_ensemble(embedding: np.ndarray, logits: torch.Tensor, stats: dict) -> tuple[bool, float]:
-    """Compute Ensemble score: Mahalanobis + KNN + Energy.
+    """Compute Ensemble score: Mahalanobis + KNN.
 
-    Calibration is done on (Maha + KNN)/2 with z-score normalization.
-    Energy is added as a bonus signal at runtime (z-score approximated).
+    Both calibrated with z-score normalization at 10% FPR during offline
+    stats generation. Energy is NOT included — it would need its own
+    per-model calibration to avoid biasing the ensemble.
 
     Returns (is_novel, ensemble_score).
     """
@@ -126,13 +127,11 @@ def _compute_ensemble(embedding: np.ndarray, logits: torch.Tensor, stats: dict) 
         np.sum((embedding - stats["class_means"]) @ stats["cov_inv"] * (embedding - stats["class_means"]), axis=1)
     )
     knn_dists, _ = stats["nn"].kneighbors(embedding.reshape(1, -1))
-    energy = float(ENERGY_TAU * torch.logsumexp(logits / ENERGY_TAU, dim=1).item())
 
     maha_z = (maha - stats["maha_mean"]) / max(stats["maha_std"], 1e-8)
     knn_z = (knn_dists.mean() - stats["knn_mean"]) / max(stats["knn_std"], 1e-8)
-    energy_z = (energy - 5.0) / 1.5
 
-    ensemble = (maha_z + knn_z + energy_z) / 3.0
+    ensemble = (maha_z + knn_z) / 2.0
     return bool(ensemble > stats["threshold_ensemble"]), float(ensemble)
 
 
