@@ -157,7 +157,7 @@ async def classify_upload(file: UploadFile = File(...), model_id: str = Form(Non
         exp_num = _get_exp_num(model_id) if model_id else None
         show_novelty = EXPERIMENTS.get(exp_num, {}).get("ncd_mode", False) if exp_num else False
         novelty = None
-        if show_novelty and model_id:
+        if show_novelty and model_id and confidence < 0.995:
             stats = get_osr_stats(model_id)
             if stats is not None:
                 emb = model.get_embeddings(image_tensor).cpu().numpy().flatten()
