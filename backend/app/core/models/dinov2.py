@@ -108,6 +108,12 @@ class DINOv2Classifier(ClassifierModel):
 
         return Dinov2Model.from_pretrained(_DINOV2_MODEL_IDS[self._variant])
 
+    def _rebuild_head_for_dim(self, in_features: int) -> None:
+        self._head = nn.Linear(in_features, self._config.num_classes)
+        self._embedding_dim = in_features
+        base = _DINOV2_EMBEDDING_DIM[self._variant]
+        self._multi_grain = in_features > base
+
     def load_weights(self, path: str) -> None:
         import os
 
@@ -124,11 +130,20 @@ class DINOv2Classifier(ClassifierModel):
         state_dict = torch.load(path, map_location="cpu", weights_only=True)
         keys = set(state_dict.keys())
 
+        # Detect head shape from checkpoint
+        ckpt_head_key = next((k for k in keys if k.endswith("_head.weight") or k == "weight"), None)
+        ckpt_head_w = state_dict.get(ckpt_head_key) if ckpt_head_key else None
+        if ckpt_head_w is not None and ckpt_head_w.shape[1] != self._head.weight.shape[1]:
+            logger.info(
+                "DINOv2 checkpoint head dim %d != current %d — adapting",
+                ckpt_head_w.shape[1], self._head.weight.shape[1],
+            )
+            self._rebuild_head_for_dim(ckpt_head_w.shape[1])
+
         # Case 1: full model state_dict (backbone + head)
         if any(k.startswith("_backbone.") for k in keys):
             has_peft = any("base_model.model" in k for k in keys)
             if not has_peft:
-                # Merged weights (no LoRA wrapping) — replace backbone with plain model
                 backbone = self._get_backbone()
                 self._backbone = backbone
             result = self.load_state_dict(state_dict, strict=False)
@@ -143,11 +158,7 @@ class DINOv2Classifier(ClassifierModel):
         head_b = state_dict.get("bias")
         if head_w is not None and head_b is not None and len(keys) == 2:
             if head_w.shape != self._head.weight.shape or head_b.shape != self._head.bias.shape:
-                raise RuntimeError(
-                    f"Head weight shape mismatch: expected "
-                    f"{self._head.weight.shape}/{self._head.bias.shape}, "
-                    f"got {head_w.shape}/{head_b.shape}"
-                )
+                self._rebuild_head_for_dim(head_w.shape[1])
             self._head.weight.data.copy_(head_w)
             self._head.bias.data.copy_(head_b)
             return
@@ -155,6 +166,9 @@ class DINOv2Classifier(ClassifierModel):
         # Case 3: head weights with _head. prefix
         head_sd = {k.replace("_head.", ""): v for k, v in state_dict.items() if k.startswith("_head.")}
         if head_sd:
+            kw = head_sd.get("weight")
+            if kw is not None and kw.shape[1] != self._head.weight.shape[1]:
+                self._rebuild_head_for_dim(kw.shape[1])
             self._head.load_state_dict(head_sd)
             return
 
