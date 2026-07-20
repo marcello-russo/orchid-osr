@@ -103,8 +103,9 @@ class DINOv2Classifier(ClassifierModel):
 
         return torch.cat([cls_final, patch_pooled, cls_mid], dim=1)
 
-    def _get_backbone(self) -> "Dinov2Model":
+    def _get_backbone(self):
         from transformers import Dinov2Model
+
         return Dinov2Model.from_pretrained(_DINOV2_MODEL_IDS[self._variant])
 
     def load_weights(self, path: str) -> None:
@@ -125,6 +126,11 @@ class DINOv2Classifier(ClassifierModel):
 
         # Case 1: full model state_dict (backbone + head)
         if any(k.startswith("_backbone.") for k in keys):
+            has_peft = any("base_model.model" in k for k in keys)
+            if not has_peft:
+                # Merged weights (no LoRA wrapping) — replace backbone with plain model
+                backbone = self._get_backbone()
+                self._backbone = backbone
             result = self.load_state_dict(state_dict, strict=False)
             if result.missing_keys:
                 logger.warning("DINOv2 load_weights missing keys: %s", result.missing_keys)
@@ -156,7 +162,8 @@ class DINOv2Classifier(ClassifierModel):
         if result.missing_keys or result.unexpected_keys:
             logger.warning(
                 "DINOv2 load_weights fallback: %d missing, %d unexpected",
-                len(result.missing_keys), len(result.unexpected_keys),
+                len(result.missing_keys),
+                len(result.unexpected_keys),
             )
 
     def save_weights(self, path: str) -> None:

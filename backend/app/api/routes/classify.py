@@ -2,11 +2,12 @@
 import base64
 import io
 
+import numpy as np
 import torch
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from PIL import Image
 
-from app.api.cache import get_model
+from app.api.cache import get_model, get_osr_stats
 from app.api.schemas import (
     ClassifyRequest,
     ClassifyResponse,
@@ -19,7 +20,6 @@ from app.cli.definitions import EXPERIMENTS
 from app.core.models import available_models, create_transform
 
 ENERGY_TAU = 1.0
-ENERGY_THRESHOLD = 0.7  # Calibrated at ~1% FPR on most models (0.5 = 10% FPR per thesis, but too sensitive in practice)
 
 MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10 MB
 ALLOWED_MIME_TYPES = {"image/jpeg", "image/png", "image/webp", "image/bmp"}
@@ -114,6 +114,28 @@ async def classify_image(request: ClassifyRequest):
     )
 
 
+def _compute_ensemble(embedding: np.ndarray, logits: torch.Tensor, stats: dict) -> tuple[bool, float]:
+    """Compute Ensemble score: Mahalanobis + KNN + Energy.
+
+    Calibration is done on (Maha + KNN)/2 with z-score normalization.
+    Energy is added as a bonus signal at runtime (z-score approximated).
+
+    Returns (is_novel, ensemble_score).
+    """
+    maha = np.min(
+        np.sum((embedding - stats["class_means"]) @ stats["cov_inv"] * (embedding - stats["class_means"]), axis=1)
+    )
+    knn_dists, _ = stats["nn"].kneighbors(embedding.reshape(1, -1))
+    energy = float(ENERGY_TAU * torch.logsumexp(logits / ENERGY_TAU, dim=1).item())
+
+    maha_z = (maha - stats["maha_mean"]) / max(stats["maha_std"], 1e-8)
+    knn_z = (knn_dists.mean() - stats["knn_mean"]) / max(stats["knn_std"], 1e-8)
+    energy_z = (energy - 5.0) / 1.5
+
+    ensemble = (maha_z + knn_z + energy_z) / 3.0
+    return bool(ensemble > stats["threshold_ensemble"]), float(ensemble)
+
+
 @router.post("/classify/upload", response_model=ClassifyUploadResponse)
 async def classify_upload(file: UploadFile = File(...), model_id: str = Form(None)):
     """Classify an orchid image uploaded as multipart form data."""
@@ -132,17 +154,27 @@ async def classify_upload(file: UploadFile = File(...), model_id: str = Form(Non
         predicted_idx = outputs.argmax(dim=1).item()
         confidence = probabilities[0, predicted_idx].item()
 
-        # Energy-based novelty detection — solo per esperimenti con ncd_mode (Exp 8, 10)
+        # Ensemble-based novelty detection — solo per experimenti con ncd_mode
         exp_num = _get_exp_num(model_id) if model_id else None
-        novelties = EXPERIMENTS.get(exp_num, {}).get("ncd_mode", False) if exp_num else False
+        show_novelty = EXPERIMENTS.get(exp_num, {}).get("ncd_mode", False) if exp_num else False
         novelty = None
-        if novelties:
-            energy = ENERGY_TAU * torch.logsumexp(outputs / ENERGY_TAU, dim=1).item()
-            novelty = {
-                "is_novel": energy > ENERGY_THRESHOLD,
-                "score": round(energy, 4),
-                "threshold": ENERGY_THRESHOLD,
-            }
+        if show_novelty and model_id:
+            stats = get_osr_stats(model_id)
+            if stats is not None:
+                emb = model.get_embeddings(image_tensor).cpu().numpy().flatten()
+                is_novel, score = _compute_ensemble(emb, outputs, stats)
+                novelty = {
+                    "is_novel": is_novel,
+                    "score": round(score, 4),
+                    "threshold": round(stats["threshold_ensemble"], 4),
+                }
+            else:
+                energy = ENERGY_TAU * torch.logsumexp(outputs / ENERGY_TAU, dim=1).item()
+                novelty = {
+                    "is_novel": energy > 0.7,
+                    "score": round(energy, 4),
+                    "threshold": 0.7,
+                }
 
     topk = torch.topk(probabilities, min(6, len(CLASS_NAMES)), dim=1)
     top_predictions = [
