@@ -32,7 +32,7 @@ class DINOv2Config(ModelConfig):
     lora_alpha: int = 16
     lora_dropout: float = 0.1
     freeze_backbone: bool = True
-    multi_grain: bool = True
+    multi_grain: bool = False
 
     def create_model(self) -> "DINOv2Classifier":
         return DINOv2Classifier(self)
