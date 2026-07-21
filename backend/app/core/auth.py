@@ -24,6 +24,8 @@ MAX_LOGIN_ATTEMPTS = 5
 _MAX_TRACKED_USERS = 1000
 _LOGIN_LOCK = threading.Lock()
 
+ROLE_HIERARCHY = {"user": 0, "admin": 1, "superadmin": 2}
+
 
 def _load_attempts() -> dict[str, int]:
     global _CACHE_LAST_SYNC
@@ -187,29 +189,26 @@ def login_user(username: str, password: str) -> dict:
     return {"username": user["username"], "role": user["role"]}
 
 
-def ensure_admin_exists() -> None:
-    if not settings.admin_username or not settings.admin_password:
-        logger = logging.getLogger(__name__)
-        logger.warning(
-            "ADMIN_USERNAME/ADMIN_PASSWORD not configured — admin account disabled. "
-            "Set these via .env, HF Spaces Secrets, or ensure users.json provides an admin."
-        )
+def ensure_superadmin_exists() -> None:
+    username = settings.superadmin_username
+    password = settings.superadmin_password
+    if not username or not password:
+        logger.warning("SUPERADMIN_USERNAME/PASSWORD non configurati — skip bootstrap")
         return
-
+    hashed = hash_password(password)
     def _modify(data):
-        existing = next((u for u in data["users"] if u["username"] == settings.admin_username), None)
+        existing = next((u for u in data["users"] if u["username"] == username), None)
         if existing:
-            existing["password_hash"] = hash_password(settings.admin_password)
-            existing["role"] = "admin"
-            return
-        data["users"].append(
-            {
-                "username": settings.admin_username,
-                "password_hash": hash_password(settings.admin_password),
-                "role": "admin",
-            }
-        )
-
+            existing["password_hash"] = hashed
+            existing["role"] = "superadmin"
+            logger.info("Superadmin %s aggiornato", username)
+        else:
+            data["users"].append({
+                "username": username,
+                "password_hash": hashed,
+                "role": "superadmin",
+            })
+            logger.info("Superadmin %s creato", username)
     _atomic_modify(_modify)
 
 
@@ -244,7 +243,36 @@ def list_users_and_invites() -> dict:
                 "used": i["used"],
                 "used_by": i.get("used_by"),
                 "created_at": i.get("created_at"),
-            }
-            for i in data["invites"]
+    }
+
+    for i in data["invites"]
         ],
     }
+
+
+def delete_user(target_username: str, requester_username: str) -> None:
+    if target_username == requester_username:
+        raise HTTPException(400, "Cannot delete yourself")
+
+    def _modify(data):
+        target = next((u for u in data["users"] if u["username"] == target_username), None)
+        if not target:
+            raise HTTPException(404, "User not found")
+
+        requester = next((u for u in data["users"] if u["username"] == requester_username), None)
+        if not requester:
+            raise HTTPException(401, "Requester not found")
+
+        target_level = ROLE_HIERARCHY.get(target["role"], -1)
+        requester_level = ROLE_HIERARCHY.get(requester["role"], -1)
+
+        if requester_level <= target_level:
+            raise HTTPException(403, "Cannot delete a user with equal or higher role")
+
+        data["users"] = [u for u in data["users"] if u["username"] != target_username]
+        for invite in data["invites"]:
+            if invite.get("used_by") == target_username:
+                invite["used"] = False
+                invite.pop("used_by", None)
+
+    _atomic_modify(_modify)

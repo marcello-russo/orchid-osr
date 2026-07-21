@@ -9,9 +9,9 @@ import {
   Box,
   Database,
   BookOpen,
-  KeyRound,
   X,
   LogIn,
+  Users,
 } from "lucide-react";
 import { useAppStore } from "@/stores/useAppStore";
 import { cn } from "@/lib/utils";
@@ -73,9 +73,9 @@ export function Sidebar() {
             <span>{t(key)}</span>
           </NavLink>
         ))}
-        {user?.role === "admin" && (
+        {(user?.role === "admin" || user?.role === "superadmin") && (
           <NavLink
-            to="/invites"
+            to="/admin/users"
             onClick={() => setSidebarOpen(false)}
             className={({ isActive }) =>
               cn(
@@ -86,8 +86,8 @@ export function Sidebar() {
               )
             }
           >
-            <KeyRound className="size-5 shrink-0" />
-            <span>{t("invites.sidebar")}</span>
+            <Users className="size-5 shrink-0" />
+            <span>{t("sidebar.user_management")}</span>
           </NavLink>
         )}
       </nav>

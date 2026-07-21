@@ -17,17 +17,11 @@ async def get_current_user(request: Request) -> dict:
 
 
 def require_role(min_role: str):
-    if min_role == "admin":
-
-        async def _check(user: dict = Depends(get_current_user)):
-            if user["role"] != "admin":
-                raise HTTPException(status.HTTP_403_FORBIDDEN, "Admin access required")
-            return user
-
-        return _check
-    else:
-
-        async def _check(user: dict = Depends(get_current_user)):
-            return user
-
-        return _check
+    def _check(current_user: dict = Depends(get_current_user)):
+        role = current_user.get("role", "")
+        if role == "superadmin":
+            return current_user
+        if role == min_role:
+            return current_user
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    return _check

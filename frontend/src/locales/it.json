@@ -470,6 +470,9 @@
     "logout": "Esci",
     "login": "Accedi"
   },
+  "sidebar": {
+    "user_management": "Gestione Utenti"
+  },
   "invites": {
     "title": "Gestione Inviti",
     "description": "Genera e gestisci i codici invito per la registrazione degli utenti.",
@@ -491,5 +494,15 @@
     "users_description": "{{count}} utenti registrati",
     "username": "Username",
     "sidebar": "Inviti"
+  },
+  "admin_users": {
+    "title": "Gestione Utenti",
+    "username": "Utente",
+    "role": "Ruolo",
+    "actions": "Azioni",
+    "delete": "Elimina",
+    "delete_confirm_title": "Elimina utente",
+    "delete_confirm_body": "Sei sicuro di voler eliminare {{username}}? Questa azione non può essere annullata.",
+    "cant_delete_self": "Non puoi eliminare il tuo account"
   }
 }

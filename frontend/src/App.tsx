@@ -26,8 +26,8 @@ const DatasetPage = lazy(() =>
 const ResearchPage = lazy(() =>
   import("@/pages/ResearchPage").then((m) => ({ default: m.ResearchPage }))
 );
-const InvitePage = lazy(() =>
-  import("@/pages/InvitePage").then((m) => ({ default: m.InvitePage }))
+const UserManagementPage = lazy(() =>
+  import("@/pages/UserManagementPage").then((m) => ({ default: m.UserManagementPage }))
 );
 
 function PageFallback() {
@@ -75,8 +75,8 @@ function App() {
               element={<ErrorBoundary><Suspense fallback={<PageFallback />}><DatasetPage /></Suspense></ErrorBoundary>}
             />
             <Route
-              path="/invites"
-              element={<ErrorBoundary><Suspense fallback={<PageFallback />}><InvitePage /></Suspense></ErrorBoundary>}
+              path="/admin/users"
+              element={<ErrorBoundary><Suspense fallback={<PageFallback />}><UserManagementPage /></Suspense></ErrorBoundary>}
             />
           </Route>
         </Route>
