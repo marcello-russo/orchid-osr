@@ -156,7 +156,7 @@ export function ResearchPage() {
           <SubSection title="Contributi">
             <ul className="list-disc list-inside text-muted-foreground space-y-1 text-sm">
               <li>Benchmark multi-architettura su tre paradigmi di apprendimento</li>
-              <li>Dataset curato di 2.880 immagini con split train/test privi di data leakage</li>
+              <li>Dataset curato di 3.040 immagini con split train/test privi di data leakage</li>
               <li>Analisi dello spazio latente tramite proiezioni t-SNE</li>
               <li>Valutazione open-set con tecniche Mahalanobis, KNN ed Energy<Cite id="liu2020energy" /></li>
             </ul>
@@ -226,15 +226,16 @@ export function ResearchPage() {
               { key: "test", label: "Test" },
             ]}
             rows={[
-              { species: "O. exaltata", train: "501", test: "50" },
-              { species: "O. garganica", train: "570", test: "50" },
-              { species: "O. incubacea", train: "366", test: "50" },
+              { species: "O. exaltata", train: "490", test: "50" },
+              { species: "O. garganica", train: "563", test: "50" },
+              { species: "O. incubacea", train: "352", test: "50" },
               { species: "O. majellensis", train: "152", test: "50" },
-              { species: "O. sphegodes", train: "433", test: "50" },
+              { species: "O. sphegodes", train: "425", test: "50" },
               { species: "O. sphegodes Palena", train: "210", test: "50" },
-              { species: "Totale", train: "2.232", test: "300" },
+              { species: "O. sphegodes_Napoli (novel)", train: "0", test: "548" },
+              { species: "Totale", train: "2.192", test: "848" },
             ]}
-            caption="Distribuzione delle immagini per specie negli split di training e test."
+            caption="Distribuzione delle immagini per specie negli split di training e test. La specie novel è presente solo nel test set (548 immagini)."
           />
 
           <Callout variant="warning" title="Data Leakage">

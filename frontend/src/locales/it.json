@@ -312,7 +312,7 @@
       "preprocessing_title": "Il Problema del Preprocessing",
       "preprocessing": "La pipeline originale applicava un center-crop aggressivo a risoluzione fissa, distruggendo le informazioni sul rapporto d'aspetto. Poiché ResNet richiede input 256×512 mentre ConvNeXt e DINOv2 usano 224×224, lo stesso crop produceva input distorti e poveri di informazioni tra le architetture. Abbiamo sostituito con il letterbox resizing: le immagini vengono scalate per rientrare nelle dimensioni target preservando il rapporto d'aspetto, con bande nere di padding a riempire lo spazio rimanente.",
       "clean_title": "Exp 6 — Tabula Rasa",
-      "clean": "L'esperimento 6 è un riavvio completo su uno split deduplicato con zero sovrapposizioni verificate tramite MD5 tra training (2.017 immagini) e test (300 bilanciate, 50 per classe). Per la prima volta, sei architetture — ResNet18, ResNet50, ConvNeXt-Tiny, ConvNeXt-Small, DINOv2-Small e DINOv2-Base — vengono valutate con dimensioni di input per-architettura e 5-fold stratified cross-validation."
+      "clean": "L'esperimento 6 è un riavvio completo su uno split deduplicato con zero sovrapposizioni verificate tramite MD5 tra training (2.192 immagini) e test (300 bilanciate, 50 per classe). Per la prima volta, sei architetture — ResNet18, ResNet50, ConvNeXt-Tiny, ConvNeXt-Small, DINOv2-Small e DINOv2-Base — vengono valutate con dimensioni di input per-architettura e 5-fold stratified cross-validation."
     },
     "methodology": {
       "title": "Metodologia",
