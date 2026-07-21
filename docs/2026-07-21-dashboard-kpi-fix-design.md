@@ -50,11 +50,13 @@ Conteggi attuali dal dataset `cropped_256x512/` (train + test):
 
 **Frontend** `frontend/src/pages/DashboardPage.tsx`:
 ```tsx
-const bestF1Model = cleanSplitExps.reduce((best, e) => {
-  const score = (e.mean_f1 ?? 0) - (e.std_f1 ?? 0);
-  const bestScore = (best.mean_f1 ?? 0) - (best.std_f1 ?? 0);
-  return score > bestScore ? e : best;
-}, cleanSplitExps[0]);
+const bestF1Model = cleanSplitExps.length > 0
+  ? cleanSplitExps.reduce((best, e) => {
+      const score = (e.mean_f1 ?? 0) - (e.std_f1 ?? 0);
+      const bestScore = (best.mean_f1 ?? 0) - (best.std_f1 ?? 0);
+      return score > bestScore ? e : best;
+    })
+  : null;
 const bestF1Val = bestF1Model?.mean_f1 ?? 0;
 const bestF1Std = bestF1Model?.std_f1 ?? 0;
 ```
@@ -88,6 +90,26 @@ Seconda riga (Open-World) — se presente almeno un NCD:
 └────────────────┴────────────────┘
 ```
 
+### i18n — nuove chiavi
+
+`frontend/src/locales/en.json` e `frontend/src/locales/it.json`:
+
+```json
+"kpis": {
+  "best_ncd_auroc": "Best NCD AUROC",
+  "best_ncd_nmi": "Best NCD NMI",
+  ...
+}
+```
+
+```json
+"kpis": {
+  "best_ncd_auroc": "Miglior AUROC NCD",
+  "best_ncd_nmi": "Miglior NMI NCD",
+  ...
+}
+```
+
 ## Files da modificare
 
 | File | Modifica |
@@ -95,6 +117,8 @@ Seconda riga (Open-World) — se presente almeno un NCD:
 | `backend/app/data/species_counts.json` | Nuovi conteggi (3040 total, 7 species) |
 | `backend/app/api/routes/species.py:64` | `valid` include `novel_class_name` |
 | `frontend/src/pages/DashboardPage.tsx` | F1 con ±std e mean-std selection; NCD KPIs |
+| `frontend/src/locales/en.json` | Aggiungere `best_ncd_auroc`, `best_ncd_nmi` |
+| `frontend/src/locales/it.json` | Aggiungere `best_ncd_auroc`, `best_ncd_nmi` |
 
 ## Test
 
