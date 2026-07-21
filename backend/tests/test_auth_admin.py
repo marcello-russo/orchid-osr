@@ -1,101 +1,159 @@
-"""Tests for ensure_admin_exists in auth.py."""
+"""Test superadmin bootstrap, user deletion, and role hierarchy."""
 
-import json
-import sys
-import tempfile
-from pathlib import Path
 from unittest.mock import patch
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+import pytest
+from fastapi import HTTPException
+
+from app.core.auth import delete_user, ensure_superadmin_exists
+
+# ── helpers ────────────────────────────────────────────────
 
 
-def _make_users(users=None, invites=None):
-    """Create a temporary users.json with given data."""
-    data = {"users": users or [], "invites": invites or []}
-    f = tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".json")
-    json.dump(data, f)
-    f.close()
-    return f.name
+def _make_user(username: str, role: str = "user") -> dict:
+    return {"username": username, "password_hash": "fakehash", "role": role}
 
 
-def test_creates_admin_when_missing():
-    """When no admin exists, ensure_admin_exists should create one."""
-    path = _make_users(users=[], invites=[])
-    with patch("app.core.auth.USERS_PATH", Path(path)):
-        with patch("app.core.auth.settings") as mock_settings:
-            mock_settings.admin_username = "admin"
-            mock_settings.admin_password = "secret123"
-            mock_settings.hf_configured = False
-
-            from app.core.auth import ensure_admin_exists
-
-            ensure_admin_exists()
-
-            with open(path) as f:
-                data = json.load(f)
-            admins = [u for u in data["users"] if u["role"] == "admin"]
-            assert len(admins) == 1
-            assert admins[0]["username"] == "admin"
+def _make_invite(code: str = "INV-TEST", used: bool = False, used_by: str = "") -> dict:
+    inv = {"code": code, "used": used, "role": "user", "created_at": "2026-01-01T00:00:00"}
+    if used and used_by:
+        inv["used"] = True
+        inv["used_by"] = used_by
+    return inv
 
 
-def test_updates_password_when_exists():
-    """When admin user already exists, ensure_admin_exists should update password."""
-    path = _make_users(
-        users=[{"username": "admin", "password_hash": "old_hash", "role": "admin"}],
-        invites=[],
-    )
-    with patch("app.core.auth.USERS_PATH", Path(path)):
-        with patch("app.core.auth.settings") as mock_settings:
-            mock_settings.admin_username = "admin"
-            mock_settings.admin_password = "new_secret"
-            mock_settings.hf_configured = False
-
-            from app.core.auth import ensure_admin_exists, verify_password
-
-            ensure_admin_exists()
-
-            with open(path) as f:
-                data = json.load(f)
-            admin = next(u for u in data["users"] if u["username"] == "admin")
-            assert verify_password("new_secret", admin["password_hash"]) is True
+def _default_data() -> dict:
+    return {
+        "users": [
+            _make_user("super", "superadmin"),
+            _make_user("alfa", "admin"),
+            _make_user("beta", "user"),
+        ],
+        "invites": [
+            _make_invite("INV-UNUSED"),
+            _make_invite("INV-USED", used=True, used_by="beta"),
+        ],
+    }
 
 
-def test_skips_when_no_env():
-    """When ADMIN_USERNAME/PASSWORD not set, should skip without error."""
-    path = _make_users(users=[], invites=[])
-    with patch("app.core.auth.USERS_PATH", Path(path)):
-        with patch("app.core.auth.settings") as mock_settings:
-            mock_settings.admin_username = ""
-            mock_settings.admin_password = ""
-            mock_settings.hf_configured = False
-
-            from app.core.auth import ensure_admin_exists
-
-            ensure_admin_exists()
-
-            with open(path) as f:
-                data = json.load(f)
-            assert len(data["users"]) == 0
+# ── delete_user ────────────────────────────────────────────
 
 
-def test_preserves_existing_users():
-    """Ensure_admin_exists should not delete other users."""
-    path = _make_users(
-        users=[{"username": "marcello", "password_hash": "hash", "role": "admin"}],
-        invites=[],
-    )
-    with patch("app.core.auth.USERS_PATH", Path(path)):
-        with patch("app.core.auth.settings") as mock_settings:
-            mock_settings.admin_username = "newadmin"
-            mock_settings.admin_password = "pwd"
-            mock_settings.hf_configured = False
+class TestDeleteUser:
+    def test_superadmin_deletes_user(self):
+        """Superadmin può eliminare un user."""
+        data = _default_data()
+        with patch("app.core.auth._atomic_modify", side_effect=lambda fn: fn(data)):
+            delete_user("beta", "super")
+        users = [u["username"] for u in data["users"]]
+        assert "beta" not in users
 
-            from app.core.auth import ensure_admin_exists
+    def test_superadmin_deletes_admin(self):
+        """Superadmin può eliminare un admin."""
+        data = _default_data()
+        with patch("app.core.auth._atomic_modify", side_effect=lambda fn: fn(data)):
+            delete_user("alfa", "super")
+        users = [u["username"] for u in data["users"]]
+        assert "alfa" not in users
 
-            ensure_admin_exists()
+    def test_admin_deletes_user(self):
+        """Admin può eliminare un user."""
+        data = _default_data()
+        with patch("app.core.auth._atomic_modify", side_effect=lambda fn: fn(data)):
+            delete_user("beta", "alfa")
+        users = [u["username"] for u in data["users"]]
+        assert "beta" not in users
 
-            with open(path) as f:
-                data = json.load(f)
-            usernames = [u["username"] for u in data["users"]]
-            assert "marcello" in usernames
-            assert "newadmin" in usernames
+    def test_admin_cannot_delete_admin(self):
+        """Admin NON può eliminare un altro admin."""
+        data = _default_data()
+        data["users"].append(_make_user("gamma", "admin"))
+        with patch("app.core.auth._atomic_modify", side_effect=lambda fn: fn(data)):
+            with pytest.raises(HTTPException, match="Cannot delete a user with equal or higher role"):
+                delete_user("gamma", "alfa")
+
+    def test_admin_cannot_delete_superadmin(self):
+        """Admin NON può eliminare un superadmin."""
+        data = _default_data()
+        with patch("app.core.auth._atomic_modify", side_effect=lambda fn: fn(data)):
+            with pytest.raises(HTTPException, match="Cannot delete a user with equal or higher role"):
+                delete_user("super", "alfa")
+
+    def test_cannot_delete_self(self):
+        """Un utente non può eliminare sé stesso."""
+        data = _default_data()
+        with patch("app.core.auth._atomic_modify", side_effect=lambda fn: fn(data)):
+            with pytest.raises(HTTPException, match="Cannot delete yourself"):
+                delete_user("super", "super")
+
+    def test_delete_nonexistent_user(self):
+        """Eliminare un utente inesistente → 404."""
+        data = _default_data()
+        with patch("app.core.auth._atomic_modify", side_effect=lambda fn: fn(data)):
+            with pytest.raises(HTTPException, match="User not found"):
+                delete_user("nonexistent", "super")
+
+    def test_delete_resets_invites(self):
+        """Gli inviti usati dall'utente eliminato vengono resettati."""
+        data = _default_data()
+        with patch("app.core.auth._atomic_modify", side_effect=lambda fn: fn(data)):
+            delete_user("beta", "super")
+        invites = [i for i in data["invites"] if i["code"] == "INV-USED"]
+        assert len(invites) == 1
+        assert invites[0]["used"] is False
+        assert "used_by" not in invites[0]
+
+
+# ── ensure_superadmin_exists ───────────────────────────────
+
+
+class TestEnsureSuperadminExists:
+    def _patch_settings(self, username: str = "super", password: str = "pass"):
+        return patch(
+            "app.core.auth.settings",
+            superadmin_username=username,
+            superadmin_password=password,
+        )
+
+    def test_creates_superadmin_when_missing(self):
+        """Se il superadmin non esiste, viene creato."""
+        data = {"users": [_make_user("user1")], "invites": []}
+        with (
+            patch("app.core.auth._atomic_modify", side_effect=lambda fn: fn(data)),
+            self._patch_settings(),
+        ):
+            ensure_superadmin_exists()
+        users = {u["username"]: u["role"] for u in data["users"]}
+        assert "super" in users
+        assert users["super"] == "superadmin"
+
+    def test_updates_existing_user_to_superadmin(self):
+        """Se l'utente esiste già, il ruolo viene aggiornato a superadmin."""
+        data = {"users": [_make_user("super", "admin")], "invites": []}
+        with (
+            patch("app.core.auth._atomic_modify", side_effect=lambda fn: fn(data)),
+            self._patch_settings(),
+        ):
+            ensure_superadmin_exists()
+        user = next(u for u in data["users"] if u["username"] == "super")
+        assert user["role"] == "superadmin"
+
+    def test_skips_when_credentials_missing(self):
+        """Se SUPERADMIN_USERNAME/PASSWORD non sono configurati, non fa nulla."""
+        data = {"users": [], "invites": []}
+        with (
+            patch("app.core.auth._atomic_modify", side_effect=lambda fn: fn(data)),
+            self._patch_settings(username="", password=""),
+        ):
+            ensure_superadmin_exists()
+        assert len(data["users"]) == 0
+
+    def test_preserves_other_users(self):
+        """La funzione non elimina altri utenti."""
+        data = {"users": [_make_user("alfa"), _make_user("beta")], "invites": []}
+        with (
+            patch("app.core.auth._atomic_modify", side_effect=lambda fn: fn(data)),
+            self._patch_settings(),
+        ):
+            ensure_superadmin_exists()
+        assert len(data["users"]) == 3

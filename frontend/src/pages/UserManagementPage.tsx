@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { fetchInvites, generateInvites, deleteUser } from "@/lib/api";
 import { useAppStore } from "@/stores/useAppStore";
+import { useShallow } from "zustand/react/shallow";
 import {
   Card,
   CardContent,
@@ -53,7 +54,9 @@ export function UserManagementPage() {
   const [role, setRole] = useState("user");
   const [generating, setGenerating] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
-  const currentUser = useAppStore((s) => ({ username: s.user?.username, role: s.user?.role }));
+  const currentUser = useAppStore(
+    useShallow((s) => ({ username: s.user?.username, role: s.user?.role }))
+  );
 
   const load = async () => {
     setLoading(true);
