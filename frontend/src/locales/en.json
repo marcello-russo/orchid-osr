@@ -470,6 +470,9 @@
     "logout": "Log out",
     "login": "Log in"
   },
+  "sidebar": {
+    "user_management": "User Management"
+  },
   "invites": {
     "title": "Invite Management",
     "description": "Generate and manage invite codes for user registration.",
@@ -491,5 +494,15 @@
     "users_description": "{{count}} registered users",
     "username": "Username",
     "sidebar": "Invites"
+  },
+  "admin_users": {
+    "title": "User Management",
+    "username": "Username",
+    "role": "Role",
+    "actions": "Actions",
+    "delete": "Delete",
+    "delete_confirm_title": "Delete user",
+    "delete_confirm_body": "Are you sure you want to delete {{username}}? This action cannot be undone.",
+    "cant_delete_self": "You cannot delete your own account"
   }
 }

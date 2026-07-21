@@ -1,5 +1,7 @@
 // frontend/src/lib/types.ts
 
+export type Role = "user" | "admin" | "superadmin";
+
 export interface ExperimentConfig {
   experiment?: number;
   name?: string;
@@ -373,7 +375,8 @@ export interface NcdComparison {
   models: NcdComparisonEntry[];
 }
 
+
 export interface AuthUser {
   username: string;
-  role: "admin" | "user";
+  role: Role;
 }

@@ -7,6 +7,7 @@ from app.api.deps import require_role
 from app.core.auth import (
     create_jwt,
     decode_jwt,
+    delete_user,
     generate_invite,
     list_users_and_invites,
     login_user,
@@ -67,3 +68,13 @@ def list_invites(request: Request, admin=Depends(require_role("admin"))):
 def create_invites(request: Request, body: GenerateInviteRequest, admin=Depends(require_role("admin"))):
     codes = generate_invite(role=body.role, count=body.count)
     return {"codes": codes}
+
+
+@router.delete("/auth/users/{username}")
+async def delete_user_endpoint(
+    username: str,
+    current_user: dict = Depends(require_role("admin")),
+):
+    """Delete a user. Superadmin can delete anyone, admin can only delete users."""
+    delete_user(username, current_user["username"])
+    return {"deleted": username}

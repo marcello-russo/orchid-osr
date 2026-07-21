@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { fetchInvites, generateInvites } from "@/lib/api";
+import { fetchInvites, generateInvites, deleteUser } from "@/lib/api";
+import { useAppStore } from "@/stores/useAppStore";
 import {
   Card,
   CardContent,
@@ -20,7 +21,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Copy, KeyRound, Plus, Users } from "lucide-react";
+import { Copy, Plus, Users } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 interface Invite {
   code: string;
@@ -35,7 +44,7 @@ interface AppUser {
   role: string;
 }
 
-export function InvitePage() {
+export function UserManagementPage() {
   const { t } = useTranslation();
   const [invites, setInvites] = useState<Invite[]>([]);
   const [users, setUsers] = useState<AppUser[]>([]);
@@ -43,6 +52,8 @@ export function InvitePage() {
   const [count, setCount] = useState(1);
   const [role, setRole] = useState("user");
   const [generating, setGenerating] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const currentUser = useAppStore((s) => ({ username: s.user?.username, role: s.user?.role }));
 
   const load = async () => {
     setLoading(true);
@@ -77,11 +88,23 @@ export function InvitePage() {
     navigator.clipboard.writeText(code);
   };
 
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    try {
+      await deleteUser(deleteTarget);
+      setDeleteTarget(null);
+      const data = await fetchInvites();
+      setUsers(data.users);
+    } catch {
+      setDeleteTarget(null);
+    }
+  }
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center gap-3">
         <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-          <KeyRound className="size-5" />
+          <Users className="size-5" />
         </div>
         <div>
           <h1 className="text-2xl font-bold tracking-tight">
@@ -239,6 +262,7 @@ export function InvitePage() {
               <TableRow>
                 <TableHead>{t("invites.username")}</TableHead>
                 <TableHead>{t("invites.role")}</TableHead>
+                <TableHead className="text-right">{t("admin_users.actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -252,12 +276,38 @@ export function InvitePage() {
                       {u.role}
                     </Badge>
                   </TableCell>
+                  <TableCell className="text-right">
+                    {(currentUser.role === "superadmin" || (currentUser.role === "admin" && u.role === "user")) && (
+                      <Button variant="destructive" size="sm" onClick={() => setDeleteTarget(u.username)}>
+                        {t("admin_users.delete")}
+                      </Button>
+                    )}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
+
+      <Dialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("admin_users.delete_confirm_title")}</DialogTitle>
+            <DialogDescription>
+              {t("admin_users.delete_confirm_body", { username: deleteTarget })}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>
+              {t("common.cancel")}
+            </Button>
+            <Button variant="destructive" onClick={confirmDelete}>
+              {t("admin_users.delete")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

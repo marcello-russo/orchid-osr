@@ -244,3 +244,9 @@ export async function fetchMe(): Promise<{ username: string; role: string }> {
   if (!res.ok) throw new Error("Not authenticated");
   return res.json();
 }
+
+export async function deleteUser(username: string): Promise<void> {
+  await fetchApi(`/auth/users/${encodeURIComponent(username)}`, {
+    method: "DELETE",
+  });
+}
