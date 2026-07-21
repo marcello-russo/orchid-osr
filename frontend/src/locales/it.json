@@ -26,11 +26,20 @@
       "inviteRequired": "Codice invito obbligatorio",
       "usernameLength": "Username deve essere 3-32 caratteri",
       "passwordLength": "Password deve essere 8-128 caratteri",
+      "passwordUpper": "Deve contenere una maiuscola",
+      "passwordLower": "Deve contenere una minuscola",
+      "passwordNumber": "Deve contenere un numero",
       "rateLimited": "Troppi tentativi. Aspetta qualche minuto.",
       "networkError": "Errore di connessione. Controlla Internet."
     },
     "hidePassword": "Nascondi password",
-    "showPassword": "Mostra password"
+    "showPassword": "Mostra password",
+    "passwordReq": {
+      "min8": "Almeno 8 caratteri",
+      "hasUpper": "Una lettera maiuscola",
+      "hasLower": "Una lettera minuscola",
+      "hasNumber": "Un numero"
+    }
   },
   "common": {
     "success": "Operazione completata!",

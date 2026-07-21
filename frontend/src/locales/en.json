@@ -26,11 +26,20 @@
       "inviteRequired": "Invite code is required",
       "usernameLength": "Username must be 3-32 characters",
       "passwordLength": "Password must be 8-128 characters",
+      "passwordUpper": "Must contain an uppercase letter",
+      "passwordLower": "Must contain a lowercase letter",
+      "passwordNumber": "Must contain a number",
       "rateLimited": "Too many attempts. Please wait a few minutes.",
       "networkError": "Connection error. Check your internet."
     },
     "hidePassword": "Hide password",
-    "showPassword": "Show password"
+    "showPassword": "Show password",
+    "passwordReq": {
+      "min8": "At least 8 characters",
+      "hasUpper": "One uppercase letter",
+      "hasLower": "One lowercase letter",
+      "hasNumber": "One number"
+    }
   },
   "common": {
     "success": "Success!",

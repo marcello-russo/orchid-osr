@@ -21,7 +21,12 @@ function createSchemas(t: (key: string) => string) {
     .object({
       inviteCode: z.string().min(1, t("auth.errors.inviteRequired")),
       username: z.string().min(3, t("auth.errors.usernameLength")).max(32, t("auth.errors.usernameLength")),
-      password: z.string().min(8, t("auth.errors.passwordLength")).max(128, t("auth.errors.passwordLength")),
+      password: z.string()
+        .min(8, t("auth.errors.passwordLength"))
+        .max(128, t("auth.errors.passwordLength"))
+        .regex(/[A-Z]/, t("auth.errors.passwordUpper"))
+        .regex(/[a-z]/, t("auth.errors.passwordLower"))
+        .regex(/[0-9]/, t("auth.errors.passwordNumber")),
       confirmPassword: z.string(),
     })
     .refine((data) => data.password === data.confirmPassword, {
@@ -45,10 +50,10 @@ function getFieldErrors(error: z.ZodError | null): FieldErrors {
 }
 
 const PASSWORD_REQUIREMENTS = [
-  { key: "min8", test: (p: string) => p.length >= 8 },
-  { key: "hasUpper", test: (p: string) => /[A-Z]/.test(p) },
-  { key: "hasLower", test: (p: string) => /[a-z]/.test(p) },
-  { key: "hasNumber", test: (p: string) => /[0-9]/.test(p) },
+  { key: "auth.passwordReq.min8", test: (p: string) => p.length >= 8 },
+  { key: "auth.passwordReq.hasUpper", test: (p: string) => /[A-Z]/.test(p) },
+  { key: "auth.passwordReq.hasLower", test: (p: string) => /[a-z]/.test(p) },
+  { key: "auth.passwordReq.hasNumber", test: (p: string) => /[0-9]/.test(p) },
 ];
 
 function getPasswordStrength(password: string): { level: number; label: string; color: string } {
@@ -303,8 +308,8 @@ export default function AuthPage() {
                   {PASSWORD_REQUIREMENTS.map((req) => {
                     const ok = req.test(password);
                     return (
-                      <span key={req.key} className={ok ? "text-green-600" : ""}>
-                        {ok ? "✓" : "○"} {req.key}
+                      <span key={req.key} className={ok ? "text-green-600 dark:text-green-400" : ""}>
+                        {ok ? "✓" : "○"} {t(req.key)}
                       </span>
                     );
                   })}
