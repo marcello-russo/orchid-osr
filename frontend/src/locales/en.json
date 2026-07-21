@@ -312,7 +312,7 @@
       "preprocessing_title": "The Preprocessing Problem",
       "preprocessing": "The original pipeline applied aggressive center-cropping to a fixed resolution, destroying aspect ratio information. Since ResNet expects 256×512 inputs while ConvNeXt and DINOv2 use 224×224, the same crop produced distorted, information-poor inputs across architectures. We replaced this with letterbox resizing: images are scaled to fit within the target dimensions while preserving aspect ratio, with black padding bands filling the remaining space.",
       "clean_title": "Exp 6 — Clean Slate",
-      "clean": "Experiment 6 is a complete restart on a deduplicated clean split with MD5-verified zero overlap between training (2,017 images) and test (300 balanced, 50 per class). For the first time, six architectures — ResNet18, ResNet50, ConvNeXt-Tiny, ConvNeXt-Small, DINOv2-Small, and DINOv2-Base — are evaluated with per-architecture input sizing and 5-fold stratified cross-validation."
+      "clean": "Experiment 6 is a complete restart on a deduplicated clean split with MD5-verified zero overlap between training (2,192 images) and test (300 balanced, 50 per class). For the first time, six architectures — ResNet18, ResNet50, ConvNeXt-Tiny, ConvNeXt-Small, DINOv2-Small, and DINOv2-Base — are evaluated with per-architecture input sizing and 5-fold stratified cross-validation."
     },
     "methodology": {
       "title": "Methodology",
