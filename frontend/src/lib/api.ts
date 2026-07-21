@@ -207,13 +207,10 @@ export async function login(username: string, password: string): Promise<{ token
 }
 
 export async function register(inviteCode: string, username: string, password: string): Promise<{ token: string; user: AuthUser }> {
-  const res = await apiFetch("/auth/register", {
+  return fetchApi("/auth/register", {
     method: "POST",
     body: JSON.stringify({ invite_code: inviteCode, username, password }),
-    headers: { "Content-Type": "application/json" },
   });
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
 }
 
 export async function fetchInvites(): Promise<{
