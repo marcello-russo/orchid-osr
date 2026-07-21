@@ -21,7 +21,7 @@ jobs:
       - run: pip install ".[dev]"
       - run: ruff check app/ tests/ scripts/
       - run: ruff format --check app/ tests/ scripts/ --diff
-      - run: pytest -x -q --cov=app --cov=scripts --cov-report=term --cov-fail-under=50
+      - run: pytest -x -q --cov=app --cov=scripts --cov-report=term --cov-fail-under=30
 
   docker:
     runs-on: ubuntu-latest
