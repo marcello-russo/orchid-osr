@@ -21,7 +21,7 @@ jobs:
       - run: pip install ".[dev]"
       - run: ruff check app/ tests/ scripts/
       - run: ruff format --check app/ tests/ scripts/ --diff
-      - run: pytest -x -q --cov=app --cov=scripts --cov-report=term --cov-fail-under=40
+      - run: pytest -x -q --cov=app --cov=scripts --cov-report=term --cov-fail-under=50
 
   docker:
     runs-on: ubuntu-latest
@@ -30,31 +30,36 @@ jobs:
       - run: bash -n entrypoint.sh
       - name: Python syntax check
         run: python3 backend/scripts/ci/check_syntax.py
-      - run: docker build --target=cpu -t orchid-ncd .
-      - name: Smoke test — avvio container
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build and cache
+        uses: docker/build-push-action@v6
+        with:
+          target: cpu
+          tags: orchid-ncd
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Smoke test — health endpoint
         run: |
           container_id=$(docker run -d orchid-ncd)
-          for i in 5 15 30 45; do
-            sleep $i
-            status=$(docker inspect "$container_id" --format='{{.State.Status}}' 2>/dev/null)
-            if [ "$status" = "running" ]; then
-              echo "OK: container running after ${i}s"
+          for i in $(seq 1 12); do
+            sleep 5
+            if docker exec "$container_id" python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:7860/health')" 2>/dev/null; then
+              echo "OK: health endpoint risponde dopo $((i*5))s"
               docker rm -f "$container_id" || true
               exit 0
             fi
+            status=$(docker inspect "$container_id" --format='{{.State.Status}}')
             if [ "$status" = "exited" ]; then
-              echo "FAIL: container exited (code $(docker inspect "$container_id" --format='{{.State.ExitCode}}')) after ${i}s"
-              echo "--- LOGS ---"
-              docker logs "$container_id"
-              echo "------------"
+              echo "FAIL: container exited (code $(docker inspect "$container_id" --format='{{.State.ExitCode}}'))"
+              docker logs "$container_id" || true
               docker rm -f "$container_id" || true
               exit 1
             fi
           done
-          echo "FAIL: container still not running after 90s"
-          echo "--- LOGS ---"
+          echo "FAIL: health endpoint non risponde dopo 60s"
           docker logs "$container_id" || true
-          echo "------------"
           docker rm -f "$container_id" || true
           exit 1
 
@@ -73,3 +78,25 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run build
+
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [backend, docker, frontend]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ubuntu
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -e
+            cd ~/OrchID
+            git pull origin main
+            cd frontend
+            npm run build 2>&1
+            cd ..
+            sudo docker compose build backend 2>&1
+            sudo docker compose up -d backend nginx 2>&1

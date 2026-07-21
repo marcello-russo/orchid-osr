@@ -69,7 +69,10 @@
       "best_f1": "Miglior F1",
       "best_test_accuracy": "Miglior Test Accuracy",
       "in_dataset": "nel dataset",
-      "combined_dataset": "dataset combinato"
+      "combined_dataset": "dataset combinato",
+      "best_ncd_auroc": "Miglior AUROC NCD",
+      "best_ncd_nmi": "Miglior NMI NCD",
+      "open_world": "Rilevamento Open-World"
     },
     "table": {
       "species": "Specie",
