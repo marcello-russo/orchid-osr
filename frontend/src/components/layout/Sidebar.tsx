@@ -1,6 +1,6 @@
 // frontend/src/components/layout/Sidebar.tsx
 
-import { NavLink } from "react-router-dom";
+import { NavLink, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   LayoutDashboard,
@@ -11,9 +11,12 @@ import {
   BookOpen,
   KeyRound,
   X,
+  LogIn,
 } from "lucide-react";
 import { useAppStore } from "@/stores/useAppStore";
 import { cn } from "@/lib/utils";
+import { LanguageToggle } from "./LanguageToggle";
+import { ThemeToggle } from "./ThemeToggle";
 
 const navItems = [
   { to: "/", icon: LayoutDashboard, key: "common.home" },
@@ -25,7 +28,7 @@ const navItems = [
 ];
 
 export function Sidebar() {
-  const { user, setSidebarOpen } = useAppStore();
+  const { user, setSidebarOpen, token, logout } = useAppStore();
   const { t } = useTranslation();
 
   return (
@@ -88,6 +91,40 @@ export function Sidebar() {
           </NavLink>
         )}
       </nav>
+
+      {/* Footer */}
+      <div className="mt-auto border-t border-border p-3 space-y-3">
+        {token ? (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20 text-sm font-semibold text-primary">
+                {user!.username.charAt(0).toUpperCase()}
+              </div>
+              <span className="text-sm font-medium text-foreground">{user!.username}</span>
+            </div>
+            <button
+              onClick={() => { logout(); setSidebarOpen(false); }}
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            >
+              {t("header.logout")}
+            </button>
+          </div>
+        ) : (
+          <Link
+            to="/auth"
+            onClick={() => setSidebarOpen(false)}
+            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <LogIn className="h-4 w-4" />
+            <span>{t("header.login")}</span>
+          </Link>
+        )}
+
+        <div className="flex items-center gap-2">
+          <LanguageToggle />
+          <ThemeToggle />
+        </div>
+      </div>
     </aside>
   );
 }
