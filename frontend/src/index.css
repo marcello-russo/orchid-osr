@@ -172,6 +172,14 @@
   font-family: "Fira Sans", system-ui, sans-serif;
 }
 
+/* Sonner toast — dark mode più visibile */
+[data-sonner-toaster][data-sonner-theme="dark"] {
+  --error-bg: oklch(0.25 0.08 22);
+  --error-text: oklch(0.85 0.08 22);
+  --success-bg: oklch(0.25 0.08 145);
+  --success-text: oklch(0.85 0.08 145);
+}
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *,
