@@ -2,82 +2,103 @@
 
 ## Objective
 
-Fix dashboard KPIs: correct total images/classes count, improve Best F1 with variance awareness, add Open-World KPIs.
+Fix dashboard KPIs: correct totals, add variance-awareness to F1, add Open-World KPIs.
 
-## Changes
+## 1. Species endpoint — includere tutte le 7 specie
 
-### 1. Species endpoint — include all 7 species
+**Backend** `backend/app/api/routes/species.py:64`
 
-**Backend** `backend/app/api/routes/species.py`
+Cambiare il filtro `valid` da `set(settings.class_names)` (6 classi) a includere anche la novel class:
 
-- Remove the filter that excludes species not in `settings.class_names`
-- Instead, include ALL species found in dataset directories (or in `species_counts.json`), including `O. sphegodes_Napoli`
-- `total_species` changes from 6 → 7
-- Species distribution table shows all 7 species
+```python
+valid = set(settings.class_names) | {settings.novel_class_name}
+```
 
-### 2. Update species_counts.json
+Così la risposta include tutte e 7 le specie, sia nel runtime scan che nel fallback `species_counts.json`.
 
-`backend/app/data/species_counts.json`
+`total_species` → 7. Tabella distribuzione mostra tutte e 7.
 
-- Update counts to reflect current dataset state (after 40 duplicate removal)
-- Keep all 7 species
+## 2. species_counts.json — aggiornare conteggi reali
 
-### 3. Best Test Accuracy
+**File** `backend/app/data/species_counts.json`
 
-No std available (single test set evaluation). Keep current behavior: max of `test_accuracy` across exp6 models. Display as `XX.XX%`.
+Conteggi attuali dal dataset `cropped_256x512/` (train + test):
 
-### 4. Best F1 — lower bound selection + std display
+| Specie | Train | Test | Totale |
+|--------|-------|------|--------|
+| O. exaltata | 490 | 50 | 540 |
+| O. garganica | 563 | 50 | 613 |
+| O. incubacea | 352 | 50 | 402 |
+| O. majellensis | 152 | 50 | 202 |
+| O. sphegodes | 425 | 50 | 475 |
+| O. sphegodes_Napoli | 0 | 548 | 548 |
+| O. sphegodes_Palena | 210 | 50 | 260 |
+| **Totale** | **2192** | **848** | **3040** |
 
-**Frontend** `frontend/src/pages/DashboardPage.tsx`
+## 3. KPI Classificazione (come ora, ma migliorato)
 
-- Selection criterion: `mean_f1 - std_f1` (lower bound pessimistic)
-- The model with the highest `mean_f1 - std_f1` wins
-- Display: `XX.XX% ± YY.YY%`
-- If `std_f1` is not available for a model, use 0
+### Best Test Accuracy
+- Nessun std disponibile (singola valutazione su test set)
+- Selezione: max di `test_accuracy` tra modelli exp6
+- Display: `XX.XX%`
 
+### Best F1 (con varianza)
+- `mean_f1` è la media tra fold, `std_f1` è la deviazione standard
+- **Selezione**: max di `(mean_f1 - std_f1)` — lower bound pessimistico
+- **Display**: `XX.XX% ± YY.YY%` (mean ± std)
+- Se `std_f1` non disponibile, assume 0
+
+**Frontend** `frontend/src/pages/DashboardPage.tsx`:
 ```tsx
 const bestF1Model = cleanSplitExps.reduce((best, e) => {
   const score = (e.mean_f1 ?? 0) - (e.std_f1 ?? 0);
   const bestScore = (best.mean_f1 ?? 0) - (best.std_f1 ?? 0);
   return score > bestScore ? e : best;
 }, cleanSplitExps[0]);
+const bestF1Val = bestF1Model?.mean_f1 ?? 0;
+const bestF1Std = bestF1Model?.std_f1 ?? 0;
 ```
 
-### 5. Open-World KPIs (second row)
+## 4. KPI Open-World (nuova riga)
 
-Add a second KPI row below the classification row, visible only if NCD experiments exist with data.
+Tutti e 12 i modelli NCD (exp8 + exp10) hanno `ncd_auroc` e `ncd_clustering_nmi` disponibili.
 
-| KPI | Source | Description |
-|-----|--------|-------------|
-| **Best NCD AUROC** | `ncd_auroc` from experiments | Max AUROC across exp8/10 models (open-set detection) |
-| **Best NCD NMI** | `ncd_clustering_nmi` from experiments | Max NMI across exp8/10 models (novel class discovery) |
+| KPI | Fonte | Selezione | Display |
+|-----|-------|-----------|---------|
+| **Best NCD AUROC** | `ncd_auroc` | max del valore | `XX.XX%` |
+| **Best NCD NMI** | `ncd_clustering_nmi` | max del valore | `X.XXX` |
 
-Selection: max of the metric value.
+Filtro: esperimenti dove `ncd_auroc is not None`. Visibile SOLO se almeno un modello NCD esiste.
 
-Layout: new row with 2 KPI cards, title "Open-World Detection" or similar label.
+Layout: seconda riga di KPI sotto quella esistente, con titolo "Open-World" e sfondo leggermente diverso.
 
-### Frontend data flow
+## 5. Schema riassuntivo
 
 ```
-exp6 models → filter exp6 kfold → bestF1 = max(mean - std) → "XX.XX% ± YY.YY%"
-ncd models → filter exp8/10 → bestAUROC = max(ncd_auroc) → "XX.XX%"
-ncd models → filter exp8/10 → bestNMI = max(ncd_clustering_nmi) → "X.XXX"
-species → include all 7 → "7 species", "XXXX total images"
+Prima riga (Classificazione):
+┌─────────────┬──────────────┬───────────────┬───────────────┬──────────┬─────────────┐
+│ Experiments │ Modelli comp.│ Best Test Acc │ Best F1       │ Classi   │ Immagini    │
+│ (conteggio) │ (conteggio)  │ XX.XX%        │ XX.XX%±YY.YY% │ 7        │ 3040        │
+└─────────────┴──────────────┴───────────────┴───────────────┴──────────┴─────────────┘
+
+Seconda riga (Open-World) — se presente almeno un NCD:
+┌────────────────┬────────────────┐
+│ Best NCD AUROC │ Best NCD NMI   │
+│ XX.XX%         │ X.XXX          │
+└────────────────┴────────────────┘
 ```
 
-### Files to modify
+## Files da modificare
 
-| File | Change |
-|------|--------|
-| `backend/app/data/species_counts.json` | Update counts with current dataset |
-| `backend/app/api/routes/species.py` | Remove `valid` filter, include all species |
-| `frontend/src/pages/DashboardPage.tsx` | Fix F1 selection (mean-std), add ±std display, add NCD KPI row |
+| File | Modifica |
+|------|----------|
+| `backend/app/data/species_counts.json` | Nuovi conteggi (3040 total, 7 species) |
+| `backend/app/api/routes/species.py:64` | `valid` include `novel_class_name` |
+| `frontend/src/pages/DashboardPage.tsx` | F1 con ±std e mean-std selection; NCD KPIs |
 
-### Testing
+## Test
 
-- Verify dashboard shows 7 species
-- Verify total images count is correct
-- Verify Best F1 selection picks the right model (highest mean-std)
-- Verify Best F1 shows ± std
-- Verify NCD AUROC and NMI appear in new row
-- Verify existing models (ResNet, ConvNeXt, DINOv2) all still work
+- Dashboard mostra 7 specie, totale 3040 immagini
+- Best F1 mostra ± std e seleziona il modello corretto (mean-std più alto)
+- NCD AUROC e NMI appaiono solo se ci sono modelli NCD
+- Build TypeScript: `cd frontend && npx tsc --noEmit`
