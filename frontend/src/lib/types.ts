@@ -95,6 +95,9 @@ export interface ExperimentSummary {
   mean_f1: number | null;
   std_f1: number | null;
   timestamp: string | null;
+  is_ncd: boolean;
+  ncd_auroc: number | null;
+  ncd_clustering_nmi: number | null;
 }
 
 export interface ExperimentDetail {

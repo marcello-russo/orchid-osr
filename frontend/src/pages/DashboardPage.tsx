@@ -38,10 +38,22 @@ export function DashboardPage() {
     (max, e) => Math.max(max, e.test_accuracy ?? 0),
     0
   );
-  const bestMeanF1 = cleanSplitExps.reduce(
-    (max, e) => Math.max(max, e.mean_f1 ?? 0),
-    0
-  );
+  const bestF1Model = cleanSplitExps.length > 0
+    ? cleanSplitExps.reduce((best, e) => {
+        const score = (e.mean_f1 ?? 0) - (e.std_f1 ?? 0);
+        const bestScore = (best.mean_f1 ?? 0) - (best.std_f1 ?? 0);
+        return score > bestScore ? e : best;
+      })
+    : null;
+  const bestF1Val = bestF1Model?.mean_f1 ?? 0;
+  const bestF1Std = bestF1Model?.std_f1 ?? 0;
+  const ncdExps = (experiments ?? []).filter((e) => e.ncd_auroc != null);
+  const bestNcdAuroc = ncdExps.length > 0
+    ? ncdExps.reduce((max, e) => Math.max(max, e.ncd_auroc ?? 0), 0)
+    : 0;
+  const bestNcdNmi = ncdExps.length > 0
+    ? ncdExps.reduce((max, e) => Math.max(max, e.ncd_clustering_nmi ?? 0), 0)
+    : 0;
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto px-4 md:px-12 animate-in fade-in duration-700">
@@ -129,7 +141,7 @@ export function DashboardPage() {
         />
         <KpiCard
           title={t("dashboard.kpis.best_f1")}
-          value={bestMeanF1 > 0 ? `${(bestMeanF1 * 100).toFixed(2)}%` : "—"}
+          value={bestF1Val > 0 ? `${(bestF1Val * 100).toFixed(2)}% ± ${(bestF1Std * 100).toFixed(2)}%` : "—"}
           icon={BarChart3}
           delay={150}
         />
@@ -148,6 +160,27 @@ export function DashboardPage() {
           delay={250}
         />
       </div>
+
+      {/* NCD KPI Row (Open-World) */}
+      {ncdExps.length > 0 && (
+        <div>
+          <h2 className="text-lg font-semibold mb-4">{t("dashboard.kpis.open_world")}</h2>
+          <div className="grid grid-cols-2 gap-3">
+            <KpiCard
+              title={t("dashboard.kpis.best_ncd_auroc")}
+              value={bestNcdAuroc > 0 ? `${(bestNcdAuroc * 100).toFixed(2)}%` : "—"}
+              icon={ScanSearch}
+              delay={300}
+            />
+            <KpiCard
+              title={t("dashboard.kpis.best_ncd_nmi")}
+              value={bestNcdNmi > 0 ? bestNcdNmi.toFixed(4) : "—"}
+              icon={BarChart3}
+              delay={350}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Dataset Overview */}
       {speciesData && speciesData.species.length > 0 && (

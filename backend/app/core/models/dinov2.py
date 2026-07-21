@@ -136,7 +136,8 @@ class DINOv2Classifier(ClassifierModel):
         if ckpt_head_w is not None and ckpt_head_w.shape[1] != self._head.weight.shape[1]:
             logger.info(
                 "DINOv2 checkpoint head dim %d != current %d — adapting",
-                ckpt_head_w.shape[1], self._head.weight.shape[1],
+                ckpt_head_w.shape[1],
+                self._head.weight.shape[1],
             )
             self._rebuild_head_for_dim(ckpt_head_w.shape[1])
 

@@ -69,7 +69,10 @@
       "best_f1": "Best F1",
       "best_test_accuracy": "Best Test Accuracy",
       "in_dataset": "in dataset",
-      "combined_dataset": "combined dataset"
+      "combined_dataset": "combined dataset",
+      "best_ncd_auroc": "Best NCD AUROC",
+      "best_ncd_nmi": "Best NCD NMI",
+      "open_world": "Open-World Detection"
     },
     "table": {
       "species": "Species",

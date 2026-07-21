@@ -61,7 +61,7 @@ async def list_species():
     """List all species in the dataset with image counts."""
     dataset_dirs = _get_dataset_dirs()
     if dataset_dirs:
-        valid = set(settings.class_names)
+        valid = set(settings.class_names) | {settings.novel_class_name}
         all_species: dict[str, int] = {}
         for d in dataset_dirs:
             species_counts = await run_in_threadpool(_count_species_files, d)
@@ -79,7 +79,7 @@ async def list_species():
     if _COUNTS_FILE.exists():
         with open(_COUNTS_FILE) as f:
             data = json.load(f)
-        valid = set(settings.class_names)
+        valid = set(settings.class_names) | {settings.novel_class_name}
         filtered = {k: v for k, v in data["species"].items() if k in valid}
         return SpeciesListResponse(
             species=[SpeciesInfo(name=k, image_count=v) for k, v in sorted(filtered.items())],

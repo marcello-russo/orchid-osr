@@ -68,3 +68,4 @@ backend/data/orchid.db
 backend/data/jwt_secret.txt
 
 backend/data/osr_stats/
+keys/

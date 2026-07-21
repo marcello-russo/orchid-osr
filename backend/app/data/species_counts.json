@@ -1,13 +1,13 @@
 {
   "species": {
-    "O. exaltata": 501,
-    "O. garganica": 570,
-    "O. incubacea": 366,
+    "O. exaltata": 540,
+    "O. garganica": 613,
+    "O. incubacea": 402,
     "O. majellensis": 202,
-    "O. sphegodes": 433,
+    "O. sphegodes": 475,
     "O. sphegodes_Napoli": 548,
     "O. sphegodes_Palena": 260
   },
-  "total_images": 2880,
+  "total_images": 3040,
   "total_species": 7
 }
