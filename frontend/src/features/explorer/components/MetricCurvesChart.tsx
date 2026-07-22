@@ -42,6 +42,8 @@ export function MetricCurvesChart({ folds, selectedFold }: MetricCurvesChartProp
       fold: f,
       points: foldToEpochPoints(f),
     }));
+    const hasData = allEpochs.some((e) => e.points.some((p) => (p.val_f1 ?? 0) !== 0));
+    if (!hasData) return { merged: [], meanBestF1: 0 };
     const maxLen = Math.max(...allEpochs.map((e) => e.points.length), 0);
     const data = Array.from({ length: maxLen }, (_, i) => {
       const row: Record<string, number> = { epoch: i + 1 };
@@ -57,6 +59,21 @@ export function MetricCurvesChart({ folds, selectedFold }: MetricCurvesChartProp
       : 0;
     return { merged: data, meanBestF1: mean };
   }, [visibleFolds, metric]);
+
+  if (merged.length === 0) {
+    return (
+      <Card>
+        <CardHeader className="pb-2 border-b border-border/50">
+          <CardTitle className="text-base">{t("experiment_detail.charts.metrics")}</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <div className="flex items-center justify-center h-[350px] text-muted-foreground text-sm">
+            {t("experiment_detail.charts.no_loss_data")}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>

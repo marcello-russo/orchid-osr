@@ -41,6 +41,8 @@ export function LossCurvesChart({ folds, selectedFold }: LossCurvesChartProps) {
       fold: f,
       points: foldToEpochPoints(f),
     }));
+    const hasData = allEpochs.some((e) => e.points.some((p) => (p.train_loss ?? 0) !== 0));
+    if (!hasData) return [];
     const maxLen = Math.max(...allEpochs.map((e) => e.points.length), 0);
     return Array.from({ length: maxLen }, (_, i) => {
       const row: Record<string, number> = { epoch: i + 1 };
@@ -54,6 +56,21 @@ export function LossCurvesChart({ folds, selectedFold }: LossCurvesChartProps) {
   }, [visibleFolds, mode]);
 
   const maxLen = merged.length;
+
+  if (merged.length === 0) {
+    return (
+      <Card>
+        <CardHeader className="pb-2 border-b border-border/50">
+          <CardTitle className="text-base">{t("experiment_detail.charts.loss")}</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <div className="flex items-center justify-center h-[350px] text-muted-foreground text-sm">
+            {t("experiment_detail.charts.no_loss_data")}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>

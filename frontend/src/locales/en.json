@@ -161,7 +161,8 @@
       "fold_summary_description": "Best validation F1 and accuracy for each fold at the best epoch.",
       "confusion_title": "Confusion Matrix (Test Set — overall)",
       "confusion_true": "True:",
-      "confusion_pred": "Pred:"
+      "confusion_pred": "Pred:",
+      "no_loss_data": "Training data not available for this experiment"
     },
     "ncd_tab": "NCD Evaluation",
     "ncd_clustering": "Clustering Results",

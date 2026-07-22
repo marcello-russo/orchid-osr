@@ -123,7 +123,7 @@ async def list_experiments():
             {
                 "id": d.name,
                 "name": config.get("name", d.name),
-                "model_variant": config.get("model_variant"),
+                "model_variant": config.get("model_variant") or (results.get("model_variant") if results else None),
                 "type": exp_type,
                 "status": "completed" if (results or exp_type == "baseline") else "partial",
                 "num_folds": len(fold_files) if has_folds else (config or {}).get("num_folds", 5),
@@ -334,7 +334,7 @@ def _build_experiment_response(
         "results": results,
         "last_modified": last_modified,
         "summary": {
-            "model_variant": config.get("model_variant"),
+            "model_variant": config.get("model_variant") or (results or {}).get("model_variant"),
             "type": "kfold" if folds else "baseline",
             "num_folds": len(folds),
             "mean_accuracy": (results or {}).get("mean_accuracy"),
