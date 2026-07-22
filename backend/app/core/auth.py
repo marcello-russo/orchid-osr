@@ -256,6 +256,7 @@ def list_users_and_invites() -> dict:
 
 
 def delete_user(target_username: str, requester_username: str) -> None:
+    logger.warning("delete_user called: target=%r requester=%r", target_username, requester_username)
     if target_username == requester_username:
         raise HTTPException(400, "Cannot delete yourself")
 
