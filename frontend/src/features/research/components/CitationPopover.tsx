@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import type { Paper } from "@/features/research/data/papers";
 
 interface CitationPopoverProps {
@@ -7,6 +8,7 @@ interface CitationPopoverProps {
 }
 
 export function CitationPopover({ paper, onClose }: CitationPopoverProps) {
+  const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<{ top: number; left: number; width: number } | null>(null);
 
@@ -70,7 +72,7 @@ export function CitationPopover({ paper, onClose }: CitationPopoverProps) {
         className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-2"
         onClick={(e) => e.stopPropagation()}
       >
-        Apri su ↗
+        {t("research.cite_open")}
       </a>
     </div>
   );

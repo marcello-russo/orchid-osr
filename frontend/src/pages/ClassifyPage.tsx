@@ -23,23 +23,24 @@ import type { ModelOption } from "@/lib/types";
 
 /* ── Tag display ── */
 
-const TAG_LABELS: Record<string, { label: string; hint: string; variant: "default" | "secondary" | "outline" }> = {
-  ncd: { label: "NCD", hint: "Can detect novel/unseen Ophrys species", variant: "secondary" },
-  best_f1: { label: "★ Best F1", hint: "Highest classification accuracy across all models", variant: "default" },
+const TAG_LABELS: Record<string, { labelKey: string; hintKey: string; variant: "default" | "secondary" | "outline" }> = {
+  ncd: { labelKey: "research.tag_ncd", hintKey: "research.tag_ncd_hint", variant: "secondary" },
+  best_f1: { labelKey: "research.tag_best_f1", hintKey: "research.tag_best_f1_hint", variant: "default" },
 };
 
 function TagBadge({ tag }: { tag: string }) {
+  const { t } = useTranslation();
   const meta = TAG_LABELS[tag];
   if (!meta) return null;
   return (
     <Tooltip>
       <TooltipTrigger>
         <Badge variant={meta.variant} className="text-[10px] px-1.5 py-0 cursor-help">
-          {meta.label}
+          {t(meta.labelKey)}
         </Badge>
       </TooltipTrigger>
       <TooltipContent side="top" className="max-w-48 text-balance text-xs">
-        {meta.hint}
+        {t(meta.hintKey)}
       </TooltipContent>
     </Tooltip>
   );
