@@ -198,6 +198,7 @@ def ensure_superadmin_exists() -> None:
         logger.warning("SUPERADMIN_USERNAME/PASSWORD non configurati — skip bootstrap")
         return
     hashed = hash_password(password)
+
     def _modify(data):
         existing = next((u for u in data["users"] if u["username"] == username), None)
         if existing:
@@ -205,12 +206,15 @@ def ensure_superadmin_exists() -> None:
             existing["role"] = "superadmin"
             logger.info("Superadmin %s aggiornato", username)
         else:
-            data["users"].append({
-                "username": username,
-                "password_hash": hashed,
-                "role": "superadmin",
-            })
+            data["users"].append(
+                {
+                    "username": username,
+                    "password_hash": hashed,
+                    "role": "superadmin",
+                }
+            )
             logger.info("Superadmin %s creato", username)
+
     _atomic_modify(_modify)
 
 
@@ -245,9 +249,8 @@ def list_users_and_invites() -> dict:
                 "used": i["used"],
                 "used_by": i.get("used_by"),
                 "created_at": i.get("created_at"),
-    }
-
-    for i in data["invites"]
+            }
+            for i in data["invites"]
         ],
     }
 

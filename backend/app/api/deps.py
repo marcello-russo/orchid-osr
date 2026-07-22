@@ -24,4 +24,5 @@ def require_role(min_role: str):
         if role == min_role:
             return current_user
         raise HTTPException(status_code=403, detail="Insufficient permissions")
+
     return _check
