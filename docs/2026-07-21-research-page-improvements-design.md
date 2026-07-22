@@ -48,20 +48,19 @@ Nel file `frontend/src/pages/ResearchPage.tsx`:
 
 **Come funziona:**
 
-1. Il `<Cite>` diventa cliccabile (non più un link diretto). Ha uno stato `isOpen` interno.
-2. Al click, imposta `isOpen = true` e salva l'ID della citazione. Se si riclicca la stessa, `isOpen = false` (toggle).
-3. Il popover è renderizzato **dentro il `<Cite>` stesso** (fratello del `<sup>`):
-   - `position: absolute` relativo al paragrafo contenitore
-   - `left: 0; right: 0` — larghezza piena del contenuto
-   - `top: 100%` — subito sotto il superscript
-   - Scrolla naturalmente col contenuto (nessun calcolo di coordinate)
-4. Chiusura: click fuori dal popover o tasto Escape.
+1. Il `<Cite>` è un `<span className="relative inline-block">`. Al click imposta l'ID attivo via context.
+2. Il popover è renderizzato dentro lo `<span>` del `Cite`, con `position: fixed`.
+3. Quando si apre, calcola `top = superscriptRect.bottom + 4` e `left = contentRect.left` dal `getBoundingClientRect()`.
+4. Larghezza: fissa uguale alla larghezza del container del contenuto (`contentRect.width`).
+5. Un scroll listener aggiorna la posizione a ogni scroll — il popover segue il superscript.
+6. Chiusura: click fuori, Escape, o se si clicca un altro `Cite`.
+7. Lo scroll della pagina non è bloccato.
 
-**Nota sul posizionamento:** I paragrafi (`<p>`) che contengono le citazioni non hanno `position: relative`. Va aggiunto `relative` ai paragrafi che contengono `<Cite>`, oppure al container principale `max-w-7xl`. Soluzione: aggiungere `relative` al `<div>` principale del contenuto in `ResearchPage.tsx`, così l'`absolute` del popover si riferisce a tutto il corpo della pagina e `left-0 right-0` copre tutta la larghezza del testo.
+**Perché `fixed` e non `absolute`:** Il popover deve essere renderizzato dentro il `<span>` del `Cite` per scrollare col contenuto. Ma con `absolute` dentro `<span>`, la larghezza `left-0 right-0` sarebbe relativa allo `<span>` (stretta). Con `fixed`, `left` e `width` sono calcolati sul viewport, e lo scroll listener mantiene l'ancoraggio.
 
 **Dettaglio implementativo — componente Cite riscritto:**
 
-Il componente `<Cite>` riceve `activeCite`, `onCiteClick`, e `paper`. Quando `activeCite === id`, mostra il popover.
+Il `<Cite>` usa un context (`useCiteContext`) per condividere `activeCite` e `setActiveCite`. Il popover è renderizzato dentro lo stesso `<span>`, usa `position: fixed`, e aggiorna la posizione via scroll listener.
 
 ```tsx
 export function Cite({ id }: { id: string }) {
@@ -71,37 +70,54 @@ export function Cite({ id }: { id: string }) {
 
   if (!paper) return <sup className="text-muted-foreground text-[10px]">[{id}]</sup>;
 
-  const toggle = () => setActiveCite(isOpen ? null : id);
-
   return (
-    <span className="relative inline">
+    <span className="relative inline-block">
       <sup
         className="text-primary text-[10px] font-medium cursor-pointer hover:underline"
-        onClick={toggle}
+        onClick={() => setActiveCite(isOpen ? null : id)}
       >
         [{paper.authors}, {paper.year}]
       </sup>
       {isOpen && <CitationPopover paper={paper} onClose={() => setActiveCite(null)} />}
-    </div>
+    </span>
   );
 }
 ```
 
 ```tsx
-// CitationPopover
+// CitationPopover — fixed positioning con scroll tracking
 function CitationPopover({ paper, onClose }: { paper: Paper; onClose: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState({ top: 0, left: 0, width: 800 });
+  const supRef = useRef<HTMLElement | null>(null);
+
+  // Calcola posizione iniziale e aggiorna a ogni scroll
+  const updatePos = useCallback(() => {
+    if (!supRef.current) return;
+    const sup = supRef.current.getBoundingClientRect();
+    const container = document.querySelector(".research-content") as HTMLElement;
+    if (!container) return;
+    const cont = container.getBoundingClientRect();
+    setPos({ top: sup.bottom + 4, left: cont.left, width: cont.width });
+  }, []);
 
   useEffect(() => {
+    supRef.current = document.getElementById(`cite-${paper.id}`);
+    updatePos();
+    window.addEventListener("scroll", updatePos, { passive: true });
+    return () => window.removeEventListener("scroll", updatePos);
+  }, [updatePos, paper.id]);
+
+  // Click fuori
+  useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        onClose();
-      }
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [onClose]);
 
+  // Escape
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     document.addEventListener("keydown", handler);
@@ -111,7 +127,8 @@ function CitationPopover({ paper, onClose }: { paper: Paper; onClose: () => void
   return (
     <div
       ref={ref}
-      className="absolute left-0 right-0 top-full mt-1 bg-card border border-border rounded-lg p-4 shadow-lg z-10 animate-in fade-in slide-in-from-top-2 duration-200"
+      style={{ position: "fixed", top: pos.top, left: pos.left, width: pos.width }}
+      className="bg-card border border-border rounded-lg p-4 shadow-lg z-50 animate-in fade-in duration-200"
     >
       <p className="text-sm font-medium">{paper.authors} ({paper.year})</p>
       <p className="text-sm text-foreground/80 italic mt-1">{paper.title}</p>
@@ -130,9 +147,20 @@ function CitationPopover({ paper, onClose }: { paper: Paper; onClose: () => void
 }
 ```
 
-**Stato condiviso:** Lo stato `activeCite: string | null` è tenuto in `ResearchPage`. Il `Cite` riceve `activeCite`, `onCiteClick`, e renderizza il popover se attivo. Il `CitationPopover` è renderizzato dentro `Cite.tsx`.
+Il superscript nel DOM deve avere un `id="cite-{paper.id}"` per permettere al popover di trovarlo. Questo va aggiunto al `<sup>` nel `Cite`:
 
-**Layout parent:** Il container principale del contenuto (`max-w-7xl` wrapper) deve avere `position: relative` perché il popover usi `absolute` correttamente con `left-0 right-0`.
+```tsx
+<sup
+  id={`cite-${paper.id}`}
+  className="..."
+>
+```
+
+**Container research-content:** Aggiungere `className="research-content relative"` al `<div>` principale del contenuto in `ResearchPage.tsx` per fungere da ancoraggio per il calcolo della larghezza.
+
+**Stato condiviso:** Un context React (`CiteContext`) fornisce `activeCite: string | null` e `setActiveCite`. Il `ResearchPage` wrappa il contenuto in `<CiteProvider>`. I `Cite` leggono e scrivono lo stato. Il popover è renderizzato dentro `Cite.tsx`.
+
+**Layout parent:** Il `<div>` principale del contenuto in `ResearchPage.tsx` deve avere `className="research-content relative"` per fungere da ancoraggio per il calcolo della larghezza del popover (`querySelector(".research-content")`).
 
 ## Files modificati
 
