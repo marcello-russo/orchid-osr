@@ -36,7 +36,13 @@ export async function fetchApi<T>(path: string, opts?: { method?: string; body?:
         throw new Error("Sessione scaduta");
     }
     const body = await res.text();
-    const snippet = body.length > 200 ? body.slice(0, 200) + "..." : body;
+    let detail = body;
+    try {
+      const parsed = JSON.parse(body);
+      if (typeof parsed.detail === "string") detail = parsed.detail;
+      else if (parsed.detail?.[0]?.msg) detail = parsed.detail[0].msg;
+    } catch {}
+    const snippet = detail.length > 200 ? detail.slice(0, 200) + "..." : detail;
     if (res.status >= 400 && res.status < 500) {
         const { toast } = await import("sonner");
         toast.error(`Errore ${res.status}: ${snippet}`);
