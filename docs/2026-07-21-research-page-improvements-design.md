@@ -48,20 +48,47 @@ Nel file `frontend/src/pages/ResearchPage.tsx`:
 
 **Come funziona:**
 
-1. Il `<Cite>` diventa cliccabile (non più un link diretto). Al click imposta uno stato globale (o un context) con l'ID della citazione.
-2. Un componente `<CitationPopover>` viene renderizzato alla fine del main content (dentro il container `max-w-7xl` che ha `position: relative`).
-3. Quando un ID è attivo, il popover:
-   - Si posiziona con `position: absolute` usando le coordinate del superscript (calcolate via `getBoundingClientRect`)
-   - Ha `width: 100%` del container parent
-   - Mostra: autori, anno, titolo, venue, e link "Apri su ↗"
-   - Ha un bordo e sfondo che lo distinguono dal contenuto
+1. Il `<Cite>` diventa cliccabile (non più un link diretto). Ha uno stato `isOpen` interno.
+2. Al click, imposta `isOpen = true` e salva l'ID della citazione. Se si riclicca la stessa, `isOpen = false` (toggle).
+3. Il popover è renderizzato **dentro il `<Cite>` stesso** (fratello del `<sup>`):
+   - `position: absolute` relativo al paragrafo contenitore
+   - `left: 0; right: 0` — larghezza piena del contenuto
+   - `top: 100%` — subito sotto il superscript
+   - Scrolla naturalmente col contenuto (nessun calcolo di coordinate)
 4. Chiusura: click fuori dal popover o tasto Escape.
-5. Lo scroll della pagina non è bloccato — il popover scrolla col contenuto.
 
-**Dettaglio implementativo:**
+**Nota sul posizionamento:** I paragrafi (`<p>`) che contengono le citazioni non hanno `position: relative`. Va aggiunto `relative` ai paragrafi che contengono `<Cite>`, oppure al container principale `max-w-7xl`. Soluzione: aggiungere `relative` al `<div>` principale del contenuto in `ResearchPage.tsx`, così l'`absolute` del popover si riferisce a tutto il corpo della pagina e `left-0 right-0` copre tutta la larghezza del testo.
+
+**Dettaglio implementativo — componente Cite riscritto:**
+
+Il componente `<Cite>` riceve `activeCite`, `onCiteClick`, e `paper`. Quando `activeCite === id`, mostra il popover.
 
 ```tsx
-// CitationPopover (nuovo componente)
+export function Cite({ id }: { id: string }) {
+  const { activeCite, setActiveCite } = useCiteContext();
+  const paper = PAPER_MAP[id];
+  const isOpen = activeCite === id;
+
+  if (!paper) return <sup className="text-muted-foreground text-[10px]">[{id}]</sup>;
+
+  const toggle = () => setActiveCite(isOpen ? null : id);
+
+  return (
+    <span className="relative inline">
+      <sup
+        className="text-primary text-[10px] font-medium cursor-pointer hover:underline"
+        onClick={toggle}
+      >
+        [{paper.authors}, {paper.year}]
+      </sup>
+      {isOpen && <CitationPopover paper={paper} onClose={() => setActiveCite(null)} />}
+    </div>
+  );
+}
+```
+
+```tsx
+// CitationPopover
 function CitationPopover({ paper, onClose }: { paper: Paper; onClose: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -84,7 +111,7 @@ function CitationPopover({ paper, onClose }: { paper: Paper; onClose: () => void
   return (
     <div
       ref={ref}
-      className="absolute left-0 right-0 bg-card border border-border rounded-lg p-4 shadow-lg z-10 animate-in fade-in slide-in-from-top-2 duration-200"
+      className="absolute left-0 right-0 top-full mt-1 bg-card border border-border rounded-lg p-4 shadow-lg z-10 animate-in fade-in slide-in-from-top-2 duration-200"
     >
       <p className="text-sm font-medium">{paper.authors} ({paper.year})</p>
       <p className="text-sm text-foreground/80 italic mt-1">{paper.title}</p>
@@ -103,16 +130,16 @@ function CitationPopover({ paper, onClose }: { paper: Paper; onClose: () => void
 }
 ```
 
-**Stato condiviso:** Un contesto React o una semplice prop drilling. Il `ResearchPage` mantiene uno stato `activeCite: string | null` e lo passa al `Cite` e al `CitationPopover`.
+**Stato condiviso:** Lo stato `activeCite: string | null` è tenuto in `ResearchPage`. Il `Cite` riceve `activeCite`, `onCiteClick`, e renderizza il popover se attivo. Il `CitationPopover` è renderizzato dentro `Cite.tsx`.
 
-**Layout parent:** Il container principale `max-w-7xl` (o il suo wrapper) deve avere `position: relative` per far funzionare il `absolute` del popover.
+**Layout parent:** Il container principale del contenuto (`max-w-7xl` wrapper) deve avere `position: relative` perché il popover usi `absolute` correttamente con `left-0 right-0`.
 
 ## Files modificati
 
 | File | Modifica |
 |------|----------|
-| `frontend/src/pages/ResearchPage.tsx` | Numeri dataset, padding TOC, stato activeCite + CitationPopover |
-| `frontend/src/features/research/components/Citation.tsx` | Riscritto: click → popover invece di link diretto |
+| `frontend/src/pages/ResearchPage.tsx` | Numeri dataset + padding TOC + `relative` al container |
+| `frontend/src/features/research/components/Citation.tsx` | Riscritto: click popover invece di link diretto |
 
 ## Test
 
