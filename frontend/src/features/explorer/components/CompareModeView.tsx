@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,6 +46,7 @@ function processFolds(folds: FoldData[], field: string): { means: number[]; stds
 const COLORS = ["#3B82F6", "#D97706", "#10B981", "#8B5CF6"];
 
 export function CompareModeView({ experiments }: Props) {
+  const { t } = useTranslation();
   const expColors = useMemo(() =>
     experiments.map((e, i) => ({ id: e.id, color: COLORS[i % COLORS.length] })),
     [experiments]
@@ -90,7 +92,7 @@ export function CompareModeView({ experiments }: Props) {
   const foldData = useMemo(() => {
     const data: Record<string, number | string>[] = [];
     for (let fi = 0; fi < maxFolds; fi++) {
-      const pt: Record<string, number | string> = { fold: `Fold ${fi}` };
+      const pt: Record<string, number | string> = { fold: `${t("research.cmp_folds")} ${fi}` };
       for (const exp of experiments) {
         pt[exp.id] = exp.folds[fi]?.best_f1 ?? 0;
       }
@@ -124,22 +126,22 @@ export function CompareModeView({ experiments }: Props) {
 
   const configTable = useMemo(() => {
     const fields: { key: string; label: string }[] = [
-      { key: "model_variant", label: "Model" },
-      { key: "num_epochs", label: "Epochs" },
-      { key: "batch_size", label: "Batch" },
-      { key: "optimizer", label: "Optimizer" },
-      { key: "learning_rate", label: "LR" },
-      { key: "weight_decay", label: "Weight Decay" },
-      { key: "patience", label: "Patience" },
-      { key: "num_folds", label: "Folds" },
+      { key: "model_variant", label: t("research.cmp_model") },
+      { key: "num_epochs", label: t("research.cmp_epochs") },
+      { key: "batch_size", label: t("research.cmp_batch") },
+      { key: "optimizer", label: t("research.cmp_optimizer") },
+      { key: "learning_rate", label: t("research.cmp_lr") },
+      { key: "weight_decay", label: t("research.cmp_wd") },
+      { key: "patience", label: t("research.cmp_patience") },
+      { key: "num_folds", label: t("research.cmp_folds") },
     ];
     const metricFields: { key: "mean_f1" | "mean_accuracy" | "test_accuracy"; label: string }[] = [
-      { key: "mean_f1", label: "F1 Score" },
-      { key: "mean_accuracy", label: "Accuracy" },
-      { key: "test_accuracy", label: "Test Accuracy" },
+      { key: "mean_f1", label: t("research.cmp_f1") },
+      { key: "mean_accuracy", label: t("research.cmp_accuracy") },
+      { key: "test_accuracy", label: t("research.cmp_test_acc") },
     ];
     return { fields, metricFields };
-  }, []);
+  }, [t]);
 
   // Compute global nMax across all experiments (max test images per class)
   const globalNMax = useMemo(() => {
@@ -156,7 +158,7 @@ export function CompareModeView({ experiments }: Props) {
   }, [experiments]);
 
   const [active, setActive] = useState(0);
-  const chartTitles = ["Loss", "Metrics", "Folds", "Overfitting", "Confusion"];
+  const chartTitles = [t("research.cmp_loss"), t("research.cmp_metrics"), t("research.cmp_fold_summary"), t("research.cmp_overfitting"), t("research.cmp_confusion")];
   const [matrixExp, setMatrixExp] = useState(experiments[0]?.id ?? "");
   const clamp = (i: number) => Math.max(0, Math.min(chartTitles.length - 1, i));
 
@@ -165,13 +167,13 @@ export function CompareModeView({ experiments }: Props) {
       {/* Config table */}
       <Card>
         <CardHeader className="pb-2 border-b border-border/50">
-          <CardTitle className="text-base">Config comparison</CardTitle>
+          <CardTitle className="text-base">{t("research.cmp_config")}</CardTitle>
         </CardHeader>
         <CardContent className="pt-0 overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border/30 text-xs uppercase tracking-widest text-muted-foreground">
-                <th className="text-left py-2.5 px-3 font-bold">Parameter</th>
+                <th className="text-left py-2.5 px-3 font-bold">{t("common.parameter")}</th>
                 {expColors.map((ec) => (
                   <th key={ec.id} className="text-center py-2.5 px-3 font-bold" style={{ color: ec.color }}>{ec.id}</th>
                 ))}
@@ -237,7 +239,7 @@ export function CompareModeView({ experiments }: Props) {
           <Card>
             <CardHeader className="pb-2 border-b border-border/50">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-base">Confusion Matrix</CardTitle>
+                <CardTitle className="text-base">{t("research.cmp_confusion")}</CardTitle>
                 <select value={matrixExp} onChange={(e) => setMatrixExp(e.target.value)}
                   className="rounded-md border border-border/50 bg-background px-3 py-1 text-sm">
                   {experiments.map((e) => (
@@ -252,7 +254,7 @@ export function CompareModeView({ experiments }: Props) {
                 const cm = sel?.results?.test_metrics;
                 return cm
                   ? <ConfusionMatrixChart matrix={cm.confusion_matrix} labels={cm.confusion_matrix_labels} nMax={globalNMax} />
-                  : <p className="text-center text-muted-foreground text-sm py-12">Not available for {matrixExp}.</p>;
+                  : <p className="text-center text-muted-foreground text-sm py-12">{t("research.cmp_not_available")} {matrixExp}.</p>;
               })()}
             </CardContent>
           </Card>
@@ -276,7 +278,7 @@ function LossChart({ epochData, expColors }: { epochData: EpochRow[]; expColors:
               <button key={m} onClick={() => setMode(m)}
                 className={cn("rounded-md px-2 py-0.5 text-xs font-medium transition-colors cursor-pointer",
                   mode === m ? "bg-primary text-primary-foreground" : "text-muted-foreground bg-muted/50 hover:bg-muted"
-                )}>{m === "train" ? "Train" : "Validation"}</button>
+                )}>{m === "train" ? t("research.cmp_train") : t("research.cmp_val")}</button>
             ))}
           </div>
         </div>
@@ -324,7 +326,7 @@ function MetricsChart({ epochData, expColors }: { epochData: EpochRow[]; expColo
               <button key={m} onClick={() => setMetric(m)}
                 className={cn("rounded-md px-2 py-0.5 text-xs font-medium transition-colors cursor-pointer",
                   metric === m ? "bg-primary text-primary-foreground" : "text-muted-foreground bg-muted/50 hover:bg-muted"
-                )}>{m === "f1" ? "F1" : "Accuracy"}</button>
+                )}>{m === "f1" ? t("research.cmp_f1") : t("research.cmp_accuracy")}</button>
             ))}
           </div>
         </div>
