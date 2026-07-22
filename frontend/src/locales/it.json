@@ -57,7 +57,9 @@
     "page_error": "Errore nel caricamento della pagina.",
     "switch_language": "Cambia lingua",
     "close_menu": "Chiudi menu",
-    "open_menu": "Apri menu"
+    "open_menu": "Apri menu",
+    "cancel": "Annulla",
+    "copy": "Copia"
   },
   "dashboard": {
     "title": "Dashboard OrchID-NCD",
@@ -514,5 +516,26 @@
     "delete_confirm_title": "Elimina utente",
     "delete_confirm_body": "Sei sicuro di voler eliminare {{username}}? Questa azione non può essere annullata.",
     "cant_delete_self": "Non puoi eliminare il tuo account"
+  },
+  "research": {
+    "hero_badge": "Tesi Magistrale — 2024/2025",
+    "hero_title": "Ultra-Fine-Grained Classification of Ophrys Orchids",
+    "hero_subtitle": "via Deep Learning and Supervised Contrastive Learning",
+    "hero_author_label": "Autore:",
+    "hero_advisor_label": "Relatore:",
+    "hero_coadvisor_label": "Correlatori:",
+    "hero_university": "Università degli Studi di Napoli Federico II — DIETI — Laurea Magistrale in Informatica",
+    "sect_intro": "Introduzione",
+    "intro_p1_before": "Il genere ",
+    "intro_p1_mid": " comprende oltre 300 specie di orchidee europee caratterizzate da una straordinaria somiglianza morfologica, che rende la loro identificazione tassonomica estremamente complessa persino per botanici esperti. Questa difficoltà, nota come classificazione ",
+    "intro_p1_after": ", rappresenta una sfida significativa per i sistemi di visione artificiale.",
+    "intro_p2_before": "Questa tesi affronta il problema confrontando sistematicamente sei architetture (ResNet, ConvNeXt, DINOv2) su tre paradigmi di apprendimento: entropia incrociata, apprendimento contrastivo supervisionato (SupCon)",
+    "intro_p2_mid": " e prototipi sferici ortogonali (SpHOR)",
+    "intro_p2_after": ".",
+    "subs_contrib": "Contributi",
+    "contrib_1": "Benchmark multi-architettura su tre paradigmi di apprendimento",
+    "contrib_2": "Dataset curato di 3.040 immagini con split train/test privi di data leakage",
+    "contrib_3": "Analisi dello spazio latente tramite proiezioni t-SNE",
+    "contrib_4": "Valutazione open-set con tecniche Mahalanobis, KNN ed Energy"
   }
 }
