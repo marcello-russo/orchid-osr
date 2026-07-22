@@ -6,6 +6,7 @@ import { Cite } from "@/features/research/components/Citation";
 import { DataTable } from "@/features/research/components/DataTable";
 import { PAPERS } from "@/features/research/data/papers";
 import { cn } from "@/lib/utils";
+import { CiteProvider } from "@/features/research/components/CiteContext";
 
 /* ── Sections index ── */
 
@@ -92,9 +93,10 @@ export function ResearchPage() {
   const active = useActiveSection();
 
   return (
+    <CiteProvider>
     <div className="relative max-w-7xl mx-auto px-4 md:px-8">
       {/* Sidebar TOC */}
-      <aside className="fixed left-0 top-24 bottom-0 w-56 hidden xl:block overflow-y-auto border-r border-border/50 pr-4">
+      <aside className="fixed left-0 top-24 bottom-0 w-64 hidden xl:block overflow-y-auto border-r border-border/50 pr-4 pl-6">
         <nav className="space-y-1 pt-6">
           <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-3 pb-2">Indice</p>
           {SECTIONS.map((s) => (
@@ -115,7 +117,7 @@ export function ResearchPage() {
       </aside>
 
       {/* Main */}
-      <main className="xl:ml-56 py-12 max-w-4xl">
+      <main className="research-content relative xl:ml-64 py-12 max-w-4xl">
 
         {/* ── HERO ── */}
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-border/50 mb-12">
@@ -803,5 +805,6 @@ export function ResearchPage() {
 
       </main>
     </div>
+    </CiteProvider>
   );
 }
