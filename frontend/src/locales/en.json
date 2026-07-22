@@ -536,6 +536,18 @@
     "contrib_1": "Multi-architecture benchmark across three learning paradigms",
     "contrib_2": "Curated dataset of 3,040 images with leakage-free train/test split",
     "contrib_3": "Latent space analysis via t-SNE projections",
-    "contrib_4": "Open-set evaluation with Mahalanobis, KNN, and Energy techniques"
+    "contrib_4": "Open-set evaluation with Mahalanobis, KNN, and Energy techniques",
+    "sect_dataset": "Dataset",
+    "dataset_col_species": "Species",
+    "dataset_col_train": "Train",
+    "dataset_col_test": "Test",
+    "dataset_row_total": "Total",
+    "dataset_caption": "Image distribution per species in training and test splits. The novel species is present only in the test set (548 images).",
+    "dataset_callout_leakage_title": "Data Leakage",
+    "dataset_callout_leakage": "In the initial phases (Exp 1–5), the dataset presented a critical data leakage problem: visually identical images appeared in both training and test sets under different filenames. The discovery was made via MD5 content hashing. Starting from Exp 6, the dataset was cleaned using a three-phase protocol: (1) MD5 deduplication, (2) extraction of a balanced hold-out of 50 images per class, (3) stratified 5-fold cross-validation with seed 57. This clean split forms the basis of all experiments.",
+    "dataset_callout_novel_title": "Novel Species: O. sphegodes_Napoli",
+    "dataset_callout_novel": "A seventh species, O. sphegodes_Napoli, was deliberately excluded from the training set and reserved exclusively for testing in Novel Class Discovery and Open-Set Recognition experiments (Exp 8, 10). Morphologically similar to O. sphegodes but with distinct diagnostic characters at the local population level, it constitutes the ideal test for evaluating the system's ability to detect previously unobserved taxonomic entities.",
+    "subs_preprocessing": "Preprocessing",
+    "dataset_preprocessing": "Raw images are processed by a pre-trained Faster R-CNN object detection module that automatically crops the flower by removing the background. Letterbox resize preserves the original aspect ratio with black padding. Input sizes are architecture-native: 256×512 for ResNet, 224×224 for ConvNeXt and DINOv2. During cross-validation, minority classes are oversampled through augmentations (rotations, flip, color jitter, cutout)."
   }
 }

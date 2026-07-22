@@ -207,7 +207,7 @@ export function ResearchPage() {
         </Section>
 
         {/* ── 2. DATASET ── */}
-        <Section id="dataset" title="Dataset">
+        <Section id="dataset" title={t("research.sect_dataset")}>
           <P>
             Il dataset comprende immagini di sei entità tassonomiche del complesso <em>O. sphegodes</em>,
             tutte fotografate nel territorio italiano, principalmente in Puglia e sul Gargano.
@@ -218,9 +218,9 @@ export function ResearchPage() {
 
           <DataTable
             columns={[
-              { key: "species", label: "Specie" },
-              { key: "train", label: "Train" },
-              { key: "test", label: "Test" },
+              { key: "species", label: t("research.dataset_col_species") },
+              { key: "train", label: t("research.dataset_col_train") },
+              { key: "test", label: t("research.dataset_col_test") },
             ]}
             rows={[
               { species: "O. exaltata", train: "490", test: "50" },
@@ -230,21 +230,16 @@ export function ResearchPage() {
               { species: "O. sphegodes", train: "425", test: "50" },
               { species: "O. sphegodes Palena", train: "210", test: "50" },
               { species: "O. sphegodes_Napoli (novel)", train: "0", test: "548" },
-              { species: "Totale", train: "2.192", test: "848" },
+              { species: t("research.dataset_row_total"), train: "2.192", test: "848" },
             ]}
-            caption="Distribuzione delle immagini per specie negli split di training e test. La specie novel è presente solo nel test set (548 immagini)."
+            caption={t("research.dataset_caption")}
           />
 
-          <Callout variant="warning" title="Data Leakage">
-            Nelle fasi iniziali (Exp 1–5), il dataset presentava un problema critico di data leakage:
-            immagini identiche a livello di contenuto apparivano sia in training che in test con nomi
-            diversi. La scoperta è avvenuta tramite hashing MD5. A partire da Exp 6, il dataset è stato
-            ripulito con un protocollo in tre fasi: (1) deduplicazione MD5, (2) estrazione di un
-            hold-out bilanciato di 50 immagini per classe, (3) cross-validation stratificata a 5 fold
-            con seed 57. Questo clean split costituisce la base di tutti gli esperimenti.
+          <Callout variant="warning" title={t("research.dataset_callout_leakage_title")}>
+            {t("research.dataset_callout_leakage")}
           </Callout>
 
-          <Callout variant="info" title="Specie Novel: O. sphegodes_Napoli">
+          <Callout variant="info" title={t("research.dataset_callout_novel_title")}>
             Una settima specie, <em>O. sphegodes_Napoli</em>, è stata volutamente esclusa dal training
             set e riservata esclusivamente al test per gli esperimenti di Novel Class Discovery e
             Open-Set Recognition (Exp 8, 10). Morfologicamente affine a <em>O. sphegodes</em> ma con
@@ -253,14 +248,9 @@ export function ResearchPage() {
             osservate.
           </Callout>
 
-          <SubSection title="Preprocessing">
+          <SubSection title={t("research.subs_preprocessing")}>
             <P>
-              Le immagini grezze vengono processate da un modulo di object detection basato su Faster
-              R-CNN pre-addestrato, che ritaglia automaticamente il fiore rimuovendo lo sfondo.
-              Il letterbox resize preserva l&apos;aspect ratio originale con padding nero.
-              Le dimensioni di input sono native per architettura: 256×512 per ResNet, 224×224 per
-              ConvNeXt e DINOv2. Durante la cross-validation, le classi minoritarie vengono
-              sovracampionate tramite augmentations (rotazioni, flip, color jitter, cutout).
+              {t("research.dataset_preprocessing")}
             </P>
           </SubSection>
         </Section>
