@@ -59,7 +59,8 @@
     "close_menu": "Close menu",
     "open_menu": "Open menu",
     "cancel": "Cancel",
-    "copy": "Copy"
+    "copy": "Copy",
+    "parameter": "Parameter"
   },
   "dashboard": {
     "title": "OrchID-NCD Dashboard",
