@@ -70,7 +70,7 @@ def create_invites(request: Request, body: GenerateInviteRequest, admin=Depends(
     return {"codes": codes}
 
 
-@router.delete("/auth/users/{username}")
+@router.delete("/users/{username}")
 async def delete_user_endpoint(
     username: str,
     current_user: dict = Depends(require_role("admin")),
