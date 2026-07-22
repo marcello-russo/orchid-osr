@@ -106,7 +106,7 @@ export function UserManagementPage() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center gap-3">
-        <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+        <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
           <Users className="size-5" />
         </div>
         <div>
