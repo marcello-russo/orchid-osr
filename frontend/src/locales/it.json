@@ -650,6 +650,19 @@
     "clust_ari": "ARI",
     "clust_f": "F",
     "clust_random": "Casuale (0.50)",
-    "clust_auroc_suffix": "AUROC per classe"
+    "clust_auroc_suffix": "AUROC per classe",
+    "contesto_p1_before": "Il genere ",
+    "contesto_p1_after": " (Orchidaceae) comprende orchidee terrestri diffuse in tutto il bacino del Mediterraneo. Le piante sono perenni, con foglie basali a rosetta e uno stelo fiorale che produce da 2 a 12 fiori. Ogni fiore è caratterizzato da un grande labello vellutato che costituisce l'elemento morfologico più vistoso e diagnostico.",
+    "contesto_p2_before": "Le orchidee del genere ",
+    "contesto_p2_mid": " sono note per il loro sistema di impollinazione basato sul mimetismo sessuale (pseudocopulazione)",
+    "contesto_p2_after": ". Ogni specie produce una miscela unica di allomoni che imita il feromone sessuale di una specifica specie di impollinatore. Il labello, per forma, colore e consistenza, mimetizza visivamente il corpo dell'insetto femmina; lo speculum — una macchia riflettente sul labello — simula la luce riflessa dalle ali. Solo circa il 10% dei fiori viene effettivamente impollinato, ma ciascuno produce fino a 12.000 semi.",
+    "contesto_p3_before": "Il genere ",
+    "contesto_p3_mid1": " è uno dei gruppi tassonomicamente più controversi del regno vegetale",
+    "contesto_p3_mid2": ". Le stime sul numero di specie variano drasticamente: da circa 20 (",
+    "contesto_p3_mid3": ", 1980) a oltre 130 (Delforge, 1995). L'ibridazione frequente produce oltre 250 ibridi naturali descritti, e lo studio molecolare ha evidenziato copie eterogenee del DNA ribosomiale ITS in singoli individui. Il complesso ",
+    "contesto_p3_mid4": " (le \"forretterelle\") è uno dei gruppi più variabili, con almeno 18 taxa subspecifici.",
+    "contesto_p4_before": "Il nostro dataset adotta una classificazione intermedia, trattando sei entità — ",
+    "contesto_p4_after": " — come specie distinte, coerentemente con la tradizione tassonomica italiana. La penisola del Gargano costituisce un hotspot di diversità del complesso.",
+    "contesto_fig_caption": "Separabilità angolare nello spazio degli embedding attraverso i tre paradigmi di apprendimento."
   }
 }
