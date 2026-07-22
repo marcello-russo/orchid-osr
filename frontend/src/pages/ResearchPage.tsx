@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Badge } from "@/components/ui/badge";
 import { Callout } from "@/components/ui/Callout";
 import { Lightbox } from "@/components/ui/Lightbox";
@@ -90,6 +91,7 @@ function P({ children }: { children: React.ReactNode }) {
 /* ── Main page ── */
 
 export function ResearchPage() {
+  const { t } = useTranslation();
   const active = useActiveSection();
 
   return (
@@ -122,45 +124,38 @@ export function ResearchPage() {
         {/* ── HERO ── */}
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background border border-border/50 mb-12">
           <div className="p-8 md:p-12">
-            <Badge variant="outline" className="mb-4 text-xs">Tesi Magistrale — 2024/2025</Badge>
+            <Badge variant="outline" className="mb-4 text-xs">{t("research.hero_badge")}</Badge>
             <h1 className="text-3xl md:text-4xl font-black tracking-tight leading-tight">
-              Ultra-Fine-Grained Classification of Ophrys Orchids
+              {t("research.hero_title")}
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground mt-1">
-              via Deep Learning and Supervised Contrastive Learning
+              {t("research.hero_subtitle")}
             </p>
             <div className="mt-6 text-sm text-muted-foreground space-y-1">
-              <p><span className="font-medium text-foreground">Autore:</span> Marcello Russo</p>
-              <p><span className="font-medium text-foreground">Relatore:</span> Luigi Libero Lucio Starace</p>
-              <p><span className="font-medium text-foreground">Correlatori:</span> Mara Sangiovanni, Alessandro De Luca</p>
+              <p><span className="font-medium text-foreground">{t("research.hero_author_label")}</span> Marcello Russo</p>
+              <p><span className="font-medium text-foreground">{t("research.hero_advisor_label")}</span> Luigi Libero Lucio Starace</p>
+              <p><span className="font-medium text-foreground">{t("research.hero_coadvisor_label")}</span> Mara Sangiovanni, Alessandro De Luca</p>
               <p className="mt-3 italic max-w-2xl text-xs">
-                Università degli Studi di Napoli Federico II — DIETI — Laurea Magistrale in Informatica
+                {t("research.hero_university")}
               </p>
             </div>
           </div>
         </div>
 
         {/* ── INTRODUZIONE ── */}
-        <Section id="intro" title="Introduzione">
+        <Section id="intro" title={t("research.sect_intro")}>
           <P>
-            Il genere <em>Ophrys</em> comprende oltre 300 specie di orchidee europee caratterizzate
-            da una straordinaria somiglianza morfologica, che rende la loro identificazione
-            tassonomica estremamente complessa persino per botanici esperti. Questa difficoltà,
-            nota come classificazione <em>ultra-fine-grained</em> (UFGVC)<Cite id="yu2021benchmark" />,
-            rappresenta una sfida significativa per i sistemi di visione artificiale.
+            {t("research.intro_p1_before")}<em>Ophrys</em>{t("research.intro_p1_mid")}<Cite id="yu2021benchmark" />{t("research.intro_p1_after")}
           </P>
           <P>
-            Questa tesi affronta il problema confrontando sistematicamente sei architetture
-            (ResNet, ConvNeXt, DINOv2) su tre paradigmi di apprendimento: entropia incrociata,
-            apprendimento contrastivo supervisionato (SupCon)<Cite id="khosla2020supervised" />
-            e prototipi sferici ortogonali (SpHOR)<Cite id="bahavan2026sphor" />.
+            {t("research.intro_p2_before")}<Cite id="khosla2020supervised" />{t("research.intro_p2_mid")}<Cite id="bahavan2026sphor" />{t("research.intro_p2_after")}
           </P>
-          <SubSection title="Contributi">
+          <SubSection title={t("research.subs_contrib")}>
             <ul className="list-disc list-inside text-muted-foreground space-y-1 text-sm">
-              <li>Benchmark multi-architettura su tre paradigmi di apprendimento</li>
-              <li>Dataset curato di 3.040 immagini con split train/test privi di data leakage</li>
-              <li>Analisi dello spazio latente tramite proiezioni t-SNE</li>
-              <li>Valutazione open-set con tecniche Mahalanobis, KNN ed Energy<Cite id="liu2020energy" /></li>
+              <li>{t("research.contrib_1")}</li>
+              <li>{t("research.contrib_2")}</li>
+              <li>{t("research.contrib_3")}</li>
+              <li>{t("research.contrib_4")}<Cite id="liu2020energy" /></li>
             </ul>
           </SubSection>
         </Section>

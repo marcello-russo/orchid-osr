@@ -57,7 +57,9 @@
     "page_error": "Something went wrong rendering this page.",
     "switch_language": "Switch Language",
     "close_menu": "Close menu",
-    "open_menu": "Open menu"
+    "open_menu": "Open menu",
+    "cancel": "Cancel",
+    "copy": "Copy"
   },
   "dashboard": {
     "title": "OrchID-NCD Dashboard",
@@ -514,5 +516,26 @@
     "delete_confirm_title": "Delete user",
     "delete_confirm_body": "Are you sure you want to delete {{username}}? This action cannot be undone.",
     "cant_delete_self": "You cannot delete your own account"
+  },
+  "research": {
+    "hero_badge": "Master's Thesis — 2024/2025",
+    "hero_title": "Ultra-Fine-Grained Classification of Ophrys Orchids",
+    "hero_subtitle": "via Deep Learning and Supervised Contrastive Learning",
+    "hero_author_label": "Author:",
+    "hero_advisor_label": "Advisor:",
+    "hero_coadvisor_label": "Co-advisors:",
+    "hero_university": "University of Naples Federico II — DIETI — Master's Degree in Computer Science",
+    "sect_intro": "Introduction",
+    "intro_p1_before": "The genus ",
+    "intro_p1_mid": " includes over 300 species of European orchids characterized by an extraordinary morphological similarity that makes their taxonomic identification extremely complex even for expert botanists. This difficulty, known as ultra-fine-grained classification (UFGVC)",
+    "intro_p1_after": ", represents a significant challenge for computer vision systems.",
+    "intro_p2_before": "This thesis addresses the problem by systematically comparing six architectures (ResNet, ConvNeXt, DINOv2) across three learning paradigms: cross-entropy, supervised contrastive learning (SupCon)",
+    "intro_p2_mid": " and spherical orthogonal prototypes (SpHOR)",
+    "intro_p2_after": ".",
+    "subs_contrib": "Contributions",
+    "contrib_1": "Multi-architecture benchmark across three learning paradigms",
+    "contrib_2": "Curated dataset of 3,040 images with leakage-free train/test split",
+    "contrib_3": "Latent space analysis via t-SNE projections",
+    "contrib_4": "Open-set evaluation with Mahalanobis, KNN, and Energy techniques"
   }
 }
