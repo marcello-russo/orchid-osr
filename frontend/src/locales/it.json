@@ -161,7 +161,8 @@
       "fold_summary_description": "Miglior F1 e accuratezza di validazione per ogni fold alla migliore epoca.",
       "confusion_title": "Matrice di Confusione (Test Set — complessiva)",
       "confusion_true": "Vero:",
-      "confusion_pred": "Pred:"
+      "confusion_pred": "Pred:",
+      "no_loss_data": "Dati di training non disponibili per questo esperimento"
     },
     "ncd_tab": "Valutazione NCD",
     "ncd_clustering": "Risultati Clustering",
