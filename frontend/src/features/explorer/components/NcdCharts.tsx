@@ -54,7 +54,7 @@ export function AblationChart({ ablation }: { ablation: Record<string, number> }
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
           <XAxis dataKey="name" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
           <YAxis domain={[0, 0.6]} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
-          <ReferenceLine y={0.5} stroke="hsl(var(--muted-foreground))" strokeDasharray="5 5" label={{ value: "Random (0.50)", fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+          <ReferenceLine y={0.5} stroke="hsl(var(--muted-foreground))" strokeDasharray="5 5" label={{ value: t("research.clust_random"), fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
           <Bar dataKey="auroc" radius={[4, 4, 0, 0]}>
             {data.map((_, i) => <Cell key={i} fill={CHART_COLORS[i]} />)}
           </Bar>
@@ -70,15 +70,27 @@ export function AblationChart({ ablation }: { ablation: Record<string, number> }
 
 export function ClusteringComparisonChart({ clustering }: { clustering: Record<string, NcdClusteringResult> }) {
   const { t } = useTranslation();
+  const labels = useMemo(() => [
+    t("research.clust_kmeans_best"),
+    t("research.clust_kmeans_true"),
+    t("research.clust_spectral"),
+    t("research.clust_dbscan"),
+  ], [t]);
+  const metrics = useMemo(() => [
+    { key: "acc" as const, label: t("research.clust_acc") },
+    { key: "nmi" as const, label: t("research.clust_nmi") },
+    { key: "ari" as const, label: t("research.clust_ari") },
+    { key: "f_measure" as const, label: t("research.clust_f") },
+  ], [t]);
 
   const chartData = useMemo(() =>
-    CHART_METRICS.map((m) => ({
+    metrics.map((m) => ({
       name: m.label,
       ...Object.fromEntries(
-        CLUSTER_ALGOS.map((a, i) => [CLUSTER_LABELS[i], clustering?.[a]?.[m.key] ?? 0])
+        CLUSTER_ALGOS.map((a, i) => [labels[i], clustering?.[a]?.[m.key] ?? 0])
       ),
     })),
-  [clustering]);
+  [clustering, labels, metrics]);
 
   if (!chartData.length) return null;
 
@@ -90,7 +102,7 @@ export function ClusteringComparisonChart({ clustering }: { clustering: Record<s
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
           <XAxis dataKey="name" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
           <YAxis domain={[0, 1]} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
-          {CLUSTER_LABELS.map((l, i) => (
+          {labels.map((l, i) => (
             <Bar key={l} dataKey={l} fill={CLUSTER_PALETTE[i]} radius={[2, 2, 0, 0]} />
           ))}
           <Tooltip
@@ -129,7 +141,7 @@ export function PerClassAurocChart({
   return (
     <section>
       <h3 className="text-lg font-bold mb-4">
-        {t("experiment_detail.ncd_osr")} — AUROC per class
+        {t("experiment_detail.ncd_osr")} — {t("research.clust_auroc_suffix")}
       </h3>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={data} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
