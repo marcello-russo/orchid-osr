@@ -640,6 +640,16 @@
     "cmp_overfitting": "Proxy Overfitting",
     "cmp_config": "Confronto configurazioni",
     "cmp_confusion": "Matrice di Confusione",
-    "cmp_not_available": "Non disponibile per"
+    "cmp_not_available": "Non disponibile per",
+    "clust_kmeans_best": "K-Means (best k)",
+    "clust_kmeans_true": "K-Means (k=true)",
+    "clust_spectral": "Spectral",
+    "clust_dbscan": "DBSCAN",
+    "clust_acc": "ACC",
+    "clust_nmi": "NMI",
+    "clust_ari": "ARI",
+    "clust_f": "F",
+    "clust_random": "Casuale (0.50)",
+    "clust_auroc_suffix": "AUROC per classe"
   }
 }
