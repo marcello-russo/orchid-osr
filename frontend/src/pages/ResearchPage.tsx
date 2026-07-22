@@ -164,45 +164,26 @@ export function ResearchPage() {
         <Section id="contesto" title={t("research.sect_contesto")}>
           <SubSection title={t("research.subs_genere_ophrys")}>
             <P>
-              Il genere <em>Ophrys</em> (Orchidaceae) comprende orchidee terrestri diffuse in tutto
-              il bacino del Mediterraneo. Le piante sono perenni, con foglie basali a rosetta e uno
-              stelo fiorale che produce da 2 a 12 fiori. Ogni fiore è caratterizzato da un grande
-              labello vellutato che costituisce l&apos;elemento morfologico più vistoso e diagnostico.
+              {t("research.contesto_p1_before")}<em>Ophrys</em>{t("research.contesto_p1_after")}
             </P>
           </SubSection>
           <SubSection title={t("research.subs_mimetismo")}>
             <P>
-              Le orchidee del genere <em>Ophrys</em> sono note per il loro sistema di impollinazione
-              basato sul mimetismo sessuale (pseudocopulazione)<Cite id="schiestl2005swindle" />.
-              Ogni specie produce una miscela unica di allomoni che imita il feromone sessuale di
-              una specifica specie di impollinatore. Il labello, per forma, colore e consistenza,
-              mimetizza visivamente il corpo dell&apos;insetto femmina; lo speculum — una macchia
-              riflettente sul labello — simula la luce riflessa dalle ali. Solo circa il 10% dei
-              fiori viene effettivamente impollinato, ma ciascuno produce fino a 12.000 semi.
+              {t("research.contesto_p2_before")}<em>Ophrys</em>{t("research.contesto_p2_mid")}<Cite id="schiestl2005swindle" />{t("research.contesto_p2_after")}
             </P>
           </SubSection>
           <SubSection title={t("research.subs_problema_tassonomico")}>
             <P>
-              Il genere <em>Ophrys</em> è uno dei gruppi tassonomicamente più controversi del regno
-              vegetale<Cite id="devey2008ophrys" />. Le stime sul numero di specie variano
-              drasticamente: da circa 20 (<em>Flora Europaea</em>, 1980) a oltre 130 (Delforge, 1995).
-              L&apos;ibridazione frequente produce oltre 250 ibridi naturali descritti, e lo studio
-              molecolare ha evidenziato copie eterogenee del DNA ribosomiale ITS in singoli individui.
-              Il complesso <em>O. sphegodes</em> (le &ldquo;forretterelle&rdquo;) è uno dei gruppi
-              più variabili, con almeno 18 taxa subspecifici.
+              {t("research.contesto_p3_before")}<em>Ophrys</em>{t("research.contesto_p3_mid1")}<Cite id="devey2008ophrys" />{t("research.contesto_p3_mid2")}<em>Flora Europaea</em>{t("research.contesto_p3_mid3")}<em>O. sphegodes</em>{t("research.contesto_p3_mid4")}
             </P>
             <P>
-              Il nostro dataset adotta una classificazione intermedia, trattando sei entità — <em>O. exaltata</em>,
-              <em>O. garganica</em>, <em>O. incubacea</em>, <em>O. majellensis</em>,
-              <em>O. sphegodes</em> e <em>O. sphegodes</em> Palena — come specie distinte,
-              coerentemente con la tradizione tassonomica italiana. La penisola del Gargano costituisce
-              un hotspot di diversità del complesso.
+              {t("research.contesto_p4_before")}<em>O. exaltata</em>, <em>O. garganica</em>, <em>O. incubacea</em>, <em>O. majellensis</em>, <em>O. sphegodes</em> e <em>O. sphegodes</em> Palena{t("research.contesto_p4_after")}
             </P>
           </SubSection>
           <Figure
             src="/figures/angular_separability.webp"
             alt="Separabilità angolare"
-            caption="Separabilità angolare nello spazio degli embedding attraverso i tre paradigmi di apprendimento."
+            caption={t("research.contesto_fig_caption")}
           />
         </Section>
 

@@ -651,6 +651,19 @@
     "clust_ari": "ARI",
     "clust_f": "F",
     "clust_random": "Random (0.50)",
-    "clust_auroc_suffix": "AUROC per class"
+    "clust_auroc_suffix": "AUROC per class",
+    "contesto_p1_before": "The genus ",
+    "contesto_p1_after": " (Orchidaceae) includes terrestrial orchids widespread throughout the Mediterranean basin. The plants are perennial, with basal rosette leaves and a flowering stem producing 2 to 12 flowers. Each flower is characterized by a large velvety labellum that constitutes the most conspicuous and diagnostic morphological element.",
+    "contesto_p2_before": "Orchids of the genus ",
+    "contesto_p2_mid": " are known for their pollination system based on sexual mimicry (pseudocopulation)",
+    "contesto_p2_after": ". Each species produces a unique blend of allomones that mimics the sex pheromone of a specific pollinator species. The labellum, in shape, color, and texture, visually mimics the female insect's body; the speculum — a reflective spot on the labellum — simulates light reflected from wings. Only about 10% of flowers are actually pollinated, but each produces up to 12,000 seeds.",
+    "contesto_p3_before": "The genus ",
+    "contesto_p3_mid1": " is one of the most taxonomically controversial groups in the plant kingdom",
+    "contesto_p3_mid2": ". Estimates of the number of species vary dramatically: from about 20 (",
+    "contesto_p3_mid3": ", 1980) to over 130 (Delforge, 1995). Frequent hybridization produces over 250 described natural hybrids, and molecular studies have revealed heterogeneous copies of ribosomal ITS DNA in single individuals. The ",
+    "contesto_p3_mid4": " complex (the \"forretterelle\") is one of the most variable groups, with at least 18 subspecific taxa.",
+    "contesto_p4_before": "Our dataset adopts an intermediate classification, treating six entities — ",
+    "contesto_p4_after": " — as distinct species, consistent with the Italian taxonomic tradition. The Gargano peninsula constitutes a diversity hotspot for the complex.",
+    "contesto_fig_caption": "Angular separability in embedding space across the three learning paradigms."
   }
 }
