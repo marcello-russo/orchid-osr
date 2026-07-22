@@ -100,7 +100,7 @@ export function ResearchPage() {
       {/* Sidebar TOC */}
       <aside className="fixed left-0 top-24 bottom-0 w-64 hidden xl:block overflow-y-auto border-r border-border/50 pr-4 pl-6">
         <nav className="space-y-1 pt-6">
-          <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-3 pb-2">Indice</p>
+          <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-3 pb-2">{t("research.toc_title")}</p>
           {SECTIONS.map((s) => (
             <a
               key={s.id}
@@ -161,8 +161,8 @@ export function ResearchPage() {
         </Section>
 
         {/* ── 1. CONTESTO BOTANICO ── */}
-        <Section id="contesto" title="Contesto Botanico">
-          <SubSection title="Il Genere Ophrys">
+        <Section id="contesto" title={t("research.sect_contesto")}>
+          <SubSection title={t("research.subs_genere_ophrys")}>
             <P>
               Il genere <em>Ophrys</em> (Orchidaceae) comprende orchidee terrestri diffuse in tutto
               il bacino del Mediterraneo. Le piante sono perenni, con foglie basali a rosetta e uno
@@ -170,7 +170,7 @@ export function ResearchPage() {
               labello vellutato che costituisce l&apos;elemento morfologico più vistoso e diagnostico.
             </P>
           </SubSection>
-          <SubSection title="Mimetismo Sessuale">
+          <SubSection title={t("research.subs_mimetismo")}>
             <P>
               Le orchidee del genere <em>Ophrys</em> sono note per il loro sistema di impollinazione
               basato sul mimetismo sessuale (pseudocopulazione)<Cite id="schiestl2005swindle" />.
@@ -181,7 +181,7 @@ export function ResearchPage() {
               fiori viene effettivamente impollinato, ma ciascuno produce fino a 12.000 semi.
             </P>
           </SubSection>
-          <SubSection title="Il Problema Tassonomico">
+          <SubSection title={t("research.subs_problema_tassonomico")}>
             <P>
               Il genere <em>Ophrys</em> è uno dei gruppi tassonomicamente più controversi del regno
               vegetale<Cite id="devey2008ophrys" />. Le stime sul numero di specie variano
@@ -256,8 +256,8 @@ export function ResearchPage() {
         </Section>
 
         {/* ── 3. METODOLOGIA ── */}
-        <Section id="metodologia" title="Metodologia Sperimentale">
-          <SubSection title="Architetture">
+        <Section id="metodologia" title={t("research.sect_metodologia")}>
+          <SubSection title={t("research.subs_architetture")}>
             <P>
               Sei architetture appartenenti a tre famiglie sono state selezionate per coprire lo stato
               dell&apos;arte della classificazione visiva. Le reti convolutive classiche
@@ -271,14 +271,14 @@ export function ResearchPage() {
             </P>
           </SubSection>
 
-          <SubSection title="Recipe di Addestramento">
+          <SubSection title={t("research.subs_recipe")}>
             <DataTable
               columns={[
-                { key: "model", label: "Modello" },
-                { key: "input", label: "Input" },
-                { key: "lr", label: "LR" },
-                { key: "wd", label: "WD" },
-                { key: "optim", label: "Optimizer" },
+                { key: "model", label: t("research.table_model") },
+                { key: "input", label: t("research.table_input") },
+                { key: "lr", label: t("research.table_lr") },
+                { key: "wd", label: t("research.table_wd") },
+                { key: "optim", label: t("research.table_optimizer") },
               ]}
               rows={[
                 { model: "ResNet-18", input: "256×512", lr: "10⁻³", wd: "0,0", optim: "Adam" },
@@ -288,11 +288,11 @@ export function ResearchPage() {
                 { model: "DINOv2-S", input: "224×224", lr: "2·10⁻⁴", wd: "10⁻²", optim: "AdamW" },
                 { model: "DINOv2-B", input: "224×224", lr: "2·10⁻⁴", wd: "10⁻²", optim: "AdamW" },
               ]}
-              caption="Recipe di addestramento per architettura."
+              caption={t("research.recipe_caption")}
             />
           </SubSection>
 
-          <SubSection title="Disegno Sperimentale">
+          <SubSection title={t("research.subs_disegno")}>
             <P>
               Gli esperimenti sono organizzati in quattro serie, ciascuna delle quali aggiunge
               complessità metodologica alla precedente, in un percorso che va dalla classificazione
@@ -306,7 +306,7 @@ export function ResearchPage() {
             </ul>
           </SubSection>
 
-          <SubSection title="Protocollo di Validazione">
+          <SubSection title={t("research.subs_validazione")}>
             <P>
               Tutti gli esperimenti utilizzano cross-validation stratificata a 5 fold con seed 57.
               La metrica principale per la classificazione closed-set è l&apos;F1 macro, robusta allo
@@ -326,7 +326,7 @@ export function ResearchPage() {
             caption="Diagramma della pipeline di addestramento e valutazione: dalla raccolta immagini alla pubblicazione dei risultati."
           />
 
-          <SubSection title="Pipeline Open-Set Recognition">
+          <SubSection title={t("research.subs_pipeline_osr")}>
             <P>
               Per la valutazione OSR, il modello addestrato su 6 classi viene testato su un set
               che include <em>O. sphegodes_Napoli</em> come classe sconosciuta. La procedura si
@@ -344,7 +344,7 @@ export function ResearchPage() {
         </Section>
 
         {/* ── 4. EXP 6: CE ── */}
-        <Section id="exp6" title="Exp 6 — Baseline Cross-Entropy">
+        <Section id="exp6" title={t("research.sect_exp6")}>
           <P>
             L&apos;Exp 6 stabilisce la baseline di classificazione closed-set con loss CE standard.
             L&apos;obiettivo softmax separa le classi con iperpiani di decisione ma non struttura
@@ -356,11 +356,11 @@ export function ResearchPage() {
 
           <DataTable
             columns={[
-              { key: "model", label: "Modello" },
-              { key: "cv", label: "F1 CV" },
-              { key: "test", label: "F1 Test" },
-              { key: "params", label: "Parametri" },
-              { key: "gap", label: "Gap" },
+              { key: "model", label: t("research.table_model") },
+              { key: "cv", label: t("research.table_f1_cv") },
+              { key: "test", label: t("research.table_f1_test") },
+              { key: "params", label: t("research.table_params") },
+              { key: "gap", label: t("research.table_gap") },
             ]}
             rows={[
               { model: "ResNet-18", cv: "0,860", test: "0,880", params: "11M", gap: "+0,020" },
@@ -371,10 +371,10 @@ export function ResearchPage() {
               { model: "DINOv2-Base", cv: "0,916", test: "0,927", params: "86M", gap: "+0,011" },
             ]}
             highlightRow="DINOv2-Base"
-            caption="Exp 6 — F1 macro di cross-validation e test per architettura."
+            caption={t("research.exp6_caption")}
           />
 
-          <Callout variant="success" title="DINOv2-Base domina la classificazione closed-set">
+          <Callout variant="success" title={t("research.exp6_callout_title")}>
             Con 0,927 F1 test, DINOv2-Base è il miglior modello closed-set dell&apos;intero studio.
             Il gap CV-Test positivo (+0,011) è sorprendente per un modello da 86M parametri su un
             dataset di 2.232 immagini. Il pre-training su 142 milioni di immagini di DINOv2<Cite id="oquab2024dinov2" />
@@ -398,7 +398,7 @@ export function ResearchPage() {
         </Section>
 
         {/* ── 5. EXP 7: SUPCON ── */}
-        <Section id="exp7" title="Exp 7 — Supervised Contrastive Learning">
+        <Section id="exp7" title={t("research.sect_exp7")}>
           <P>
             Per affrontare la limitazione strutturale della CE, si adotta l&apos;Apprendimento
             Contrastivo Supervisionato (SupCon)<Cite id="khosla2020supervised" />. La loss SupCon
@@ -410,10 +410,10 @@ export function ResearchPage() {
 
           <DataTable
             columns={[
-              { key: "model", label: "Modello" },
-              { key: "cv", label: "F1 CV" },
-              { key: "test", label: "F1 Test" },
-              { key: "gap", label: "Gap" },
+              { key: "model", label: t("research.table_model") },
+              { key: "cv", label: t("research.table_f1_cv") },
+              { key: "test", label: t("research.table_f1_test") },
+              { key: "gap", label: t("research.table_gap") },
             ]}
             rows={[
               { model: "ResNet-18", cv: "0,612", test: "0,736", gap: "+0,123" },
@@ -424,16 +424,16 @@ export function ResearchPage() {
               { model: "DINOv2-Base", cv: "0,914", test: "0,687", gap: "−0,226" },
             ]}
             highlightRow="DINOv2-Small"
-            caption="Exp 7 — F1 macro di cross-validation e test."
+            caption={t("research.exp7_caption")}
           />
 
-          <Callout variant="success" title="DINOv2-Small: il miglior compromesso dello studio">
+          <Callout variant="success" title={t("research.exp7_callout_title")}>
             Con F1 test 0,896 e gap CV-Test trascurabile (−0,01), DINOv2-Small è il modello più
             bilanciato dell&apos;intero studio. A livello di specie, eccelle su
             <em> O. sphegodes Palena</em> (F1 = 0,990) e <em>O. majellensis</em> (F1 = 0,980).
           </Callout>
 
-          <Callout variant="danger" title="OSR: Fallimento completo — accuratezza classi note = 0,0">
+          <Callout variant="danger" title={t("research.exp7_osr_callout_title")}>
             Nonostante embedding qualitativamente migliori, il test OSR rivela una limitazione
             fondamentale: l&apos;accuratezza sulle classi note è <strong>0,0</strong> a ogni soglia.
             Tutte le immagini vengono classificate come sconosciute. L&apos;AUROC medio è 0,485,
@@ -469,7 +469,7 @@ export function ResearchPage() {
         </Section>
 
         {/* ── 6. EXP 8: SPHOR ── */}
-        <Section id="exp8" title="Exp 8 — Prototipi Sferici Ortogonali (SpHOR)">
+        <Section id="exp8" title={t("research.sect_exp8")}>
           <P>
             SpHOR<Cite id="bahavan2026sphor" /> (CVPR 2026 Findings) introduce prototipi apprendibili
             L2-normalizzati sulla sfera unitaria — uno per classe. La loss combina SupCon con una
@@ -479,7 +479,7 @@ export function ResearchPage() {
             Energy score<Cite id="liu2020energy" />, ed Ensemble normalizzato.
           </P>
 
-          <Callout variant="info" title="Trade-off ineludibile">
+          <Callout variant="info" title={t("research.exp8_callout_title")}>
             SpHOR migliora la separabilità angolare ma consuma capacità discriminativa: il F1
             closed-set cala mediamente di 0,12 rispetto a Exp 7. La scelta dell&apos;architettura
             diventa critica: ConvNeXt-Tiny emerge come punto di equilibrio ottimale.
@@ -487,11 +487,11 @@ export function ResearchPage() {
 
           <DataTable
             columns={[
-              { key: "model", label: "Modello" },
-              { key: "f1t", label: "F1 Test" },
-              { key: "f1cv", label: "F1 CV" },
-              { key: "det", label: "Detection@10%" },
-              { key: "detector", label: "Miglior Detector" },
+              { key: "model", label: t("research.table_model") },
+              { key: "f1t", label: t("research.table_f1_test") },
+              { key: "f1cv", label: t("research.table_f1_cv") },
+              { key: "det", label: t("research.table_detection") },
+              { key: "detector", label: t("research.table_best_detector") },
             ]}
             rows={[
               { model: "ResNet-18", f1t: "0,520", f1cv: "0,398", det: "0,093", detector: "Mahalanobis" },
@@ -502,10 +502,10 @@ export function ResearchPage() {
               { model: "DINOv2-Base", f1t: "0,654", f1cv: "0,870", det: "0,746", detector: "Energy" },
             ]}
             highlightRow="ConvNeXt-Tiny"
-            caption="Exp 8 — F1 closed-set e Detection Rate al 10% FPR."
+            caption={t("research.exp8_caption")}
           />
 
-          <Callout variant="success" title="ConvNeXt-Tiny: detection rate 0,907 — campione open-set">
+          <Callout variant="success" title={t("research.exp8_winner_callout_title")}>
             273 immagini note su 300 correttamente identificate, 45 campioni novel su 50 respinti.
             È l&apos;unica configurazione che dimostra di apprendere la differenza tra
             &ldquo;immagine nota mai vista&rdquo; e &ldquo;specie mai vista&rdquo; a granularità
@@ -556,7 +556,7 @@ export function ResearchPage() {
         </Section>
 
         {/* ── 7. EXP 10: MGH-NCD ── */}
-        <Section id="exp10" title="Exp 10 — Multi-Granularity NCD (MGH-NCD)">
+        <Section id="exp10" title={t("research.sect_exp10")}>
           <P>
             Sulla base dei risultati SpHOR, si è tentato di migliorare la scoperta di classi nascoste
             adottando MGCE<Cite id="zheng2025mgce" />. Tre esperti di clustering operano a risoluzioni
@@ -565,7 +565,7 @@ export function ResearchPage() {
             multi-granularità potesse catturare la struttura gerarchica della tassonomia botanica.
           </P>
 
-          <Callout variant="danger" title="Collasso a O. sphegodes Palena">
+          <Callout variant="danger" title={t("research.exp10_callout_title")}>
             Il 74% delle classificazioni totali cade su Palena, indipendentemente dalla vera specie.
             <em> O. sphegodes</em> non viene riconosciuta nemmeno una volta su 50 immagini.
             Palena agisce come un attrattore nello spazio degli embedding. Il miglior F1 test è
@@ -574,12 +574,12 @@ export function ResearchPage() {
 
           <DataTable
             columns={[
-              { key: "model", label: "Modello" },
-              { key: "f1t", label: "F1 Test" },
-              { key: "det", label: "Detect@10%" },
-              { key: "nmi", label: "NMI" },
-              { key: "acc", label: "ACC Clust." },
-              { key: "palena", label: "Fraz. Palena" },
+              { key: "model", label: t("research.table_model") },
+              { key: "f1t", label: t("research.table_f1_test") },
+              { key: "det", label: t("research.table_detection") },
+              { key: "nmi", label: t("research.table_nmi") },
+              { key: "acc", label: t("research.table_acc_clust") },
+              { key: "palena", label: t("research.table_palena") },
             ]}
             rows={[
               { model: "ResNet-18", f1t: "0,226", det: "0,257", nmi: "0,034", acc: "0,253", palena: "64%" },
@@ -589,7 +589,8 @@ export function ResearchPage() {
               { model: "DINOv2-Small", f1t: "0,270", det: "0,391", nmi: "0,239", acc: "0,592", palena: "61%" },
               { model: "DINOv2-Base", f1t: "0,369", det: "0,688", nmi: "0,485", acc: "0,511", palena: "74%" },
             ]}
-            caption="Exp 10 — MGH-NCD: metriche complete."
+            highlightRow="DINOv2-Base"
+            caption={t("research.exp10_caption")}
           />
 
           <Figure
@@ -617,7 +618,7 @@ export function ResearchPage() {
             caption="F1 per specie in Exp 10. Nessuna specie raggiunge 0,5 F1. Il collasso è uniforme: tutte le specie soffrono allo stesso modo."
           />
 
-          <SubSection title="Analisi del Fallimento">
+          <SubSection title={t("research.subs_analisi")}>
             <P>
               Il fallimento si articola su tre livelli. (1) <strong>Consensus spuria</strong>:
               l&apos;allineamento degli esperti forza il consenso tra tre risoluzioni KNN; in
@@ -641,7 +642,7 @@ export function ResearchPage() {
         </Section>
 
         {/* ── 8. BENCHMARK ── */}
-        <Section id="benchmark" title="Benchmark Consolidato">
+        <Section id="benchmark" title={t("research.sect_benchmark")}>
           <P>
             La tabella seguente consolida le prestazioni di tutte le architetture attraverso i
             quattro esperimenti, per classificazione closed-set (F1 test) e open-set (Detection
@@ -650,13 +651,13 @@ export function ResearchPage() {
 
           <DataTable
             columns={[
-              { key: "model", label: "Modello" },
-              { key: "e6", label: "Exp 6 (CE)" },
-              { key: "e7", label: "Exp 7 (SupCon)" },
-              { key: "e8", label: "Exp 8 (SpHOR)" },
-              { key: "e10", label: "Exp 10 (MGH)" },
-              { key: "osr8", label: "OSR@10% (8)" },
-              { key: "osr10", label: "OSR@10% (10)" },
+              { key: "model", label: t("research.table_model") },
+              { key: "e6", label: t("research.table_e6") },
+              { key: "e7", label: t("research.table_e7") },
+              { key: "e8", label: t("research.table_e8") },
+              { key: "e10", label: t("research.table_e10") },
+              { key: "osr8", label: t("research.table_osr8") },
+              { key: "osr10", label: t("research.table_osr10") },
             ]}
             rows={[
               { model: "ResNet-18", e6: "0,880", e7: "0,736", e8: "0,520", e10: "0,226", osr8: "0,093", osr10: "0,257" },
@@ -667,7 +668,7 @@ export function ResearchPage() {
               { model: "DINOv2-Base", e6: "0,927", e7: "0,687", e8: "0,654", e10: "0,369", osr8: "0,746", osr10: "0,688" },
             ]}
             bests={{ e6: "DINOv2-Base", e7: "DINOv2-Small", osr8: "ConvNeXt-Tiny" }}
-            caption="Benchmark completo: F1 test e Detection Rate al 10% FPR. ★ = miglior valore per colonna."
+            caption={t("research.benchmark_caption")}
           />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
@@ -683,7 +684,7 @@ export function ResearchPage() {
             />
           </div>
 
-          <SubSection title="Risultati Chiave">
+          <SubSection title={t("research.subs_risultati")}>
             <ol className="list-decimal list-inside text-muted-foreground space-y-2">
               <li><strong>Campione closed-set:</strong> DINOv2-Small + SupCon (F1 test 0,896, gap CV-Test −0,01) — il miglior compromesso tra accuratezza e generalizzazione.</li>
               <li><strong>Campione open-set:</strong> ConvNeXt-Tiny + SpHOR (detection rate 0,907) — prima dimostrazione di OSR funzionante in ultra-FGVC.</li>
@@ -726,7 +727,7 @@ export function ResearchPage() {
         </Section>
 
         {/* ── 9. CONCLUSIONI ── */}
-        <Section id="conclusioni" title="Conclusioni">
+        <Section id="conclusioni" title={t("research.sect_conclusioni")}>
           <P>
             Questa tesi ha presentato uno studio sistematico della classificazione ultra-fine-grained
             del genere <em>Ophrys</em> mediante deep learning, confrontando sei architetture su tre
@@ -734,7 +735,7 @@ export function ResearchPage() {
             cross-validation stratificata.
           </P>
 
-          <SubSection title="Contributi">
+          <SubSection title={t("research.subs_conclusioni_contrib")}>
             <ul className="list-disc list-inside text-muted-foreground space-y-1 text-sm">
               <li>Primo benchmark sistematico di architetture deep learning per la classificazione ultra-FGVC delle <em>Ophrys</em>.</li>
               <li>Dimostrazione che SpHOR + ConvNeXt-Tiny risolve l&apos;OSR in ultra-FGVC (detection rate 0,907).</li>
@@ -743,7 +744,7 @@ export function ResearchPage() {
             </ul>
           </SubSection>
 
-          <SubSection title="Limiti">
+          <SubSection title={t("research.subs_limiti")}>
             <ul className="list-disc list-inside text-muted-foreground space-y-1 text-sm">
               <li>Copertura geografica ristretta (Puglia e Gargano).</li>
               <li>Squilibrio tra fonti: specie da campo vs internet.</li>
@@ -752,7 +753,7 @@ export function ResearchPage() {
             </ul>
           </SubSection>
 
-          <SubSection title="Lavori Futuri">
+          <SubSection title={t("research.subs_futuri")}>
             <ul className="list-disc list-inside text-muted-foreground space-y-1 text-sm">
               <li>Espansione del dataset tramite citizen science e generative AI.</li>
               <li>Metodi part-based (APL<Cite id="dai2025apl" />, PartGCD<Cite id="wang2025partgcd" />) per NCD.</li>
@@ -763,7 +764,7 @@ export function ResearchPage() {
         </Section>
 
         {/* ── 10. BIBLIOGRAFIA ── */}
-        <Section id="bibliografia" title="Bibliografia">
+        <Section id="bibliografia" title={t("research.sect_bibliografia")}>
           <div className="space-y-3 text-sm">
             {PAPERS.map((p) => (
               <div key={p.id} className="flex gap-2">
