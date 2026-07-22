@@ -127,11 +127,11 @@ export async function fetchCacheStatus() {
 }
 
 export async function downloadAllModels() {
-  return fetchApi<{ status: string }>("/api/admin/cache/download");
+  return fetchApi<{ status: string }>("/api/admin/cache/download", { method: "POST" });
 }
 
 export async function downloadModel(id: string) {
-  return fetchApi<{ status: string; model_id: string }>(`/api/admin/cache/download/${encodeURIComponent(id)}`);
+  return fetchApi<{ status: string; model_id: string }>(`/api/admin/cache/download/${encodeURIComponent(id)}`, { method: "POST" });
 }
 
 export async function deleteCachedModel(id: string) {
