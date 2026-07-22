@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -21,6 +22,7 @@ interface DataTableProps {
 }
 
 export function DataTable({ columns, rows, rowKey, highlightRow, bests, caption }: DataTableProps) {
+  const { t } = useTranslation();
   const keyAccessor = rowKey ?? columns[0].key;
 
   return (
@@ -59,7 +61,7 @@ export function DataTable({ columns, rows, rowKey, highlightRow, bests, caption 
                         "inline-flex items-center gap-1",
                         isBestInCol && "text-foreground",
                       )}>
-                        {isBestInCol && <span className="text-amber-500 text-xs" aria-label="Miglior valore">★</span>}
+                        {isBestInCol && <span className="text-amber-500 text-xs" aria-label={t("research.datatable_best_value")}>★</span>}
                         {row[col.key]}
                       </span>
                     </TableCell>

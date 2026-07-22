@@ -1,4 +1,5 @@
 import React, { useRef, useState, useMemo, useCallback, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Canvas, type ThreeEvent } from "@react-three/fiber";
 import { OrbitControls, Html } from "@react-three/drei";
 import * as THREE from "three";
@@ -140,6 +141,7 @@ function Tooltip({ point, speciesColors }: {
 }
 
 export function Scatter3D({ points, speciesColors, onSelect }: Scatter3DProps) {
+  const { t } = useTranslation();
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
   const hoveredPoint = useMemo(
@@ -173,7 +175,7 @@ export function Scatter3D({ points, speciesColors, onSelect }: Scatter3DProps) {
   if (points.length === 0) {
     return (
       <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-        No points to display
+        {t("research.scatter_no_points")}
       </div>
     );
   }

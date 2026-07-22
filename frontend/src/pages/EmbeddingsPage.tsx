@@ -115,16 +115,16 @@ export function EmbeddingsPage() {
         </select>
         <select value={method} onChange={(e) => setMethod(e.target.value)}
           className="text-xs bg-card border border-border/50 rounded-lg px-2.5 py-1.5 text-foreground cursor-pointer appearance-auto">
-          <option value="tsne_3d" className="bg-card text-foreground">t-SNE 3D</option>
-          <option value="tsne_2d" className="bg-card text-foreground">t-SNE 2D</option>
-          <option value="umap_2d" className="bg-card text-foreground">UMAP 2D</option>
-          <option value="umap_3d" className="bg-card text-foreground">UMAP 3D</option>
+          <option value="tsne_3d" className="bg-card text-foreground">{t("research.method_tsne3d")}</option>
+          <option value="tsne_2d" className="bg-card text-foreground">{t("research.method_tsne2d")}</option>
+          <option value="umap_2d" className="bg-card text-foreground">{t("research.method_umap2d")}</option>
+          <option value="umap_3d" className="bg-card text-foreground">{t("research.method_umap3d")}</option>
         </select>
         <select value={split} onChange={(e) => setSplit(e.target.value)}
           className="text-xs bg-card border border-border/50 rounded-lg px-2.5 py-1.5 text-foreground cursor-pointer appearance-auto">
-          <option value="all" className="bg-card text-foreground">All data</option>
-          <option value="train" className="bg-card text-foreground">Train only</option>
-          <option value="test" className="bg-card text-foreground">Test only</option>
+          <option value="all" className="bg-card text-foreground">{t("research.split_all")}</option>
+          <option value="train" className="bg-card text-foreground">{t("research.split_train")}</option>
+          <option value="test" className="bg-card text-foreground">{t("research.split_test")}</option>
         </select>
         <Link to={`/experiments/${experiment}`}
           className="text-xs text-primary hover:underline px-2 py-1.5 font-medium">
@@ -195,8 +195,8 @@ export function EmbeddingsPage() {
                   {imgError ? (
                     <div className="flex flex-col items-center gap-2 p-4 text-center">
                       <ImageIcon className="size-8 text-muted-foreground/30" />
-                      <p className="text-xs text-muted-foreground/60">Immagine non disponibile localmente</p>
-                      <p className="text-[10px] text-muted-foreground/40">Scarica il dataset completo per visualizzare tutte le immagini</p>
+                      <p className="text-xs text-muted-foreground/60">{t("research.img_not_available")}</p>
+                      <p className="text-[10px] text-muted-foreground/40">{t("research.img_download_hint")}</p>
                     </div>
                   ) : (
                     <img src={`${API_BASE}${selectedPoint.image_url}`} alt={selectedPoint.species}

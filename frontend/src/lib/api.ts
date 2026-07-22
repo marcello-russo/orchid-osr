@@ -2,6 +2,7 @@
 
 import { useAppStore } from "../stores/useAppStore";
 import type { AuthUser } from "./types";
+import i18n from "./i18n";
 
 const API_BASE = import.meta.env.VITE_API_URL ?? "";
 
@@ -45,7 +46,7 @@ export async function fetchApi<T>(path: string, opts?: { method?: string; body?:
     const snippet = detail.length > 200 ? detail.slice(0, 200) + "..." : detail;
     if (res.status >= 400 && res.status < 500) {
         const { toast } = await import("sonner");
-        toast.error(`Errore ${res.status}: ${snippet}`);
+        toast.error(`${i18n.t("research.api_error")} ${res.status}: ${snippet}`);
         throw new Error(`API ${res.status}: ${snippet}`);
     }
     throw new Error(`API ${res.status}: ${snippet}`);
