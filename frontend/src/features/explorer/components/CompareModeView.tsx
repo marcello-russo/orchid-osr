@@ -99,7 +99,7 @@ export function CompareModeView({ experiments }: Props) {
       data.push(pt);
     }
     return data;
-  }, [experiments, maxFolds]);
+  }, [experiments, maxFolds, t]);
 
   const overfitData = useMemo(() => {
     const allExps = experiments.map((exp) => {
@@ -267,6 +267,7 @@ export function CompareModeView({ experiments }: Props) {
 /* ---- Sub-charts ---- */
 
 function LossChart({ epochData, expColors }: { epochData: EpochRow[]; expColors: { id: string; color: string }[] }) {
+  const { t } = useTranslation();
   const [mode, setMode] = useState<"train" | "val">("val");
   return (
     <Card>
@@ -315,6 +316,7 @@ function LossChart({ epochData, expColors }: { epochData: EpochRow[]; expColors:
 }
 
 function MetricsChart({ epochData, expColors }: { epochData: EpochRow[]; expColors: { id: string; color: string }[] }) {
+  const { t } = useTranslation();
   const [metric, setMetric] = useState<"f1" | "accuracy">("f1");
   return (
     <Card>

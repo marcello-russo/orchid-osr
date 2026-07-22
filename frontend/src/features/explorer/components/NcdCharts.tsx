@@ -10,13 +10,6 @@ import type { NcdClusteringResult } from "@/lib/types";
 const CHART_COLORS = ["#3B82F6", "#8B5CF6", "#F59E0B", "#EF4444"];
 const CLUSTER_PALETTE = ["#3B82F6", "#8B5CF6", "#22C55E", "#EF4444"];
 const CLUSTER_ALGOS = ["kmeans_best", "kmeans_true_k", "spectral", "dbscan"];
-const CLUSTER_LABELS = ["K-Means (best k)", "K-Means (k=true)", "Spectral", "DBSCAN"];
-const CHART_METRICS = [
-  { key: "acc" as const, label: "ACC" },
-  { key: "nmi" as const, label: "NMI" },
-  { key: "ari" as const, label: "ARI" },
-  { key: "f_measure" as const, label: "F" },
-];
 
 interface AblationData {
   name: string;

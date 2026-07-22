@@ -446,10 +446,6 @@ export function ResearchPage() {
           <Callout variant="success" title={t("research.exp8_winner_callout_title")}>
             {t("research.exp8_winner_body")}
           </Callout>
-            (28M parametri — né troppo pochi come ResNet-18 né troppi come ConvNeXt-Small);
-            (2) località convoluzionale dei kernel 7×7 su caratteri morfologici di 30–50 pixel;
-            (3) compatibilità della layer normalization con la loss di repulsione.
-          </Callout>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Figure
