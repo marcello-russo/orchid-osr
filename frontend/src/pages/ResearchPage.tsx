@@ -573,9 +573,7 @@ export function ResearchPage() {
         {/* ── 8. BENCHMARK ── */}
         <Section id="benchmark" title={t("research.sect_benchmark")}>
           <P>
-            La tabella seguente consolida le prestazioni di tutte le architetture attraverso i
-            quattro esperimenti, per classificazione closed-set (F1 test) e open-set (Detection
-            Rate al 10% FPR).
+            {t("research.benchmark_intro")}
           </P>
 
           <DataTable
@@ -615,11 +613,11 @@ export function ResearchPage() {
 
           <SubSection title={t("research.subs_risultati")}>
             <ol className="list-decimal list-inside text-muted-foreground space-y-2">
-              <li><strong>Campione closed-set:</strong> DINOv2-Small + SupCon (F1 test 0,896, gap CV-Test −0,01) — il miglior compromesso tra accuratezza e generalizzazione.</li>
-              <li><strong>Campione open-set:</strong> ConvNeXt-Tiny + SpHOR (detection rate 0,907) — prima dimostrazione di OSR funzionante in ultra-FGVC.</li>
-              <li><strong>Compromesso SpHOR:</strong> calo medio F1 closed-set di 0,12, ma detection rate da 0,0 (SupCon) a 0,907 (SpHOR). Trade-off accettabile per ambienti aperti.</li>
-              <li><strong>Fallimento MGH-NCD:</strong> collasso a Palena. La multi-granularità è controproducente quando la granularità intrinseca è già al massimo.</li>
-              <li><strong>Risultato negativo:</strong> la scoperta non supervisionata di nuove specie in ultra-FGVC non è risolvibile con i metodi attuali (NMI = 0,16–0,19).</li>
+              <li><strong>{t("research.risultati_li1_before")}</strong>DINOv2-Small{t("research.risultati_li1_mid")}</li>
+              <li><strong>{t("research.risultati_li2_before")}</strong>ConvNeXt-Tiny{t("research.risultati_li2_mid")}</li>
+              <li>{t("research.risultati_li3")}</li>
+              <li>{t("research.risultati_li4")}</li>
+              <li>{t("research.risultati_li5")}</li>
             </ol>
           </SubSection>
 
@@ -658,36 +656,33 @@ export function ResearchPage() {
         {/* ── 9. CONCLUSIONI ── */}
         <Section id="conclusioni" title={t("research.sect_conclusioni")}>
           <P>
-            Questa tesi ha presentato uno studio sistematico della classificazione ultra-fine-grained
-            del genere <em>Ophrys</em> mediante deep learning, confrontando sei architetture su tre
-            paradigmi di apprendimento con un protocollo rigoroso basato su clean split MD5 e
-            cross-validation stratificata.
+            {t("research.conclusioni_p1_before")}<em>Ophrys</em>{t("research.conclusioni_p1_after")}
           </P>
 
           <SubSection title={t("research.subs_conclusioni_contrib")}>
             <ul className="list-disc list-inside text-muted-foreground space-y-1 text-sm">
-              <li>Primo benchmark sistematico di architetture deep learning per la classificazione ultra-FGVC delle <em>Ophrys</em>.</li>
-              <li>Dimostrazione che SpHOR + ConvNeXt-Tiny risolve l&apos;OSR in ultra-FGVC (detection rate 0,907).</li>
-              <li>Risultato negativo pubblicabile: NCD in ultra-FGVC rimane un problema aperto.</li>
-              <li>Dataset curato e deduplicato per sei specie di <em>Ophrys</em>.</li>
+              <li>{t("research.contrib_li1")}<em>Ophrys</em>{t("research.contrib_li1_end")}</li>
+              <li>{t("research.contrib_li2")}</li>
+              <li>{t("research.contrib_li3")}</li>
+              <li>{t("research.contrib_li4")}<em>Ophrys</em>{t("research.contrib_li4_end")}</li>
             </ul>
           </SubSection>
 
           <SubSection title={t("research.subs_limiti")}>
             <ul className="list-disc list-inside text-muted-foreground space-y-1 text-sm">
-              <li>Copertura geografica ristretta (Puglia e Gargano).</li>
-              <li>Squilibrio tra fonti: specie da campo vs internet.</li>
-              <li>Risorse computazionali limitate (batch size 8, LoRA vs full FT discontinuo).</li>
-              <li>Assenza di validazione esterna con botanici o DNA barcoding.</li>
+              <li>{t("research.limiti_li1")}</li>
+              <li>{t("research.limiti_li2")}</li>
+              <li>{t("research.limiti_li3")}</li>
+              <li>{t("research.limiti_li4")}</li>
             </ul>
           </SubSection>
 
           <SubSection title={t("research.subs_futuri")}>
             <ul className="list-disc list-inside text-muted-foreground space-y-1 text-sm">
-              <li>Espansione del dataset tramite citizen science e generative AI.</li>
-              <li>Metodi part-based (APL<Cite id="dai2025apl" />, PartGCD<Cite id="wang2025partgcd" />) per NCD.</li>
-              <li>Integrazione sistematica di XAI con validazione da parte di esperti botanici.</li>
-              <li>Validazione sul campo tramite deploy dell&apos;applicazione OrchID.</li>
+              <li>{t("research.futuri_li1")}</li>
+              <li>{t("research.futuri_li2_before")}<Cite id="dai2025apl" />{t("research.futuri_li2_after")}<Cite id="wang2025partgcd" />{t("research.futuri_li2_end")}</li>
+              <li>{t("research.futuri_li3")}</li>
+              <li>{t("research.futuri_li4")}</li>
             </ul>
           </SubSection>
         </Section>
