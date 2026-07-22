@@ -8,7 +8,7 @@ interface CitationPopoverProps {
 
 export function CitationPopover({ paper, onClose }: CitationPopoverProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState({ top: 0, left: 0, width: 800 });
+  const [pos, setPos] = useState<{ top: number; left: number; width: number } | null>(null);
 
   const updatePos = useCallback(() => {
     const sup = document.getElementById(`cite-${paper.id}`);
@@ -24,6 +24,7 @@ export function CitationPopover({ paper, onClose }: CitationPopoverProps) {
   }, [paper.id]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     updatePos();
     window.addEventListener("scroll", updatePos, { passive: true });
     return () => window.removeEventListener("scroll", updatePos);
@@ -47,7 +48,7 @@ export function CitationPopover({ paper, onClose }: CitationPopoverProps) {
     return () => document.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  if (pos.top === 0) return null;
+  if (!pos) return null;
 
   return (
     <div

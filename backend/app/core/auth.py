@@ -8,13 +8,13 @@ from collections import OrderedDict
 from datetime import datetime, timezone
 from pathlib import Path
 
-logger = logging.getLogger(__name__)
-
 import bcrypt
 import jwt
 from fastapi import HTTPException, status
 
 from app.config import settings
+
+logger = logging.getLogger(__name__)
 
 USERS_PATH = Path(os.environ.get("USERS_PATH", "data/users.json"))
 _HF_DATASET_REPO = "marcellorusso/orchid-ncd-dataset"
