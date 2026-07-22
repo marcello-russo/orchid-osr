@@ -240,15 +240,7 @@ export function ResearchPage() {
         <Section id="metodologia" title={t("research.sect_metodologia")}>
           <SubSection title={t("research.subs_architetture")}>
             <P>
-              Sei architetture appartenenti a tre famiglie sono state selezionate per coprire lo stato
-              dell&apos;arte della classificazione visiva. Le reti convolutive classiche
-              <strong> ResNet-18</strong> (11M parametri) e <strong>ResNet-50</strong> (25M)<Cite id="he2016deep" />
-              sono state scelte come baseline per efficienza computazionale. Le CNN modernizzate
-              <strong>ConvNeXt-Tiny</strong> (28M) e <strong>ConvNeXt-Small</strong> (50M)<Cite id="liu2022convnet" />
-              incorporano scelte progettuali dei Transformer (kernel 7×7, Layer Normalization, GELU).
-              I Vision Transformer <strong>DINOv2-Small</strong> (21M, ViT-S/14) e
-              <strong>DINOv2-Base</strong> (86M, ViT-B/14)<Cite id="oquab2024dinov2" /> sono
-              pre-addestrati in modo auto-supervisionato su 142 milioni di immagini.
+              {t("research.arch_before")}<strong>ResNet-18</strong>{t("research.arch_mid1")}<strong>ResNet-50</strong>{t("research.arch_mid2")}<Cite id="he2016deep" />{t("research.arch_mid3")}<strong>ConvNeXt-Tiny</strong>{t("research.arch_mid4")}<strong>ConvNeXt-Small</strong>{t("research.arch_mid5")}<Cite id="liu2022convnet" />{t("research.arch_mid6")}<strong>DINOv2-Small</strong>{t("research.arch_mid7")}<strong>DINOv2-Base</strong>{t("research.arch_mid8")}<Cite id="oquab2024dinov2" />{t("research.arch_after")}
             </P>
           </SubSection>
 
@@ -327,12 +319,7 @@ export function ResearchPage() {
         {/* ── 4. EXP 6: CE ── */}
         <Section id="exp6" title={t("research.sect_exp6")}>
           <P>
-            L&apos;Exp 6 stabilisce la baseline di classificazione closed-set con loss CE standard.
-            L&apos;obiettivo softmax separa le classi con iperpiani di decisione ma non struttura
-            lo spazio latente: due campioni della stessa specie possono proiettarsi in regioni
-            arbitrarie dello spazio, purché il classificatore li assegni alla classe corretta.
-            Questa mancanza di struttura è accettabile per la classificazione closed-set ma diventa
-            critica in scenari open-world<Cite id="geng2020openset" />.
+            {t("research.exp6_p1_before")}<Cite id="geng2020openset" />.
           </P>
 
           <DataTable
@@ -356,37 +343,24 @@ export function ResearchPage() {
           />
 
           <Callout variant="success" title={t("research.exp6_callout_title")}>
-            Con 0,927 F1 test, DINOv2-Base è il miglior modello closed-set dell&apos;intero studio.
-            Il gap CV-Test positivo (+0,011) è sorprendente per un modello da 86M parametri su un
-            dataset di 2.232 immagini. Il pre-training su 142 milioni di immagini di DINOv2<Cite id="oquab2024dinov2" />
-            fornisce una rappresentazione di partenza sufficientemente ricca da garantire la generalizzazione.
+            {t("research.exp6_callout_body_before")}<Cite id="oquab2024dinov2" />{t("research.exp6_callout_body_after")}
           </Callout>
 
           <P>
-            Il pattern del gap CV-Test rivela il fenomeno della <em>double descent</em><Cite id="belkin2019double" />:
-            le ResNet (11–25M) mostrano gap positivo, operando nel regime sovra-parametrizzato con
-            la regolarizzazione implicita della batch normalization<Cite id="ioffe2015batchnorm" />.
-            ConvNeXt-Small (50M, il più grande tra le CNN) mostra overfitting più pronunciato perché
-            la layer normalization non fornisce la stessa regolarizzazione. DINOv2-Base, nonostante
-            i 86M parametri, generalizza grazie al pre-training su larga scala.
+            {t("research.exp6_p2_before")}<em>double descent</em>{t("research.exp6_p2_mid")}<Cite id="ioffe2015batchnorm" />{t("research.exp6_p2_after")}
           </P>
 
           <Figure
             src="/figures/loss_curves_exp6_dinov2b.webp"
             alt="Loss curves DINOv2-B Exp 6"
-            caption="Curve di training e validazione per DINOv2-Base in Exp 6 (CE). Convergenza stabile intorno a 60 epoche, early stopping a 75."
+            caption={t("research.exp6_fig_caption")}
           />
         </Section>
 
         {/* ── 5. EXP 7: SUPCON ── */}
         <Section id="exp7" title={t("research.sect_exp7")}>
           <P>
-            Per affrontare la limitazione strutturale della CE, si adotta l&apos;Apprendimento
-            Contrastivo Supervisionato (SupCon)<Cite id="khosla2020supervised" />. La loss SupCon
-            attira esplicitamente i campioni della stessa classe e respinge quelli di classi diverse
-            nello spazio normalizzato L2. Il risultato è uno spazio metrico dove la distanza coseno
-            riflette la similarità semantica — proprietà essenziale per l&apos;open-set recognition
-            e il novel class discovery<Cite id="liu2024novel" /><Cite id="vaze2022gcd" />.
+            {t("research.exp7_p1_before")}<Cite id="khosla2020supervised" />{t("research.exp7_p1_after")}<Cite id="liu2024novel" /><Cite id="vaze2022gcd" />.
           </P>
 
           <DataTable
@@ -409,61 +383,44 @@ export function ResearchPage() {
           />
 
           <Callout variant="success" title={t("research.exp7_callout_title")}>
-            Con F1 test 0,896 e gap CV-Test trascurabile (−0,01), DINOv2-Small è il modello più
-            bilanciato dell&apos;intero studio. A livello di specie, eccelle su
-            <em> O. sphegodes Palena</em> (F1 = 0,990) e <em>O. majellensis</em> (F1 = 0,980).
+            {t("research.exp7_callout_body")}<em>O. sphegodes Palena</em>{t("research.exp7_callout_body_end")}<em>O. majellensis</em>{t("research.exp7_callout_body_end2")}
           </Callout>
 
           <Callout variant="danger" title={t("research.exp7_osr_callout_title")}>
-            Nonostante embedding qualitativamente migliori, il test OSR rivela una limitazione
-            fondamentale: l&apos;accuratezza sulle classi note è <strong>0,0</strong> a ogni soglia.
-            Tutte le immagini vengono classificate come sconosciute. L&apos;AUROC medio è 0,485,
-            indistinguibile dal caso. Nello spazio normalizzato L2 di SupCon, le distribuzioni
-            degli embedding &ldquo;noti&rdquo; e &ldquo;novel&rdquo; sono completamente sovrapposte:
-            la loss contrastiva separa le classi tra loro ma non crea una regione per
-            &ldquo;ciò che non è nessuna classe nota&rdquo;. Serve un margine angolare esplicito.
+            {t("research.exp7_osr_body")}
           </Callout>
 
           <P>
-            Il pattern di overfitting è marcato: DINOv2-Base mostra il gap più ampio (−0,226),
-            mentre le ResNet beneficiano della batch normalization (gap positivo). ConvNeXt ha
-            gap ≈ −0,19. La t-SNE (Fig. 1b) mostra cluster marcatamente più coesi rispetto alla CE.
+            {t("research.exp7_overfitting")}
           </P>
 
           <Figure
             src="/figures/cv_test_gap.webp"
             alt="Generalization gap"
-            caption="Gap di generalizzazione (F1 Test − F1 CV) in funzione dei parametri. Le architetture moderne mostrano gap negativi maggiori (overfitting); le ResNet beneficiano della regolarizzazione implicita della batch normalization."
+            caption={t("research.exp7_fig1_caption")}
           />
 
           <Figure
             src="/figures/per_species_f1.webp"
             alt="F1 per specie"
-            caption="F1 per specie attraverso architetture ed esperimenti. O. sphegodes è sistematicamente la specie più difficile; O. exaltata e O. sphegodes Palena le più facili."
+            caption={t("research.exp7_fig2_caption")}
           />
 
           <Figure
             src="/figures/metric_curves_dinov2s.webp"
             alt="Metric curves DINOv2-S"
-            caption="Curve di training e validazione per DINOv2-Small durante l'addestramento SupCon."
+            caption={t("research.exp7_fig3_caption")}
           />
         </Section>
 
         {/* ── 6. EXP 8: SPHOR ── */}
         <Section id="exp8" title={t("research.sect_exp8")}>
           <P>
-            SpHOR<Cite id="bahavan2026sphor" /> (CVPR 2026 Findings) introduce prototipi apprendibili
-            L2-normalizzati sulla sfera unitaria — uno per classe. La loss combina SupCon con una
-            loss di repulsione ortogonale che forza i prototipi a occupare direzioni distinte,
-            massimizzando la copertura angolare. Al test, quattro rivelatori valutano la novità:
-            distanza di Mahalanobis<Cite id="lee2018simple" /> dal prototipo più vicino, KNN (k=5),
-            Energy score<Cite id="liu2020energy" />, ed Ensemble normalizzato.
+            {t("research.exp8_p1_before")}<Cite id="bahavan2026sphor" />{t("research.exp8_p1_mid")}<Cite id="lee2018simple" />{t("research.exp8_p1_mid2")}<Cite id="liu2020energy" />{t("research.exp8_p1_after")}
           </P>
 
           <Callout variant="info" title={t("research.exp8_callout_title")}>
-            SpHOR migliora la separabilità angolare ma consuma capacità discriminativa: il F1
-            closed-set cala mediamente di 0,12 rispetto a Exp 7. La scelta dell&apos;architettura
-            diventa critica: ConvNeXt-Tiny emerge come punto di equilibrio ottimale.
+            {t("research.exp8_callout_body")}
           </Callout>
 
           <DataTable
@@ -487,10 +444,8 @@ export function ResearchPage() {
           />
 
           <Callout variant="success" title={t("research.exp8_winner_callout_title")}>
-            273 immagini note su 300 correttamente identificate, 45 campioni novel su 50 respinti.
-            È l&apos;unica configurazione che dimostra di apprendere la differenza tra
-            &ldquo;immagine nota mai vista&rdquo; e &ldquo;specie mai vista&rdquo; a granularità
-            ultra-fine. Tre fattori spiegano il successo: (1) equilibrio capacità-regularizzazione
+            {t("research.exp8_winner_body")}
+          </Callout>
             (28M parametri — né troppo pochi come ResNet-18 né troppi come ConvNeXt-Small);
             (2) località convoluzionale dei kernel 7×7 su caratteri morfologici di 30–50 pixel;
             (3) compatibilità della layer normalization con la loss di repulsione.
@@ -539,18 +494,11 @@ export function ResearchPage() {
         {/* ── 7. EXP 10: MGH-NCD ── */}
         <Section id="exp10" title={t("research.sect_exp10")}>
           <P>
-            Sulla base dei risultati SpHOR, si è tentato di migliorare la scoperta di classi nascoste
-            adottando MGCE<Cite id="zheng2025mgce" />. Tre esperti di clustering operano a risoluzioni
-            KNN multiple (k=5, 15, 50), ciascuno genera pseudo-etichette tramite InfoMap, e un memory
-            bank contrastivo allinea le rappresentazioni tra le scale. L&apos;ipotesi era che la
-            multi-granularità potesse catturare la struttura gerarchica della tassonomia botanica.
+            {t("research.exp10_p1_before")}<Cite id="zheng2025mgce" />{t("research.exp10_p1_after")}
           </P>
 
           <Callout variant="danger" title={t("research.exp10_callout_title")}>
-            Il 74% delle classificazioni totali cade su Palena, indipendentemente dalla vera specie.
-            <em> O. sphegodes</em> non viene riconosciuta nemmeno una volta su 50 immagini.
-            Palena agisce come un attrattore nello spazio degli embedding. Il miglior F1 test è
-            0,369 (DINOv2-Base), contro 0,927 in Exp 6.
+            {t("research.exp10_callout_body")}<em>O. sphegodes</em>{t("research.exp10_callout_body_mid")}
           </Callout>
 
           <DataTable
