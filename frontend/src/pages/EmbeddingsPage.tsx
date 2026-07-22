@@ -73,11 +73,11 @@ export function EmbeddingsPage() {
   }, [selectedIdx, data]);
 
   const speciesStats = useMemo(() => {
-    const pts = visiblePoints.length > 0 ? visiblePoints : (data?.points ?? []);
+    const pts = visiblePoints.length > 0 ? visiblePoints : [];
     const counts: Record<string, number> = {};
     for (const p of pts) counts[p.species] = (counts[p.species] || 0) + 1;
     const total = pts.length;
-    return Object.entries(counts).map(([species, count]) => ({ species, count, total }))
+    return (data?.species ?? []).map((species) => ({ species, count: counts[species] || 0, total }))
       .sort((a, b) => b.count - a.count);
   }, [visiblePoints, data]);
 
@@ -169,15 +169,21 @@ export function EmbeddingsPage() {
                 <span className="text-sm font-bold uppercase tracking-wider text-muted-foreground">{t("embeddings.dataset_overview")}</span>
               </div>
               <div className="space-y-1.5">
-                {speciesStats.map(({ species, count, total }) => (
-                  <button key={species} onClick={() => toggleSpecies(species)}
-                    className="flex items-center gap-2 w-full text-left text-sm transition-opacity hover:opacity-80">
-                    <span className="size-2.5 rounded-full shrink-0" style={{ backgroundColor: speciesColors[species] || PALETTE[0] }} />
-                    <span className="flex-1 truncate text-muted-foreground">{species}</span>
-                    <span className="font-bold tabular-nums">{count}</span>
-                    <span className="text-muted-foreground/50 text-[10px]">({((count / total) * 100).toFixed(0)}%)</span>
-                  </button>
-                ))}
+                {speciesStats.map(({ species, count, total }) => {
+                  const isHidden = hidden.has(species);
+                  return (
+                    <button key={species} onClick={() => toggleSpecies(species)}
+                      className={`flex items-center gap-2 w-full text-left text-sm transition-all hover:opacity-80 ${isHidden ? "opacity-50" : ""}`}>
+                      <span className={`size-2.5 rounded-full shrink-0 transition-all ${isHidden ? "opacity-30" : ""}`}
+                        style={{ backgroundColor: speciesColors[species] || PALETTE[0] }} />
+                      <span className={`flex-1 truncate transition-all ${isHidden ? "text-muted-foreground/40 line-through" : "text-muted-foreground"}`}>
+                        {species}
+                      </span>
+                      <span className="font-bold tabular-nums text-foreground/80">{count}</span>
+                      <span className="text-muted-foreground/50 text-[10px]">({total > 0 ? ((count / total) * 100).toFixed(0) : "0"}%)</span>
+                    </button>
+                  );
+                })}
               </div>
               <p className="text-xs text-muted-foreground/50 pt-1 italic">{t("embeddings.click_hint")}</p>
             </div>
