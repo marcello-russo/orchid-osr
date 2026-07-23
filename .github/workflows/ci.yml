@@ -97,7 +97,8 @@ jobs:
           script: |
             set -e
             cd ~/OrchID
-            git pull origin main
+            git fetch origin main
+            git reset --hard origin/main
             cd frontend
             npm run build 2>&1
             cd ..
