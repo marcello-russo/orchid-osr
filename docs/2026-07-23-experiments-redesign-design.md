@@ -48,13 +48,17 @@ A 6×4 heatmap: rows = architectures, columns = experiment series.
 │  │DINOv2-B │★ 0.927  │  0.687  │  0.654  │  0.369  │               │
 │  └─────────┴─────────┴─────────┴─────────┴─────────┘               │
 │                                                                     │
-│  OSR Detection Rate:                                                │
-│  ┌─────────┬─────────┬─────────┐                                    │
-│  │         │ Exp 8   │ Exp 10  │                                    │
-│  ├─────────┼─────────┼─────────┤                                    │
-│  │Conv-Tiny│ ★0.907  │  0.566  │                                    │
-│  │DINOv2-B │  0.746  │  0.688  │                                    │
-│  └─────────┴─────────┴─────────┘                                    │
+│  OSR Detection Rate (@10% FPR):                                │
+│  ┌──────────┬─────────┬─────────┐                               │
+│  │          │ Exp 8   │ Exp 10  │                               │
+│  ├──────────┼─────────┼─────────┤                               │
+│  │ResNet-18 │  0.093  │  0.257  │                               │
+│  │ResNet-50 │  0.538  │  0.321  │                               │
+│  │Conv-Tiny │ ★0.907  │  0.566  │                               │
+│  │Conv-Sml  │  0.480  │  0.536  │                               │
+│  │DINOv2-S  │  0.670  │  0.391  │                               │
+│  │DINOv2-B  │  0.746  │  0.688  │                               │
+│  └──────────┴─────────┴─────────┘                               │
 │                                                                     │
 │  [View detail table →]                                              │
 └─────────────────────────────────────────────────────────────────────┘
@@ -72,8 +76,10 @@ A 6×4 heatmap: rows = architectures, columns = experiment series.
 **Implementation:**
 - Custom `<BenchmarkMatrix>` component
 - Rows: 6 architecture labels with color indicators
-- Colored cells using `oklch()` or Tailwind opacity based on F1 value
-- No external chart library needed — pure HTML/CSS grid
+- **Color scale**: each cell's background color interpolates from green (high F1) to red (low F1). Uses `oklch()` with lightness mapped to F1 value.
+- **OSR sub-table**: same 6 rows, separate color scale normalized to OSR value range (0–1).
+- **Navigation**: the component builds a lookup map `{architecture → {experiment → ExperimentSummary}}` from the flat `experiments[]` array. Click on cell at (row_architecture, col_experiment) → find matching experiment ID → navigate to `/experiments/{id}`.
+- No external chart library needed — pure HTML/CSS grid.
 
 ### View 2: Detail Table
 
@@ -136,12 +142,17 @@ When 2+ experiments selected, a collapsible div appears below the table showing 
 
 ## Test
 
-- Matrix shows all 24 experiments in 6×4 grid
+- Matrix shows all 24 experiments in 6×4 grid (6 architectures × 4 experiments)
 - Architecture filter hides/shows rows correctly
 - Experiment filter hides/shows columns correctly
-- OSR table shows only exp8 and exp10
-- Tooltip on hover shows detail
-- Click on cell navigates to detail page
-- Detail table sorts by column click
-- Detail table filters work
-- Compare panel shows inline when 2+ selected
+- OSR sub-table shows all 6 architectures with ncd_auroc values
+- Color scale: higher F1 → greener, lower F1 → redder. OSR values use separate scale.
+- Hover tooltip shows F1 CV, std, test_accuracy
+- Click on cell → navigates to correct experiment detail page
+- Detail table toggles from matrix via button
+- Detail table sorts ascending/descending on column header click
+- Architecture filter dropdown filters rows
+- Experiment series filter dropdown filters rows
+- Checkbox selection (max 4) → compare button activates
+- Inline comparison panel renders CompareModeView
+- Build: `npx tsc --noEmit` + `npm run build` pass without errors
