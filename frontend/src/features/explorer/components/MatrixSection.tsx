@@ -28,7 +28,6 @@ export function MatrixSection({
     const value = exp ? accessor(exp) : null;
     const isBest = value !== null && value === bestPerColumn[col];
     const formattedValue = value !== null ? `${(value * 100).toFixed(1)}%` : "—";
-    const tooltipId = exp ? `tooltip-${variant}-${col}` : undefined;
 
     return (
       <td
@@ -50,22 +49,19 @@ export function MatrixSection({
         tabIndex={exp ? 0 : undefined}
         role={exp ? "button" : undefined}
         aria-label={exp ? `View details: ${exp.name}` : undefined}
-        aria-describedby={tooltipId}
       >
-        <span>{formattedValue}</span>
-        {isBest && <span className="ml-0.5 text-yellow-300" aria-label="best performing architecture">★</span>}
+        <span className={cn(exp && "group-hover:invisible")}>{formattedValue}</span>
+        {isBest && <span className={cn("ml-0.5 text-yellow-300", exp && "group-hover:invisible")} aria-label="best performing architecture">★</span>}
         {exp && (
-          <div id={tooltipId} className="absolute top-full left-1/2 -translate-x-1/2 mt-1 hidden group-hover:block group-focus-within:block z-50 max-w-[220px]">
-            <div className="bg-popover text-popover-foreground text-xs rounded-lg border border-border px-3 py-2 shadow-md">
-              <p className="font-semibold truncate">{exp.name}</p>
-              <p>{tooltipLabel}: {formattedValue}%</p>
-              {value !== null && exp.std_f1 != null && (
-                <p>Std: ±{(exp.std_f1 * 100).toFixed(2)}%</p>
-              )}
-              {exp.test_accuracy != null && (
-                <p>Test Acc: {(exp.test_accuracy * 100).toFixed(2)}%</p>
-              )}
-            </div>
+          <div className="absolute inset-0 hidden group-hover:flex flex-col items-center justify-center z-50 bg-card/95 rounded-lg border border-border text-xs shadow-md px-2">
+            <span className="font-semibold truncate max-w-full">{exp.name}</span>
+            <span>{tooltipLabel}: {formattedValue}</span>
+            {value !== null && exp.std_f1 != null && (
+              <span>Std: ±{(exp.std_f1 * 100).toFixed(2)}%</span>
+            )}
+            {exp.test_accuracy != null && (
+              <span>Test Acc: {(exp.test_accuracy * 100).toFixed(2)}%</span>
+            )}
           </div>
         )}
       </td>
@@ -79,7 +75,7 @@ export function MatrixSection({
           {title}
         </h3>
       )}
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto w-full">
         <table className="w-full text-sm">
           <thead>
             <tr>
