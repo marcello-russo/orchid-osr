@@ -441,13 +441,17 @@ export function ResearchPage() {
 
         {/* ── 6. EXP 8: SPHOR ── */}
         <Section id="exp8" title={t("research.sect_exp8")}>
-          <P>
-            {t("research.exp8_p1_before")}<Cite id="bahavan2026sphor" />{t("research.exp8_p1_mid")}<Cite id="lee2018simple" />{t("research.exp8_p1_mid2")}<Cite id="liu2020energy" />{t("research.exp8_p1_after")}
-          </P>
+          <SubSection title={t("research.exp8_subs_motivazione")}>
+            <P>
+              {t("research.exp8_motivazione_before")}<Cite id="bahavan2026sphor" />{t("research.exp8_motivazione_mid")}<Cite id="lee2018simple" />{t("research.exp8_motivazione_after")}<Cite id="liu2020energy" />{t("research.exp8_motivazione_end")}
+            </P>
+          </SubSection>
 
-          <Callout variant="info" title={t("research.exp8_callout_title")}>
-            {t("research.exp8_callout_body")}
-          </Callout>
+          <SubSection title={t("research.exp8_subs_closedset")}>
+            <P>
+              {t("research.exp8_closedset")}
+            </P>
+          </SubSection>
 
           <DataTable
             columns={[
@@ -469,9 +473,19 @@ export function ResearchPage() {
             caption={t("research.exp8_caption")}
           />
 
-          <Callout variant="success" title={t("research.exp8_winner_callout_title")}>
-            {t("research.exp8_winner_body")}
-          </Callout>
+          <SubSection title={t("research.exp8_subs_openset")}>
+            <P>
+              {t("research.exp8_openset_intro")}
+            </P>
+            <ul className="list-disc list-inside text-muted-foreground space-y-2 text-sm">
+              <li><strong>ConvNeXt-Tiny:</strong> {t("research.exp8_openset_winner")}</li>
+              <li><strong>DINOv2-Base:</strong> {t("research.exp8_openset_dinov2")}</li>
+              <li><strong>ResNet-18:</strong> {t("research.exp8_openset_resnet")}</li>
+            </ul>
+            <P>
+              {t("research.exp8_openset_ensemble")}
+            </P>
+          </SubSection>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Figure
@@ -485,6 +499,12 @@ export function ResearchPage() {
               caption="F1 per specie in Exp 8: O. sphegodes è la più penalizzata; Palena e Exaltata le meno colpite."
             />
           </div>
+
+          <SubSection title={t("research.exp8_subs_species")}>
+            <P>
+              {t("research.exp8_species")}
+            </P>
+          </SubSection>
 
           <P>
             L&apos;analisi del clustering sugli embedding SpHOR conferma che la separazione
