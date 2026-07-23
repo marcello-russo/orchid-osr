@@ -535,13 +535,25 @@ export function ResearchPage() {
 
         {/* ── 7. EXP 10: MGH-NCD ── */}
         <Section id="exp10" title={t("research.sect_exp10")}>
-          <P>
-            {t("research.exp10_p1_before")}<Cite id="zheng2025mgce" />{t("research.exp10_p1_after")}
-          </P>
+          <SubSection title={t("research.exp10_subs_motivazione")}>
+            <P>
+              {t("research.exp10_p1_before")}<Cite id="zheng2025mgce" />{t("research.exp10_p1_after")}
+            </P>
+            <P>
+              {t("research.exp10_disegno")}
+            </P>
+          </SubSection>
 
-          <Callout variant="danger" title={t("research.exp10_callout_title")}>
-            {t("research.exp10_callout_body")}<em>O. sphegodes</em>{t("research.exp10_callout_body_mid")}
-          </Callout>
+          <SubSection title={t("research.exp10_subs_collasso")}>
+            <P>
+              {t("research.exp10_collasso_intro")}
+            </P>
+            <ul className="list-disc list-inside text-muted-foreground space-y-1 text-sm">
+              <li><em>O. exaltata</em>: {t("research.exp10_collasso_exaltata")}</li>
+              <li><em>O. garganica</em>: {t("research.exp10_collasso_garganica")}</li>
+              <li><em>O. sphegodes</em>: {t("research.exp10_collasso_sphegodes")}</li>
+            </ul>
+          </SubSection>
 
           <DataTable
             columns={[
@@ -563,6 +575,16 @@ export function ResearchPage() {
             highlightRow="DINOv2-Base"
             caption={t("research.exp10_caption")}
           />
+
+          <P>
+            {t("research.exp10_risultati")}
+          </P>
+
+          <SubSection title={t("research.exp10_subs_analisi")}>
+            <P>
+              {t("research.exp10_analisi")}
+            </P>
+          </SubSection>
 
           <Figure
             src="/figures/spotlight_exp10_collapse.webp"
@@ -695,28 +717,19 @@ export function ResearchPage() {
           />
         </Section>
 
-        {/* ── 9. CONCLUSIONI ── */}
-        <Section id="conclusioni" title={t("research.sect_conclusioni")}>
+        {/* ── 9. SINTESI E DISCUSSIONE ── */}
+        <Section id="conclusioni" title={t("research.sintesi_title")}>
           <P>
-            {t("research.conclusioni_p1_before")}<em>Ophrys</em>{t("research.conclusioni_p1_after")}
+            {t("research.sintesi_implicazioni")}
+          </P>
+          <P>
+            {t("research.sintesi_necessita")}<Cite id="dai2025apl" /><Cite id="wang2025partgcd" />.
           </P>
 
-          <SubSection title={t("research.subs_conclusioni_contrib")}>
-            <ul className="list-disc list-inside text-muted-foreground space-y-1 text-sm">
-              <li>{t("research.contrib_li1")}<em>Ophrys</em>{t("research.contrib_li1_end")}</li>
-              <li>{t("research.contrib_li2")}</li>
-              <li>{t("research.contrib_li3")}</li>
-              <li>{t("research.contrib_li4")}<em>Ophrys</em>{t("research.contrib_li4_end")}</li>
-            </ul>
-          </SubSection>
-
           <SubSection title={t("research.subs_limiti")}>
-            <ul className="list-disc list-inside text-muted-foreground space-y-1 text-sm">
-              <li>{t("research.limiti_li1")}</li>
-              <li>{t("research.limiti_li2")}</li>
-              <li>{t("research.limiti_li3")}</li>
-              <li>{t("research.limiti_li4")}</li>
-            </ul>
+            <P>
+              {t("research.sintesi_limitazioni")}
+            </P>
           </SubSection>
 
           <SubSection title={t("research.subs_futuri")}>
