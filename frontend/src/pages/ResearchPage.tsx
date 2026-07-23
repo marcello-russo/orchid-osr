@@ -375,9 +375,17 @@ export function ResearchPage() {
 
         {/* ── 5. EXP 7: SUPCON ── */}
         <Section id="exp7" title={t("research.sect_exp7")}>
-          <P>
-            {t("research.exp7_p1_before")}<Cite id="khosla2020supervised" />{t("research.exp7_p1_after")}<Cite id="liu2024novel" /><Cite id="vaze2022gcd" />.
-          </P>
+          <SubSection title={t("research.exp7_subs_motivazione")}>
+            <P>
+              {t("research.exp7_p1_before")}<Cite id="khosla2020supervised" />{t("research.exp7_p1_after")}<Cite id="liu2024novel" />.
+            </P>
+          </SubSection>
+
+          <SubSection title={t("research.exp7_subs_protocollo")}>
+            <P>
+              {t("research.exp7_protocollo")}<Cite id="vaze2022gcd" />.
+            </P>
+          </SubSection>
 
           <DataTable
             columns={[
@@ -398,17 +406,19 @@ export function ResearchPage() {
             caption={t("research.exp7_caption")}
           />
 
-          <Callout variant="success" title={t("research.exp7_callout_title")}>
-            {t("research.exp7_callout_body")}<em>O. sphegodes Palena</em>{t("research.exp7_callout_body_end")}<em>O. majellensis</em>{t("research.exp7_callout_body_end2")}
-          </Callout>
-
-          <Callout variant="danger" title={t("research.exp7_osr_callout_title")}>
-            {t("research.exp7_osr_body")}
-          </Callout>
-
           <P>
-            {t("research.exp7_overfitting")}
+            {t("research.exp7_risultati")}
           </P>
+
+          <Callout variant="info" title={t("research.exp7_overfitting_title")}>
+            {t("research.exp7_overfitting_detail")}
+          </Callout>
+
+          <SubSection title={t("research.exp7_subs_embedding_osr")}>
+            <P>
+              {t("research.exp7_embedding_osr")}
+            </P>
+          </SubSection>
 
           <Figure
             src="/figures/cv_test_gap.webp"
