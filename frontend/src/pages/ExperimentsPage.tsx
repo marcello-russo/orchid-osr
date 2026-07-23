@@ -67,7 +67,7 @@ export function ExperimentsPage() {
     });
   }, [experiments, familyFilter, seriesFilter]);
 
-  const { key, dir, toggle, sorted } = useSort<ExperimentSummary, SortKey>(filtered, "id");
+  const { key, dir, toggle, sorted } = useSort<ExperimentSummary, SortKey>(filtered, "mean_f1", "desc");
 
   const toggleSelect = useCallback((id: string) => {
     setSelected((prev) => {

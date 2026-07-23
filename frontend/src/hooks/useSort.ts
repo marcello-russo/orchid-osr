@@ -19,10 +19,10 @@ function sortReducer<K>(state: SortState<K>, action: SortAction<K>): SortState<K
   return { key: action.key, dir: "asc" };
 }
 
-export function useSort<T, K extends keyof T>(items: T[], defaultKey: K) {
+export function useSort<T, K extends keyof T>(items: T[], defaultKey: K, defaultDir: SortDir = "asc") {
   const [state, dispatch] = useReducer(sortReducer<K>, {
     key: defaultKey,
-    dir: "asc",
+    dir: defaultDir,
   });
 
   const sorted = useMemo(() => {
