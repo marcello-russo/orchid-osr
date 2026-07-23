@@ -27,7 +27,7 @@ export function MatrixSection({
     const exp = lookup[variant]?.[col];
     const value = exp ? accessor(exp) : null;
     const isBest = value !== null && value === bestPerColumn[col];
-    const formattedValue = value !== null ? `${(value * 100).toFixed(1)}` : "—";
+    const formattedValue = value !== null ? `${(value * 100).toFixed(1)}%` : "—";
     const tooltipId = exp ? `tooltip-${variant}-${col}` : undefined;
 
     return (
@@ -55,9 +55,9 @@ export function MatrixSection({
         <span>{formattedValue}</span>
         {isBest && <span className="ml-0.5 text-yellow-300" aria-label="best performing architecture">★</span>}
         {exp && (
-          <div id={tooltipId} className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block group-focus-within:block z-50">
-            <div className="bg-popover text-popover-foreground text-xs rounded-lg border border-border px-3 py-2 shadow-md whitespace-nowrap">
-              <p className="font-semibold">{exp.name}</p>
+          <div id={tooltipId} className="absolute top-full left-1/2 -translate-x-1/2 mt-1 hidden group-hover:block group-focus-within:block z-50 max-w-[220px]">
+            <div className="bg-popover text-popover-foreground text-xs rounded-lg border border-border px-3 py-2 shadow-md">
+              <p className="font-semibold truncate">{exp.name}</p>
               <p>{tooltipLabel}: {formattedValue}%</p>
               {value !== null && exp.std_f1 != null && (
                 <p>Std: ±{(exp.std_f1 * 100).toFixed(2)}%</p>
