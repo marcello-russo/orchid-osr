@@ -733,6 +733,14 @@
     "risultati_li2_mid": " + SpHOR (detection rate 0.907) — first demonstration of working OSR in ultra-FGVC.",
     "risultati_li3": "SpHOR trade-off: average closed-set F1 drop of 0.12, but detection rate from 0.0 (SupCon) to 0.907 (SpHOR). Acceptable trade-off for open environments.",
     "risultati_li4": "MGH-NCD failure: collapse to Palena. Multi-granularity is counterproductive when intrinsic granularity is already at maximum.",
-    "risultati_li5": "Negative result: unsupervised discovery of new species in ultra-FGVC is not solvable with current methods (NMI = 0.16–0.19)."
+    "risultati_li5": "Negative result: unsupervised discovery of new species in ultra-FGVC is not solvable with current methods (NMI = 0.16–0.19).",
+    "exp6_subs_motivazione": "Motivation and Design",
+    "exp6_training": "All six architectures were trained for a maximum of 150 epochs with patience 15 for early stopping, using the recipes defined in the configuration table.",
+    "exp6_risultati_before": "The table reports the F1 scores. DINOv2-Base achieved the highest test F1 (0.9271), followed by ConvNeXt-Tiny (0.8902) and DINOv2-Small (0.8883). The negative CV-Test gap observed for ConvNeXt and DINOv2-Small indicates moderate overfitting. Conversely, ResNet-18 and ResNet-50 show a positive gap, a pattern consistent with the ",
+    "exp6_risultati_mid": " phenomenon: with approximately 2,200 training samples, ResNets (11–25M parameters) operate in the over-parameterized regime where generalization improves with model size, while ConvNeXt-Small (50M parameters) lies closer to the interpolation threshold where overfitting is more severe.",
+    "exp6_risultati_after": "The gap tends to increase with model parameters for the ConvNeXt and DINOv2 families, while ResNets show stable or positive generalization thanks to the implicit regularization of batch normalization.",
+    "exp6_subs_embedding": "Embedding Space Analysis",
+    "exp6_embedding": "The t-SNE projection of DINOv2-Small embeddings reveals that CE produces a poorly structured latent space. Although species are approximately separable, considerable overlap is observed between morphologically similar taxa — particularly between O. sphegodes and O. garganica, which belong to the same taxonomic complex. This lack of geometric structure is intrinsic to the softmax objective: the model has no incentive to organize the latent space beyond what is necessary for classification, producing representations inadequate for open-set recognition.",
+    "exp6_fig_cv_gap": "Generalization gap (Test F1 − CV F1) as a function of model parameters. Positive values indicate the model generalizes beyond the cross-validation estimate; negative values indicate overfitting. Modern architectures (ConvNeXt, DINOv2) show larger gaps than ResNets, consistent with the double descent phenomenon."
   }
 }

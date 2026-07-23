@@ -732,6 +732,14 @@
     "risultati_li2_mid": " + SpHOR (detection rate 0,907) — prima dimostrazione di OSR funzionante in ultra-FGVC.",
     "risultati_li3": "Compromesso SpHOR: calo medio F1 closed-set di 0,12, ma detection rate da 0,0 (SupCon) a 0,907 (SpHOR). Trade-off accettabile per ambienti aperti.",
     "risultati_li4": "Fallimento MGH-NCD: collasso a Palena. La multi-granularità è controproducente quando la granularità intrinseca è già al massimo.",
-    "risultati_li5": "Risultato negativo: la scoperta non supervisionata di nuove specie in ultra-FGVC non è risolvibile con i metodi attuali (NMI = 0,16–0,19)."
+    "risultati_li5": "Risultato negativo: la scoperta non supervisionata di nuove specie in ultra-FGVC non è risolvibile con i metodi attuali (NMI = 0,16–0,19).",
+    "exp6_subs_motivazione": "Motivazione e Disegno",
+    "exp6_training": "Tutte e sei le architetture sono state addestrate per un massimo di 150 epoche con pazienza 15 per l'early stopping, utilizzando le ricette definite nella tabella delle configurazioni.",
+    "exp6_risultati_before": "La tabella riporta i punteggi F1. DINOv2-Base ha raggiunto il F1 test più alto (0,9271), seguito da ConvNeXt-Tiny (0,8902) e DINOv2-Small (0,8883). Il gap CV-Test negativo osservato per ConvNeXt e DINOv2-Small indica un moderato overfitting. Al contrario, ResNet-18 e ResNet-50 mostrano un gap positivo, un pattern coerente con il fenomeno della ",
+    "exp6_risultati_mid": ": con circa 2.200 campioni di training, le ResNet (11–25M parametri) operano nel regime sovra-parametrizzato in cui la generalizzazione migliora con la dimensione del modello, mentre ConvNeXt-Small (50M parametri) si trova più vicino alla soglia di interpolazione dove l'overfitting è più severo.",
+    "exp6_risultati_after": "Il gap tende ad aumentare con i parametri del modello per le famiglie ConvNeXt e DINOv2, mentre le ResNet mostrano una generalizzazione stabile o positiva grazie alla regolarizzazione implicita della batch normalization.",
+    "exp6_subs_embedding": "Analisi dello Spazio degli Embedding",
+    "exp6_embedding": "La proiezione t-SNE degli embedding di DINOv2-Small rivela che la CE produce uno spazio latente scarsamente strutturato. Sebbene le specie siano approssimativamente separabili, si osserva una considerevole sovrapposizione tra taxa morfologicamente simili — in particolare tra O. sphegodes e O. garganica, che appartengono allo stesso complesso tassonomico. Questa mancanza di struttura geometrica è intrinseca all'obiettivo softmax: il modello non è incentivato a organizzare lo spazio latente oltre quanto necessario per la classificazione, producendo rappresentazioni inadeguate per il riconoscimento open-set.",
+    "exp6_fig_cv_gap": "Generalization gap (Test F1 − CV F1) as a function of model parameters. Positive values indicate the model generalizes beyond the cross-validation estimate; negative values indicate overfitting. Modern architectures (ConvNeXt, DINOv2) show larger gaps than ResNets, consistent with the double descent phenomenon."
   }
 }
