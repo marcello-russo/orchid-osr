@@ -482,12 +482,6 @@ export function ResearchPage() {
             </P>
           </SubSection>
 
-          <Figure
-            src="/figures/angular_separability-2026.webp"
-            alt="Angular separability"
-            caption="Confronto della separabilità angolare tra SupCon (Exp 7) e SpHOR (Exp 8) per ConvNeXt-Tiny. Le prime due matrici mostrano la similarità coseno tra i prototipi delle sei specie (diagonale mascherata). La terza matrice (destra) mostra la differenza SpHOR − SupCon: valori positivi (rossi) indicano similarità aumentata, negativi (blu) similarità ridotta. La predominanza di blu nella terza matrice indica che SpHOR riduce la similarità tra classi diverse, migliorando la separazione angolare."
-          />
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Figure
               src="/figures/spotlight_convnext_osr.webp"
