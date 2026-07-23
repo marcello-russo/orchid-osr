@@ -80,12 +80,15 @@ jobs:
       - run: npm run build
 
   deploy:
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     needs: [backend, docker, frontend]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
+      - name: Skip deploy on non-main
+        if: github.ref != 'refs/heads/main' || github.event_name != 'push'
+        run: echo "Deploy skipped (non-main branch > exit 0)"
       - name: Deploy to VPS
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ secrets.VPS_HOST }}

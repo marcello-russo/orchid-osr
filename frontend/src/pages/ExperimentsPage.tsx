@@ -1,169 +1,229 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useMemo, useCallback } from "react";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { FlaskConical, ArrowRight } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { FlaskConical, Table2, Grid3X3, AlertCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useExperiments } from "@/features/explorer/hooks/useExperiments";
+import { BenchmarkMatrix } from "@/features/explorer/components/BenchmarkMatrix";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useExperiments } from "@/features/explorer/hooks/useExperiments";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
+import {
+  getArchitectureFamily, getExperimentSeries, getArchitectureLabel,
+  FAMILY_COLORS,
+} from "@/features/explorer/types";
+import { useSort } from "@/hooks/useSort";
+import { SortHeader } from "@/components/ui/SortHeader";
+import type { ExperimentSummary } from "@/lib/types";
+
+const SORTABLE_COLUMNS = [
+  { key: "id", labelKey: "experiments.table.experiment" },
+  { key: "model_variant", labelKey: "experiments.table.model" },
+  { key: "mean_f1", label: "F1", align: "right" },
+  { key: "test_accuracy", labelKey: "experiments.table.test_acc", align: "right" },
+  { key: "ncd_auroc", label: "NCD AUROC", align: "right" },
+] as const;
+
+type Col = typeof SORTABLE_COLUMNS[number];
+type SortKey = Col["key"];
+
+function colLabel(col: Col, t: (k: string) => string): string {
+  if ("label" in col) return col.label;
+  return t(col.labelKey);
+}
+
+function colAlign(col: Col): "left" | "right" | undefined {
+  return "align" in col ? col.align : undefined;
+}
+
+const ALL_FAMILIES = ["ResNet", "ConvNeXt", "DINOv2"] as const;
+const ALL_SERIES = ["Exp 6", "Exp 7", "Exp 8", "Exp 10"] as const;
 
 export function ExperimentsPage() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
-  const { data: experiments, isLoading } = useExperiments();
-  const [filter, setFilter] = useState<"all" | "kfold" | "baseline">("all");
+  const { data: experiments, isLoading, isError, error, refetch } = useExperiments();
+
+  const [view, setView] = useState<"matrix" | "table">("matrix");
+  const [familyFilter, setFamilyFilter] = useState<string | null>(null);
+  const [seriesFilter, setSeriesFilter] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
-  const filtered = (experiments ?? []).filter(
-    (e) => filter === "all" || e.type === filter
-  );
+  const filtered = useMemo(() => {
+    if (!experiments) return [];
+    return experiments.filter((e) => {
+      if (e.id.includes("exp9")) return false;
+      if (familyFilter) {
+        const fam = getArchitectureFamily(e.model_variant);
+        if (fam !== familyFilter) return false;
+      }
+      if (seriesFilter) {
+        const ser = getExperimentSeries(e.id);
+        if (ser !== seriesFilter) return false;
+      }
+      return true;
+    });
+  }, [experiments, familyFilter, seriesFilter]);
 
-  const toggle = (id: string) => {
+  const { key, dir, toggle, sorted } = useSort<ExperimentSummary, SortKey>(filtered, "id");
+
+  const toggleSelect = useCallback((id: string) => {
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else if (next.size < 4) next.add(id);
       return next;
     });
-  };
+  }, []);
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto px-4 md:px-12 animate-in fade-in duration-700">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-4">
-          <div className="size-10 md:size-12 rounded-2xl bg-purple-500/10 flex items-center justify-center shrink-0 text-purple-500">
-            <FlaskConical className="size-6" />
-          </div>
-          <div>
-            <h1 className="text-2xl md:text-4xl font-black tracking-tight">{t("experiments.title")}</h1>
-            <p className="text-muted-foreground text-sm mt-1">{t("experiments.subtitle")}</p>
-          </div>
+      <div className="flex items-center gap-4">
+        <div className="size-10 md:size-12 rounded-2xl bg-purple-500/10 flex items-center justify-center shrink-0 text-purple-500">
+          <FlaskConical className="size-6" />
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {(["all", "kfold", "baseline"] as const).map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={cn(
-                "rounded-lg px-4 py-2 text-sm font-medium transition-colors duration-150 cursor-pointer",
-                filter === f
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground bg-muted/50 hover:bg-muted"
-              )}
-            >
-              {t(`experiments.filters.${f}`)}
-            </button>
-          ))}
-          {selected.size >= 2 && (
-            <Button
-              size="sm"
-              onClick={() => {
-                navigate(`/compare?ids=${Array.from(selected).join(",")}`);
-              }}
-            >
-              Compare ({selected.size}) <ArrowRight className="ml-1 size-4" />
-            </Button>
-          )}
+        <div>
+          <h1 className="text-2xl md:text-4xl font-black tracking-tight">{t("experiments.title")}</h1>
+          <p className="text-muted-foreground text-sm mt-1">{t("experiments.subtitle")}</p>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-3 items-center justify-between">
+        <div className="flex gap-2">
+          <Button variant={view === "matrix" ? "default" : "outline"} size="sm" onClick={() => setView("matrix")} aria-pressed={view === "matrix"}>
+            <Grid3X3 className="size-4 mr-1" /> {t("experiments.view_matrix")}
+          </Button>
+          <Button variant={view === "table" ? "default" : "outline"} size="sm" onClick={() => setView("table")} aria-pressed={view === "table"}>
+            <Table2 className="size-4 mr-1" /> {t("experiments.view_table")}
+          </Button>
+        </div>
+        <div className="flex flex-wrap gap-2 items-center">
+          <select value={familyFilter ?? ""} onChange={(e) => setFamilyFilter(e.target.value || null)}
+            className="text-xs bg-card border border-border/50 rounded-lg px-2.5 py-1.5 text-foreground cursor-pointer appearance-auto">
+            <option value="">{t("experiments.filters.all_architectures")}</option>
+            {ALL_FAMILIES.map((f) => <option key={f} value={f}>{f}</option>)}
+          </select>
+          <select value={seriesFilter ?? ""} onChange={(e) => setSeriesFilter(e.target.value || null)}
+            className="text-xs bg-card border border-border/50 rounded-lg px-2.5 py-1.5 text-foreground cursor-pointer appearance-auto">
+            <option value="">{t("experiments.filters.all_experiments")}</option>
+            {ALL_SERIES.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
         </div>
       </div>
 
       {isLoading ? (
-        <div className="space-y-2">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-12 w-full rounded-lg" />
-          ))}
+        <div className="space-y-3">
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-8 w-full" />
         </div>
-      ) : filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-          <FlaskConical className="mb-3 size-10 opacity-30" />
-          <p className="text-sm">{t("common.error")}</p>
+      ) : isError ? (
+        <div className="text-center py-20 text-muted-foreground">
+          <AlertCircle className="size-12 mx-auto mb-4 opacity-30 text-destructive" />
+          <p className="text-destructive font-medium">{t("common.error")}</p>
+          {error instanceof Error && (
+            <p className="text-xs mt-2 text-muted-foreground max-w-md mx-auto">{error.message}</p>
+          )}
+          <Button variant="outline" size="sm" className="mt-4" onClick={() => refetch()}>
+            {t("common.retry")}
+          </Button>
         </div>
+      ) : !experiments || experiments.length === 0 ? (
+        <div className="text-center py-20 text-muted-foreground">
+          <FlaskConical className="size-12 mx-auto mb-4 opacity-30" />
+          <p>{t("experiments.empty")}</p>
+        </div>
+      ) : view === "matrix" ? (
+        <BenchmarkMatrix
+          experiments={experiments}
+          familyFilter={familyFilter}
+          seriesFilter={seriesFilter}
+        />
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-10">
-                  <span className="sr-only">Select</span>
-                </TableHead>
-                <TableHead>{t("experiments.table.experiment")}</TableHead>
-                <TableHead>{t("experiments.table.model")}</TableHead>
-                <TableHead>{t("experiments.table.type")}</TableHead>
-                <TableHead className="text-right">{t("experiments.table.f1")}</TableHead>
-                <TableHead className="text-right">{t("experiments.table.test_acc")}</TableHead>
-                <TableHead className="text-right">{t("experiments.table.folds")}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map((exp) => {
-                const isSelected = selected.has(exp.id);
-                return (
-                  <TableRow
-                    key={exp.id}
-                    className={cn(
-                      "transition-colors duration-150 cursor-pointer",
-                      isSelected && "bg-primary/5"
-                    )}
-                    onClick={() => toggle(exp.id)}
-                  >
-                    <TableCell className="w-10">
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => toggle(exp.id)}
-                        className="accent-primary size-4 cursor-pointer"
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      <Link
-                        to={`/experiments/${exp.id}`}
-                        className="text-primary hover:underline"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {exp.name}
-                      </Link>
-                    </TableCell>
-                    <TableCell className="font-mono text-sm">
-                      {exp.model_variant ?? "—"}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={exp.type === "kfold" ? "default" : "secondary"}
-                        className={cn(
-                          "text-xs",
-                          exp.type === "kfold" && "bg-primary/10 text-primary"
+        <>
+          <div className="rounded-lg border border-border overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-10">
+                    <div className="size-4" aria-hidden="true" />
+                    <span className="sr-only">{t("experiments.table.select")}</span>
+                  </TableHead>
+                  {SORTABLE_COLUMNS.map((col) => (
+                    <SortHeader
+                      key={col.key}
+                      label={colLabel(col, t)}
+                      sortKey={col.key}
+                      activeKey={key}
+                      dir={dir}
+                      onToggle={toggle}
+                      align={colAlign(col)}
+                    />
+                  ))}
+                  <TableHead className="text-right">{t("experiments.table.folds")}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {sorted.map((exp) => {
+                  const family = getArchitectureFamily(exp.model_variant);
+                  const series = getExperimentSeries(exp.id);
+                  return (
+                    <TableRow key={exp.id} className={cn(selected.has(exp.id) && "bg-primary/5")}>
+                      <TableCell>
+                        <input type="checkbox" checked={selected.has(exp.id)}
+                          onChange={() => toggleSelect(exp.id)} />
+                      </TableCell>
+                      <TableCell>
+                        <Link to={`/experiments/${exp.id}`} className="text-primary hover:underline font-medium text-sm">
+                          {series ? `${series}: ` : ""}{exp.name}
+                        </Link>
+                        {exp.is_ncd && <Badge variant="secondary" className="ml-2 text-[10px]">NCD</Badge>}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {family && (
+                            <span className="inline-block size-2.5 rounded-full shrink-0"
+                              style={{ backgroundColor: FAMILY_COLORS[family] }} />
+                          )}
+                          <span className="font-mono text-sm">{getArchitectureLabel(exp.model_variant)}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-sm tabular-nums">
+                        {exp.mean_f1 != null ? `${(exp.mean_f1 * 100).toFixed(2)}%` : "—"}
+                        {exp.std_f1 != null && (
+                          <span className="text-muted-foreground text-xs ml-1">
+                            ±{(exp.std_f1 * 100).toFixed(2)}%
+                          </span>
                         )}
-                      >
-                        {exp.type}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right font-mono">
-                      {exp.mean_f1 !== null
-                        ? `${(exp.mean_f1 * 100).toFixed(2)}%`
-                        : "—"}
-                    </TableCell>
-                    <TableCell className="text-right font-mono">
-                      {exp.test_accuracy !== null
-                        ? `${(exp.test_accuracy * 100).toFixed(2)}%`
-                        : "—"}
-                    </TableCell>
-                    <TableCell className="text-right">{exp.folds_completed != null ? `${exp.folds_completed}/${exp.num_folds ?? "?"}` : "—"}</TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-sm tabular-nums">
+                        {exp.test_accuracy != null ? `${(exp.test_accuracy * 100).toFixed(2)}%` : "—"}
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-sm tabular-nums">
+                        {exp.ncd_auroc != null ? `${(exp.ncd_auroc * 100).toFixed(2)}%` : "—"}
+                      </TableCell>
+                      <TableCell className="text-right text-sm text-muted-foreground">
+                        {exp.folds_completed ?? "—"}/{exp.num_folds ?? "—"}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+          {selected.size >= 2 && (
+            <div className="flex justify-center">
+              <Link
+                to={`/compare?ids=${Array.from(selected).join(",")}`}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+              >
+                {t("experiments.compare")} ({selected.size})
+              </Link>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
