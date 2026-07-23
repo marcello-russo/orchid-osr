@@ -98,7 +98,14 @@
     "filters": {
       "all": "Tutti",
       "kfold": "K-Fold",
-      "baseline": "Baseline"
+      "baseline": "Baseline",
+      "all_architectures": "Tutte le architetture",
+      "all_experiments": "Tutti gli esperimenti"
+    },
+    "matrix": {
+      "osr_title": "Tasso di Rilevamento OSR (@10% FPR)",
+      "f1_tooltip": "F1 CV",
+      "auroc_tooltip": "AUROC"
     },
     "table": {
       "experiment": "Esperimento",
@@ -106,8 +113,13 @@
       "f1": "Mean F1",
       "type": "Tipo",
       "test_acc": "Test Acc",
-      "folds": "Fold"
-    }
+      "folds": "Fold",
+      "select": "Seleziona esperimenti da confrontare"
+    },
+    "empty": "Nessun esperimento trovato",
+    "compare": "Confronta",
+    "view_matrix": "Matrix",
+    "view_table": "Tabella"
   },
   "experiment_detail": {
     "back_to_experiments": "Torna agli esperimenti",

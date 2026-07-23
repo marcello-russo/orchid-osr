@@ -37,3 +37,54 @@ export function foldToEpochPoints(fold: FoldData): EpochPoint[] {
   }
   return points;
 }
+
+// --- Experiments page redesign helpers ---
+
+export type ArchitectureFamily = "ResNet" | "ConvNeXt" | "DINOv2";
+export type ExperimentSeries = "Exp 6" | "Exp 7" | "Exp 8" | "Exp 10";
+
+const FAMILY_MAP: Record<string, ArchitectureFamily> = {
+  resnet18: "ResNet", resnet50: "ResNet",
+  convnext_tiny: "ConvNeXt", convnext_small: "ConvNeXt",
+  dinov2_small: "DINOv2", dinov2_base: "DINOv2",
+};
+
+const SERIES_MAP: Record<string, ExperimentSeries> = {
+  exp6: "Exp 6", exp7: "Exp 7", exp8: "Exp 8", exp10: "Exp 10",
+};
+
+export function getArchitectureFamily(variant: string | null): ArchitectureFamily | null {
+  return variant ? (FAMILY_MAP[variant] ?? null) : null;
+}
+
+export function getExperimentSeries(id: string): ExperimentSeries | null {
+  const prefix = id.split("_")[0];
+  return SERIES_MAP[prefix] ?? null;
+}
+
+export const FAMILY_COLORS: Record<ArchitectureFamily, string> = {
+  ResNet: "#3B82F6",
+  ConvNeXt: "#D97706",
+  DINOv2: "#8B5CF6",
+};
+
+export const ARCHITECTURE_ORDER = [
+  "ResNet-18", "ResNet-50",
+  "ConvNeXt-Tiny", "ConvNeXt-Small",
+  "DINOv2-Small", "DINOv2-Base",
+];
+
+export function getArchitectureLabel(variant: string | null): string {
+  const map: Record<string, string> = {
+    resnet18: "ResNet-18", resnet50: "ResNet-50",
+    convnext_tiny: "ConvNeXt-Tiny", convnext_small: "ConvNeXt-Small",
+    dinov2_small: "DINOv2-Small", dinov2_base: "DINOv2-Base",
+  };
+  return variant ? (map[variant] ?? variant) : "—";
+}
+
+export const LABEL_TO_VARIANT: Readonly<Record<string, string>> = {
+  "ResNet-18": "resnet18", "ResNet-50": "resnet50",
+  "ConvNeXt-Tiny": "convnext_tiny", "ConvNeXt-Small": "convnext_small",
+  "DINOv2-Small": "dinov2_small", "DINOv2-Base": "dinov2_base",
+};

@@ -98,7 +98,14 @@
     "filters": {
       "all": "All",
       "kfold": "K-Fold",
-      "baseline": "Baseline"
+      "baseline": "Baseline",
+      "all_architectures": "All architectures",
+      "all_experiments": "All experiments"
+    },
+    "matrix": {
+      "osr_title": "OSR Detection Rate (@10% FPR)",
+      "f1_tooltip": "F1 CV",
+      "auroc_tooltip": "AUROC"
     },
     "table": {
       "experiment": "Experiment",
@@ -106,8 +113,13 @@
       "f1": "Mean F1",
       "type": "Type",
       "test_acc": "Test Acc",
-      "folds": "Folds"
-    }
+      "folds": "Folds",
+      "select": "Select experiments to compare"
+    },
+    "empty": "No experiments found",
+    "compare": "Compare",
+    "view_matrix": "Matrix",
+    "view_table": "Table"
   },
   "experiment_detail": {
     "back_to_experiments": "Back to experiments",
