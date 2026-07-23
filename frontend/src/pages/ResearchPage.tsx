@@ -485,7 +485,7 @@ export function ResearchPage() {
           <Figure
             src="/figures/angular_separability-2026.webp"
             alt="Angular separability"
-            caption="Confronto della separabilità angolare tra SupCon (Exp 7) e SpHOR (Exp 8). La matrice mostra la similarità coseno tra i prototipi delle sei specie nello spazio normalizzato L2. Valori alti (rosso) indicano specie vicine sulla sfera unitaria, valori bassi (blu) indicano specie ben separate. SpHOR produce una matrice più diagonale, con minore similarità tra classi diverse, grazie alla loss di repulsione ortogonale."
+            caption="Confronto della separabilità angolare tra SupCon (Exp 7) e SpHOR (Exp 8) per ConvNeXt-Tiny. Il grafico mostra per ogni specie la similarità coseno con la classe più vicina nello spazio normalizzato L2. Valori più bassi indicano migliore separazione angolare. SpHOR riduce la similarità con la classe più vicina per Exaltata, Sphegodes e Palena (frecce verdi ↓), dimostrando l'effetto della loss di repulsione ortogonale. Le specie Garganica e Incubacea rimangono fortemente sovrapposte (0.985), evidenziando la difficoltà intrinseca dell'ultra-FGVC."
           />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
