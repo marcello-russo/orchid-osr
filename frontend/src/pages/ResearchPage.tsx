@@ -180,11 +180,6 @@ export function ResearchPage() {
               {t("research.contesto_p4_before")}<em>O. exaltata</em>, <em>O. garganica</em>, <em>O. incubacea</em>, <em>O. majellensis</em>, <em>O. sphegodes</em> e <em>O. sphegodes</em> Palena{t("research.contesto_p4_after")}
             </P>
           </SubSection>
-          <Figure
-            src="/figures/angular_separability.webp"
-            alt="Separabilità angolare"
-            caption={t("research.contesto_fig_caption")}
-          />
         </Section>
 
         {/* ── 2. DATASET ── */}
@@ -486,6 +481,12 @@ export function ResearchPage() {
               {t("research.exp8_openset_ensemble")}
             </P>
           </SubSection>
+
+          <Figure
+            src="/figures/angular_separability.webp"
+            alt="Angular separability"
+            caption="Confronto della separabilità angolare tra SupCon (Exp 7) e SpHOR (Exp 8). La matrice mostra la similarità coseno tra i prototipi delle sei specie nello spazio normalizzato L2. Valori alti (rosso) indicano specie vicine sulla sfera unitaria, valori bassi (blu) indicano specie ben separate. SpHOR produce una matrice più diagonale, con minore similarità tra classi diverse, grazie alla loss di repulsione ortogonale."
+          />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Figure
