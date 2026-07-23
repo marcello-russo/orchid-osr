@@ -318,9 +318,14 @@ export function ResearchPage() {
 
         {/* ── 4. EXP 6: CE ── */}
         <Section id="exp6" title={t("research.sect_exp6")}>
-          <P>
-            {t("research.exp6_p1_before")}<Cite id="geng2020openset" />.
-          </P>
+          <SubSection title={t("research.exp6_subs_motivazione")}>
+            <P>
+              {t("research.exp6_p1_before")}<Cite id="geng2020openset" />.
+            </P>
+            <P>
+              {t("research.exp6_training")}
+            </P>
+          </SubSection>
 
           <DataTable
             columns={[
@@ -342,19 +347,30 @@ export function ResearchPage() {
             caption={t("research.exp6_caption")}
           />
 
-          <Callout variant="success" title={t("research.exp6_callout_title")}>
-            {t("research.exp6_callout_body_before")}<Cite id="oquab2024dinov2" />{t("research.exp6_callout_body_after")}
-          </Callout>
-
           <P>
-            {t("research.exp6_p2_before")}<em>double descent</em>{t("research.exp6_p2_mid")}<Cite id="ioffe2015batchnorm" />{t("research.exp6_p2_after")}
+            {t("research.exp6_risultati_before")}<em>double descent</em>{t("research.exp6_risultati_mid")}
           </P>
+          <P>
+            {t("research.exp6_risultati_after")}
+          </P>
+
+          <Figure
+            src="/figures/cv_test_gap.webp"
+            alt="Generalization gap"
+            caption={t("research.exp6_fig_cv_gap")}
+          />
 
           <Figure
             src="/figures/loss_curves_exp6_dinov2b.webp"
             alt="Loss curves DINOv2-B Exp 6"
             caption={t("research.exp6_fig_caption")}
           />
+
+          <SubSection title={t("research.exp6_subs_embedding")}>
+            <P>
+              {t("research.exp6_embedding")}<Cite id="vaze2022gcd" />.
+            </P>
+          </SubSection>
         </Section>
 
         {/* ── 5. EXP 7: SUPCON ── */}
