@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import React from "react";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (k: string) => k }),
@@ -12,7 +13,7 @@ vi.mock("react-router-dom", () => ({
 }));
 
 vi.mock("react-dom", () => ({
-  createPortal: (content: any) => content,
+  createPortal: (content: React.ReactNode) => content,
 }));
 
 import { MatrixSection } from "../components/MatrixSection";
