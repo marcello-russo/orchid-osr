@@ -10,18 +10,15 @@ interface CitationPopoverProps {
 export function CitationPopover({ paper, onClose }: CitationPopoverProps) {
   const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState<{ top: number; left: number; width: number } | null>(null);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
 
   const updatePos = useCallback(() => {
     const sup = document.getElementById(`cite-${paper.id}`);
-    const container = document.querySelector(".research-content");
-    if (!sup || !container) return;
+    if (!sup) return;
     const supRect = sup.getBoundingClientRect();
-    const contRect = container.getBoundingClientRect();
     setPos({
       top: supRect.bottom + 4,
-      left: contRect.left,
-      width: contRect.width,
+      left: Math.max(8, supRect.left - 8),
     });
   }, [paper.id]);
 
@@ -55,8 +52,8 @@ export function CitationPopover({ paper, onClose }: CitationPopoverProps) {
   return (
     <div
       ref={ref}
-      style={{ position: "fixed", top: pos.top, left: pos.left, width: pos.width }}
-      className="bg-card border border-border rounded-lg p-4 shadow-lg z-50 animate-in fade-in duration-200"
+      style={{ position: "fixed", top: pos.top, left: pos.left }}
+      className="bg-card border border-border rounded-lg p-4 shadow-lg z-50 animate-in fade-in duration-200 w-auto max-w-md"
     >
       <p className="text-sm font-medium">
         {paper.authors} ({paper.year})

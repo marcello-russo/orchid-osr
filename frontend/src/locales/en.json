@@ -114,7 +114,8 @@
       "type": "Type",
       "test_acc": "Test Acc",
       "folds": "Folds",
-      "select": "Select experiments to compare"
+      "select": "Select experiments to compare",
+      "ncd_auroc": "NCD AUROC"
     },
     "empty": "No experiments found",
     "compare": "Compare",
