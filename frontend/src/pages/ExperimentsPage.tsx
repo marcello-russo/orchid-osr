@@ -31,7 +31,6 @@ type Col = typeof SORTABLE_COLUMNS[number];
 type SortKey = Col["key"];
 
 function colLabel(col: Col, t: (k: string) => string): string {
-  if ("label" in col) return col.label;
   return t(col.labelKey);
 }
 
