@@ -46,8 +46,13 @@ async def get_embeddings(
     else:
         dirs = sorted(d for d in exp_dir.glob("exp*/embeddings/metadata.json") if "exp9_ncd" not in str(d))
         if not dirs:
-            raise HTTPException(
-                status_code=404, detail="No embeddings found. Train a model first or specify an experiment."
+            return EmbeddingResponse(
+                experiment="",
+                method="tsne_3d",
+                dimension=3,
+                total_points=0,
+                species=[],
+                points=[],
             )
         exp_dir = dirs[-1].parent
 

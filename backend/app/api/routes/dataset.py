@@ -9,6 +9,7 @@ from fastapi.responses import FileResponse, Response
 from PIL import Image
 
 from app.api.deps import require_role
+from app.api.routes.species import _count_species_files, _get_dataset_dirs
 from app.api.schemas import ClassImagesResponse, DatasetClassesResponse, DatasetClassInfo, DatasetImage
 from app.config import settings
 
@@ -94,7 +95,7 @@ async def list_classes(user=Depends(require_role("user"))):
                     if not class_dir.is_dir():
                         continue
                     cn = class_dir.name
-                    if any(c["name"] == cn for c in classes):
+                    if any(c.name == cn for c in classes):
                         continue
                     train_count = len(list((train_dir / cn).iterdir())) if (train_dir / cn).is_dir() else 0
                     test_count = len(list((test_dir / cn).iterdir())) if (test_dir / cn).is_dir() else 0
@@ -240,3 +241,41 @@ async def serve_image(
         return FileResponse(file_path, media_type=media_type)
 
     return await _hf_proxy(class_name, filename)
+
+
+@router.get("/summary")
+async def dataset_summary():
+    """Summary of the dataset: total species and total images."""
+    dataset_dirs = _get_dataset_dirs()
+    valid = set(settings.class_names) | {settings.novel_class_name}
+    all_species: dict[str, int] = {}
+    for d in dataset_dirs:
+        species_counts = await run_in_threadpool(_count_species_files, d)
+        for name, count in species_counts.items():
+            if name in valid:
+                all_species[name] = all_species.get(name, 0) + count
+    return {"total_species": len(all_species), "total_images": sum(all_species.values())}
+
+
+@router.get("/gallery")
+async def dataset_gallery(user=Depends(require_role("user"))):
+    """Flat list of all dataset images across all classes and splits."""
+    dataset_dirs = _get_dataset_dirs()
+    images: list[dict] = []
+    valid = set(settings.class_names) | {settings.novel_class_name}
+    for d in dataset_dirs:
+        split = d.name
+        for species_dir in sorted(d.iterdir()):
+            if not species_dir.is_dir() or species_dir.name not in valid:
+                continue
+            for f in sorted(species_dir.iterdir()):
+                if f.is_file() and f.suffix.lower() in _IMAGE_EXTS:
+                    images.append(
+                        {
+                            "filename": f.name,
+                            "split": split,
+                            "class_name": species_dir.name,
+                            "url": f"/api/dataset/images/{split}/{species_dir.name}/{f.name}",
+                        }
+                    )
+    return images
