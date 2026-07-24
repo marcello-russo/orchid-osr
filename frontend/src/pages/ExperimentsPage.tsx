@@ -22,9 +22,9 @@ import type { ExperimentSummary } from "@/lib/types";
 const SORTABLE_COLUMNS = [
   { key: "id", labelKey: "experiments.table.experiment" },
   { key: "model_variant", labelKey: "experiments.table.model" },
-  { key: "mean_f1", label: "F1", align: "right" },
+  { key: "mean_f1", labelKey: "experiments.table.f1", align: "right" },
   { key: "test_accuracy", labelKey: "experiments.table.test_acc", align: "right" },
-  { key: "ncd_auroc", label: "NCD AUROC", align: "right" },
+  { key: "ncd_auroc", labelKey: "experiments.table.ncd_auroc", align: "right" },
 ] as const;
 
 type Col = typeof SORTABLE_COLUMNS[number];

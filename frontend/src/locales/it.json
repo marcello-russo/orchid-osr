@@ -114,7 +114,8 @@
       "type": "Tipo",
       "test_acc": "Test Acc",
       "folds": "Fold",
-      "select": "Seleziona esperimenti da confrontare"
+      "select": "Seleziona esperimenti da confrontare",
+      "ncd_auroc": "NCD AUROC"
     },
     "empty": "Nessun esperimento trovato",
     "compare": "Confronta",
@@ -559,6 +560,7 @@
     "dataset_callout_leakage_title": "Data Leakage",
     "dataset_callout_leakage": "Nelle fasi iniziali (Exp 1–5), il dataset presentava un problema critico di data leakage: immagini identiche a livello di contenuto apparivano sia in training che in test con nomi diversi. La scoperta è avvenuta tramite hashing MD5. A partire da Exp 6, il dataset è stato ripulito con un protocollo in tre fasi: (1) deduplicazione MD5, (2) estrazione di un hold-out bilanciato di 50 immagini per classe, (3) cross-validation stratificata a 5 fold con seed 57. Questo clean split costituisce la base di tutti gli esperimenti.",
     "dataset_callout_novel_title": "Specie Novel: O. sphegodes_Napoli",
+    "dataset_callout_novel": "Una settima specie, O. sphegodes_Napoli, è stata deliberatamente esclusa dal training set e riservata esclusivamente per i test di Novel Class Discovery e Open-Set Recognition (Exp 8, 10). Morfologicamente simile a O. sphegodes ma con caratteri diagnostici distinti a livello di popolazione locale, costituisce il test ideale per valutare la capacità del sistema di rilevare entità tassonomiche mai osservate prima.",
     "subs_preprocessing": "Preprocessing",
     "dataset_preprocessing": "Le immagini grezze vengono processate da un modulo di object detection basato su Faster R-CNN pre-addestrato, che ritaglia automaticamente il fiore rimuovendo lo sfondo. Il letterbox resize preserva l'aspect ratio originale con padding nero. Le dimensioni di input sono native per architettura: 256×512 per ResNet, 224×224 per ConvNeXt e DINOv2. Durante la cross-validation, le classi minoritarie vengono sovracampionate tramite augmentations (rotazioni, flip, color jitter, cutout).",
     "sect_contesto": "Contesto Botanico",

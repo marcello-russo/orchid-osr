@@ -1,3 +1,5 @@
+import { useState, useCallback, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
@@ -17,11 +19,42 @@ interface MatrixSectionProps {
   tooltipLabel: string;
 }
 
+interface TooltipState {
+  exp: ExperimentSummary;
+  formattedValue: string;
+  value: number | null;
+  top: number;
+  left: number;
+}
+
 export function MatrixSection({
   lookup, architectureRows, columns, title, accessor, colorFn, bestPerColumn, tooltipLabel,
 }: MatrixSectionProps) {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const [tooltip, setTooltip] = useState<TooltipState | null>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout>>(null);
+
+  useEffect(() => {
+    return () => {
+      if (closeTimer.current) clearTimeout(closeTimer.current);
+    };
+  }, []);
+
+  const handleMouseEnter = useCallback((
+    e: React.MouseEvent<HTMLTableCellElement>,
+    exp: ExperimentSummary,
+    formattedValue: string,
+    value: number | null,
+  ) => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    const rect = e.currentTarget.getBoundingClientRect();
+    setTooltip({ exp, formattedValue, value, top: rect.top - 8, left: rect.left + rect.width / 2 });
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    closeTimer.current = setTimeout(() => setTooltip(null), 80);
+  }, []);
 
   const renderCell = (col: string, variant: string) => {
     const exp = lookup[variant]?.[col];
@@ -33,7 +66,7 @@ export function MatrixSection({
       <td
         key={col}
         className={cn(
-          "group relative text-center py-2 px-3 rounded-lg transition-all",
+          "relative text-center py-2 px-3 rounded-lg transition-all",
           exp
             ? "cursor-pointer focus-visible:ring-2 focus-visible:ring-ring hover:brightness-110"
             : "text-muted-foreground",
@@ -49,21 +82,11 @@ export function MatrixSection({
         tabIndex={exp ? 0 : undefined}
         role={exp ? "button" : undefined}
         aria-label={exp ? `View details: ${exp.name}` : undefined}
+        onMouseEnter={(e) => exp && handleMouseEnter(e, exp, formattedValue, value)}
+        onMouseLeave={handleMouseLeave}
       >
-        <span className={cn(exp && "group-hover:invisible")}>{formattedValue}</span>
-        {isBest && <span className={cn("ml-0.5 text-yellow-300", exp && "group-hover:invisible")} aria-label="best performing architecture">★</span>}
-        {exp && (
-          <div className="absolute inset-0 hidden group-hover:flex flex-col items-center justify-center z-50 bg-card/95 rounded-lg border border-border text-xs shadow-md px-2">
-            <span className="font-semibold truncate max-w-full">{exp.name}</span>
-            <span>{tooltipLabel}: {formattedValue}</span>
-            {value !== null && exp.std_f1 != null && (
-              <span>Std: ±{(exp.std_f1 * 100).toFixed(2)}%</span>
-            )}
-            {exp.test_accuracy != null && (
-              <span>Test Acc: {(exp.test_accuracy * 100).toFixed(2)}%</span>
-            )}
-          </div>
-        )}
+        <span>{formattedValue}</span>
+        {isBest && <span className="ml-0.5 text-yellow-300" aria-label="best performing architecture">★</span>}
       </td>
     );
   };
@@ -109,6 +132,26 @@ export function MatrixSection({
           </tbody>
         </table>
       </div>
+
+      {tooltip && createPortal(
+        <div
+          className="fixed z-50"
+          style={{ top: tooltip.top, left: tooltip.left, transform: "translate(-50%, -100%)" }}
+          onMouseEnter={() => { if (closeTimer.current) clearTimeout(closeTimer.current); }}
+        >
+          <div className="bg-popover text-popover-foreground text-xs rounded-lg border border-border px-3 py-2 shadow-md whitespace-nowrap">
+            <p className="font-semibold">{tooltip.exp.name}</p>
+            <p>{tooltipLabel}: {tooltip.formattedValue}</p>
+            {tooltip.value !== null && tooltip.exp.std_f1 != null && (
+              <p>Std: ±{(tooltip.exp.std_f1 * 100).toFixed(2)}%</p>
+            )}
+            {tooltip.exp.test_accuracy != null && (
+              <p>Test Acc: {(tooltip.exp.test_accuracy * 100).toFixed(2)}%</p>
+            )}
+          </div>
+        </div>,
+        document.body,
+      )}
     </div>
   );
 }
