@@ -1,101 +1,41 @@
-"""Tests for supcon training."""
-
-import tempfile
-from pathlib import Path
-
-import pytest
 import torch
-from torch.utils.data import DataLoader, TensorDataset
 
-from app.core.models import create_model
-from app.core.supcon import train_supcon
+from app.core.losses import SupConLoss
 
 
-def _make_dummy_loader(batch_size=4, num_batches=3):
-    X = torch.randn(num_batches * batch_size, 3, 224, 224)
-    y = torch.randint(0, 3, (num_batches * batch_size,))
-    ds = TensorDataset(X, y, torch.arange(len(X)))
-    return DataLoader(ds, batch_size=batch_size)
+class TestSupConLoss:
+    def test_forward_returns_scalar(self):
+        loss_fn = SupConLoss(temperature=0.07)
+        features = torch.randn(8, 128)
+        labels = torch.tensor([0, 0, 1, 1, 2, 2, 3, 3])
+        loss = loss_fn(features, labels)
+        assert loss.ndim == 0
+        assert loss > 0
 
+    def test_two_identical_samples_have_zero_loss(self):
+        loss_fn = SupConLoss(temperature=0.07)
+        f = torch.randn(1, 128).expand(2, -1)
+        labels = torch.zeros(2, dtype=torch.long)
+        loss = loss_fn(f, labels)
+        assert loss < 0.01
 
-@pytest.mark.slow
-def test_train_supcon_basic():
-    model = create_model("resnet18", num_classes=3, pretrained=False)
-    train_loader = _make_dummy_loader(batch_size=4, num_batches=2)
-    val_loader = _make_dummy_loader(batch_size=4, num_batches=1)
-    device = torch.device("cpu")
+    def test_different_classes_have_positive_loss(self):
+        loss_fn = SupConLoss(temperature=0.07)
+        features = torch.randn(4, 128)
+        labels = torch.tensor([0, 0, 1, 1])
+        loss = loss_fn(features, labels)
+        assert loss > 0
 
-    with tempfile.TemporaryDirectory() as tmp:
-        model_out, metrics = train_supcon(
-            model=model,
-            train_loader=train_loader,
-            val_loader=val_loader,
-            num_epochs=2,
-            learning_rate=0.001,
-            device=device,
-            checkpoint_dir=tmp,
-        )
-    assert "knn_accuracy" in metrics
-    assert len(metrics["knn_accuracy"]) == 2
-    assert model_out is not None
+    def test_temperature_scales_loss(self):
+        features = torch.randn(8, 128)
+        labels = torch.tensor([0] * 4 + [1] * 4)
+        loss_low = SupConLoss(temperature=0.07)(features, labels)
+        loss_high = SupConLoss(temperature=1.0)(features, labels)
+        assert loss_low > loss_high
 
-
-@pytest.mark.slow
-def test_train_supcon_no_nans():
-    model = create_model("resnet18", num_classes=3, pretrained=False)
-    train_loader = _make_dummy_loader(batch_size=2, num_batches=1)
-    val_loader = _make_dummy_loader(batch_size=2, num_batches=1)
-    device = torch.device("cpu")
-
-    with tempfile.TemporaryDirectory() as tmp:
-        model_out, metrics = train_supcon(
-            model=model,
-            train_loader=train_loader,
-            val_loader=val_loader,
-            num_epochs=1,
-            learning_rate=0.001,
-            device=device,
-            checkpoint_dir=tmp,
-            patience=0,
-        )
-    assert not any(torch.isnan(torch.tensor(v)).any() for k, v in metrics.items() if isinstance(v, list) and v)
-
-
-@pytest.mark.slow
-def test_train_supcon_resume():
-    model = create_model("resnet18", num_classes=3, pretrained=False)
-    train_loader = _make_dummy_loader(batch_size=4, num_batches=2)
-    val_loader = _make_dummy_loader(batch_size=4, num_batches=1)
-    device = torch.device("cpu")
-
-    tmp = Path(tempfile.mkdtemp())
-    try:
-        ckpt = tmp / "last_ckpt_supcon.pt"
-        model, metrics1 = train_supcon(
-            model=model,
-            train_loader=train_loader,
-            val_loader=val_loader,
-            num_epochs=2,
-            learning_rate=0.001,
-            device=device,
-            checkpoint_dir=str(tmp),
-            resume=False,
-        )
-        assert ckpt.exists()
-
-        model2 = create_model("resnet18", num_classes=3, pretrained=False)
-        model2, metrics2 = train_supcon(
-            model=model2,
-            train_loader=train_loader,
-            val_loader=val_loader,
-            num_epochs=4,
-            learning_rate=0.001,
-            device=device,
-            checkpoint_dir=str(tmp),
-            resume=True,
-        )
-        assert len(metrics2.get("train_loss", [])) >= 2
-    finally:
-        import shutil
-
-        shutil.rmtree(tmp)
+    def test_large_batch(self):
+        loss_fn = SupConLoss(temperature=0.07)
+        features = torch.randn(64, 128)
+        labels = torch.randint(0, 8, (64,))
+        loss = loss_fn(features, labels)
+        assert loss.ndim == 0
