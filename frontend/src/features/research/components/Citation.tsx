@@ -18,7 +18,7 @@ export function Cite({ id }: { id: string }) {
         className="text-primary text-[10px] font-medium cursor-pointer hover:underline"
         onClick={() => setActiveCite(isOpen ? null : id)}
       >
-        [{paper.authors}, {paper.year}]
+        [{paper.shortAuthors}, {paper.year}]
       </sup>
       {isOpen && <CitationPopover paper={paper} onClose={() => setActiveCite(null)} />}
     </span>

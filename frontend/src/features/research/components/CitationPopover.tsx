@@ -56,8 +56,9 @@ export function CitationPopover({ paper, onClose }: CitationPopoverProps) {
       className="bg-card border border-border rounded-lg p-4 shadow-lg z-50 animate-in fade-in duration-200 w-auto max-w-md"
     >
       <p className="text-sm font-medium">
-        {paper.authors} ({paper.year})
+        {paper.authors}
       </p>
+      <p className="text-sm text-foreground/80 mt-0.5">({paper.year})</p>
       <p className="text-sm text-foreground/80 italic mt-1">{paper.title}</p>
       {paper.venue && (
         <p className="text-xs text-muted-foreground mt-1">{paper.venue}</p>
@@ -67,7 +68,6 @@ export function CitationPopover({ paper, onClose }: CitationPopoverProps) {
         target="_blank"
         rel="noopener noreferrer"
         className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-2"
-        onClick={(e) => e.stopPropagation()}
       >
         {t("research.cite_open")}
       </a>
