@@ -83,10 +83,10 @@ The current `ci.yml` has three jobs: `backend`, `docker`, `frontend`. We only ch
       - run: bash -n entrypoint.sh
       - name: Python syntax check
         run: python3 backend/scripts/ci/check_syntax.py
-      - run: docker build --target=cpu -t orchid-ncd .
+      - run: docker build --target=cpu -t orchid-osr .
       - name: Smoke test — avvio container
         run: |
-          container_id=$(docker run -d orchid-ncd)
+          container_id=$(docker run -d orchid-osr)
           for i in 5 15 30 45; do
             sleep $i
             status=$(docker inspect "$container_id" --format='{{.State.Status}}' 2>/dev/null)
@@ -130,13 +130,13 @@ Sostituire l'intero job docker (dalla riga `docker:` fino alla riga prima di `fr
         uses: docker/build-push-action@v6
         with:
           target: cpu
-          tags: orchid-ncd
+          tags: orchid-osr
           load: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
       - name: Smoke test — health endpoint
         run: |
-          container_id=$(docker run -d orchid-ncd)
+          container_id=$(docker run -d orchid-osr)
           for i in $(seq 1 12); do
             sleep 5
             if docker exec "$container_id" python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:7860/health')" 2>/dev/null; then
@@ -208,7 +208,7 @@ Alla fine del file `ci.yml`, DOPO la chiusura del job `frontend` (dopo la riga `
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             set -e
-            cd ~/OrchID
+            cd ~/OrchidOSR
             git pull origin main
             cd frontend
             npm run build 2>&1

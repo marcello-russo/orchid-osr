@@ -2,7 +2,7 @@
 set -euo pipefail
 
 echo "============================================"
-echo "  Local Deploy — OrchID"
+echo "  Local Deploy — OrchidOSR"
 echo "  $(date)"
 echo "============================================"
 

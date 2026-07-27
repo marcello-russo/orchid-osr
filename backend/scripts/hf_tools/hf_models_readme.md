@@ -10,13 +10,13 @@ tags:
   - ophrys
 ---
 
-# OrchID NCD — Model Zoo
+# OrchidOSR NCD — Model Zoo
 
 Trained models for **Ophrys** orchid classification (6 species), part of the **Novel Class Discovery (NCD)** research.
 
-**Live Demo (Embed Version):** [https://marcellorusso-orchid-ncd.hf.space](https://marcellorusso-orchid-ncd.hf.space)
+**Live Demo (Embed Version):** [https://marcellorusso-orchid-osr.hf.space](https://marcellorusso-orchid-osr.hf.space)
 
-All models trained on the [orchid-ncd-dataset](https://huggingface.co/datasets/marcellorusso/orchid-ncd-dataset) (exp6 clean split, zero data leakage).
+All models trained on the [orchid-osr-dataset](https://huggingface.co/datasets/marcellorusso/orchid-osr-dataset) (exp6 clean split, zero data leakage).
 
 ## Exp 6 — Cross-Entropy Loss
 
@@ -94,14 +94,14 @@ from huggingface_hub import snapshot_download
 
 # Download a specific model
 snapshot_download(
-    repo_id="marcellorusso/orchid-ncd-models",
+    repo_id="marcellorusso/orchid-osr-models",
     allow_patterns="exp6_ce/exp6_clean_split_resnet18/*",
     local_dir="models",
 )
 
 # Download everything
 snapshot_download(
-    repo_id="marcellorusso/orchid-ncd-models",
+    repo_id="marcellorusso/orchid-osr-models",
     local_dir="models",
 )
 ```

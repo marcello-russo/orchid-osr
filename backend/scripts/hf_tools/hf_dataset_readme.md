@@ -14,16 +14,16 @@ size_categories:
 viewer: true
 ---
 
-# OrchID-NCD — Ophrys Orchid Classification Dataset
+# OrchidOSR-NCD — Ophrys Orchid Classification Dataset
 
 6-class ultra-fine-grained image dataset for **Ophrys** orchid species classification from the [*Ophrys sphegodes*](https://en.wikipedia.org/wiki/Ophrys_sphegodes) complex — a group of Mediterranean orchids known for extreme morphological similarity and frequent hybridization.
 
-Part of the **OrchID-NCD** project: representation learning and novel class discovery applied to biodiversity data.
+Part of the **OrchidOSR-NCD** project: representation learning and novel class discovery applied to biodiversity data.
 
 ## Links
 
 - **Live demo:** [marcellorusso-orchid-ncd.hf.space](https://marcellorusso-orchid-ncd.hf.space)
-- **Code:** [github.com/squidslab/OrchID](https://github.com/squidslab/OrchID)
+- **Code:** [github.com/squidslab/OrchidOSR](https://github.com/squidslab/OrchidOSR)
 - **Models:** [marcellorusso/orchid-ncd-models](https://huggingface.co/marcellorusso/orchid-ncd-models)
 
 ---
@@ -144,7 +144,7 @@ Previous experiments suffered from **data leakage** — the same photo, download
 
 ## Links
 
-- **GitHub:** [squidslab/OrchID](https://github.com/squidslab/OrchID) · [marcello-russo](https://github.com/marcello-russo)
+- **GitHub:** [squidslab/OrchidOSR](https://github.com/squidslab/OrchidOSR) · [marcello-russo](https://github.com/marcello-russo)
 - **Live demo:** [marcellorusso-orchid-ncd.hf.space](https://marcellorusso-orchid-ncd.hf.space)
 - **Models:** [huggingface.co/marcellorusso/orchid-ncd-models](https://huggingface.co/marcellorusso/orchid-ncd-models)
 

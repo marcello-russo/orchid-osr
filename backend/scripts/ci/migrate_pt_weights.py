@@ -7,7 +7,7 @@ from pathlib import Path
 import torch
 from huggingface_hub import HfApi, snapshot_download
 
-HF_REPO = "marcellorusso/orchid-ncd-models"
+HF_REPO = "marcellorusso/orchid-osr-models"
 LOCAL_CACHE = "/tmp/pt_migration"
 os.makedirs(LOCAL_CACHE, exist_ok=True)
 

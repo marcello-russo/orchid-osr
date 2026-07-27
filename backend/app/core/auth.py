@@ -17,7 +17,7 @@ from app.config import settings
 logger = logging.getLogger(__name__)
 
 USERS_PATH = Path(os.environ.get("USERS_PATH", "data/users.json"))
-_HF_DATASET_REPO = "marcellorusso/orchid-ncd-dataset"
+_HF_DATASET_REPO = "marcellorusso/orchid-osr-dataset"
 JWT_ALGORITHM = "HS256"
 _LOGIN_ATTEMPTS: OrderedDict[str, int] = OrderedDict()
 LOGIN_ATTEMPTS_CACHE: dict[str, int] = {}
@@ -116,8 +116,8 @@ def create_jwt(username: str, role: str) -> str:
     payload = {
         "sub": username,
         "role": role,
-        "aud": "orchid-ncd",
-        "iss": "orchid-ncd-api",
+        "aud": "orchid-osr",
+        "iss": "orchid-osr-api",
         "iat": int(time.time()),
         "exp": int(time.time()) + 86400,
     }
@@ -130,8 +130,8 @@ def decode_jwt(token: str) -> dict:
             token,
             settings.jwt_secret,
             algorithms=[JWT_ALGORITHM],
-            audience="orchid-ncd",
-            issuer="orchid-ncd-api",
+            audience="orchid-osr",
+            issuer="orchid-osr-api",
         )
         return payload
     except jwt.PyJWTError:

@@ -6,7 +6,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
 
 CONTAINER_NAME="pytorch_app"
-IMAGE_NAME="orchid-ncd-app"
+IMAGE_NAME="orchid-osr-app"
 
 docker stop "$CONTAINER_NAME" 2>/dev/null
 docker rm "$CONTAINER_NAME" 2>/dev/null

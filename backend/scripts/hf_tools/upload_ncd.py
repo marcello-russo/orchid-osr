@@ -11,7 +11,7 @@ from huggingface_hub import HfApi
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-REPO_ID = "marcellorusso/orchid-ncd-models"
+REPO_ID = "marcellorusso/orchid-osr-models"
 HF_TOKEN = os.environ.get("HF_TOKEN", "")
 api = HfApi(token=HF_TOKEN)
 

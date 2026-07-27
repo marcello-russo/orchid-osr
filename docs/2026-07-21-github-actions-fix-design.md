@@ -7,16 +7,16 @@ Fix CI pipeline issues: eliminate obsolete HF Spaces sync, improve Docker smoke 
 ## Changes
 
 ### 1. Eliminare `sync-hf.yml`
-Il file `.github/workflows/sync-hf.yml` è obsoleto — il deployment è sulla VPS (`orchid-ncd.klad.ml`), non più su HF Spaces. Rimuovere il file.
+Il file `.github/workflows/sync-hf.yml` è obsoleto — il deployment è sulla VPS (`orchid-osr.klad.ml`), non più su HF Spaces. Rimuovere il file.
 
 ### 2. Docker smoke test via `/health`
 Sostituire il polling loop attuale (controlla a 5/15/30/45s solo se il container non è uscito):
 
 ```yaml
-- run: docker build --target=cpu -t orchid-ncd .
+- run: docker build --target=cpu -t orchid-osr .
 - name: Smoke test — avvio container
   run: |
-    container_id=$(docker run -d orchid-ncd)
+    container_id=$(docker run -d orchid-osr)
     for i in 5 15 30 45; do
       sleep $i
       status=$(docker inspect "$container_id" --format='{{.State.Status}}')
@@ -26,10 +26,10 @@ Sostituire il polling loop attuale (controlla a 5/15/30/45s solo se il container
 **Nuovo approccio** — avviare il container e fare `curl http://localhost:7860/health` con retry:
 
 ```yaml
-- run: docker build --target=cpu -t orchid-ncd .
+- run: docker build --target=cpu -t orchid-osr .
 - name: Smoke test — health endpoint
   run: |
-    container_id=$(docker run -d orchid-ncd)
+    container_id=$(docker run -d orchid-osr)
     for i in $(seq 1 12); do
       sleep 5
       if docker exec "$container_id" python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:7860/health')" 2>/dev/null; then
@@ -61,7 +61,7 @@ Sostituire `docker build` diretto con `docker/build-push-action@v6`:
   uses: docker/build-push-action@v6
   with:
     target: cpu
-    tags: orchid-ncd
+    tags: orchid-osr
     load: true
     cache-from: type=gha
     cache-to: type=gha,mode=max
@@ -92,7 +92,7 @@ deploy:
         username: ubuntu
         key: ${{ secrets.VPS_SSH_KEY }}
         script: |
-          cd ~/OrchID
+          cd ~/OrchidOSR
           git pull origin main
           cd frontend && npm run build
           cd ..
@@ -103,9 +103,9 @@ deploy:
 Alternativa: usare `ssh` diretto con chiave scritta su file (evita dipendenza appleboy). Ma appleboy/ssh-action è la soluzione standard e più pulita per GitHub Actions.
 
 ### 7. SSH key pair
-Generata con `ssh-keygen -t ed25519 -f keys/orchid-ncd -N "" -C "github-actions-deploy"`.
-- `keys/orchid-ncd` (privata) → non committata (`.gitignore`), già aggiunta come secret `VPS_SSH_KEY`
-- `keys/orchid-ncd.pub` (pubblica) → installata in `~/.ssh/authorized_keys` sulla VPS
+Generata con `ssh-keygen -t ed25519 -f keys/orchid-osr -N "" -C "github-actions-deploy"`.
+- `keys/orchid-osr` (privata) → non committata (`.gitignore`), già aggiunta come secret `VPS_SSH_KEY`
+- `keys/orchid-osr.pub` (pubblica) → installata in `~/.ssh/authorized_keys` sulla VPS
 
 ### 8. Ruff fix su dinov2.py
 `backend/app/core/models/dinov2.py:136-140` — riga troppo lunga nel logger, già fixata.
@@ -125,7 +125,7 @@ Generata con `ssh-keygen -t ed25519 -f keys/orchid-ncd -N "" -C "github-actions-
 | Secret | Valore |
 |--------|--------|
 | `VPS_HOST` | `51.38.51.220` |
-| `VPS_SSH_KEY` | Chiave privata ed25519 in `keys/orchid-ncd` |
+| `VPS_SSH_KEY` | Chiave privata ed25519 in `keys/orchid-osr` |
 
 ## Trigger
 

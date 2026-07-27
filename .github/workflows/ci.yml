@@ -36,13 +36,13 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           target: cpu
-          tags: orchid-ncd
+          tags: orchid-osr
           load: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
       - name: Smoke test — health endpoint
         run: |
-          container_id=$(docker run -d orchid-ncd)
+          container_id=$(docker run -d orchid-osr)
           for i in $(seq 1 12); do
             sleep 5
             if docker exec "$container_id" python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:7860/health')" 2>/dev/null; then
@@ -96,7 +96,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             set -e
-            cd ~/OrchID
+            cd ~/OrchidOSR
             git fetch origin main
             git reset --hard origin/main
             cd frontend

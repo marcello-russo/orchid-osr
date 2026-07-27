@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use subagent-driven-development (recommended) or executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add invite-based authentication with three roles (public/user/admin) to OrchID.
+**Goal:** Add invite-based authentication with three roles (public/user/admin) to OrchidOSR.
 
 **Architecture:** Backend uses a JSON file for users/invites, bcrypt for passwords, JWT for sessions, and FastAPI dependency injection for route protection. Frontend uses Zustand (already in the project) for auth state and adds a login/register page.
 

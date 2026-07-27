@@ -17,7 +17,7 @@ from huggingface_hub import HfApi
 api = HfApi(token='$HF_TOKEN')
 api.upload_folder(
     folder_path='.',
-    repo_id='marcellorusso/orchid-ncd',
+    repo_id='marcellorusso/orchid-osr',
     repo_type='space',
     commit_message='Sync from local',
     ignore_patterns=[
@@ -29,5 +29,5 @@ api.upload_folder(
     ],
 )
 print('✅ HF Space sync complete')
-" && curl -s -X POST "https://huggingface.co/api/spaces/marcellorusso/orchid-ncd/restart" \
+" && curl -s -X POST "https://huggingface.co/api/spaces/marcellorusso/orchid-osr/restart" \
   -H "Authorization: Bearer $HF_TOKEN" 2>/dev/null | python3 -c "import json,sys; print('🚀 Space:', json.load(sys.stdin).get('stage','?'))"

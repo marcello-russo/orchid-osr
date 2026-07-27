@@ -1,4 +1,4 @@
-# OrchID — Training Status & Results
+# OrchidOSR — Training Status & Results
 
 ## Stato Generale
 
@@ -14,11 +14,11 @@
 ## Dove trovare i risultati
 
 ### Nuovi risultati (OVH v13 — da preferire)
-**HF**: `marcellorusso/orchid-ncd-models/exp7_supcon/` e `exp8_sphor/`
+**HF**: `marcellorusso/orchid-osr-models/exp7_supcon/` e `exp8_sphor/`
 Contiene: DINOv2 S/B exp 7-8, ConvNeXt exp 6 (parte)
 
 ### Vecchi risultati (locale — ConvNeXt)
-**HF**: `marcellorusso/orchid-ncd-models/old/exp7_supcon/` e `old/exp8_sphor/`
+**HF**: `marcellorusso/orchid-osr-models/old/exp7_supcon/` e `old/exp8_sphor/`
 Contiene: ConvNeXt T/S exp 7-8
 
 ### In corso (locale)

@@ -28,7 +28,7 @@ _model_cache_lock = threading.Lock()
 _osr_stats_cache: dict[str, dict] = {}
 _osr_stats_lock = threading.Lock()
 
-_HF_MODELS_REPO = "marcellorusso/orchid-ncd-models"
+_HF_MODELS_REPO = "marcellorusso/orchid-osr-models"
 _HF_PREFIX_MAP = {
     "exp6_clean_split": "exp6_ce",
     "exp7_supcon": "exp7_supcon",

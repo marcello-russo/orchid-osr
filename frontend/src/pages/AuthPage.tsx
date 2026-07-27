@@ -219,7 +219,7 @@ export default function AuthPage() {
           <div className="mb-4">
             <span className="text-primary font-bold text-xl">Orch</span>
             <span className="text-foreground font-bold text-xl">ID</span>
-            <span className="text-muted-foreground font-bold text-xs ml-0.5">NCD</span>
+            <span className="text-muted-foreground font-bold text-xs ml-0.5"></span>
           </div>
           <div className="flex rounded-lg bg-muted p-1">
             <button

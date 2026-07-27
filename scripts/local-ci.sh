@@ -43,11 +43,11 @@ bash -n "$ROOT/entrypoint.sh" && pass || fail
 echo "→ python3 backend/scripts/ci/check_syntax.py"
 python3 "$ROOT/backend/scripts/ci/check_syntax.py" && pass || fail
 
-echo "→ docker build --target cpu -t orchid-ncd"
-docker build --target cpu -t orchid-ncd "$ROOT" && pass || fail
+echo "→ docker build --target cpu -t orchid-osr"
+docker build --target cpu -t orchid-osr "$ROOT" && pass || fail
 
 echo "→ smoke test — health endpoint"
-container_id=$(docker run -d orchid-ncd)
+container_id=$(docker run -d orchid-osr)
 SMOKE_PASS=0
 for i in $(seq 1 12); do
   sleep 5

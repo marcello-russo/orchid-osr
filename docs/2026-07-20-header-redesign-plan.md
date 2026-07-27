@@ -23,7 +23,7 @@ Read the current file to see the right section with user info, LanguageToggle, T
 
 Remove everything after the center logo span. The header should contain only:
 - Hamburger button (left)
-- Logo "OrchID NCD" (center)
+- Logo "OrchidOSR NCD" (center)
 - Empty div as spacer (right) to keep centering
 
 The key change: delete the `{token ? (...)} : (...)}` block and the `{t("header.logout")}` button, and the LanguageToggle/ThemeToggle imports.
