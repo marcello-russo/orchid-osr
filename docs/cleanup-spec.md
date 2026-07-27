@@ -1,8 +1,8 @@
-# OrchID OSR NCD — Cleanup & Hardening Spec
+# OrchID OSR — Cleanup & Hardening Spec
 
 ## Problem Statement
 
-Il progetto OrchID OSR NCD ha accumulato debito tecnico e bug minori durante lo sviluppo della tesi. Dopo aver completato gli esperimenti principali (Exp 6–10) e il deployment su HF Spaces, sono emersi diversi problemi infrastrutturali, di qualità del codice e di sicurezza che devono essere risolti prima della discussione della tesi per garantire che la piattaforma sia presentabile, robusta e riproducibile.
+Il progetto OrchID OSR ha accumulato debito tecnico e bug minori durante lo sviluppo della tesi. Dopo aver completato gli esperimenti principali (Exp 6–10) e il deployment su HF Spaces, sono emersi diversi problemi infrastrutturali, di qualità del codice e di sicurezza che devono essere risolti prima della discussione della tesi per garantire che la piattaforma sia presentabile, robusta e riproducibile.
 
 I problemi coinvolgono:
 - Infrastruttura di deploy (Docker, CI/CD)

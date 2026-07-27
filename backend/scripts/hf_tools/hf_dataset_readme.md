@@ -23,7 +23,7 @@ Part of the **OrchID OSR-NCD** project: representation learning and novel class 
 ## Links
 
 - **Live demo:** [marcellorusso-orchid-ncd.hf.space](https://marcellorusso-orchid-ncd.hf.space)
-- **Code:** [github.com/squidslab/OrchID OSR](https://github.com/squidslab/OrchID OSR)
+- **Code:** [github.com/squidslab/OrchID](https://github.com/squidslab/OrchID)
 - **Models:** [marcellorusso/orchid-ncd-models](https://huggingface.co/marcellorusso/orchid-ncd-models)
 
 ---
@@ -144,7 +144,7 @@ Previous experiments suffered from **data leakage** — the same photo, download
 
 ## Links
 
-- **GitHub:** [squidslab/OrchID OSR](https://github.com/squidslab/OrchID OSR) · [marcello-russo](https://github.com/marcello-russo)
+- **GitHub:** [squidslab/OrchID](https://github.com/squidslab/OrchID) · [marcello-russo](https://github.com/marcello-russo)
 - **Live demo:** [marcellorusso-orchid-ncd.hf.space](https://marcellorusso-orchid-ncd.hf.space)
 - **Models:** [huggingface.co/marcellorusso/orchid-ncd-models](https://huggingface.co/marcellorusso/orchid-ncd-models)
 

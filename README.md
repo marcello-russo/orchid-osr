@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/images/banner.png" alt="OrchID OSR NCD Banner" width="100%"/>
+  <img src="assets/images/banner.png" alt="OrchID OSR Banner" width="100%"/>
 </p>
 
 <p align="center">
@@ -19,7 +19,7 @@
 <p align="center">
   <strong>Master's thesis — University of Naples Federico II (DIETI)</strong>
   <br/>
-  <a href="https://github.com/squidslab/OrchID OSR">GitHub</a> ·
+  <a href="https://github.com/squidslab/OrchID">GitHub</a> ·
   <a href="https://arxiv.org/abs/2503.08049">SpHOR Paper</a>
 </p>
 
@@ -168,7 +168,7 @@ Download from HuggingFace: `snapshot_download("marcellorusso/orchid-osr-dataset"
 
 ## Links
 
-- **GitHub:** [squidslab/OrchID OSR](https://github.com/squidslab/OrchID OSR)
+- **GitHub:** [squidslab/OrchID](https://github.com/squidslab/OrchID)
 - **Models:** `marcellorusso/orchid-osr-models`
 - **Dataset:** `marcellorusso/orchid-osr-dataset`
 
