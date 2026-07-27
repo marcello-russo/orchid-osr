@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 CLASS_NAMES = settings.class_names  # 6 training classes
 NOVEL_CLASS_NAME = settings.novel_class_name
-HF_MODELS_REPO = "marcellorusso/orchid-osr-models"
+HF_MODELS_REPO = "marcellorusso/orchid-ncd-models"
 
 # Mapping from experiment directory prefix → human label + number
 _EXP_META: dict[str, tuple[str, int]] = {

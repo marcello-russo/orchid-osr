@@ -19,7 +19,7 @@ _IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
 _VALID_SPLITS = {"train", "test"}
 _VALID_CLASSES = set(settings.class_names)
 _CROPPED_DIR = "cropped_256x512"
-_HF_DATASET = "marcellorusso/orchid-osr-dataset"
+_HF_DATASET = "marcellorusso/orchid-ncd-dataset"
 _HF_BRANCH = "main"
 _LISTING_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "dataset_listing.json"
 

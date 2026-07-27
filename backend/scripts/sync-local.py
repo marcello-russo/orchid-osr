@@ -28,7 +28,7 @@ def main():
         print("ERROR: HF_TOKEN not set and not found in .env")
         sys.exit(1)
 
-    print("Syncing experiments from marcellorusso/orchid-osr-models...")
+    print("Syncing experiments from marcellorusso/orchid-ncd-models...")
     print(f"Experiment dir: {exp_dir}")
 
     if not exp_dir.is_dir():
@@ -39,7 +39,7 @@ def main():
         sys.exit(1)
 
     api = HfApi(token=token)
-    REPO = "marcellorusso/orchid-osr-models"
+    REPO = "marcellorusso/orchid-ncd-models"
 
     print("Listing HF repo contents...")
     hf_paths = list_repo_files(api, REPO)
