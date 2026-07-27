@@ -110,6 +110,17 @@ async def list_experiments():
         config_type = (config or {}).get("type", "")
         exp_type = "kfold" if has_folds else ("kfold" if config_type == "kfold" else "baseline")
 
+        # Numero di fold: file individuali o fold_results in results.json
+        if has_folds:
+            num_folds = len(fold_files)
+            folds_done = len(fold_files)
+        elif results and results.get("fold_results"):
+            num_folds = len(results["fold_results"])
+            folds_done = len(results["fold_results"])
+        else:
+            num_folds = (config or {}).get("num_folds", 5)
+            folds_done = 0
+
         has_ncd_file = (d / "ncd_results.json").exists()
         is_ncd = bool(config.get("ncd_mode"))
         ncd_metrics = _read_ncd_metrics(d) if has_ncd_file else {}
@@ -126,8 +137,8 @@ async def list_experiments():
                 "model_variant": config.get("model_variant") or (results.get("model_variant") if results else None),
                 "type": exp_type,
                 "status": "completed" if (results or exp_type == "baseline") else "partial",
-                "num_folds": len(fold_files) if has_folds else (config or {}).get("num_folds", 5),
-                "folds_completed": len(fold_files),
+                "num_folds": num_folds,
+                "folds_completed": folds_done,
                 "test_accuracy": test_accuracy,
                 "mean_f1": (
                     results.get("mean_f1")
@@ -252,6 +263,18 @@ async def get_experiment(experiment_id: str):
         from app.api.routes.comparison import _normalize_fold
 
         folds.append(_normalize_fold(raw))
+
+    # Fallback: se non ci sono fold file individuali, usa fold_results da results.json
+    if not folds:
+        results_path = exp_dir / "results.json"
+        if results_path.exists():
+            raw_results = _load_json(results_path)
+            fr = raw_results.get("fold_results", [])
+            if fr:
+                from app.api.routes.comparison import _normalize_fold
+
+                for f in fr:
+                    folds.append(_normalize_fold(f))
 
     results = None
     results_path = exp_dir / "results.json"
