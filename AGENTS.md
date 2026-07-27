@@ -1,14 +1,14 @@
-# AGENTS.md — OrchID (orchid)
+# AGENTS.md — OrchidOSR (orchid)
 
 Master's thesis project: ultra-fine-grained classification of *Ophrys* orchids via deep learning. Python backend (FastAPI + PyTorch) + React frontend (Vite + TypeScript).
 
 ## Working directory
 
-All code lives under `orchid-ncd/`. Commands must be relative to that subtree:
+All code lives under `orchid-osr/`. Commands must be relative to that subtree:
 
-- Backend: `orchid-ncd/backend/`
-- Frontend: `orchid-ncd/frontend/`
-- Docker/Podman root: `orchid-ncd/`
+- Backend: `orchid-osr/backend/`
+- Frontend: `orchid-osr/frontend/`
+- Docker/Podman root: `orchid-osr/`
 
 ## Prerequisites
 
@@ -69,7 +69,7 @@ npm run lint       # eslint .
 ### Containerized
 
 ```bash
-cd orchid-ncd
+cd orchid-osr
 docker compose up -d                       # Dev server (CPU, --reload, volume-mounts)
 docker compose --profile gpu up -d         # GPU container (training/serve)
 docker compose --profile gpu run gpu bash  # Esegui comandi nel container GPU
@@ -83,7 +83,7 @@ docker compose --profile gpu run gpu bash  # Esegui comandi nel container GPU
 ### Key paths
 
 ```
-orchid-ncd/
+orchid-osr/
 ├── backend/
 │   ├── cli.py                        # CLI entry point
 │   ├── server.py                     # FastAPI entry point
@@ -114,7 +114,7 @@ orchid-ncd/
 
 - **Backend config**: `app/config.py` (`pydantic-settings`, reads `.env`). Model-specific params (input_size, lr, optimizer, weight_decay) are in the model registry at `app/core/models/registry.py`, not in config.
 - **Frontend env**: `frontend/.env` → `VITE_API_URL` (empty = relative paths proxied by Vite)
-- **Root .env**: `orchid-ncd/.env` contains `NORM_MEAN`, `NORM_STD`, and `HF_TOKEN` (do not commit)
+- **Root .env**: `orchid-osr/.env` contains `NORM_MEAN`, `NORM_STD`, and `HF_TOKEN` (do not commit)
 
 ### Image size convention
 
@@ -140,10 +140,10 @@ No `ruff`, `mypy`, `black`, or `pre-commit` setup. Only `pytest` as a quality ga
 - The frontend dev server proxies `/api`, `/classify`, `/health` to port 5000 — both must be running for full-stack dev
 
 ### HuggingFace integration
-- Dataset: `marcellorusso/orchid-ncd-dataset`
-- Models: `marcellorusso/orchid-ncd-models`
+- Dataset: `marcellorusso/orchid-osr-dataset`
+- Models: `marcellorusso/orchid-osr-models`
 - Download during build: `scripts/hf_tools/download_cache.py` (requires `HF_TOKEN`)
-- Live demo: `marcellorusso-orchid-ncd.hf.space`
+- Live demo: `marcellorusso-orchid-osr.hf.space`
 
 ### Database / state
 No database. All state is filesystem-based: experiments JSON, model `.pt` files, dataset images. The backend API scans `experiments/` at runtime to discover available models (LRU cache, max 5 loaded at once).

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/images/banner.png" alt="OrchID NCD Banner" width="100%"/>
+  <img src="assets/images/banner.png" alt="OrchidOSR NCD Banner" width="100%"/>
 </p>
 
 <p align="center">
@@ -19,7 +19,7 @@
 <p align="center">
   <strong>Tesi magistrale — Università degli Studi di Napoli Federico II (DIETI)</strong>
   <br/>
-  <a href="https://github.com/squidslab/OrchID">GitHub</a> ·
+  <a href="https://github.com/squidslab/OrchidOSR">GitHub</a> ·
   <a href="https://arxiv.org/abs/2503.08049">Articolo SpHOR</a>
 </p>
 
@@ -129,14 +129,14 @@ Vedi [AGENTS.md](AGENTS.md) per tutti i comandi.
 | O. sphegodes Palena | 210 | 50 | |
 | **O. sphegodes Napoli** | — | 548 | **✓** |
 
-Download: `snapshot_download("marcellorusso/orchid-ncd-dataset", repo_type="dataset")`
+Download: `snapshot_download("marcellorusso/orchid-osr-dataset", repo_type="dataset")`
 
 ---
 
 ## Deploy
 
 - **Backend:** Docker (VPS / Dokploy) con Cloudflare Quick Tunnel
-- **Frontend:** Cloudflare Pages (`orchid-ncd.pages.dev`)
+- **Frontend:** Cloudflare Pages (`orchid-osr.pages.dev`)
 - **Nessun database:** tutto su filesystem (JSON, .pt, .npy)
 
 ---

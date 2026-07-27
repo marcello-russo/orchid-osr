@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-cd /home/user/Documenti/orchid/orchid-ncd/backend
+cd /home/user/Documenti/orchid/orchid-osr/backend
 
 # Carica HF_TOKEN per upload automatico risultati
 if [ -f ../.env ]; then

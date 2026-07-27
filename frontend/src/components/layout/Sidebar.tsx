@@ -40,7 +40,7 @@ export function Sidebar() {
             <img src="/favicon.svg" alt="" className="size-6" />
           </div>
           <span className="font-black text-lg tracking-tighter">
-            <span className="text-primary">Orch</span><span className="text-foreground">ID</span><span className="text-muted-foreground font-bold text-xs ml-0.5">NCD</span>
+            <span className="text-primary">Orchid</span><span className="text-foreground">OSR</span>
           </span>
         </div>
         <button

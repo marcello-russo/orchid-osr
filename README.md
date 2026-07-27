@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/images/banner.png" alt="OrchID NCD Banner" width="100%"/>
+  <img src="assets/images/banner.png" alt="OrchidOSR NCD Banner" width="100%"/>
 </p>
 
 <p align="center">
@@ -19,7 +19,7 @@
 <p align="center">
   <strong>Master's thesis — University of Naples Federico II (DIETI)</strong>
   <br/>
-  <a href="https://github.com/squidslab/OrchID">GitHub</a> ·
+  <a href="https://github.com/squidslab/OrchidOSR">GitHub</a> ·
   <a href="https://arxiv.org/abs/2503.08049">SpHOR Paper</a>
 </p>
 
@@ -145,14 +145,14 @@ All experiments use 5-fold stratified CV with seed 57 over 6 backbones.
 | O. sphegodes Palena | 210 | 50 | |
 | **O. sphegodes Napoli** | — | 548 | **✓** |
 
-Download from HuggingFace: `snapshot_download("marcellorusso/orchid-ncd-dataset", repo_type="dataset")`
+Download from HuggingFace: `snapshot_download("marcellorusso/orchid-osr-dataset", repo_type="dataset")`
 
 ---
 
 ## Deploy
 
 - **Backend:** Docker (VPS / Dokploy) behind Cloudflare Quick Tunnel
-- **Frontend:** Cloudflare Pages (`orchid-ncd.pages.dev`)
+- **Frontend:** Cloudflare Pages (`orchid-osr.pages.dev`)
 - **No database:** filesystem-based (experiments JSON, model .pt files, embeddings .npy)
 
 ---
@@ -168,9 +168,9 @@ Download from HuggingFace: `snapshot_download("marcellorusso/orchid-ncd-dataset"
 
 ## Links
 
-- **GitHub:** [squidslab/OrchID](https://github.com/squidslab/OrchID)
-- **Models:** `marcellorusso/orchid-ncd-models`
-- **Dataset:** `marcellorusso/orchid-ncd-dataset`
+- **GitHub:** [squidslab/OrchidOSR](https://github.com/squidslab/OrchidOSR)
+- **Models:** `marcellorusso/orchid-osr-models`
+- **Dataset:** `marcellorusso/orchid-osr-dataset`
 
 ## License
 

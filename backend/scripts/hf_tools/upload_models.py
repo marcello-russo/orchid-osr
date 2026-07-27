@@ -16,7 +16,7 @@ _env = Path(__file__).resolve().parent.parent.parent / ".env"
 if _env.exists():
     load_dotenv(_env)
 
-HF_REPO = "marcellorusso/orchid-ncd-models"
+HF_REPO = "marcellorusso/orchid-osr-models"
 EXP_BASE = os.path.join(os.path.dirname(__file__), "..", "..", "experiments")
 EXP_BASE = os.path.abspath(EXP_BASE)
 
@@ -203,15 +203,15 @@ def _build_results_yaml(exp6_rows, exp7_rows, exp8_rows, exp9_rows=None, exp10_r
         lines.append("      - task:")
         lines.append("          type: image-classification")
         lines.append("        dataset:")
-        lines.append("          name: orchid-ncd-dataset")
-        lines.append("          type: marcellorusso/orchid-ncd-dataset")
+        lines.append("          name: orchid-osr-dataset")
+        lines.append("          type: marcellorusso/orchid-osr-dataset")
         lines.append("        metrics:")
         lines.append("          - name: Macro F1 Score")
         lines.append("            type: f1_macro")
         lines.append(f"            value: {f1}")
         lines.append("        source:")
         lines.append(f"          name: {exp}")
-        lines.append("          url: https://huggingface.co/datasets/marcellorusso/orchid-ncd-dataset")
+        lines.append("          url: https://huggingface.co/datasets/marcellorusso/orchid-osr-dataset")
 
     return "\n".join(lines)
 
@@ -293,15 +293,15 @@ tags:
 - convnext
 - dinov2
 datasets:
-- marcellorusso/orchid-ncd-dataset
+- marcellorusso/orchid-osr-dataset
 license: mit
 pipeline_tag: image-classification
 {results_yaml}
 ---
 
-# OrchID-NCD Models
+# OrchidOSR-NCD Models
 
-Trained model weights for the [OrchID-NCD](https://huggingface.co/spaces/marcellorusso/orchid-ncd)
+Trained model weights for the [OrchidOSR-NCD](https://huggingface.co/spaces/marcellorusso/orchid-osr)
 project — ultra-fine-grained visual classification of *Ophrys* orchids.
 
 Fine-grained classification of six cryptic *Ophrys* species
@@ -335,14 +335,14 @@ exp10_mgh_ncd/                     — Exp 10 (MGH-NCD)
 
 ## Usage
 
-The classifier in the [OrchID-NCD Space](https://huggingface.co/spaces/marcellorusso/orchid-ncd)
+The classifier in the [OrchidOSR-NCD Space](https://huggingface.co/spaces/marcellorusso/orchid-osr)
 downloads these weights at startup and uses them for inference.
 
 ## Links
 
-- [Dataset](https://huggingface.co/datasets/marcellorusso/orchid-ncd-dataset)
-- [Live Demo](https://huggingface.co/spaces/marcellorusso/orchid-ncd)
-- [GitHub](https://github.com/squidslab/OrchID)
+- [Dataset](https://huggingface.co/datasets/marcellorusso/orchid-osr-dataset)
+- [Live Demo](https://huggingface.co/spaces/marcellorusso/orchid-osr)
+- [GitHub](https://github.com/squidslab/OrchidOSR)
 """
 
     import tempfile

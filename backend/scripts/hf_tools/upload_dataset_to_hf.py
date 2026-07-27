@@ -1,5 +1,5 @@
 """
-Upload the OrchID-NCD dataset to HuggingFace.
+Upload the OrchidOSR-NCD dataset to HuggingFace.
 
 Structure:
   raw/private/{class}/     — raw private field photos
@@ -21,7 +21,7 @@ import tempfile
 
 from huggingface_hub import HfApi, create_repo
 
-REPO_ID = "marcellorusso/orchid-ncd-dataset"
+REPO_ID = "marcellorusso/orchid-osr-dataset"
 PROJECT_ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", ".."))
 DATASET_DIR = os.path.join(PROJECT_ROOT, "dataset")
 INTERNET_DIR = os.path.normpath(os.path.join(PROJECT_ROOT, "..", "..", "drive", "Immagini_Internet"))

@@ -18,7 +18,7 @@ from huggingface_hub import hf_hub_download
 import os
 try:
     path = hf_hub_download(
-        repo_id='marcellorusso/orchid-ncd-dataset',
+        repo_id='marcellorusso/orchid-osr-dataset',
         filename='users.json',
         repo_type='dataset',
         token=os.environ.get('HF_TOKEN')

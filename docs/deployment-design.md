@@ -1,9 +1,9 @@
-# Deployment Architecture Design — OrchID NCD
+# Deployment Architecture Design — OrchidOSR NCD
 
 ## Architettura
 
 ```
-Cloudflare Pages ──HTTPS──> orchid-ncd.pages.dev
+Cloudflare Pages ──HTTPS──> orchid-osr.pages.dev
 (Frontend React, CDN globale)
       │
       │ VITE_API_URL = https://<random>.trycloudflare.com

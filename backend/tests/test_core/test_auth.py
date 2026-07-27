@@ -28,8 +28,8 @@ class TestJWT:
         payload = decode_jwt(token)
         assert payload["sub"] == "testuser"
         assert payload["role"] == "admin"
-        assert payload["aud"] == "orchid-ncd"
-        assert payload["iss"] == "orchid-ncd-api"
+        assert payload["aud"] == "orchid-osr"
+        assert payload["iss"] == "orchid-osr-api"
 
     def test_decode_expired_token(self):
         import time
@@ -37,8 +37,8 @@ class TestJWT:
         payload = {
             "sub": "testuser",
             "role": "user",
-            "aud": "orchid-ncd",
-            "iss": "orchid-ncd-api",
+            "aud": "orchid-osr",
+            "iss": "orchid-osr-api",
             "iat": int(time.time()) - 99999,
             "exp": int(time.time()) - 1,
         }
