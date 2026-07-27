@@ -742,7 +742,7 @@ export function ResearchPage() {
           <div className="space-y-3 text-sm">
             {PAPERS.map((p) => (
               <div key={p.id} className="flex gap-2">
-                <span className="text-primary font-mono text-xs shrink-0 mt-0.5">[{p.id}]</span>
+                <span className="text-primary font-mono text-xs shrink-0 mt-0.5">[{p.shortAuthors}, {p.year}]</span>
                 <div>
                   <span className="font-medium text-foreground">{p.authors} ({p.year}).</span>{" "}
                   <em>{p.title}.</em>{" "}
