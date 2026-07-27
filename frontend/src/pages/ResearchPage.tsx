@@ -416,12 +416,6 @@ export function ResearchPage() {
           </SubSection>
 
           <Figure
-            src="/figures/cv_test_gap.webp"
-            alt="Generalization gap"
-            caption={t("research.exp7_fig1_caption")}
-          />
-
-          <Figure
             src="/figures/per_species_f1.webp"
             alt="F1 per specie"
             caption={t("research.exp7_fig2_caption")}
