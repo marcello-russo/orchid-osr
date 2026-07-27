@@ -12,17 +12,17 @@ import { CiteProvider } from "@/features/research/components/CiteContext";
 /* ── Sections index ── */
 
 const SECTIONS = [
-  { id: "intro", label: "Introduzione" },
-  { id: "contesto", label: "Contesto Botanico" },
-  { id: "dataset", label: "Dataset" },
-  { id: "metodologia", label: "Metodologia" },
-  { id: "exp6", label: "Exp 6 — CE" },
-  { id: "exp7", label: "Exp 7 — SupCon" },
-  { id: "exp8", label: "Exp 8 — SpHOR" },
-  { id: "exp10", label: "Exp 10 — MGH-NCD" },
-  { id: "benchmark", label: "Benchmark" },
-  { id: "conclusioni", label: "Conclusioni" },
-  { id: "bibliografia", label: "Bibliografia" },
+  { id: "intro", labelKey: "research.sect_intro" },
+  { id: "contesto", labelKey: "research.sect_contesto" },
+  { id: "dataset", labelKey: "research.sect_dataset" },
+  { id: "metodologia", labelKey: "research.sect_metodologia" },
+  { id: "exp6", labelKey: "research.sect_exp6" },
+  { id: "exp7", labelKey: "research.sect_exp7" },
+  { id: "exp8", labelKey: "research.sect_exp8" },
+  { id: "exp10", labelKey: "research.sect_exp10" },
+  { id: "benchmark", labelKey: "research.sect_benchmark" },
+  { id: "conclusioni", labelKey: "research.sect_conclusioni" },
+  { id: "bibliografia", labelKey: "research.sect_bibliografia" },
 ];
 
 /* ── Hooks ── */
@@ -112,7 +112,7 @@ export function ResearchPage() {
                   : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
               )}
             >
-              {s.label}
+              {t(s.labelKey)}
             </a>
           ))}
         </nav>
