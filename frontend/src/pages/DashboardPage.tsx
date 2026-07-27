@@ -70,7 +70,7 @@ export function DashboardPage() {
       {/* Banner */}
       <div>
         <img
-          src="/assets/images/banner.webp"
+          src="/assets/images/banner-osr.webp"
           alt="OrchID OSR"
           decoding="async"
           loading="eager"
