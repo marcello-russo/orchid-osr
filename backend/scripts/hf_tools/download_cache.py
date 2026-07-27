@@ -5,7 +5,7 @@ from pathlib import Path
 
 from huggingface_hub import snapshot_download
 
-DATASET_REPO = "marcellorusso/orchid-osr-dataset"
+DATASET_REPO = "marcellorusso/orchid-ncd-dataset"
 
 SAMPLE_RATIO = float(os.environ.get("DATASET_SAMPLE_RATIO", "1.0"))
 

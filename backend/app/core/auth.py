@@ -17,7 +17,7 @@ from app.config import settings
 logger = logging.getLogger(__name__)
 
 USERS_PATH = Path(os.environ.get("USERS_PATH", "data/users.json"))
-_HF_DATASET_REPO = "marcellorusso/orchid-osr-dataset"
+_HF_DATASET_REPO = "marcellorusso/orchid-ncd-dataset"
 JWT_ALGORITHM = "HS256"
 _LOGIN_ATTEMPTS: OrderedDict[str, int] = OrderedDict()
 LOGIN_ATTEMPTS_CACHE: dict[str, int] = {}
