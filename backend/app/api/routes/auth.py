@@ -27,7 +27,7 @@ class GenerateInviteRequest(BaseModel):
 
 class RegisterRequest(BaseModel):
     invite_code: str
-    username: str = Field(min_length=3, max_length=32, pattern=r"^[a-zA-Z0-9_]+$")
+    username: str = Field(min_length=3, max_length=32, pattern=r"^[a-zA-Z0-9_.-]+$")
     password: str = Field(min_length=8, max_length=128)
 
     @field_validator("password")
