@@ -1,4 +1,4 @@
-# OrchidOSR — Unified Dockerfile
+# OrchID OSR — Unified Dockerfile
 # Targets: cpu (HF Space, default), gpu (local), training (OVH/cloud)
 
 # Stage: shared scripts (avoids duplicate COPY across cpu/gpu/training targets)

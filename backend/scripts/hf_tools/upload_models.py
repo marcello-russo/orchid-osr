@@ -299,9 +299,9 @@ pipeline_tag: image-classification
 {results_yaml}
 ---
 
-# OrchidOSR-NCD Models
+# OrchID OSR-NCD Models
 
-Trained model weights for the [OrchidOSR-NCD](https://huggingface.co/spaces/marcellorusso/orchid-osr)
+Trained model weights for the [OrchID OSR-NCD](https://huggingface.co/spaces/marcellorusso/orchid-osr)
 project — ultra-fine-grained visual classification of *Ophrys* orchids.
 
 Fine-grained classification of six cryptic *Ophrys* species
@@ -335,14 +335,14 @@ exp10_mgh_ncd/                     — Exp 10 (MGH-NCD)
 
 ## Usage
 
-The classifier in the [OrchidOSR-NCD Space](https://huggingface.co/spaces/marcellorusso/orchid-osr)
+The classifier in the [OrchID OSR-NCD Space](https://huggingface.co/spaces/marcellorusso/orchid-osr)
 downloads these weights at startup and uses them for inference.
 
 ## Links
 
 - [Dataset](https://huggingface.co/datasets/marcellorusso/orchid-osr-dataset)
 - [Live Demo](https://huggingface.co/spaces/marcellorusso/orchid-osr)
-- [GitHub](https://github.com/squidslab/OrchidOSR)
+- [GitHub](https://github.com/squidslab/OrchID OSR)
 """
 
     import tempfile

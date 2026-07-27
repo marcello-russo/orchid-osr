@@ -1,4 +1,4 @@
-# OrchidOSR — Training Status & Results
+# OrchID OSR — Training Status & Results
 
 ## Stato Generale
 

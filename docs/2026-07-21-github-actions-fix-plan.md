@@ -208,7 +208,7 @@ Alla fine del file `ci.yml`, DOPO la chiusura del job `frontend` (dopo la riga `
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             set -e
-            cd ~/OrchidOSR
+            cd ~/OrchID OSR
             git pull origin main
             cd frontend
             npm run build 2>&1

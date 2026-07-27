@@ -1,4 +1,4 @@
-# AGENTS.md — OrchidOSR (orchid)
+# AGENTS.md — OrchID OSR (orchid)
 
 Master's thesis project: ultra-fine-grained classification of *Ophrys* orchids via deep learning. Python backend (FastAPI + PyTorch) + React frontend (Vite + TypeScript).
 
