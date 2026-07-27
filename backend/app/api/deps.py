@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from fastapi import Depends, HTTPException, Request, status
 
-from app.core.auth import decode_jwt
+from app.core.auth import ROLE_HIERARCHY, decode_jwt
 
 
 async def get_current_user(request: Request) -> dict:
@@ -19,9 +19,9 @@ async def get_current_user(request: Request) -> dict:
 def require_role(min_role: str):
     def _check(current_user: dict = Depends(get_current_user)):
         role = current_user.get("role", "")
-        if role == "superadmin":
-            return current_user
-        if role == min_role:
+        user_level = ROLE_HIERARCHY.get(role, -1)
+        min_level = ROLE_HIERARCHY.get(min_role, -1)
+        if user_level >= min_level:
             return current_user
         raise HTTPException(status_code=403, detail="Insufficient permissions")
 
