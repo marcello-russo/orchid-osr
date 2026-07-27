@@ -2,32 +2,32 @@
 skinparam backgroundColor white
 skinparam componentStyle rectangle
 
-title System Architecture — OrchID NCD
+title System Architecture — OrchID OSR
 
 actor "User / Browser" as user
 
 package "Cloudflare" {
-  component "Cloudflare Pages\nFrontend SPA" as pages
-  component "Cloudflare Tunnel\nEdge" as tunnel_edge
+  component "Cloudflare Tunnel\n(edge)" as tunnel
 }
 
-package "VPS (OVH / Dokploy)" {
+package "VPS" {
+  component "Nginx\n(frontend SPA + proxy)" as nginx
   component "FastAPI Backend" as api
   component "Classifier\nModel" as model
   database "HF Hub\nModel Weights" as hf_models
   database "HF Hub\nDataset Images" as hf_data
-  database "Local Cache\n/data" as cache
+  database "Local Volume\n/data (persist)" as cache
 }
 
-user --> pages : HTTPS
-pages --> tunnel_edge : API calls\n(VITE_API_URL)
+user --> tunnel : HTTPS\norchid-osr.klad.ml
+tunnel --> nginx : HTTP (internal docker network)
 
-tunnel_edge --> api : HTTP (internal)
+nginx --> api : proxy /api/* /auth/* /health
+nginx --> nginx : serve SPA\n(frontend/dist)
 
 api --> model : load & predict
 model --> hf_models : download .pt\n(on demand)
-api --> hf_data : download images\n(background)
-hf_data --> cache : persist
-api --> cache : read/write
+api --> hf_data : proxy images
+api --> cache : read/write\nusers.json\nexperiments
 
 @enduml
