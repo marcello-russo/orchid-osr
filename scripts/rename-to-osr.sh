@@ -29,14 +29,14 @@ grep -rl "orchid-ncd" --include="*.py" --include="*.ts" --include="*.tsx" \
     echo "  ✅ $f"
   done
 
-# 2. PascalCase "OrchidOSR" → "OrchidOSR" (JWT claims, display names)
-grep -rl "OrchidOSR" --include="*.py" --include="*.ts" --include="*.tsx" \
+# 2. PascalCase "OrchID OSR" → "OrchID OSR" (JWT claims, display names)
+grep -rl "OrchID OSR" --include="*.py" --include="*.ts" --include="*.tsx" \
   --include="*.json" --include="*.md" --include="*.yml" --include="*.yaml" \
   --include="*.sh" --include="*.html" 2>/dev/null | grep -v "node_modules" \
   | grep -v ".git/" | grep -v "__pycache__" | grep -v "coverage/" \
   | while read f; do
-    sed -i 's/OrchidOSR/OrchidOSR/g' "$f"
-    echo "  ✅ (OrchidOSR) $f"
+    sed -i 's/OrchID OSR/OrchID OSR/g' "$f"
+    echo "  ✅ (OrchID OSR) $f"
   done
 
 # 3. Uppercase "orchid_ncd" in Python  

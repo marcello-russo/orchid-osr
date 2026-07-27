@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/images/banner.png" alt="OrchidOSR NCD Banner" width="100%"/>
+  <img src="assets/images/banner.png" alt="OrchID OSR NCD Banner" width="100%"/>
 </p>
 
 <p align="center">
@@ -19,7 +19,7 @@
 <p align="center">
   <strong>Tesi magistrale — Università degli Studi di Napoli Federico II (DIETI)</strong>
   <br/>
-  <a href="https://github.com/squidslab/OrchidOSR">GitHub</a> ·
+  <a href="https://github.com/squidslab/OrchID OSR">GitHub</a> ·
   <a href="https://arxiv.org/abs/2503.08049">Articolo SpHOR</a>
 </p>
 

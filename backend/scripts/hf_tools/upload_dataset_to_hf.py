@@ -1,5 +1,5 @@
 """
-Upload the OrchidOSR-NCD dataset to HuggingFace.
+Upload the OrchID OSR-NCD dataset to HuggingFace.
 
 Structure:
   raw/private/{class}/     — raw private field photos

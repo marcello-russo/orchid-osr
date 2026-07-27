@@ -63,7 +63,7 @@
     "parameter": "Parametro"
   },
   "dashboard": {
-    "title": "Dashboard OrchidOSR-NCD",
+    "title": "Dashboard OrchID OSR-NCD",
     "subtitle": "Panoramica del benchmark di classificazione e monitoraggio degli esperimenti.",
     "species_distribution": "Distribuzione Specie",
     "recent_experiments": "Esperimenti Recenti",
@@ -309,7 +309,7 @@
   },
   "about": {
     "hero": {
-      "title": "OrchidOSR-NCD",
+      "title": "OrchID OSR-NCD",
       "description": "Un framework di ricerca end-to-end sviluppato presso l'Università degli Studi di Napoli Federico II per la classificazione visiva ultra-fine-grained e il representation learning delle orchidee del genere Ophrys.",
       "tag": "Progetto di Tesi Magistrale"
     },
@@ -739,7 +739,7 @@
     "futuri_li2_after": ", PartGCD",
     "futuri_li2_end": ") per NCD.",
     "futuri_li3": "Integrazione sistematica di XAI con validazione da parte di esperti botanici.",
-    "futuri_li4": "Validazione sul campo tramite deploy dell'applicazione OrchidOSR.",
+    "futuri_li4": "Validazione sul campo tramite deploy dell'applicazione OrchID OSR.",
     "risultati_li1_before": "Campione closed-set: ",
     "risultati_li1_mid": " + SupCon (F1 test 0,896, gap CV-Test −0,01) — il miglior compromesso tra accuratezza e generalizzazione.",
     "risultati_li2_before": "Campione open-set: ",

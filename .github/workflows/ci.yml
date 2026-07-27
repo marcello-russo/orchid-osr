@@ -96,7 +96,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             set -e
-            cd ~/OrchidOSR
+            cd ~/OrchID OSR
             git fetch origin main
             git reset --hard origin/main
             cd frontend

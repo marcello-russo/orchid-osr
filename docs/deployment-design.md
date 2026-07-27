@@ -1,4 +1,4 @@
-# Deployment Architecture Design — OrchidOSR NCD
+# Deployment Architecture Design — OrchID OSR NCD
 
 ## Architettura
 

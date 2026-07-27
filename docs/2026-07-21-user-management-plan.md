@@ -505,7 +505,7 @@ cd backend && python3 -c "from app.core.auth import delete_user, ensure_superadm
 L'`.env` reale sulla VPS (ignorato da git) ha ancora `ADMIN_USERNAME/PASSWORD`. Dopo il deploy:
 
 ```bash
-ssh -i keys/orchid-osr ubuntu@51.38.51.220 "sed -i 's/ADMIN_USERNAME/SUPERADMIN_USERNAME/g; s/ADMIN_PASSWORD/SUPERADMIN_PASSWORD/g' ~/OrchidOSR/.env"
+ssh -i keys/orchid-osr ubuntu@51.38.51.220 "sed -i 's/ADMIN_USERNAME/SUPERADMIN_USERNAME/g; s/ADMIN_PASSWORD/SUPERADMIN_PASSWORD/g' ~/OrchID OSR/.env"
 ```
 
 Poi dopo il prossimo deploy automatico, il container userà le nuove var.

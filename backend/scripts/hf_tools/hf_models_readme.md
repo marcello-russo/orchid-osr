@@ -10,7 +10,7 @@ tags:
   - ophrys
 ---
 
-# OrchidOSR NCD — Model Zoo
+# OrchID OSR NCD — Model Zoo
 
 Trained models for **Ophrys** orchid classification (6 species), part of the **Novel Class Discovery (NCD)** research.
 

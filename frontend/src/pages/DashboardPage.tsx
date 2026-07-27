@@ -71,7 +71,7 @@ export function DashboardPage() {
       <div>
         <img
           src="/assets/images/banner.webp"
-          alt="OrchidOSR NCD"
+          alt="OrchID OSR NCD"
           decoding="async"
           loading="eager"
           fetchPriority="high"

@@ -92,7 +92,7 @@ deploy:
         username: ubuntu
         key: ${{ secrets.VPS_SSH_KEY }}
         script: |
-          cd ~/OrchidOSR
+          cd ~/OrchID OSR
           git pull origin main
           cd frontend && npm run build
           cd ..

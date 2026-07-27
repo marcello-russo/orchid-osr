@@ -1,4 +1,4 @@
-# 🌸 OrchidOSR — Frontend
+# 🌸 OrchID OSR — Frontend
 
 React SPA per la classificazione e l'esplorazione dei risultati delle orchidee *Ophrys*.
 
@@ -13,7 +13,7 @@ npm install
 npm run dev     # → http://localhost:5175
 ```
 
-Richiede il backend OrchidOSR su porta 5000 (proxy API in `vite.config.ts`).
+Richiede il backend OrchID OSR su porta 5000 (proxy API in `vite.config.ts`).
 
 ## Build per produzione
 

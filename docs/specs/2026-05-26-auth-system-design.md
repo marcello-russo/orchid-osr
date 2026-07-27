@@ -1,8 +1,8 @@
-# Auth System — OrchidOSR
+# Auth System — OrchID OSR
 
 ## Overview
 
-Authentication and authorization system for OrchidOSR. Three roles (public, registered user, admin) with invite-based registration. Zero database — all state in a JSON file. Minimal admin overhead: generate invite tokens, share them, done.
+Authentication and authorization system for OrchID OSR. Three roles (public, registered user, admin) with invite-based registration. Zero database — all state in a JSON file. Minimal admin overhead: generate invite tokens, share them, done.
 
 ## Architecture
 
@@ -132,7 +132,7 @@ async def image(admin = Depends(require_role("admin"))): ...
 
 - Layout centrato full-height, sfondo `bg-background`
 - Card `bg-card border`
-- Logo "OrchidOSR NCD" in alto (stesso stile sidebar)
+- Logo "OrchID OSR NCD" in alto (stesso stile sidebar)
 - Tab toggle Login / Register con stile pill
 
 **Login tab:**
