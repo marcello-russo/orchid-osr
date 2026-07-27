@@ -10,9 +10,10 @@ if [ -d "$DATA_DIR" ]; then
     fi
     [ ! -L dataset ] && ln -sfn "$DATA_DIR/dataset" dataset 2>/dev/null || true
 
-    # Persistent users.json (auth) — scarica/sincronizza da dataset privato
-    echo "Sincronizzo users.json da dataset privato..."
-    python3 -c "
+    # Persistent users.json (auth) — scarica SOLO se non esiste già
+    if [ ! -f "$DATA_DIR/users.json" ]; then
+        echo "Scarico users.json da dataset privato (primo avvio)..."
+        python3 -c "
 from huggingface_hub import hf_hub_download
 import os
 try:
@@ -28,6 +29,9 @@ try:
 except Exception as e:
     print(f'users.json non disponibile: {e}')
 " 2>&1
+    else
+        echo "users.json già presente su /data, uso locale"
+    fi
     export USERS_PATH="$DATA_DIR/users.json"
     # JWT secret path: persist in /data per sopravvivere ai restart
     export JWT_SECRET_PATH="$DATA_DIR/.jwt_secret"
