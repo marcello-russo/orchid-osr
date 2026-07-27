@@ -82,8 +82,8 @@
       "best_test_accuracy": "Best Test Accuracy",
       "in_dataset": "in dataset",
       "combined_dataset": "combined dataset",
-      "best_ncd_auroc": "Best NCD AUROC",
-      "best_ncd_nmi": "Best NCD NMI",
+      "best_ncd_auroc": "Best OSR AUROC",
+      "best_ncd_nmi": "Best OSR NMI",
       "open_world": "Open-World Detection"
     },
     "table": {
@@ -115,7 +115,7 @@
       "test_acc": "Test Acc",
       "folds": "Folds",
       "select": "Select experiments to compare",
-      "ncd_auroc": "NCD AUROC"
+      "ncd_auroc": "OSR AUROC"
     },
     "empty": "No experiments found",
     "compare": "Compare",
@@ -180,13 +180,13 @@
       "confusion_pred": "Pred:",
       "no_loss_data": "Training data not available for this experiment"
     },
-    "ncd_tab": "NCD Evaluation",
+    "ncd_tab": "OSR Evaluation",
     "ncd_clustering": "Clustering Results",
     "ncd_osr": "Open-Set Recognition",
     "ncd_auroc": "Mean AUROC",
     "ncd_baseline_softmax": "Softmax Baseline",
     "ncd_improvement": "Improvement",
-    "ncd_no_data": "NCD results not available.",
+    "ncd_no_data": "OSR results not available.",
     "ncd_algorithm": "Algorithm",
     "ncd_clustering_acc": "ACC",
     "ncd_clustering_nmi": "NMI",
@@ -621,7 +621,7 @@
     "datatable_best_value": "Best value",
     "cite_open": "Open on ↗",
     "api_error": "Error",
-    "tag_ncd": "NCD",
+    "tag_ncd": "OSR",
     "tag_ncd_hint": "Can detect novel/unseen Ophrys species",
     "tag_best_f1": "★ Best F1",
     "tag_best_f1_hint": "Highest classification accuracy across all models",

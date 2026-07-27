@@ -63,7 +63,7 @@
     "parameter": "Parametro"
   },
   "dashboard": {
-    "title": "Dashboard OrchID OSR-NCD",
+    "title": "Dashboard OrchID OSR",
     "subtitle": "Panoramica del benchmark di classificazione e monitoraggio degli esperimenti.",
     "species_distribution": "Distribuzione Specie",
     "recent_experiments": "Esperimenti Recenti",
@@ -82,8 +82,8 @@
       "best_test_accuracy": "Miglior Test Accuracy",
       "in_dataset": "nel dataset",
       "combined_dataset": "dataset combinato",
-      "best_ncd_auroc": "Miglior AUROC NCD",
-      "best_ncd_nmi": "Miglior NMI NCD",
+      "best_ncd_auroc": "Miglior AUROC OSR",
+      "best_ncd_nmi": "Miglior NMI OSR",
       "open_world": "Rilevamento Open-World"
     },
     "table": {
@@ -115,7 +115,7 @@
       "test_acc": "Test Acc",
       "folds": "Fold",
       "select": "Seleziona esperimenti da confrontare",
-      "ncd_auroc": "NCD AUROC"
+      "ncd_auroc": "OSR AUROC"
     },
     "empty": "Nessun esperimento trovato",
     "compare": "Confronta",
@@ -180,13 +180,13 @@
       "confusion_pred": "Pred:",
       "no_loss_data": "Dati di training non disponibili per questo esperimento"
     },
-    "ncd_tab": "Valutazione NCD",
+    "ncd_tab": "Valutazione OSR",
     "ncd_clustering": "Risultati Clustering",
     "ncd_osr": "Open-Set Recognition",
     "ncd_auroc": "AUROC medio",
     "ncd_baseline_softmax": "Baseline Softmax",
     "ncd_improvement": "Miglioramento",
-    "ncd_no_data": "Risultati NCD non disponibili.",
+    "ncd_no_data": "Risultati OSR non disponibili.",
     "ncd_algorithm": "Algoritmo",
     "ncd_clustering_acc": "ACC",
     "ncd_clustering_nmi": "NMI",
@@ -621,7 +621,7 @@
     "datatable_best_value": "Miglior valore",
     "cite_open": "Apri su ↗",
     "api_error": "Errore",
-    "tag_ncd": "NCD",
+    "tag_ncd": "OSR",
     "tag_ncd_hint": "Rileva specie di Ophrys nuove/non viste",
     "tag_best_f1": "★ Miglior F1",
     "tag_best_f1_hint": "Miglior accuratezza di classificazione tra tutti i modelli",
