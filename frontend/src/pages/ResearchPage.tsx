@@ -331,12 +331,12 @@ export function ResearchPage() {
               { key: "gap", label: t("research.table_gap") },
             ]}
             rows={[
-              { model: "ResNet-18", cv: "0,860", test: "0,880", params: "11M", gap: "+0,020" },
-              { model: "ResNet-50", cv: "0,858", test: "0,882", params: "25M", gap: "+0,024" },
-              { model: "ConvNeXt-Tiny", cv: "0,892", test: "0,890", params: "28M", gap: "−0,002" },
-              { model: "ConvNeXt-Small", cv: "0,883", test: "0,863", params: "50M", gap: "−0,020" },
-              { model: "DINOv2-Small", cv: "0,906", test: "0,888", params: "21M", gap: "−0,018" },
-              { model: "DINOv2-Base", cv: "0,916", test: "0,927", params: "86M", gap: "+0,011" },
+              { model: "ResNet-18", cv: "0,860", test: "0,978", params: "11M", gap: "+0,117" },
+              { model: "ResNet-50", cv: "0,887", test: "0,980", params: "25M", gap: "+0,093" },
+              { model: "ConvNeXt-Tiny", cv: "0,702", test: "0,821", params: "28M", gap: "+0,119" },
+              { model: "ConvNeXt-Small", cv: "0,527", test: "0,793", params: "50M", gap: "+0,266" },
+              { model: "DINOv2-Small", cv: "0,884", test: "0,970", params: "21M", gap: "+0,086" },
+              { model: "DINOv2-Base", cv: "0,911", test: "0,975", params: "86M", gap: "+0,064" },
             ]}
             highlightRow="DINOv2-Base"
             caption={t("research.exp6_caption")}
@@ -390,12 +390,12 @@ export function ResearchPage() {
               { key: "gap", label: t("research.table_gap") },
             ]}
             rows={[
-              { model: "ResNet-18", cv: "0,612", test: "0,736", gap: "+0,123" },
-              { model: "ResNet-50", cv: "0,736", test: "0,799", gap: "+0,063" },
-              { model: "ConvNeXt-Tiny", cv: "0,876", test: "0,681", gap: "−0,195" },
-              { model: "ConvNeXt-Small", cv: "0,882", test: "0,689", gap: "−0,194" },
-              { model: "DINOv2-Small", cv: "0,906", test: "0,896", gap: "−0,010" },
-              { model: "DINOv2-Base", cv: "0,914", test: "0,687", gap: "−0,226" },
+              { model: "ResNet-18", cv: "0,364", test: "0,444", gap: "+0,080" },
+              { model: "ResNet-50", cv: "0,383", test: "0,465", gap: "+0,083" },
+              { model: "ConvNeXt-Tiny", cv: "0,844", test: "0,837", gap: "−0,007" },
+              { model: "ConvNeXt-Small", cv: "0,704", test: "0,517", gap: "−0,187" },
+              { model: "DINOv2-Small", cv: "0,913", test: "0,888", gap: "−0,026" },
+              { model: "DINOv2-Base", cv: "0,933", test: "0,936", gap: "+0,004" },
             ]}
             highlightRow="DINOv2-Small"
             caption={t("research.exp7_caption")}
@@ -457,12 +457,12 @@ export function ResearchPage() {
               { key: "detector", label: t("research.table_best_detector") },
             ]}
             rows={[
-              { model: "ResNet-18", f1t: "0,520", f1cv: "0,398", det: "0,093", detector: "Mahalanobis" },
-              { model: "ResNet-50", f1t: "0,609", f1cv: "0,736", det: "0,538", detector: "Ensemble" },
-              { model: "ConvNeXt-Tiny", f1t: "0,759", f1cv: "0,794", det: "0,907", detector: "Ensemble" },
-              { model: "ConvNeXt-Small", f1t: "0,668", f1cv: "0,735", det: "0,480", detector: "Energy" },
-              { model: "DINOv2-Small", f1t: "0,747", f1cv: "0,906", det: "0,670", detector: "Ensemble" },
-              { model: "DINOv2-Base", f1t: "0,654", f1cv: "0,870", det: "0,746", detector: "Energy" },
+              { model: "ResNet-18", f1t: "0,520", f1cv: "0,398", det: "0,095", detector: "Mahalanobis" },
+              { model: "ResNet-50", f1t: "0,594", f1cv: "0,540", det: "0,538", detector: "Ensemble" },
+              { model: "ConvNeXt-Tiny", f1t: "0,829", f1cv: "0,815", det: "0,907", detector: "Ensemble" },
+              { model: "ConvNeXt-Small", f1t: "0,801", f1cv: "0,698", det: "0,480", detector: "Ensemble" },
+              { model: "DINOv2-Small", f1t: "0,904", f1cv: "0,917", det: "0,670", detector: "Ensemble" },
+              { model: "DINOv2-Base", f1t: "0,911", f1cv: "0,930", det: "0,746", detector: "Energy" },
             ]}
             highlightRow="ConvNeXt-Tiny"
             caption={t("research.exp8_caption")}
@@ -503,8 +503,8 @@ export function ResearchPage() {
 
           <P>
             L&apos;analisi del clustering sugli embedding SpHOR conferma che la separazione
-            non supervisionata rimane aperta: l&apos;NMI al k reale (k=6) è 0,164 per ConvNeXt-Tiny
-            e 0,187 per DINOv2-Base. K-means converge a k=2 (separazione binaria tra i due cluster
+             non supervisionata rimane aperta: l&apos;NMI al k reale (k=6) è 0,219 per ConvNeXt-Tiny
+             e 0,648 per DINOv2-Base. K-means converge a k=2 (separazione binaria tra i due cluster
             principali). DBSCAN classifica il 96% dei punti come rumore.
           </P>
 
@@ -560,12 +560,12 @@ export function ResearchPage() {
               { key: "palena", label: t("research.table_palena") },
             ]}
             rows={[
-              { model: "ResNet-18", f1t: "0,226", det: "0,257", nmi: "0,034", acc: "0,253", palena: "64%" },
-              { model: "ResNet-50", f1t: "0,174", det: "0,321", nmi: "0,023", acc: "0,206", palena: "68%" },
-              { model: "ConvNeXt-Tiny", f1t: "0,349", det: "0,566", nmi: "0,142", acc: "0,386", palena: "55%" },
-              { model: "ConvNeXt-Small", f1t: "0,247", det: "0,536", nmi: "0,075", acc: "0,330", palena: "60%" },
-              { model: "DINOv2-Small", f1t: "0,270", det: "0,391", nmi: "0,239", acc: "0,592", palena: "61%" },
-              { model: "DINOv2-Base", f1t: "0,369", det: "0,688", nmi: "0,485", acc: "0,511", palena: "74%" },
+              { model: "ResNet-18", f1t: "0,226", det: "0,257", nmi: "0,137", acc: "0,253", palena: "19%" },
+              { model: "ResNet-50", f1t: "0,064", det: "0,321", nmi: "0,032", acc: "0,206", palena: "0%" },
+              { model: "ConvNeXt-Tiny", f1t: "0,110", det: "0,566", nmi: "0,248", acc: "0,386", palena: "29%" },
+              { model: "ConvNeXt-Small", f1t: "0,078", det: "0,537", nmi: "0,162", acc: "0,330", palena: "98%" },
+              { model: "DINOv2-Small", f1t: "0,077", det: "0,610", nmi: "0,549", acc: "0,592", palena: "91%" },
+              { model: "DINOv2-Base", f1t: "0,057", det: "0,688", nmi: "0,425", acc: "0,511", palena: "78%" },
             ]}
             highlightRow="DINOv2-Base"
             caption={t("research.exp10_caption")}
@@ -646,14 +646,14 @@ export function ResearchPage() {
               { key: "osr10", label: t("research.table_osr10") },
             ]}
             rows={[
-              { model: "ResNet-18", e6: "0,880", e7: "0,736", e8: "0,520", e10: "0,226", osr8: "0,093", osr10: "0,257" },
-              { model: "ResNet-50", e6: "0,882", e7: "0,799", e8: "0,609", e10: "0,174", osr8: "0,538", osr10: "0,321" },
-              { model: "ConvNeXt-Tiny", e6: "0,890", e7: "0,681", e8: "0,759", e10: "0,349", osr8: "0,907", osr10: "0,566" },
-              { model: "ConvNeXt-Small", e6: "0,863", e7: "0,689", e8: "0,668", e10: "0,247", osr8: "0,480", osr10: "0,536" },
-              { model: "DINOv2-Small", e6: "0,888", e7: "0,896", e8: "0,747", e10: "0,270", osr8: "0,670", osr10: "0,391" },
-              { model: "DINOv2-Base", e6: "0,927", e7: "0,687", e8: "0,654", e10: "0,369", osr8: "0,746", osr10: "0,688" },
+              { model: "ResNet-18", e6: "0,978", e7: "0,444", e8: "0,520", e10: "0,226", osr8: "0,095", osr10: "0,257" },
+              { model: "ResNet-50", e6: "0,980", e7: "0,465", e8: "0,594", e10: "0,064", osr8: "0,538", osr10: "0,321" },
+              { model: "ConvNeXt-Tiny", e6: "0,821", e7: "0,837", e8: "0,829", e10: "0,110", osr8: "0,907", osr10: "0,566" },
+              { model: "ConvNeXt-Small", e6: "0,793", e7: "0,517", e8: "0,801", e10: "0,078", osr8: "0,480", osr10: "0,537" },
+              { model: "DINOv2-Small", e6: "0,970", e7: "0,888", e8: "0,904", e10: "0,077", osr8: "0,670", osr10: "0,610" },
+              { model: "DINOv2-Base", e6: "0,975", e7: "0,936", e8: "0,911", e10: "0,057", osr8: "0,746", osr10: "0,688" },
             ]}
-            bests={{ e6: "DINOv2-Base", e7: "DINOv2-Small", osr8: "ConvNeXt-Tiny" }}
+            bests={{ e6: "DINOv2-Base", e7: "DINOv2-Base", osr8: "ConvNeXt-Tiny" }}
             caption={t("research.benchmark_caption")}
           />
 
