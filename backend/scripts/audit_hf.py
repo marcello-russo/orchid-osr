@@ -5,7 +5,7 @@ import datetime
 from huggingface_hub import HfApi
 
 api = HfApi()
-REPO = "marcellorusso/orchid-ncd-models"
+REPO = "marcellorusso/orchid-osr-models"
 CUTOFF_DAYS = 15
 
 tree = api.list_repo_tree(REPO, recursive=True, expand=True)
