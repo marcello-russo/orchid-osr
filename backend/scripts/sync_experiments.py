@@ -10,7 +10,11 @@ Production-grade sync:
 
 import json
 import os
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from scripts.hf_config import HF_MODELS_REPO
 
 from huggingface_hub import HfApi
 
@@ -47,7 +51,7 @@ def main():
         return
 
     api = HfApi(token=token)
-    REPO = "marcellorusso/orchid-osr-models"
+    REPO = HF_MODELS_REPO
     DST = os.environ.get("EXPERIMENTS_DIR", "/data/experiments")
     os.makedirs(DST, exist_ok=True)
 

@@ -5,13 +5,18 @@ This script exists as a fallback for manual sync if needed."""
 
 import logging
 import os
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
+from scripts.hf_config import HF_MODELS_REPO
 
 from huggingface_hub import HfApi
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-REPO_ID = "marcellorusso/orchid-osr-models"
+REPO_ID = HF_MODELS_REPO
 HF_TOKEN = os.environ.get("HF_TOKEN", "")
 api = HfApi(token=HF_TOKEN)
 

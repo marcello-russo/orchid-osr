@@ -17,7 +17,6 @@ from app.config import settings
 logger = logging.getLogger(__name__)
 
 USERS_PATH = Path(os.environ.get("USERS_PATH", "data/users.json"))
-_HF_DATASET_REPO = "marcellorusso/orchid-osr-dataset"
 JWT_ALGORITHM = "HS256"
 _LOGIN_ATTEMPTS: OrderedDict[str, int] = OrderedDict()
 LOGIN_ATTEMPTS_CACHE: dict[str, int] = {}
@@ -74,7 +73,7 @@ def _sync_to_hf() -> None:
         api.upload_file(
             path_or_fileobj=str(USERS_PATH),
             path_in_repo="users.json",
-            repo_id=_HF_DATASET_REPO,
+            repo_id=settings.hf_dataset_repo,
             repo_type="dataset",
         )
     except Exception as e:

@@ -1,11 +1,15 @@
 import os
 import random
 import shutil
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
+from scripts.hf_config import HF_DATASET_REPO
 
 from huggingface_hub import snapshot_download
 
-DATASET_REPO = "marcellorusso/orchid-osr-dataset"
+DATASET_REPO = HF_DATASET_REPO
 
 SAMPLE_RATIO = float(os.environ.get("DATASET_SAMPLE_RATIO", "1.0"))
 

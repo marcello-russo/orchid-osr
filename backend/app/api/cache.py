@@ -28,7 +28,6 @@ _model_cache_lock = threading.Lock()
 _osr_stats_cache: dict[str, dict] = {}
 _osr_stats_lock = threading.Lock()
 
-_HF_MODELS_REPO = "marcellorusso/orchid-osr-models"
 _HF_PREFIX_MAP = {
     "exp6_clean_split": "exp6_ce",
     "exp7_supcon": "exp7_supcon",
@@ -105,7 +104,7 @@ def get_osr_stats(model_id: str) -> dict | None:
     if not local_path.exists():
         try:
             downloaded = hf_hub_download(
-                repo_id=_HF_MODELS_REPO,
+                repo_id=settings.hf_models_repo,
                 filename=stats_path_in_repo,
                 token=settings.hf_token or None,
             )

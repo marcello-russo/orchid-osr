@@ -1,11 +1,16 @@
 """Audit HF repo file ages and flag outdated files."""
 
 import datetime
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from scripts.hf_config import HF_MODELS_REPO
 
 from huggingface_hub import HfApi
 
 api = HfApi()
-REPO = "marcellorusso/orchid-osr-models"
+REPO = HF_MODELS_REPO
 CUTOFF_DAYS = 15
 
 tree = api.list_repo_tree(REPO, recursive=True, expand=True)

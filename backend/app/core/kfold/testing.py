@@ -5,6 +5,12 @@ import logging
 import os
 from pathlib import Path
 
+import numpy as np
+import torch
+from torch.utils.data import DataLoader
+
+from app.config import settings
+
 try:
     from dotenv import load_dotenv
 
@@ -13,14 +19,7 @@ try:
 except ImportError:
     pass
 
-import numpy as np
-import torch
-from torch.utils.data import DataLoader
-
 logger = logging.getLogger(__name__)
-
-HF_MODELS_REPO = "marcellorusso/orchid-osr-models"
-
 
 def _upload_to_hf(output_dir, model_variant):
     """Upload only essential model files to HuggingFace: best fold weights + metadata."""
@@ -46,7 +45,7 @@ def _upload_to_hf(output_dir, model_variant):
     else:
         exp_group = "exp6_ce"
     remote_dir = f"{exp_group}/{exp_name}"
-    logger.info(f"Uploading results to HF: {HF_MODELS_REPO}/{remote_dir}/")
+    logger.info(f"Uploading results to HF: {settings.hf_models_repo}/{remote_dir}/")
 
     # Read results to find best fold
     results_path = os.path.join(output_dir, "results.json")
@@ -65,7 +64,7 @@ def _upload_to_hf(output_dir, model_variant):
             if os.path.exists(fpath):
                 logger.info(f"  Uploading {fname}")
                 api.upload_file(
-                    repo_id=HF_MODELS_REPO,
+                    repo_id=settings.hf_models_repo,
                     path_or_fileobj=fpath,
                     path_in_repo=f"{remote_dir}/{fname}",
                 )
@@ -76,7 +75,7 @@ def _upload_to_hf(output_dir, model_variant):
             if os.path.exists(fpath):
                 logger.info(f"  Uploading {best_pt}")
                 api.upload_file(
-                    repo_id=HF_MODELS_REPO,
+                    repo_id=settings.hf_models_repo,
                     path_or_fileobj=fpath,
                     path_in_repo=f"{remote_dir}/{best_pt}",
                 )
@@ -85,12 +84,12 @@ def _upload_to_hf(output_dir, model_variant):
             if os.path.isdir(adapter_dir):
                 logger.info("  Uploading adapter directory")
                 api.upload_folder(
-                    repo_id=HF_MODELS_REPO,
+                    repo_id=settings.hf_models_repo,
                     folder_path=adapter_dir,
                     path_in_repo=f"{remote_dir}/best_fold_{best_fold}_adapter",
                 )
 
-        logger.info(f"Upload to HF complete: {HF_MODELS_REPO}/{remote_dir}/")
+        logger.info(f"Upload to HF complete: {settings.hf_models_repo}/{remote_dir}/")
     except Exception as e:
         logger.warning(f"HF upload failed: {e}")
 
