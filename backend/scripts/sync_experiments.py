@@ -47,7 +47,7 @@ def main():
         return
 
     api = HfApi(token=token)
-    REPO = "marcellorusso/orchid-ncd-models"
+    REPO = "marcellorusso/orchid-osr-models"
     DST = os.environ.get("EXPERIMENTS_DIR", "/data/experiments")
     os.makedirs(DST, exist_ok=True)
 

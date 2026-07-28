@@ -16,7 +16,7 @@ _env = Path(__file__).resolve().parent.parent.parent / ".env"
 if _env.exists():
     load_dotenv(_env)
 
-HF_REPO = "marcellorusso/orchid-ncd-models"
+HF_REPO = "marcellorusso/orchid-osr-models"
 EXP_BASE = os.path.join(os.path.dirname(__file__), "..", "..", "experiments")
 EXP_BASE = os.path.abspath(EXP_BASE)
 

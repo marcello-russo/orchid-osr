@@ -19,7 +19,7 @@ from torch.utils.data import DataLoader
 
 logger = logging.getLogger(__name__)
 
-HF_MODELS_REPO = "marcellorusso/orchid-ncd-models"
+HF_MODELS_REPO = "marcellorusso/orchid-osr-models"
 
 
 def _upload_to_hf(output_dir, model_variant):

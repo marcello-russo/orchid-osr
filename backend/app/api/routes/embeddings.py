@@ -112,7 +112,7 @@ async def get_embeddings(
         points=points,
         serving=ServingInfo(
             note="Embeddings are pre-computed during training and uploaded to HuggingFace. No on-the-fly computation.",
-            repo="marcellorusso/orchid-ncd-models",
+            repo="marcellorusso/orchid-osr-models",
             path=f"{{exp}}/{experiment}/embeddings/" if experiment else "",
         ),
     )
