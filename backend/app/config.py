@@ -77,6 +77,10 @@ class Settings(BaseSettings):
     # HuggingFace token (from .env)
     hf_token: str = ""
 
+    # HuggingFace repository URLs (from .env, fallback a default)
+    hf_dataset_repo: str = "marcellorusso/orchid-osr-dataset"
+    hf_models_repo: str = "marcellorusso/orchid-osr-models"
+
     # JWT authentication (from .env)
     jwt_secret: str = ""
     jwt_secret_path: str = "data/jwt_secret.txt"

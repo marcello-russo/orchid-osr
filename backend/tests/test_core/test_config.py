@@ -43,3 +43,34 @@ def test_settings_hf_configured():
     settings = Settings()
     assert hasattr(settings, "hf_configured")
     assert isinstance(settings.hf_configured, bool)
+
+
+def test_hf_dataset_repo_format():
+    """Test HF dataset repo URL has valid org/repo format."""
+    settings = Settings()
+    assert settings.hf_dataset_repo.count("/") == 1
+    org, repo = settings.hf_dataset_repo.split("/")
+    assert org and repo
+
+
+def test_hf_models_repo_format():
+    """Test HF models repo URL has valid org/repo format."""
+    settings = Settings()
+    assert settings.hf_models_repo.count("/") == 1
+    org, repo = settings.hf_models_repo.split("/")
+    assert org and repo
+
+
+def test_hf_repos_are_different():
+    """Test dataset and models repos are not the same (copy-paste guard)."""
+    settings = Settings()
+    assert settings.hf_dataset_repo != settings.hf_models_repo
+
+
+def test_hf_repo_from_env(monkeypatch):
+    """Test HF repo URL can be overridden from environment."""
+    monkeypatch.setenv("HF_DATASET_REPO", "other-org/other-dataset")
+    monkeypatch.setenv("HF_MODELS_REPO", "other-org/other-models")
+    settings = Settings()
+    assert settings.hf_dataset_repo == "other-org/other-dataset"
+    assert settings.hf_models_repo == "other-org/other-models"

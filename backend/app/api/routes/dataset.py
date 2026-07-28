@@ -19,7 +19,6 @@ _IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
 _VALID_SPLITS = {"train", "test"}
 _VALID_CLASSES = set(settings.class_names)
 _CROPPED_DIR = "cropped_256x512"
-_HF_DATASET = "marcellorusso/orchid-osr-dataset"
 _HF_BRANCH = "main"
 _LISTING_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "dataset_listing.json"
 
@@ -151,7 +150,7 @@ async def _hf_proxy(class_name: str, filename: str, cache_dir: Path | None = Non
         "cropped/256x512/train",
         "cropped/256x512/test",
     ]:
-        hf_url = f"https://huggingface.co/datasets/{_HF_DATASET}/resolve/{_HF_BRANCH}/{crop}/{class_name}/{filename}"
+        hf_url = f"https://huggingface.co/datasets/{settings.hf_dataset_repo}/resolve/{_HF_BRANCH}/{crop}/{class_name}/{filename}"
         client = await _get_http_client()
         resp = await client.get(hf_url, headers=headers, follow_redirects=True)
         if resp.status_code == 200:

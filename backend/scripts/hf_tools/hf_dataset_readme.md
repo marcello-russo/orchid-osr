@@ -22,9 +22,9 @@ Part of the **OrchID OSR-NCD** project: representation learning and novel class 
 
 ## Links
 
-- **Live demo:** [marcellorusso-orchid-ncd.hf.space](https://marcellorusso-orchid-ncd.hf.space)
+- **Live demo:** [marcellorusso-orchid-osr.hf.space](https://marcellorusso-orchid-osr.hf.space)
 - **Code:** [github.com/squidslab/OrchID](https://github.com/squidslab/OrchID)
-- **Models:** [marcellorusso/orchid-ncd-models](https://huggingface.co/marcellorusso/orchid-ncd-models)
+- **Models:** [marcellorusso/orchid-osr-models](https://huggingface.co/marcellorusso/orchid-osr-models)
 
 ---
 
@@ -111,7 +111,7 @@ Raw images ──► Faster R-CNN ──► Clean split ──► Letterbox resi
 from huggingface_hub import snapshot_download
 
 snapshot_download(
-    repo_id="marcellorusso/orchid-ncd-dataset",
+    repo_id="marcellorusso/orchid-osr-dataset",
     repo_type="dataset",
     local_dir="dataset",
 )
@@ -145,8 +145,8 @@ Previous experiments suffered from **data leakage** — the same photo, download
 ## Links
 
 - **GitHub:** [squidslab/OrchID](https://github.com/squidslab/OrchID) · [marcello-russo](https://github.com/marcello-russo)
-- **Live demo:** [marcellorusso-orchid-ncd.hf.space](https://marcellorusso-orchid-ncd.hf.space)
-- **Models:** [huggingface.co/marcellorusso/orchid-ncd-models](https://huggingface.co/marcellorusso/orchid-ncd-models)
+- **Live demo:** [marcellorusso-orchid-osr.hf.space](https://marcellorusso-orchid-osr.hf.space)
+- **Models:** [huggingface.co/marcellorusso/orchid-osr-models](https://huggingface.co/marcellorusso/orchid-osr-models)
 
 ## License
 

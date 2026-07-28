@@ -8,6 +8,9 @@ import os
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from scripts.hf_config import HF_MODELS_REPO
+
 from dotenv import load_dotenv
 from huggingface_hub import HfApi
 
@@ -28,7 +31,7 @@ def main():
         print("ERROR: HF_TOKEN not set and not found in .env")
         sys.exit(1)
 
-    print("Syncing experiments from marcellorusso/orchid-osr-models...")
+    print(f"Syncing experiments from {HF_MODELS_REPO}...")
     print(f"Experiment dir: {exp_dir}")
 
     if not exp_dir.is_dir():
@@ -39,7 +42,7 @@ def main():
         sys.exit(1)
 
     api = HfApi(token=token)
-    REPO = "marcellorusso/orchid-osr-models"
+    REPO = HF_MODELS_REPO
 
     print("Listing HF repo contents...")
     hf_paths = list_repo_files(api, REPO)

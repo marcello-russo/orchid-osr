@@ -11,6 +11,7 @@ Test set source mapping (deterministic):
 import json
 import os
 import sys
+from pathlib import Path
 
 import numpy as np
 
@@ -28,6 +29,20 @@ SOURCE = [0, 0, 0, 1, 0, 1]
 SRC_NAMES = {0: "internet", 1: "campo"}
 
 
+def within_source_accuracy(confusion: np.ndarray, indices: list[int]) -> float:
+    correct = float(sum(confusion[i, i] for i in indices))
+    total = float(sum(confusion[i, :].sum() for i in indices))
+    return correct / total if total > 0 else 0.0
+
+
+def cross_source_rate(
+    confusion: np.ndarray, indices_from: list[int], indices_to: list[int]
+) -> float:
+    errors = float(sum(confusion[i, j] for i in indices_from for j in indices_to))
+    total = float(sum(confusion[i, :].sum() for i in indices_from))
+    return errors / total if total > 0 else 0.0
+
+
 def analyze_experiment(exp_dir: str, label: str) -> dict | None:
     path = os.path.join(BASE, exp_dir, "results.json")
     if not os.path.exists(path):
@@ -37,8 +52,6 @@ def analyze_experiment(exp_dir: str, label: str) -> dict | None:
     cm = np.array(data["test_metrics"]["confusion_matrix"])
     n = cm.shape[0]
     assert n == 6, f"Expected 6 classes, got {n}"
-
-    totals = cm.sum(axis=1)  # true class counts (should all be 50)
 
     # Per-class F1 from confusion matrix
     f1_per_class = []
@@ -57,30 +70,10 @@ def analyze_experiment(exp_dir: str, label: str) -> dict | None:
     internet_idx = [i for i in range(n) if SOURCE[i] == 0]
     field_idx = [i for i in range(n) if SOURCE[i] == 1]
 
-    def within_source_accuracy(indices):
-        correct = sum(cm[i, i] for i in indices)
-        total = sum(totals[i] for i in indices)
-        return correct / total if total > 0 else 0.0
-
-    def cross_source_errors(indices_from, indices_to):
-        errors = 0
-        total = sum(totals[i] for i in indices_from)
-        for i in indices_from:
-            for j in indices_to:
-                errors += cm[i, j]
-        # Only from→to; not including diagonal of "to" set
-        diag_correct = sum(cm[i, i] for i in indices_to)
-        # We want: images from FROM set classified as TO species
-        errors_fine = 0
-        for i in indices_from:
-            for j in indices_to:
-                errors_fine += cm[i, j]
-        return errors_fine / total if total > 0 else 0.0
-
-    wsi = within_source_accuracy(internet_idx)
-    wsf = within_source_accuracy(field_idx)
-    csi = cross_source_errors(internet_idx, field_idx)
-    csf = cross_source_errors(field_idx, internet_idx)
+    wsi = within_source_accuracy(cm, internet_idx)
+    wsf = within_source_accuracy(cm, field_idx)
+    csi = cross_source_rate(cm, internet_idx, field_idx)
+    csf = cross_source_rate(cm, field_idx, internet_idx)
 
     return {
         "label": label,
@@ -93,7 +86,7 @@ def analyze_experiment(exp_dir: str, label: str) -> dict | None:
     }
 
 
-def main():
+def main() -> None:
     experiments = [
         ("exp6_clean_split_resnet50", "CE ResNet-50"),
         ("exp6_clean_split_dinov2_base", "CE DINOv2-Base"),
@@ -134,6 +127,25 @@ def main():
             f"{r['within_internet_acc']:>6.3f} {r['within_field_acc']:>6.3f} "
             f"{r['internet_to_field_rate']:>6.3f} {r['field_to_internet_rate']:>6.3f}"
         )
+
+
+    output = {
+        r["label"]: {
+            "macro_f1": r["macro_f1"],
+            "within_internet_acc": r["within_internet_acc"],
+            "within_field_acc": r["within_field_acc"],
+            "internet_to_field_rate": r["internet_to_field_rate"],
+            "field_to_internet_rate": r["field_to_internet_rate"],
+            "f1_per_class": {
+                SPECIES[i]: r["f1_per_class"][i] for i in range(len(SPECIES))
+            },
+        }
+        for r in results
+    }
+    out_path = Path(__file__).resolve().parent.parent / "experiments" / "domain_shift_summary.json"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(output, indent=2, ensure_ascii=False))
+    print(f"\nSalvato in {out_path}")
 
 
 if __name__ == "__main__":

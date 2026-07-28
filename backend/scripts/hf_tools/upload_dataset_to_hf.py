@@ -17,11 +17,16 @@ Requires: huggingface_hub, HF token configured (huggingface-cli login)
 
 import os
 import shutil
+import sys
 import tempfile
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
+from scripts.hf_config import HF_DATASET_REPO
 
 from huggingface_hub import HfApi, create_repo
 
-REPO_ID = "marcellorusso/orchid-osr-dataset"
+REPO_ID = HF_DATASET_REPO
 PROJECT_ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", ".."))
 DATASET_DIR = os.path.join(PROJECT_ROOT, "dataset")
 INTERNET_DIR = os.path.normpath(os.path.join(PROJECT_ROOT, "..", "..", "drive", "Immagini_Internet"))

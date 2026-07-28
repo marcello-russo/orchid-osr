@@ -8,6 +8,9 @@ import os
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
+from scripts.hf_config import HF_MODELS_REPO, HF_DATASET_REPO
+
 from dotenv import load_dotenv
 from huggingface_hub import HfApi
 
@@ -16,7 +19,7 @@ _env = Path(__file__).resolve().parent.parent.parent / ".env"
 if _env.exists():
     load_dotenv(_env)
 
-HF_REPO = "marcellorusso/orchid-osr-models"
+HF_REPO = HF_MODELS_REPO
 EXP_BASE = os.path.join(os.path.dirname(__file__), "..", "..", "experiments")
 EXP_BASE = os.path.abspath(EXP_BASE)
 
@@ -203,15 +206,15 @@ def _build_results_yaml(exp6_rows, exp7_rows, exp8_rows, exp9_rows=None, exp10_r
         lines.append("      - task:")
         lines.append("          type: image-classification")
         lines.append("        dataset:")
-        lines.append("          name: orchid-osr-dataset")
-        lines.append("          type: marcellorusso/orchid-osr-dataset")
+        lines.append(f"          name: {HF_DATASET_REPO.rsplit('/', 1)[-1]}")
+        lines.append(f"          type: {HF_DATASET_REPO}")
         lines.append("        metrics:")
         lines.append("          - name: Macro F1 Score")
         lines.append("            type: f1_macro")
         lines.append(f"            value: {f1}")
         lines.append("        source:")
         lines.append(f"          name: {exp}")
-        lines.append("          url: https://huggingface.co/datasets/marcellorusso/orchid-osr-dataset")
+        lines.append(f"          url: https://huggingface.co/datasets/{HF_DATASET_REPO}")
 
     return "\n".join(lines)
 
@@ -293,7 +296,7 @@ tags:
 - convnext
 - dinov2
 datasets:
-- marcellorusso/orchid-osr-dataset
+- {HF_DATASET_REPO}
 license: mit
 pipeline_tag: image-classification
 {results_yaml}
@@ -340,7 +343,7 @@ downloads these weights at startup and uses them for inference.
 
 ## Links
 
-- [Dataset](https://huggingface.co/datasets/marcellorusso/orchid-osr-dataset)
+- [Dataset](https://huggingface.co/datasets/{HF_DATASET_REPO})
 - [Live Demo](https://huggingface.co/spaces/marcellorusso/orchid-osr)
 - [GitHub](https://github.com/squidslab/OrchID OSR)
 """

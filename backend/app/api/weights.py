@@ -18,8 +18,6 @@ logger = logging.getLogger(__name__)
 
 CLASS_NAMES = settings.class_names  # 6 training classes
 NOVEL_CLASS_NAME = settings.novel_class_name
-HF_MODELS_REPO = "marcellorusso/orchid-osr-models"
-
 # Mapping from experiment directory prefix → human label + number
 _EXP_META: dict[str, tuple[str, int]] = {
     "exp6_clean_split": ("Exp 6 (CE)", 6),
@@ -247,7 +245,7 @@ def _resolve_weights(model_id: str) -> tuple[Path, str] | None:
 
     try:
         downloaded = hf_hub_download(
-            repo_id=HF_MODELS_REPO,
+            repo_id=settings.hf_models_repo,
             filename=hf_path,
             token=settings.hf_token or None,
         )
@@ -297,7 +295,7 @@ def _find_weights(model_type: str) -> Path | None:
                 hf_path = _hf_path_for(dir_name, f"best_fold_{best_fold}.pt")
                 if hf_path:
                     downloaded = hf_hub_download(
-                        repo_id=HF_MODELS_REPO,
+                        repo_id=settings.hf_models_repo,
                         filename=hf_path,
                         token=settings.hf_token or None,
                     )
