@@ -117,11 +117,23 @@
 
 ## 12. "Domain shift: foto da campo vs internet"
 
-**Riconoscimento**: "Le specie da campo (majellensis, Palena) hanno caratteristiche fotografiche diverse."
+**Riconoscimento**: "Le specie da campo (majellensis, Palena) hanno accuratezza perfetta in tutti gli esperimenti — è un potenziale confound."
 
-**Difesa**: "È una limitazione che riconosciamo. Due elementi mitigano: (1) Palena ha F1 eccellente (0.990 in SupCon) ma anche sphegodes (da internet) ha F1 0.782 — il modello non discrimina solo per dominio; (2) le confusioni più frequenti sono tra specie che condividono la STESSA fonte (exaltata↔sphegodes, entrambe da internet)."
+**Difesa**: "Due elementi dimostrano che il modello apprende anche caratteri morfologici genuini. Primo: la confusione simmetrica O. exaltata → O. sphegodes (12–20%) coinvolge due specie ENTRAMBE da internet. Se il modello discriminasse solo per dominio fotografico, tutte le specie da internet sarebbero indistinguibili tra loro. Secondo: O. garganica ↔ O. incubacea è un altro pattern di confusione reciproca tra specie da internet — seguono la tassonomia, non la fonte."
 
-**Chiusura**: "Un'analisi separata per fonte sarebbe ideale ma richiederebbe annotazioni che non abbiamo."
+**Chiusura**: "Resta una limitazione, ma non invalida i risultati. Il pattern di confusione è biologicamente plausibile e non spiegabile dal solo dominio fotografico."
+
+## 13. "Il silhouette score dei vostri embedding è vicino a zero"
+
+**Riconoscimento**: "I silhouette score per SupCon e SpHOR sono effettivamente bassi (0.04–0.08 per DINOv2, negativi per ConvNeXt e ResNet)."
+
+**Difesa**: "È atteso e coerente con il dominio ultra-FG. La silhouette misura separabilità in spazio coseno. Se le classi sono intrinsecamente simili (differenze minime tra specie dello stesso complesso), la separabilità sarà modesta indipendentemente dal metodo. Infatti anche CE, che è il miglior classificatore closed-set, ha silhouette solo 0.66 per ResNet-18. Non è un problema del metodo — è una proprietà del dominio."
+
+## 14. "Avete aggiunto error analysis: non dimostra che il modello sbaglia tanto?"
+
+**Riconoscimento**: "Le confusioni più frequenti sono 12–20% — non sono trascurabili."
+
+**Difesa**: "Ma sono BIOLOGICAMENTE SIGNIFICATIVE. exaltata↔sphegodes e garganica↔incubacea sono le coppie tassonomicamente più vicine del dataset. Il fatto che il modello le confonda con la stessa frequenza con cui si confondono i tassonomi umani (Devey et al. 2008 riportano 15–30% di disaccordo) suggerisce che il modello ha imparato pattern morfologici reali, non artefatti."
 
 ---
 
