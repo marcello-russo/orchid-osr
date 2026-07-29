@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 include = ["app*"]
 
 [project]
-name = "orchid-ncd"
+name = "orchid-osr"
 version = "0.1.0"
 description = "Ultra-fine-grained classification of Ophrys orchids via deep learning"
 requires-python = ">=3.10"
