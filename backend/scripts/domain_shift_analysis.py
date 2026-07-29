@@ -1,12 +1,14 @@
 """Domain shift analysis: field vs internet photos.
 
-Checks whether the model exploits source-specific shortcuts (background,
-lighting, resolution) rather than species morphology. Uses test-set confusion
-matrices from results.json.
+NOTE: This script's assumptions are INCORRECT for per-image source mapping.
+All 6 species have field (private) photos. Only 4 have internet photos
+(exaltata, garganica, incubacea, sphegodes). Majellensis and Palena are
+field-only. Without per-image source labels in the test set metadata,
+within-source accuracy cannot be computed reliably.
 
-Test set source mapping (deterministic):
-  - O. exaltata, O. garganica, O. incubacea, O. sphegodes → internet
-  - O. majellensis, O. sphegodes Palena → field
+The script is kept for reference but its output should NOT be used for
+conclusions about domain-specific shortcuts. The qualitative discussion
+in the thesis (confusion patterns) is more reliable.
 """
 import json
 import os
