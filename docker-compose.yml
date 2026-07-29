@@ -52,6 +52,7 @@ services:
 
 volumes:
   orchid-data:
+    name: orchid-osr_orchid-data
 
 networks:
   orchid-net:
