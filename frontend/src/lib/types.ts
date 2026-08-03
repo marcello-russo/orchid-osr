@@ -95,6 +95,7 @@ export interface ExperimentSummary {
   folds_completed: number | null;
   test_accuracy: number | null;
   mean_f1: number | null;
+  test_f1: number | null;
   std_f1: number | null;
   timestamp: string | null;
   is_ncd: boolean;

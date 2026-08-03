@@ -110,7 +110,8 @@
     "table": {
       "experiment": "Experiment",
       "model": "Model",
-      "f1": "Mean F1",
+      "f1": "CV F1",
+      "test_f1": "Test F1",
       "type": "Type",
       "test_acc": "Test Acc",
       "folds": "Folds",
