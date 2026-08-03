@@ -16,10 +16,18 @@ export function CitationPopover({ paper, onClose }: CitationPopoverProps) {
     const sup = document.getElementById(`cite-${paper.id}`);
     if (!sup) return;
     const supRect = sup.getBoundingClientRect();
-    setPos({
-      top: supRect.bottom + 4,
-      left: Math.max(8, supRect.left - 8),
-    });
+    const popoverHeight = ref.current?.offsetHeight ?? 0;
+    const POPOVER_WIDTH = 448; // max-w-md (28rem)
+    const margin = 8;
+    const left = Math.min(
+      Math.max(margin, supRect.left - margin),
+      window.innerWidth - POPOVER_WIDTH - margin,
+    );
+    let top = supRect.bottom + margin;
+    if (top + popoverHeight > window.innerHeight - margin) {
+      top = Math.max(margin, supRect.top - popoverHeight - margin);
+    }
+    setPos({ top, left });
   }, [paper.id]);
 
   useEffect(() => {
