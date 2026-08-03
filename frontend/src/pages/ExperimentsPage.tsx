@@ -23,6 +23,7 @@ const SORTABLE_COLUMNS = [
   { key: "id", labelKey: "experiments.table.experiment" },
   { key: "model_variant", labelKey: "experiments.table.model" },
   { key: "mean_f1", labelKey: "experiments.table.f1", align: "right" },
+  { key: "test_f1", labelKey: "experiments.table.test_f1", align: "right" },
   { key: "test_accuracy", labelKey: "experiments.table.test_acc", align: "right" },
   { key: "ncd_auroc", labelKey: "experiments.table.ncd_auroc", align: "right" },
 ] as const;
@@ -196,6 +197,9 @@ export function ExperimentsPage() {
                             ±{(exp.std_f1 * 100).toFixed(2)}%
                           </span>
                         )}
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-sm tabular-nums">
+                        {exp.test_f1 != null ? `${(exp.test_f1 * 100).toFixed(2)}%` : "—"}
                       </TableCell>
                       <TableCell className="text-right font-mono text-sm tabular-nums">
                         {exp.test_accuracy != null ? `${(exp.test_accuracy * 100).toFixed(2)}%` : "—"}

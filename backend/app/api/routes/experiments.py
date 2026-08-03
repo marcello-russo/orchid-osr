@@ -147,6 +147,11 @@ async def list_experiments():
                 )
                 if results
                 else None,
+                "test_f1": (
+                    (results.get("test_metrics") or {}).get("f1_macro")
+                    if results
+                    else None
+                ),
                 "std_f1": results.get("std_f1") if results else None,
                 "timestamp": config.get("timestamp"),
                 "is_ncd": is_ncd,
