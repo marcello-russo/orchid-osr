@@ -126,9 +126,6 @@ async def list_experiments():
         ncd_metrics = _read_ncd_metrics(d) if has_ncd_file else {}
 
         test_accuracy = results.get("test_metrics", {}).get("accuracy") if results else None
-        # Se ci sono metriche NCD, usa AUROC come test_accuracy
-        if ncd_metrics.get("ncd_auroc") is not None:
-            test_accuracy = ncd_metrics["ncd_auroc"]
 
         experiments.append(
             {
@@ -287,7 +284,13 @@ async def get_experiment(experiment_id: str):
         results = _load_json(results_path)
 
     # NCD metrics from ncd_results.json (JSON fallback)
-    if (exp_dir / "ncd_results.json").exists():
+    ncd_full: dict | None = None
+    ncd_path = exp_dir / "ncd_results.json"
+    if ncd_path.exists():
+        try:
+            ncd_full = json.loads(ncd_path.read_text())
+        except (json.JSONDecodeError, OSError):
+            ncd_full = None
         ncd_metrics = _read_ncd_metrics(exp_dir)
         if ncd_metrics:
             results = results or {}
@@ -305,6 +308,7 @@ async def get_experiment(experiment_id: str):
         folds=folds,
         results=results,
         last_modified=last_modified,
+        ncd_full=ncd_full,
     )
 
 
@@ -315,6 +319,7 @@ def _build_experiment_response(
     results: dict | None = None,
     exp_data: dict | None = None,
     last_modified: str | None = None,
+    ncd_full: dict | None = None,
 ) -> dict:
     """Costruisce risposta standard per un esperimento."""
     # Normalize results from DB row or JSON dict
@@ -337,13 +342,6 @@ def _build_experiment_response(
         }
 
     is_ncd = bool(config.get("ncd_mode")) or bool((exp_data or {}).get("is_ncd"))
-    ncd_auroc = (results or {}).get("ncd_auroc")
-
-    # Se ci sono metriche NCD, usa AUROC come test_accuracy (sempre più significativa della standard)
-    if ncd_auroc is not None:
-        results = results or {}
-        results.setdefault("test_metrics", {})["accuracy"] = ncd_auroc
-        results.setdefault("test_metrics", {})["f1_macro"] = ncd_auroc
 
     # Normalize all folds (handles SupCon two-phase → flat + phase_epochs)
     from app.api.routes.comparison import _normalize_fold
@@ -361,6 +359,9 @@ def _build_experiment_response(
         "folds": normalized_folds,
         "results": results,
         "last_modified": last_modified,
+        "detectors": (ncd_full or {}).get("detectors"),
+        "openset": (ncd_full or {}).get("openset"),
+        "clustering": (ncd_full or {}).get("clustering"),
         "summary": {
             "model_variant": config.get("model_variant") or (results or {}).get("model_variant"),
             "type": "kfold" if folds else "baseline",

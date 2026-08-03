@@ -108,6 +108,9 @@ export interface ExperimentDetail {
   config: ExperimentConfig;
   folds: FoldData[];
   results: ExperimentResults | null;
+  detectors?: Record<string, { auroc?: number | null; detection_rate_at_10pct_fpr?: number | null }> | null;
+  openset?: Record<string, unknown> | null;
+  clustering?: Record<string, unknown> | null;
   summary: {
     model_variant: string | null;
     type: "baseline" | "kfold";
