@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useLayoutEffect } from "react";
 import { useTranslation } from "react-i18next";
 import type { Paper } from "@/features/research/data/papers";
 
@@ -29,6 +29,19 @@ export function CitationPopover({ paper, onClose }: CitationPopoverProps) {
     }
     setPos({ top, left });
   }, [paper.id]);
+
+  const measured = useRef(false);
+
+  useLayoutEffect(() => {
+    updatePos();
+  }, [updatePos]);
+
+  useEffect(() => {
+    if (!pos || measured.current) return;
+    measured.current = true;
+    // Re-position now that the popover is mounted and its real height is known.
+    updatePos();
+  }, [pos, updatePos]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
