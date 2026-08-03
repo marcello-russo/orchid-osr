@@ -100,15 +100,16 @@ EXPERIMENTS = {
         "name": "exp9_ncd",
         "train_dataset": "clean",
         "test_dataset": "clean",
-        "num_classes": 6,
+        "num_classes": 5,
         "test_classes": TRAIN_CLASSES,
+        "exclude_classes": ["O. garganica"],
         "loss_type": "supcon",
         "ncd_mode": True,
         "phases": ["SupCon + SpHOR", "CE fine-tune"],
-        "recipe": "Come Exp 8. Novità: NCD mode attivo — la novel class "
-        "(O. sphegodes_Napoli) è esclusa dal training e usata solo in test "
-        "per valutare la scoperta di nuove specie.",
-        "description": "SpHOR with O. sphegodes_Napoli as hidden novel class (NCD)",
+        "recipe": "Come Exp 8. Novità: NCD mode attivo — O. garganica è "
+        "esclusa dal training (5 classi note) e usata solo in test come "
+        "novel class per valutare la scoperta di nuove specie.",
+        "description": "SpHOR with O. garganica as hidden novel class (NCD)",
     },
     10: {
         "name": "exp10_mgh_ncd",
