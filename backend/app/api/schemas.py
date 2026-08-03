@@ -75,6 +75,9 @@ class ExperimentDetailResponse(BaseModel):
     config: dict
     folds: list[dict]
     results: Optional[dict] = None
+    detectors: Optional[dict] = None
+    openset: Optional[dict] = None
+    clustering: Optional[dict] = None
     summary: dict
 
 
