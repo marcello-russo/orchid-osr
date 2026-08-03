@@ -151,16 +151,27 @@ def run_experiment(
         if not os.path.exists(cropped_train):
             logger.error(f"Dataset not found: {cropped_train}")
             return
+        # Per esperimenti con exclude_classes (Exp 9: garganica come novel),
+        # usa dataset dedicati senza garganica (train) e senza sphegodes_Napoli (test).
+        train_dir = cropped_train
+        test_dir = cropped_test if os.path.exists(cropped_test) else None
+        if config.get("exclude_classes"):
+            dedicated_train = str(PROJECT_ROOT / "dataset" / f"cropped_{w}x{h}" / "train_ncd_exp9")
+            if os.path.exists(dedicated_train):
+                train_dir = dedicated_train
+            dedicated_test = str(PROJECT_ROOT / "dataset" / f"cropped_{w}x{h}" / "test_ncd_exp9")
+            if os.path.exists(dedicated_test):
+                test_dir = dedicated_test
         run_ncd_pipeline(
             exp_dir=output_dir,
             model_variant=model_variant,
             num_classes=config["num_classes"],
             class_names=config.get("test_classes", ALL_CLASSES),
             exclude_classes=config.get("exclude_classes"),
-            data_dir=cropped_train,
+            data_dir=train_dir,
             batch_size=batch_size,
             run_osr=True,
-            test_dir=cropped_test if os.path.exists(cropped_test) else None,
+            test_dir=test_dir,
             ncd_mode=config.get("ncd_mode", False),
             all_classes=ALL_CLASSES,
         )
