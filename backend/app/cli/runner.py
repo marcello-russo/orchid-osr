@@ -162,6 +162,10 @@ def run_experiment(
             dedicated_test = str(PROJECT_ROOT / "dataset" / f"cropped_{w}x{h}" / "test_ncd_exp9")
             if os.path.exists(dedicated_test):
                 test_dir = dedicated_test
+        # NCD mode è forzato a True per esperimenti con exclude_classes
+        # (Exp 9): la novel class è quella esclusa dal training. Per gli
+        # altri exp (6-8,10) resta il valore della config.
+        ncd_eval = config.get("ncd_mode", False) or bool(config.get("exclude_classes"))
         run_ncd_pipeline(
             exp_dir=output_dir,
             model_variant=model_variant,
@@ -172,7 +176,7 @@ def run_experiment(
             batch_size=batch_size,
             run_osr=True,
             test_dir=test_dir,
-            ncd_mode=config.get("ncd_mode", False),
+            ncd_mode=ncd_eval,
             all_classes=ALL_CLASSES,
         )
         return
@@ -203,6 +207,21 @@ def run_experiment(
         test_dir = str(PROJECT_ROOT / DATASET_PATHS.get(test_key, {}).get("test", test_key))
         num_classes_val = config.get("num_classes", 6)
         class_names = config.get("test_classes", ALL_CLASSES)
+
+        # Per esperimenti con exclude_classes (Exp 9: garganica come novel),
+        # il test finale closed-set usa solo le classi di training (5),
+        # su test_ncd_exp9 (senza sphegodes_Napoli). La novel (garganica)
+        # è valutata separatamente dal pipeline NCD, non qui.
+        exclude = set(config.get("exclude_classes") or [])
+        if exclude:
+            class_names = [c for c in class_names if c not in exclude]
+            num_classes_val = len(class_names)
+            from app.core.models import get_registry_entry
+            _entry = get_registry_entry(model_variant)
+            _w, _h = _entry.input_size
+            _dedicated_test = str(PROJECT_ROOT / "dataset" / f"cropped_{_w}x{_h}" / "test_ncd_exp9")
+            if os.path.exists(_dedicated_test):
+                test_dir = _dedicated_test
 
         test_metrics = final_test(
             best_model_path, model_variant, num_classes_val, test_dir, class_names, batch_size, get_device()

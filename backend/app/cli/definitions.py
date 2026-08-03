@@ -104,11 +104,11 @@ EXPERIMENTS = {
         "test_classes": TRAIN_CLASSES,
         "exclude_classes": ["O. garganica"],
         "loss_type": "supcon",
-        "ncd_mode": True,
+        "ncd_mode": False,
         "phases": ["SupCon + SpHOR", "CE fine-tune"],
-        "recipe": "Come Exp 8. Novità: NCD mode attivo — O. garganica è "
-        "esclusa dal training (5 classi note) e usata solo in test come "
-        "novel class per valutare la scoperta di nuove specie.",
+        "recipe": "Identico a Exp 8 (150 epoche, patience 15 in entrambe le "
+        "fasi). Novità: O. garganica è esclusa dal training (5 classi note) "
+        "e usata solo in test come novel class per la valutazione OSR.",
         "description": "SpHOR with O. garganica as hidden novel class (NCD)",
     },
     10: {
