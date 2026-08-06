@@ -71,7 +71,7 @@ def _register_all():
             embedding_dim=768,
             optimizer="adamw",
             weight_decay=0.05,
-            learning_rate=0.0003,
+            learning_rate=0.0001,
         ),
     )
     register_model(
@@ -85,7 +85,7 @@ def _register_all():
             embedding_dim=768,
             optimizer="adamw",
             weight_decay=0.05,
-            learning_rate=0.0003,
+            learning_rate=0.0001,
         ),
     )
 
