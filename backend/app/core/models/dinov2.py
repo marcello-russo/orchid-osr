@@ -76,6 +76,8 @@ class DINOv2Classifier(ClassifierModel):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         emb = self.get_embeddings(x)
+        if self._config.normalize_embeddings:
+            emb = torch.nn.functional.normalize(emb, p=2, dim=1)
         return self._head(emb)
 
     def get_embeddings(self, x: torch.Tensor) -> torch.Tensor:
