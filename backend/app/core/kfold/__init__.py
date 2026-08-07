@@ -104,6 +104,7 @@ def kfold_experiment(
             "use_prototypes": use_prototypes if loss_type == "supcon" else None,
             "full_finetune": full_finetune if loss_type == "supcon" else None,
             "ncd_mode": ncd_mode if loss_type == "supcon" else None,
+            "normalize_embeddings": True if loss_type == "supcon" else False,
             "timestamp": datetime.now().isoformat(),
         }
         with open(config_path, "w") as f:
@@ -303,6 +304,15 @@ def kfold_experiment(
     if fold_index is not None:
         logger.info(f"\nFold {fold_index} completato.")
         logger.info(f"Per aggregare: --cross-validate --exp 6 --model {model_variant} --aggregate-only")
+        if "fold_metrics" not in locals():
+            # Fold singolo già completato in un run precedente: carica i metric
+            # dal fold JSON invece di crashare su una variabile non definita.
+            _fp = os.path.join(kfold_dir, f"fold_{fold_index}.json")
+            if os.path.exists(_fp):
+                with open(_fp) as f:
+                    fold_metrics = json.load(f)
+            else:
+                fold_metrics = {"fold": fold_index, "note": "fold gia' completato, metric non disponibili"}
         return {"fold_completed": fold_index, "fold_metrics": fold_metrics}
 
     # Per esperimenti con exclude_classes (Exp 9): il test finale closed-set

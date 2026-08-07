@@ -45,6 +45,10 @@ def load_trained_model(
             is_mgh = "mgh" in dir_name.lower() or cfg.get("multi_grain", False)
             model_kwargs["multi_grain"] = is_mgh
             logger.info(f"Model {model_variant}: multi_grain={is_mgh} (from exp_dir: {dir_name})")
+        # SupCon models are trained with L2-normalized embeddings before the
+        # linear head (fix for exploding logits / val loss). Match that at load.
+        if cfg.get("normalize_embeddings", False):
+            model_kwargs["normalize_embeddings"] = True
 
     model = create_model(model_variant, num_classes=num_classes, pretrained=False, **model_kwargs)
     model.load_weights(best_model_path)
