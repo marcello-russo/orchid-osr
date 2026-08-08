@@ -10,6 +10,7 @@ from typing import Callable
 
 import numpy as np
 import torch
+import torch.nn.functional as F
 from numpy.typing import NDArray
 from torch.utils.data import DataLoader
 
@@ -311,6 +312,10 @@ def extract_all(
     model = load_trained_model(model_variant, num_classes, model_path, device, exp_dir=exp_dir)
     model.eval()
     transform = create_transform(model_variant)
+    # Se il modello è stato allenato con embeddings L2-normalizzate prima della
+    # testa lineare (normalize_embeddings), i logits (Energy detector) devono
+    # usare embeddings normalizzate allo stesso modo, altrimenti esplodono.
+    normalize_logits = bool(getattr(model, "_config", None) and model._config.normalize_embeddings)
 
     train_dataset = ImageFolderWithName(train_dir, transform=transform)
     test_dataset = ImageFolderWithName(test_dir, transform=transform)
@@ -330,7 +335,8 @@ def extract_all(
                 emb = model.get_embeddings(inputs)
                 embeddings[split].append(emb.cpu().numpy())
                 if collect_logits:
-                    logit = classifier(emb)
+                    logit_in = F.normalize(emb, p=2, dim=1) if normalize_logits else emb
+                    logit = classifier(logit_in)
                     logits_list[split].append(logit.cpu().numpy())
             labels[split].append(lbls.numpy())
 
