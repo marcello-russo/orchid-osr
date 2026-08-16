@@ -27,11 +27,11 @@ FIGURES.mkdir(parents=True, exist_ok=True)
 
 # ── Global constants ───────────────────────────────────────────────────
 PATIENCE = 15
-NOVEL_CLASS = "O. sphegodes_Napoli"
+NOVEL_CLASS = "O. garganica"
 
 MODELS = ["resnet18", "resnet50", "convnext_tiny", "convnext_small", "dinov2_small", "dinov2_base"]
-EXPS_ALL = ["exp6", "exp7", "exp8", "exp10"]
-EXPS_OSR = ["exp8", "exp10"]
+EXPS_ALL = ["exp6", "exp7", "exp8", "exp9", "exp10"]
+EXPS_OSR = ["exp8", "exp9", "exp10"]
 
 MODEL_LABELS = {
     "resnet18": "ResNet-18",
@@ -45,12 +45,14 @@ EXP_LABELS = {
     "exp6": "Exp 6 (CE)",
     "exp7": "Exp 7 (SupCon)",
     "exp8": "Exp 8 (SpHOR)",
+    "exp9": "Exp 9 (Novel)",
     "exp10": "Exp 10 (MGH-NCD)",
 }
 EXP_PREFIXES = {
     "exp6": "exp6_clean_split",
     "exp7": "exp7_supcon",
     "exp8": "exp8_sphor",
+    "exp9": "exp9_ncd",
     "exp10": "exp10_mgh_ncd",
 }
 
@@ -71,7 +73,7 @@ SPECIES_SHORT = {
     "O. majellensis": "MAJ",
     "O. sphegodes": "SPH",
     "O. sphegodes_Palena": "PAL",
-    NOVEL_CLASS: "NAP",
+    NOVEL_CLASS: "GAR",
 }
 MODEL_COLORS = {
     "resnet18": "#E69F00",
@@ -225,24 +227,24 @@ def load_embeddings(exp, model):
 
 def fig_benchmark_heatmap():
     """Test F1 heatmap: models × experiments."""
-    data = np.full((len(MODELS), 4), np.nan)
+    data = np.full((len(MODELS), len(EXPS_ALL)), np.nan)
     for j, exp in enumerate(EXPS_ALL):
         for i, model in enumerate(MODELS):
             data[i, j] = get_test_f1(load_results(exp, model))
 
-    fig, ax = plt.subplots(figsize=(7, 5))
+    fig, ax = plt.subplots(figsize=(8, 5))
     cmap = plt.cm.Blues.copy()
     cmap.set_bad("#f0f0f0")
     im = ax.imshow(data, cmap=cmap, vmin=0.3, vmax=1.0, aspect="auto")
 
     for i in range(len(MODELS)):
-        for j in range(4):
+        for j in range(len(EXPS_ALL)):
             v = data[i, j]
             if not np.isnan(v):
                 c = "white" if v > 0.75 else "black"
                 ax.text(j, i, f"{v:.3f}", ha="center", va="center", fontsize=10, color=c, fontweight="bold")
 
-    ax.set_xticks(range(4))
+    ax.set_xticks(range(len(EXPS_ALL)))
     ax.set_xticklabels([EXP_LABELS[e] for e in EXPS_ALL], rotation=35, ha="right", fontsize=9)
     ax.set_yticks(range(len(MODELS)))
     ax.set_yticklabels([short_model(m) for m in MODELS], fontsize=9)
@@ -509,8 +511,8 @@ def fig_loss_curves_aggregated():
     of the three main paradigms (CE → SupCon → SpHOR → MGH-NCD)."""
     model = "dinov2_small"
     fig, ax = plt.subplots(figsize=(9, 5))
-    exp_colors = {"exp6": "#757575", "exp7": "#E69F00", "exp8": "#0072B2", "exp10": "#D55E00"}
-    exp_styles = {"exp6": "-", "exp7": "--", "exp8": "-.", "exp10": ":"}
+    exp_colors = {"exp6": "#757575", "exp7": "#E69F00", "exp8": "#0072B2", "exp9": "#009E73", "exp10": "#D55E00"}
+    exp_styles = {"exp6": "-", "exp7": "--", "exp8": "-.", "exp9": ":", "exp10": ":"}
 
     for idx, exp in enumerate(EXPS_ALL):
         folds = load_folds(exp, model)
@@ -539,7 +541,7 @@ def fig_loss_curves_aggregated():
 
 
 def fig_osr_detection_rate():
-    """Detection rate @ 10% FPR per detector, all models, Exp 8."""
+    """Detection rate @ 10% FPR per detector, all models, Exp 9 (novel = O. garganica)."""
     detectors = ["Mahalanobis", "KNN", "Energy", "Ensemble"]
     fig, ax = plt.subplots(figsize=(9, 5))
     x = np.arange(len(MODELS))
@@ -548,7 +550,7 @@ def fig_osr_detection_rate():
     for j, det in enumerate(detectors):
         vals = []
         for model in MODELS:
-            p = EXPERIMENTS / f"{EXP_PREFIXES['exp8']}_{model}" / "ncd_results.json"
+            p = EXPERIMENTS / f"{EXP_PREFIXES['exp9']}_{model}" / "ncd_results.json"
             v = 0
             if p.exists():
                 with open(p) as f:
@@ -563,12 +565,45 @@ def fig_osr_detection_rate():
     ax.set_xticks(x)
     ax.set_xticklabels([short_model(m) for m in MODELS], rotation=30, ha="right")
     ax.set_ylabel("Detection Rate @ 10% FPR")
-    ax.set_title("Exp 8 (SpHOR): Known-Class Recognition Rate", fontweight="bold")
+    ax.set_title("Exp 9 (SpHOR, novel O. garganica): Detection @ 10% FPR", fontweight="bold")
     ax.axhline(y=0.5, color="gray", linestyle="--", alpha=0.5)
     ax.legend(loc="lower right", framealpha=0.9)
     ax.set_ylim(0, 1.05)
     fig.tight_layout()
     _save(fig, "osr_detection_rate.png")
+
+
+def fig_exp9_osr_auroc():
+    """AUROC OSR per detector, all models, Exp 9 (novel = O. garganica)."""
+    detectors = ["Mahalanobis", "KNN", "Energy", "Ensemble"]
+    fig, ax = plt.subplots(figsize=(9, 5))
+    x = np.arange(len(MODELS))
+    width = 0.8 / len(detectors)
+
+    for j, det in enumerate(detectors):
+        vals = []
+        for model in MODELS:
+            p = EXPERIMENTS / f"{EXP_PREFIXES['exp9']}_{model}" / "ncd_results.json"
+            v = 0
+            if p.exists():
+                with open(p) as f:
+                    d = json.load(f)
+                dets = d.get("detectors", {})
+                dd = dets.get(det, {})
+                v = dd.get("auroc", 0) if isinstance(dd, dict) else 0
+            vals.append(v)
+        off = (j - len(detectors) / 2 + 0.5) * width
+        ax.bar(x + off, vals, width, label=det, color=plt.cm.Set2(j / len(detectors)))
+
+    ax.set_xticks(x)
+    ax.set_xticklabels([short_model(m) for m in MODELS], rotation=30, ha="right")
+    ax.set_ylabel("AUROC")
+    ax.set_title("Exp 9 (SpHOR, novel O. garganica): OSR AUROC", fontweight="bold")
+    ax.axhline(y=0.5, color="gray", linestyle="--", alpha=0.5, label="chance (0.5)")
+    ax.legend(loc="lower right", framealpha=0.9)
+    ax.set_ylim(0, 1.05)
+    fig.tight_layout()
+    _save(fig, "exp9_osr_auroc.png")
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -577,13 +612,13 @@ def fig_osr_detection_rate():
 
 
 def fig_osr_detection_comparison():
-    """Detection rate: Exp 8 vs Exp 10, all detectors, all models."""
+    """Detection rate: Exp 9 (novel garganica) vs Exp 10, all detectors, all models."""
     detectors = ["Mahalanobis", "KNN", "Energy", "Ensemble"]
     fig, axes = plt.subplots(1, 2, figsize=(14, 4.5))
     x = np.arange(len(MODELS))
     width = 0.8 / len(detectors)
 
-    for idx, exp in enumerate(EXPS_OSR):
+    for idx, exp in enumerate(["exp9", "exp10"]):
         ax = axes[idx]
         for j, det in enumerate(detectors):
             vals = []
@@ -608,7 +643,7 @@ def fig_osr_detection_comparison():
         ax.legend(loc="upper left", bbox_to_anchor=(1.01, 1), framealpha=0.9, fontsize=8)
         ax.text(-0.15, -0.1, f"({chr(97 + idx)})", transform=ax.transAxes, fontsize=11, fontweight="bold")
 
-    fig.suptitle("Known-Class Recognition Rate: SpHOR vs MGH-NCD", fontweight="bold", y=1.05)
+    fig.suptitle("Known-Class Recognition Rate: Exp 9 (novel garganica) vs Exp 10", fontweight="bold", y=1.05)
     fig.tight_layout()
     _save(fig, "osr_detection_comparison.png")
 
@@ -811,8 +846,8 @@ def fig_clustering_comparison():
 
 def fig_summary_dual_heatmap():
     """Closed-set F1 + open-set detection rate side by side."""
-    data_f1 = np.full((len(MODELS), 4), np.nan)
-    data_det = np.full((len(MODELS), 2), np.nan)
+    data_f1 = np.full((len(MODELS), 5), np.nan)
+    data_det = np.full((len(MODELS), 3), np.nan)
 
     for j, exp in enumerate(EXPS_ALL):
         for i, model in enumerate(MODELS):
@@ -822,13 +857,13 @@ def fig_summary_dual_heatmap():
         for i, model in enumerate(MODELS):
             data_det[i, j] = get_detection_rate(exp, model)
 
-    fig, axes = plt.subplots(1, 2, figsize=(10, 4.5))
+    fig, axes = plt.subplots(1, 2, figsize=(11, 4.5))
     cmap = plt.cm.Blues.copy()
     cmap.set_bad("#f0f0f0")
 
     for ax, data, title, vmin, vmax, labels in [
         (axes[0], data_f1, "Closed-Set Test F1", 0.3, 1.0, [EXP_LABELS[e] for e in EXPS_ALL]),
-        (axes[1], data_det, "OSR Detection@10%FPR", 0.0, 1.0, ["Exp 8 (SpHOR)", "Exp 10 (MGH-NCD)"]),
+        (axes[1], data_det, "OSR Detection@10%FPR", 0.0, 1.0, [EXP_LABELS[e] for e in EXPS_OSR]),
     ]:
         ax.imshow(data, cmap=cmap, vmin=vmin, vmax=vmax, aspect="auto")
         ax.set_xticks(range(data.shape[1]))
@@ -855,26 +890,26 @@ def fig_summary_dual_heatmap():
 
 
 def fig_osr_detection_heatmap():
-    """Ensemble detection rate for all models, Exp 8 vs Exp 10."""
-    data = np.full((len(MODELS), 2), np.nan)
+    """Ensemble detection rate for all models, Exp 8/9/10."""
+    data = np.full((len(MODELS), 3), np.nan)
     for j, exp in enumerate(EXPS_OSR):
         for i, model in enumerate(MODELS):
             data[i, j] = get_detection_rate(exp, model)
 
-    fig, ax = plt.subplots(figsize=(5, 4.5))
+    fig, ax = plt.subplots(figsize=(6, 4.5))
     cmap = plt.cm.Blues.copy()
     cmap.set_bad("#f0f0f0")
     im = ax.imshow(data, cmap=cmap, vmin=0.0, vmax=1.0, aspect="auto")
 
     for i in range(len(MODELS)):
-        for j in range(2):
+        for j in range(3):
             v = data[i, j]
             if not np.isnan(v):
                 c = "white" if v > 0.5 else "black"
                 ax.text(j, i, f"{v:.3f}", ha="center", va="center", fontsize=12, color=c, fontweight="bold")
 
-    ax.set_xticks(range(2))
-    ax.set_xticklabels(["SpHOR (Exp 8)", "MGH-NCD (Exp 10)"], fontsize=9)
+    ax.set_xticks(range(3))
+    ax.set_xticklabels(["SpHOR\n(Exp 8)", "Novel\n(Exp 9)", "MGH-NCD\n(Exp 10)"], fontsize=9)
     ax.set_yticks(range(len(MODELS)))
     ax.set_yticklabels([short_model(m) for m in MODELS], fontsize=9)
     ax.set_title("Detection Rate @ 10% FPR", fontweight="bold", pad=12)
@@ -889,15 +924,15 @@ def fig_osr_detection_heatmap():
 
 
 def fig_spotlight_convnext_osr():
-    """Spotlight: ConvNeXt-Tiny achieves 0.907 detection rate in Exp 8.
-    Shows detection rate across ALL detectors + models, highlighting ConvNeXt-Tiny."""
+    """Spotlight: DINOv2-Base achieves AUROC 0.875 in Exp 9 (novel = O. garganica).
+    Shows AUROC across ALL detectors + models, highlighting DINOv2-Base."""
     detectors = ["Mahalanobis", "KNN", "Energy", "Ensemble"]
     fig, ax = plt.subplots(figsize=(10, 5))
     x = np.arange(len(detectors))
     width = 0.12
 
     for i, model in enumerate(MODELS):
-        p = EXPERIMENTS / f"{EXP_PREFIXES['exp8']}_{model}" / "ncd_results.json"
+        p = EXPERIMENTS / f"{EXP_PREFIXES['exp9']}_{model}" / "ncd_results.json"
         vals = [0] * len(detectors)
         if p.exists():
             with open(p) as f:
@@ -905,12 +940,12 @@ def fig_spotlight_convnext_osr():
             dets = d.get("detectors", {})
             for j, det in enumerate(detectors):
                 dd = dets.get(det, {})
-                vals[j] = dd.get("detection_rate_at_10pct_fpr", 0) if isinstance(dd, dict) else 0
+                vals[j] = dd.get("auroc", 0) if isinstance(dd, dict) else 0
 
         off = (i - len(MODELS) / 2 + 0.5) * width
-        c = "#D55E00" if model == "convnext_tiny" else MODEL_COLORS.get(model, CB[i])
-        lw = 2.5 if model == "convnext_tiny" else 0.8
-        alpha_val = 1.0 if model == "convnext_tiny" else 0.4
+        c = "#D55E00" if model == "dinov2_base" else MODEL_COLORS.get(model, CB[i])
+        lw = 2.5 if model == "dinov2_base" else 0.8
+        alpha_val = 1.0 if model == "dinov2_base" else 0.4
         ax.bar(
             x + off,
             vals,
@@ -918,15 +953,15 @@ def fig_spotlight_convnext_osr():
             label=short_model(model),
             color=c,
             linewidth=lw,
-            edgecolor="black" if model == "convnext_tiny" else None,
+            edgecolor="black" if model == "dinov2_base" else None,
             alpha=alpha_val,
         )
 
     # Annotate the champion
     ax.annotate(
-        "ConvNeXt-Tiny: 0.907\n(Ensemble detector)",
-        xy=(3 + (MODELS.index("convnext_tiny") - len(MODELS) / 2 + 0.5) * width, 0.907),
-        xytext=(4.5, 0.85),
+        "DINOv2-Base: 0.875\n(Ensemble detector)",
+        xy=(3 + (MODELS.index("dinov2_base") - len(MODELS) / 2 + 0.5) * width, 0.875),
+        xytext=(4.5, 0.80),
         fontsize=10,
         fontweight="bold",
         color="#D55E00",
@@ -936,8 +971,9 @@ def fig_spotlight_convnext_osr():
 
     ax.set_xticks(x)
     ax.set_xticklabels(detectors)
-    ax.set_ylabel("Detection Rate @ 10% FPR")
-    ax.set_title("OSR Champion: ConvNeXt-Tiny + SpHOR", fontweight="bold")
+    ax.set_ylabel("AUROC")
+
+    ax.set_title("OSR Champion: DINOv2-Base + SpHOR (Exp 9, novel O. garganica)", fontweight="bold")
     ax.legend(loc="upper left", bbox_to_anchor=(1.01, 1), framealpha=0.9, fontsize=8)
     ax.set_ylim(0, 1.05)
     ax.grid(True, axis="y", alpha=0.3)
@@ -1052,8 +1088,8 @@ def fig_spotlight_species_evolution():
     n_sp = len(order)
 
     fig, ax = plt.subplots(figsize=(10, 5))
-    exp_colors = {"exp6": "#757575", "exp7": "#E69F00", "exp8": "#0072B2", "exp10": "#D55E00"}
-    markers = {"exp6": "o", "exp7": "s", "exp8": "^", "exp10": "D"}
+    exp_colors = {"exp6": "#757575", "exp7": "#E69F00", "exp8": "#0072B2", "exp9": "#009E73", "exp10": "#D55E00"}
+    markers = {"exp6": "o", "exp7": "s", "exp8": "^", "exp9": "P", "exp10": "D"}
     x = np.arange(n_sp)
 
     for exp in EXPS_ALL:
@@ -1117,6 +1153,8 @@ def main():
         ("8. OSR detection rate", fig_osr_detection_rate),
         ("9. t-SNE Exp 8 — 3 architectures", fig_tsne_exp8_multimodel),
         ("10. Per-species F1 all models", fig_exp8_per_species),
+        ("--- EXP 9 (Novel: O. garganica) ---", None),
+        ("10b. OSR AUROC (novel garganica)", fig_exp9_osr_auroc),
         ("--- EXP 10 (MGH-NCD) ---", None),
         ("11. Clustering comparison", fig_clustering_comparison),
         ("12. OSR detection — SpHOR vs MGH-NCD", fig_osr_detection_comparison),
