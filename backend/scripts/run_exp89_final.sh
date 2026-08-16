@@ -27,9 +27,9 @@ EXPS="8 9"
 MODELS="resnet18 resnet50 convnext_tiny convnext_small dinov2_small dinov2_base"
 declare -A EXP_NAME=([8]="exp8_sphor" [9]="exp9_ncd")
 # Per-architecture gradient accumulation (effective batch = batch × accum)
-declare -A ACCUM=([resnet18]=4 [resnet50]=4 [convnext_tiny]=4 [convnext_small]=4 [dinov2_small]=8 [dinov2_base]=4)
+declare -A ACCUM=([resnet18]=4 [resnet50]=4 [convnext_tiny]=4 [convnext_small]=4 [dinov2_small]=1 [dinov2_base]=4)
 # Batch size per architecture
-declare -A BATCH=([resnet18]=8 [resnet50]=8 [convnext_tiny]=8 [convnext_small]=8 [dinov2_small]=4 [dinov2_base]=8)
+declare -A BATCH=([resnet18]=8 [resnet50]=8 [convnext_tiny]=8 [convnext_small]=8 [dinov2_small]=8 [dinov2_base]=8)
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
