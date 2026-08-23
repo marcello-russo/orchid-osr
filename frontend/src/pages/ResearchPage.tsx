@@ -481,11 +481,11 @@ export function ResearchPage() {
               { key: "detector", label: t("research.table_best_detector") },
             ]}
             rows={[
-              { model: "ResNet-18", f1t: "0,590", auroc: "0,422", det: "0,020", detector: "Mahalanobis" },
-              { model: "ResNet-50", f1t: "0,856", auroc: "0,688", det: "0,220", detector: "KNN" },
+              { model: "ResNet-18", f1t: "0,590", auroc: "0,507", det: "0,120", detector: "Mahalanobis" },
+              { model: "ResNet-50", f1t: "0,856", auroc: "0,776", det: "0,360", detector: "KNN" },
               { model: "ConvNeXt-Tiny", f1t: "0,920", auroc: "0,850", det: "0,640", detector: "Ensemble" },
               { model: "ConvNeXt-Small", f1t: "0,933", auroc: "0,840", det: "0,460", detector: "Ensemble" },
-              { model: "DINOv2-Small", f1t: "0,921", auroc: "0,755", det: "0,340", detector: "KNN" },
+              { model: "DINOv2-Small", f1t: "0,921", auroc: "0,760", det: "0,280", detector: "KNN" },
               { model: "DINOv2-Base", f1t: "0,932", auroc: "0,875", det: "0,560", detector: "Ensemble" },
             ]}
             highlightRow="DINOv2-Base"
@@ -539,11 +539,11 @@ export function ResearchPage() {
               { key: "osr9", label: t("research.table_osr9") },
             ]}
             rows={[
-              { model: "ResNet-18", e6: "0,978", e7: "0,444", e8: "0,560", e9: "0,590", osr9: "0,422" },
-              { model: "ResNet-50", e6: "0,980", e7: "0,465", e8: "0,750", e9: "0,856", osr9: "0,688" },
+              { model: "ResNet-18", e6: "0,978", e7: "0,444", e8: "0,560", e9: "0,590", osr9: "0,507" },
+              { model: "ResNet-50", e6: "0,980", e7: "0,465", e8: "0,750", e9: "0,856", osr9: "0,776" },
               { model: "ConvNeXt-Tiny", e6: "0,821", e7: "0,837", e8: "0,911", e9: "0,920", osr9: "0,850" },
               { model: "ConvNeXt-Small", e6: "0,793", e7: "0,517", e8: "0,874", e9: "0,933", osr9: "0,840" },
-              { model: "DINOv2-Small", e6: "0,970", e7: "0,888", e8: "0,894", e9: "0,921", osr9: "0,755" },
+              { model: "DINOv2-Small", e6: "0,970", e7: "0,888", e8: "0,894", e9: "0,921", osr9: "0,760" },
               { model: "DINOv2-Base", e6: "0,975", e7: "0,936", e8: "0,910", e9: "0,932", osr9: "0,875" },
             ]}
             bests={{ e6: "ResNet-50", e7: "DINOv2-Base", e8: "ConvNeXt-Tiny", e9: "ConvNeXt-Small", osr9: "DINOv2-Base" }}
