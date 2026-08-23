@@ -348,6 +348,7 @@ export interface NcdResults {
   openset?: NcdOsrResults;
   detectors?: Record<string, NcdDetectorResult>;
   class_names?: string[];
+  novel_class?: string;
   tsne_2d?: number[][];
   tsne_3d?: number[][];
   novel_class_label?: number[];
