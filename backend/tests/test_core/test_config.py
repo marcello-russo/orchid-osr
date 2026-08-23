@@ -8,7 +8,7 @@ def test_settings_defaults():
 
     assert settings.model_type == "resnet18"
     assert settings.num_classes == 6
-    assert settings.novel_class_name == "O. sphegodes_Napoli"
+    assert settings.novel_class_name == "O. garganica"
     assert settings.epochs == 26
     assert settings.batch_size == 8
     assert settings.learning_rate == 0.001

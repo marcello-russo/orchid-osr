@@ -152,7 +152,7 @@ def run_experiment(
             logger.error(f"Dataset not found: {cropped_train}")
             return
         # Per esperimenti con exclude_classes (Exp 9: garganica come novel),
-        # usa dataset dedicati senza garganica (train) e senza sphegodes_Napoli (test).
+        # usa dataset dedicati senza garganica (train e test).
         train_dir = cropped_train
         test_dir = cropped_test if os.path.exists(cropped_test) else None
         if config.get("exclude_classes"):
@@ -210,8 +210,8 @@ def run_experiment(
 
         # Per esperimenti con exclude_classes (Exp 9: garganica come novel),
         # il test finale closed-set usa solo le classi di training (5),
-        # su test_ncd_exp9 (senza sphegodes_Napoli). La novel (garganica)
-        # è valutata separatamente dal pipeline NCD, non qui.
+        # su test_ncd_exp9. La novel (garganica) è valutata separatamente
+        # dal pipeline NCD, non qui.
         exclude = set(config.get("exclude_classes") or [])
         if exclude:
             class_names = [c for c in class_names if c not in exclude]
