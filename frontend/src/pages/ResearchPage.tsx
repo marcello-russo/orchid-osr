@@ -20,7 +20,6 @@ const SECTIONS = [
   { id: "exp7", labelKey: "research.sect_exp7" },
   { id: "exp8", labelKey: "research.sect_exp8" },
   { id: "exp9", labelKey: "research.sect_exp9" },
-  { id: "exp10", labelKey: "research.sect_exp10" },
   { id: "benchmark", labelKey: "research.sect_benchmark" },
   { id: "conclusioni", labelKey: "research.sect_conclusioni" },
   { id: "bibliografia", labelKey: "research.sect_bibliografia" },
@@ -186,11 +185,7 @@ export function ResearchPage() {
         {/* ── 2. DATASET ── */}
         <Section id="dataset" title={t("research.sect_dataset")}>
           <P>
-            Il dataset comprende immagini di sei entità tassonomiche del complesso <em>O. sphegodes</em>,
-            tutte fotografate nel territorio italiano, principalmente in Puglia e sul Gargano.
-            Le immagini provengono da due fonti: fotografie da campo scattate dai ricercatori
-            (fonte primaria per <em>O. majellensis</em> e <em>O. sphegodes</em> Palena) e
-            immagini raccolte da banche dati internet aperte per le altre specie.
+            {t("research.dataset_intro")}
           </P>
 
           <DataTable
@@ -264,7 +259,6 @@ export function ResearchPage() {
               <li><strong>Exp 7 — Supervised Contrastive Learning:</strong>{t("research.metodo_exp7")}<Cite id="khosla2020supervised" /></li>
               <li><strong>Exp 8 — SpHOR:</strong>{t("research.metodo_exp8")}<Cite id="bahavan2026sphor" /><Cite id="lee2018simple" /><Cite id="liu2020energy" /></li>
               <li><strong>Exp 9 — OSR con Novel Nascosta:</strong>{t("research.metodo_exp9")}</li>
-              <li><strong>Exp 10 — MGH-NCD:</strong>{t("research.metodo_exp10")}<Cite id="zheng2025mgce" /></li>
             </ul>
           </SubSection>
 
@@ -462,6 +456,12 @@ export function ResearchPage() {
               caption={t("research.exp8_tsne_caption")}
             />
           </div>
+
+          <Figure
+            src="/figures/confusion_matrices.webp"
+            alt="Confusion matrices"
+            caption={t("research.exp8_confusion_caption")}
+          />
         </Section>
 
         {/* ── EXP 9: SpHOR con novel class nascosta (O. garganica) ── */}
@@ -523,105 +523,7 @@ export function ResearchPage() {
           </SubSection>
         </Section>
 
-        {/* ── 7. EXP 10: MGH-NCD ── */}
-        <Section id="exp10" title={t("research.sect_exp10")}>
-          <SubSection title={t("research.exp10_subs_motivazione")}>
-            <P>
-              {t("research.exp10_p1_before")}<Cite id="zheng2025mgce" />{t("research.exp10_p1_after")}
-            </P>
-            <P>
-              {t("research.exp10_disegno")}
-            </P>
-          </SubSection>
-
-          <SubSection title={t("research.exp10_subs_collasso")}>
-            <P>
-              {t("research.exp10_collasso_intro")}
-            </P>
-            <ul className="list-disc list-inside text-muted-foreground space-y-1 text-sm">
-              <li><em>O. exaltata</em>: {t("research.exp10_collasso_exaltata")}</li>
-              <li><em>O. garganica</em>: {t("research.exp10_collasso_garganica")}</li>
-              <li><em>O. sphegodes</em>: {t("research.exp10_collasso_sphegodes")}</li>
-            </ul>
-          </SubSection>
-
-          <DataTable
-            columns={[
-              { key: "model", label: t("research.table_model") },
-              { key: "f1t", label: t("research.table_f1_test") },
-              { key: "det", label: t("research.table_detection") },
-              { key: "nmi", label: t("research.table_nmi") },
-              { key: "acc", label: t("research.table_acc_clust") },
-              { key: "palena", label: t("research.table_palena") },
-            ]}
-            rows={[
-              { model: "ResNet-18", f1t: "0,226", det: "0,257", nmi: "0,137", acc: "0,253", palena: "19%" },
-              { model: "ResNet-50", f1t: "0,064", det: "0,321", nmi: "0,032", acc: "0,206", palena: "0%" },
-              { model: "ConvNeXt-Tiny", f1t: "0,110", det: "0,566", nmi: "0,248", acc: "0,386", palena: "29%" },
-              { model: "ConvNeXt-Small", f1t: "0,078", det: "0,537", nmi: "0,162", acc: "0,330", palena: "98%" },
-              { model: "DINOv2-Small", f1t: "0,077", det: "0,610", nmi: "0,549", acc: "0,592", palena: "91%" },
-              { model: "DINOv2-Base", f1t: "0,057", det: "0,688", nmi: "0,425", acc: "0,511", palena: "78%" },
-            ]}
-            highlightRow="DINOv2-Base"
-            caption={t("research.exp10_caption")}
-          />
-
-          <P>
-            {t("research.exp10_risultati")}
-          </P>
-
-          <SubSection title={t("research.exp10_subs_analisi")}>
-            <P>
-              {t("research.exp10_analisi")}
-            </P>
-          </SubSection>
-
-          <Figure
-            src="/figures/spotlight_exp10_collapse.webp"
-            alt="Collasso Exp 10"
-            caption={t("research.exp10_spotlight_caption")}
-          />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Figure
-              src="/figures/confusion_matrices.webp"
-              alt="Confusion matrices"
-              caption={t("research.exp10_confusion_caption")}
-            />
-            <Figure
-              src="/figures/tsne_novel_exp10.webp"
-              alt="t-SNE with novel Exp 10"
-              caption={t("research.exp10_tsne_caption")}
-            />
-          </div>
-
-          <Figure
-            src="/figures/exp10_per_species.webp"
-            alt="F1 per specie Exp 10"
-            caption={t("research.exp10_per_species_caption")}
-          />
-
-          <SubSection title={t("research.subs_analisi")}>
-            <P>
-              {t("research.exp10_analisi_p1")}
-            </P>
-            <P>
-              <strong>{t("research.exp10_analisi_collasso")}</strong>
-            </P>
-            <P>
-              <strong>{t("research.exp10_analisi_fullft")}</strong>
-            </P>
-            <P>
-              <strong>{t("research.exp10_analisi_complessita")}</strong>
-            </P>
-          </SubSection>
-
-          <Callout variant="info" title={t("research.exp10_lesson_title")}>
-            {t("research.exp10_lesson_body")}
-          </Callout>
-        </Section>
-
-        {/* ── 8. BENCHMARK ── */}
+        {/* ── 7. BENCHMARK ── */}
         <Section id="benchmark" title={t("research.sect_benchmark")}>
           <P>
             {t("research.benchmark_intro")}
@@ -634,16 +536,15 @@ export function ResearchPage() {
               { key: "e7", label: t("research.table_e7") },
               { key: "e8", label: t("research.table_e8") },
               { key: "e9", label: t("research.table_e9") },
-              { key: "e10", label: t("research.table_e10") },
               { key: "osr9", label: t("research.table_osr9") },
             ]}
             rows={[
-              { model: "ResNet-18", e6: "0,978", e7: "0,444", e8: "0,560", e9: "0,590", e10: "0,226", osr9: "0,422" },
-              { model: "ResNet-50", e6: "0,980", e7: "0,465", e8: "0,750", e9: "0,856", e10: "0,064", osr9: "0,688" },
-              { model: "ConvNeXt-Tiny", e6: "0,821", e7: "0,837", e8: "0,911", e9: "0,920", e10: "0,110", osr9: "0,850" },
-              { model: "ConvNeXt-Small", e6: "0,793", e7: "0,517", e8: "0,874", e9: "0,933", e10: "0,078", osr9: "0,840" },
-              { model: "DINOv2-Small", e6: "0,970", e7: "0,888", e8: "0,894", e9: "0,921", e10: "0,077", osr9: "0,755" },
-              { model: "DINOv2-Base", e6: "0,975", e7: "0,936", e8: "0,910", e9: "0,932", e10: "0,057", osr9: "0,875" },
+              { model: "ResNet-18", e6: "0,978", e7: "0,444", e8: "0,560", e9: "0,590", osr9: "0,422" },
+              { model: "ResNet-50", e6: "0,980", e7: "0,465", e8: "0,750", e9: "0,856", osr9: "0,688" },
+              { model: "ConvNeXt-Tiny", e6: "0,821", e7: "0,837", e8: "0,911", e9: "0,920", osr9: "0,850" },
+              { model: "ConvNeXt-Small", e6: "0,793", e7: "0,517", e8: "0,874", e9: "0,933", osr9: "0,840" },
+              { model: "DINOv2-Small", e6: "0,970", e7: "0,888", e8: "0,894", e9: "0,921", osr9: "0,755" },
+              { model: "DINOv2-Base", e6: "0,975", e7: "0,936", e8: "0,910", e9: "0,932", osr9: "0,875" },
             ]}
             bests={{ e6: "ResNet-50", e7: "DINOv2-Base", e8: "ConvNeXt-Tiny", e9: "ConvNeXt-Small", osr9: "DINOv2-Base" }}
             caption={t("research.benchmark_caption")}
