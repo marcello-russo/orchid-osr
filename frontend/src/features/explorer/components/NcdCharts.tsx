@@ -111,10 +111,10 @@ export function ClusteringComparisonChart({ clustering }: { clustering: Record<s
 
 export function PerClassAurocChart({
   perClass,
-  napoliAuroc,
+  novelAuroc,
 }: {
   perClass: PerClassAUROC[];
-  napoliAuroc?: number;
+  novelAuroc?: number;
 }) {
   const { t } = useTranslation();
   const data = useMemo(() => {
@@ -123,11 +123,11 @@ export function PerClassAurocChart({
       auroc: p.auroc,
       isNovel: false,
     }));
-    if (napoliAuroc !== undefined) {
-      items.push({ name: "s. Napoli*", auroc: napoliAuroc, isNovel: true });
+    if (novelAuroc !== undefined) {
+      items.push({ name: "novel*", auroc: novelAuroc, isNovel: true });
     }
     return items;
-  }, [perClass, napoliAuroc]);
+  }, [perClass, novelAuroc]);
 
   if (!data.length) return null;
 
