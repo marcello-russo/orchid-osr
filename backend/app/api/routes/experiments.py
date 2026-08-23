@@ -225,13 +225,13 @@ async def get_experiment(experiment_id: str):
                 "  • Stessi ottimizzatori e scheduling di Exp 7.\n\n"
                 "Fase 2 — CE Fine-Tuning:\n"
                 "  • Identica a Exp 7: backbone congelato, testa lineare.\n\n"
-                "Valutazione: O. sphegodes_Napoli è la novel class (solo in test).",
+                "Valutazione: closed-set su 6 classi note, nessuna novel class.",
             },
             9: {
                 "phases": ["Fase 1: SupCon + SpHOR", "Fase 2: CE fine-tuning"],
                 "recipe": "Strutturalmente identico a Exp 8 (stessa loss, stessi iperparametri).\n"
-                "L'unica differenza: ncd_mode=True abilita il pipeline NCD completo "
-                "(OSR + clustering) con O. sphegodes_Napoli come novel class nascosta.",
+                "L'unica differenza: O. garganica è esclusa dal training (5 classi note) "
+                "e riservata al test come novel class nascosta per la valutazione OSR/NCD.",
             },
             10: {
                 "phases": ["Fase 1: MGH-SupCon (Multi-Granularità Hard-negative)", "Fase 2: CE fine-tuning"],

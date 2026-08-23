@@ -21,7 +21,7 @@ class Settings(BaseSettings):
 
     # Model configuration
     model_type: str = "resnet18"
-    num_classes: int = 6  # 6 training species; the novel class (sphegodes_Napoli) is only used for OSR evaluation
+    num_classes: int = 6  # 6 training species; the novel class (garganica in Exp 9) is only used for OSR evaluation
     class_names: list[str] = [
         "O. exaltata",
         "O. garganica",
@@ -30,7 +30,10 @@ class Settings(BaseSettings):
         "O. sphegodes",
         "O. sphegodes_Palena",
     ]
-    novel_class_name: str = "O. sphegodes_Napoli"
+    # Novel class di riferimento (Exp 9): O. garganica è esclusa dal training
+    # e riservata al test come classe nascosta. Exp 10 usa invece la
+    # sphegodes_Napoli legacy, gestita localmente nella sua config.
+    novel_class_name: str = "O. garganica"
 
     # Classes that have internet-sourced images (test set comes from internet)
     internet_classes: list[str] = [

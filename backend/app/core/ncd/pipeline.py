@@ -199,6 +199,8 @@ def run_ncd_pipeline(
                 logger.warning("Nessuna novel class in all_classes vs train")
 
         results["detectors"] = {}
+        if novel_name:
+            results["novel_class"] = novel_name
 
         for det_name in list_detectors():
             detector = get_detector(det_name)

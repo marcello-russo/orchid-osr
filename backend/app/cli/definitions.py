@@ -7,7 +7,9 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 
 ALL_CLASSES = settings.class_names
 INTERNET_CLASSES = settings.internet_classes
-TRAIN_CLASSES = [c for c in ALL_CLASSES if c != "O. sphegodes_Napoli"]
+# Le sei classi note. La novel class di Exp 9 (O. garganica) viene esclusa
+# dal training tramite exclude_classes, non da questa lista.
+TRAIN_CLASSES = list(ALL_CLASSES)
 
 DATASET_PATHS = {
     "privato": {
