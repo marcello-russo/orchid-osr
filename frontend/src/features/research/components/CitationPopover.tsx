@@ -33,6 +33,9 @@ export function CitationPopover({ paper, onClose }: CitationPopoverProps) {
   const measured = useRef(false);
 
   useLayoutEffect(() => {
+    // La posizione iniziale richiede la misurazione del DOM del popover prima
+    // del paint; la sincronizzazione è intenzionale (positioning).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     updatePos();
   }, [updatePos]);
 
@@ -40,6 +43,7 @@ export function CitationPopover({ paper, onClose }: CitationPopoverProps) {
     if (!pos || measured.current) return;
     measured.current = true;
     // Re-position now that the popover is mounted and its real height is known.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     updatePos();
   }, [pos, updatePos]);
 
