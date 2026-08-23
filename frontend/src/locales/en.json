@@ -771,6 +771,7 @@
     "exp9_osr_auroc_caption": "OSR AUROC per architecture in Exp 9 with O. garganica as the novel class. DINOv2-Base (0.875) and ConvNeXt-Tiny (0.850) clearly exceed the chance level (0.5); the ResNets do not reach significant discrimination.",
     "exp9_subs_clustering": "Clustering Analysis",
     "exp9_clustering": "Unsupervised clustering on Exp 9 embeddings recovers species for high-capacity models: K-means reaches NMI 0.844 (ConvNeXt-Tiny), 0.828 (DINOv2-Small), and 0.756 (DINOv2-Base). Weaker architectures recover the structure only partially.",
+    "exp9_tsne_novel_caption": "t-SNE projection of Exp 9 embeddings for DINOv2-Base: the five known species (circles) are well separated, while the novel class O. garganica (crosses) sits at the margins of the known clusters, remaining detectable by the open-set detectors.",
     "exp10_subs_motivazione": "Motivation and Design",
     "exp10_disegno": "All six architectures were trained with the same full fine-tuning regime on OVH as Exp 8, with the MGCE adaptation integrated into the SpHOR pipeline.",
     "exp10_subs_collasso": "Results: Collapse to O. sphegodes Palena",

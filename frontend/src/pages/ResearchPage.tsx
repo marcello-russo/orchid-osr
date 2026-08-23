@@ -515,6 +515,11 @@ export function ResearchPage() {
             <P>
               {t("research.exp9_clustering")}
             </P>
+            <Figure
+              src="/figures/exp9_tsne_novel.webp"
+              alt="t-SNE known vs novel Exp 9"
+              caption={t("research.exp9_tsne_novel_caption")}
+            />
           </SubSection>
         </Section>
 
