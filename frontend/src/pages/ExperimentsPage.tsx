@@ -40,7 +40,7 @@ function colAlign(col: Col): "left" | "right" | undefined {
 }
 
 const ALL_FAMILIES = ["ResNet", "ConvNeXt", "DINOv2"] as const;
-const ALL_SERIES = ["Exp 6", "Exp 7", "Exp 8", "Exp 10"] as const;
+const ALL_SERIES = ["Exp 6", "Exp 7", "Exp 8", "Exp 9"] as const;
 
 export function ExperimentsPage() {
   const { t } = useTranslation();
@@ -54,7 +54,7 @@ export function ExperimentsPage() {
   const filtered = useMemo(() => {
     if (!experiments) return [];
     return experiments.filter((e) => {
-      if (e.id.includes("exp9")) return false;
+      if (e.id.includes("exp10")) return false;
       if (familyFilter) {
         const fam = getArchitectureFamily(e.model_variant);
         if (fam !== familyFilter) return false;

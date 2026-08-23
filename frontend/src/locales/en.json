@@ -308,179 +308,6 @@
     "dataset_overview": "Dataset Overview",
     "click_hint": "Click a point to inspect the image"
   },
-  "about": {
-    "hero": {
-      "title": "OrchID OSR-NCD",
-      "description": "An end-to-end research framework developed at the University of Naples Federico II for ultra-fine-grained visual classification and representation learning of Ophrys species.",
-      "tag": "Master Thesis Project"
-    },
-    "objectives": {
-      "title": "Research Objectives",
-      "vectorSpace": {
-        "title": "Structured Embedding Space",
-        "description": "We construct a high-dimensional vector space where morphologically similar Ophrys species cluster together via Supervised Contrastive Learning [8]. This latent representation enables similarity search, outlier detection, and provides the foundation for discovering previously unseen species."
-      },
-      "ncd": {
-        "title": "Novel Class Discovery",
-        "description": "Standard classifiers operate under a closed-world assumption. Our research tackles Novel Class Discovery [7]: can a model recognize that an unknown Ophrys does not belong to any known species, and group novel entities into meaningful clusters without supervision?"
-      }
-    },
-    "scientific": {
-      "title": "The Ophrys Problem",
-      "content1": "The genus Ophrys is one of the most taxonomically challenging orchid groups in the Mediterranean. These orchids use sexual deception to attract species-specific pollinators, producing flowers that mimic female insects through visual cues, scent, and tactile signals [1].",
-      "content2": "This extreme specialisation drives rapid morphological divergence and frequent hybridization, resulting in visually ambiguous specimens that challenge even expert botanists. The Ophrys sphegodes complex alone encompasses multiple cryptic taxa with overlapping phenotypic traits [2][3]."
-    },
-    "journey": {
-      "title": "Experimental Journey",
-      "baselines_title": "Preliminary Baselines (Exp 1–5)",
-      "baselines": "The first five experiments explored only ResNet18 (Exp 1–3) and ResNet50 (Exp 4–5) on standard train/val/test splits, using a combined dataset of private field photos and internet-sourced images across six Ophrys species of the sphegodes complex: O. exaltata, O. garganica, O. incubacea, O. majellensis, O. sphegodes, and O. sphegodes ssp. sphegodes (Palena population). Experiment 4 introduced 5-fold stratified cross-validation for both architectures, establishing the rigorous evaluation protocol still in use today. ConvNeXt and DINOv2 had not yet been tested.",
-      "leakage_title": "The Data Leakage Problem",
-      "leakage": "MD5 content hashing revealed that the train and test sets shared visually identical images under different filenames — a subtle form of data leakage that artificially inflated metrics and invalidated all results from Exp 1–5. The same Ophrys photograph, downloaded multiple times with different names, was present in both training and test partitions.",
-      "preprocessing_title": "The Preprocessing Problem",
-      "preprocessing": "The original pipeline applied aggressive center-cropping to a fixed resolution, destroying aspect ratio information. Since ResNet expects 256×512 inputs while ConvNeXt and DINOv2 use 224×224, the same crop produced distorted, information-poor inputs across architectures. We replaced this with letterbox resizing: images are scaled to fit within the target dimensions while preserving aspect ratio, with black padding bands filling the remaining space.",
-      "clean_title": "Exp 6 — Clean Slate",
-      "clean": "Experiment 6 is a complete restart on a deduplicated clean split with MD5-verified zero overlap between training (2,192 images) and test (300 balanced, 50 per class). For the first time, six architectures — ResNet18, ResNet50, ConvNeXt-Tiny, ConvNeXt-Small, DINOv2-Small, and DINOv2-Base — are evaluated with per-architecture input sizing and 5-fold stratified cross-validation."
-    },
-    "methodology": {
-      "title": "Methodology",
-      "model_selection": {
-        "title": "Architecture Comparison",
-        "description": "We benchmark three families of architectures to understand which inductive biases best capture subtle floral differences: ResNet (hierarchical local features via residual connections [4]), ConvNeXt (modernised CNN with large kernels and LayerNorm [5]), and DINOv2 (self-supervised Vision Transformer with global attention, trained on 142M images [6])."
-      },
-      "optimization": {
-        "title": "Per-Architecture Recipes",
-        "description": "Each architecture receives a tailored training recipe. DINOv2 is fine-tuned via LoRA adapters [9] (rank r=8, alpha=16, dropout=0.1) targeting the query and value projections of all attention layers, updating just ~0.5% of parameters while keeping the backbone frozen. ResNet uses Adam [10], while ConvNeXt and DINOv2 use AdamW with decoupled weight decay [11]."
-      },
-      "rigor": {
-        "title": "Experimental Rigor",
-        "description": "All results are validated through 5-fold stratified cross-validation on a deduplicated clean split. MD5 hashing ensures zero content overlap between training and test sets, eliminating the data leakage that invalidated our preliminary experiments. Early stopping uses patience on val_loss. We evaluated the Generalization Loss criterion [12] but found it terminated training prematurely, before convergence."
-      },
-      "augmentation": {
-        "title": "Balanced Augmentation",
-        "description": "Class imbalance is addressed per-fold: the minority class determines the target count, which is multiplied by the number of augmentation transforms (random flips, rotation, color jitter) to produce a balanced dataset where every class has the same number of training images."
-      }
-    },
-    "experiments": {
-      "no_data": "Exp 7 (SupCon) results are not yet available.",
-      "hint": "Models are being trained with Supervised Contrastive Learning. Results will appear here automatically once training completes and is uploaded."
-    },
-    "exp9": {
-      "description": "Pure Novel Class Discovery setup: O. majellensis is excluded from training and left as a hidden novel class. The model is trained on 5 species and evaluated on all 6, measuring how well it detects the unseen species as 'unknown' through OSR metrics (AUROC, OSCR).",
-      "training": "Training in progress",
-      "waiting": "Additional models are being trained and will appear here once NCD evaluation is complete.",
-      "negative_result_title": "SpHOR Does Not Improve Open-Set Detection",
-      "negative_result": "All six architectures fail to significantly detect O. majellensis as a novel class. The best AUROC is 0.497 (ConvNeXt-Tiny), essentially random chance. This is consistent across architectures: simpler models (ConvNeXt) slightly outperform complex ones (DINOv2-Base: 0.332). The results suggest that Spherical Orthogonal Prototypes (SpHOR) do not provide meaningful open-set detection benefits in this ultra-fine-grained domain. This is a publishable negative result — the species are too morphologically similar for prototype-based rejection to work effectively.",
-      "model": "Model",
-      "clust_acc": "Cluster ACC",
-      "auroc": "AUROC",
-      "baseline": "Baseline",
-      "delta": "Δ"
-    },
-    "future": {
-      "title": "Exp 8: Open-World Recognition (SpHOR + GCD)",
-      "phase2_intro": "Exp 6 trains classifiers with standard Cross-Entropy loss. While effective for classification, CE does not explicitly structure the embedding space — same-class samples may be scattered and different-class samples may overlap. Exp 7 addresses this by applying Supervised Contrastive Learning (SupCon) [8], which reshapes the latent space so that embeddings of the same species cluster together while different species are pushed apart.",
-      "phase2_how": "How SupCon works. For each image (anchor) in a batch, the loss computes cosine similarities against all other images. Same-class pairs are attracted (positive pairs), while different-class pairs are repelled (negative pairs). This is formalised as an InfoNCE objective [13] with a temperature scaling parameter tau. Unlike Triplet Loss, which requires explicit anchor-positive-negative mining, SupCon naturally uses all pair combinations in the batch.",
-      "phase2_pipeline": "Two-phase training. Each fold of Exp 7 consists of two phases: (1) SupCon pretraining — the backbone and a projection head (embedding_dim to 128) are trained with the contrastive loss; the classifier head is ignored. The best model is selected via KNN accuracy (k=1) on validation embeddings. (2) CE fine-tuning — the projection head is discarded, the backbone is frozen, and only the linear classifier head is trained with Cross-Entropy loss at a higher learning rate (0.01).",
-      "phase2_why_frozen": "Why freeze the backbone? If the backbone were updated during CE fine-tuning, gradients from the Cross-Entropy loss would warp the embedding space to maximise class separability at the expense of the contrastive structure learned in Phase 1 [8]. The resulting embeddings would lose the property that morphologically similar species cluster together — a property essential for Novel Class Discovery [7]. Freezing the backbone also reduces the parameter count by 99.5%, meaning Phase 2 converges in fewer than 50 epochs.",
-      "phase2_params": "Hyperparameters. SupCon Phase: temperature tau=0.07. Projection dimension 128. Per-architecture optimizer and LR from the model registry: Adam with LR=0.001 for ResNet; AdamW with LR=0.0001 for ConvNeXt; AdamW with LR=0.0002 for DINOv2 LoRA. Physical batch size 8 (ResNet/ConvNeXt) or 4 (DINOv2) due to 4 GB VRAM; effective batch 32 via gradient accumulation [8]. CE Phase: LR=0.01, Adam, zero weight decay, patience 15 on val_loss [12], maximum 50 epochs.",
-      "phase2_memory": "Memory constraints and SupCon stability. At batch=4 with 6 classes, random sampling frequently yields batches where all samples belong to different species. The InfoNCE objective requires at least one positive pair per anchor — without it, the log-sum-exp over an all-negative similarity matrix produces NaN gradients. We mitigate this through three mechanisms: (1) empty-positive-batch detection returning zero loss, (2) gradient clipping at max_norm=2.0 [12], and (3) safe L2-normalisation with a numerical epsilon. Gradient accumulation (8 steps) ensures each optimiser step aggregates enough positive pairs for stable learning.",
-      "phase2_dinov2": "DINOv2 special case. DINOv2-Base [6] is a Vision Transformer (ViT-B) with 86M parameters. We use Low-Rank Adaptation (LoRA) [9] with rank r=8, alpha=16, dropout=0.1, applied to the query and value projection matrices of all 12 attention layers. This adds only 0.42M trainable parameters (~0.5% of total). During SupCon Phase 1, LoRA adapters and the projection head are trained jointly. In Phase 2, the backbone and LoRA adapters are frozen; only the linear classifier head is trained.",
-      "phase3_title": "Exp 8: Open-World Recognition (SpHOR + GCD)",
-      "phase3": "Exp 8 implements an open-world pipeline for recognising and discovering new Ophrys species, building on the SupCon models from Exp 7. The system consists of three phases: (1) Open-Set Recognition (OSR) based on Spherical Orthogonal Prototypes [16] and Extreme Value Theory (OpenMax) [14]; (2) Generalised Category Discovery (GCD) via multi-granularity clustering [17]; (3) incremental addition of new species with CE head fine-tuning on a frozen backbone. The core hypothesis is that the structured embedding space learned by SupCon in Exp 7 — where each species maps to a localised region on the unit hypersphere — provides the geometric foundation for distinguishing known from novel classes, a task that is provably impossible in the degenerate embedding spaces produced by plain CE [15].",
-      "phase1_embedding_title": "Embedding Space Geometry",
-      "phase1_embedding": "A key design choice is to enforce that the embedding space lies on the surface of a unit hypersphere (L2-normalised outputs). On the hypersphere, cosine similarity equals Euclidean distance up to a monotonic transformation: d(a,b) = 2 - 2cos(theta). More importantly, spherical embeddings guarantee that every point has bounded distance to all others (maximum chord length = 2), making distance thresholds interpretable globally — a property that unnormalised Euclidean spaces lack, where inter-class distances can grow arbitrarily. This bounded geometry is essential for OSR: the maximum possible distance from any class prototype is 2 (the antipodal point), so rejection thresholds are meaningful regardless of which region of the space a test sample falls into.",
-      "osr_title": "Phase 1: Open-Set Recognition",
-      "osr_description": "We train K spherical orthogonal prototypes — one per species — that lie on the unit hypersphere and are encouraged to be orthogonal via a repulsive loss [16]: L_rep = (1/K(K-1)) sum_{i != j} (cos(theta_ij))^2. Orthogonal prototypes maximise angular coverage, ensuring each species occupies a distinct conical region of the sphere. At inference, we compute distances from a test embedding to each prototype and fit the tail of each per-class distance distribution with a Weibull distribution: f(x; lambda, k) = (k/lambda) (x/lambda)^{k-1} exp(-(x/lambda)^k). The Weibull CDF models the probability that a sample belongs to the extreme tail of a known class — samples beyond the 95th percentile of all per-class fits are candidate unknowns. OpenMax [14] refines this: for the top-alpha closest prototypes, the activation is downweighted by (1 - Weibull_CDF(distance)), and if the max revised activation falls below a threshold, the sample is classified as unknown. We evaluate OSR performance via AUROC (area under the ROC for the known-vs-unknown binary task) and OSCR (Open-Set Classification Rate, measuring the trade-off between known-class accuracy and unknown rejection rate across thresholds [15]).",
-      "gcd_title": "Phase 2: Generalized Category Discovery",
-      "gcd_description": "After OSR rejects unknown samples, they must be grouped into candidate species — a Generalised Category Discovery problem [7]. We use Multi-Granularity Conceptual Experts (MGCE) [17]: three clustering experts operate at different KNN resolutions (k_fine, k_medium, k_coarse), each producing pseudo-labels at a different granularity. A contrastive memory bank aligns representations across scales. The multi-granularity votes are consolidated via InfoMap — a community detection algorithm on a weighted graph that estimates the number of clusters automatically by minimising the description length of a random walk (the map equation). This is particularly suited to botanical data, where the true number of species is unknown and may vary by geographic region.",
-      "phase3_incremental_title": "Phase 3: Incremental Learning",
-      "phase3_incremental": "Once new species are discovered, the model incorporates them without retraining from scratch: the frozen backbone produces the same embeddings as before; only a new linear classifier head is trained with Cross-Entropy on the augmented label set (known + new species). Because the embedding space is fixed and novel clusters are already well-separated, a 30-epoch fine-tuning of the linear head suffices.",
-      "phase3_ncd_title": "Connection to the NCD Literature",
-      "phase3_ncd": "Our pipeline follows the GCD paradigm introduced by Vaze et al. [7] — their baseline uses a self-supervised pretrained backbone followed by k-means clustering on the novel set. Our contribution extends this in two directions: (1) we replace self-supervised pretraining with supervised contrastive learning (SupCon) to obtain class-aware embeddings that separate known classes while preserving the metric structure needed for novel discovery; (2) we introduce a dedicated OSR stage with OpenMax [14] before clustering, so that novel candidates are filtered from known-class outliers rather than being naively assigned to a known cluster. The spherical orthogonal prototypes [16] further regularise the embedding space, a technique not yet applied to botanical ultra-FGVC to our knowledge."
-    },
-    "results": {
-      "title": "Benchmark Results",
-      "rank": "#",
-      "model": "Model",
-      "f1": "F1 Score",
-      "accuracy": "Accuracy",
-      "test_acc": "Test Acc",
-      "best_fold": "Best Fold",
-      "unavailable": "Results not available — is the backend running?",
-      "no_data": "Experiment 6 results not found yet.",
-      "comment_winner": "{{model}} leads the ranking with {{f1}} mean F1 — the strongest classifier in the benchmark.",
-      "comment_stability": "{{model}} shows the highest consistency (std={{std}}%), with reliable performance across all folds.",
-      "comment_gap": "The gap between 1st ({{top}}) and last place ({{bottom}}) is {{gap}} F1 points, reflecting meaningful architecture-level performance differences."
-    },
-    "bibliography": {
-      "title": "References"
-    },
-    "footer": {
-      "university": "University of Naples Federico II",
-      "degree": "M.Sc. Computer Science",
-      "department": "DIETI Department",
-      "description": "This project is part of a Master's Thesis on the application of Self-Supervised Learning and Novel Class Discovery to biodiversity data.",
-      "author": "Author: Marcello Russo"
-    },
-    "exp6": {
-      "description": "The first benchmark establishes the baseline: 6 architectures trained with standard Cross-Entropy loss via 5-fold stratified cross-validation (seed=57). Per-architecture Test F1 results: ResNet-18=0.8799, ResNet-50=0.8822, ConvNeXt-Tiny=0.8902, ConvNeXt-Small=0.8626, DINOv2-Small=0.8883, DINOv2-Base=0.9271. Performance is generally high (macro F1 0.86-0.93), but CE does not explicitly structure the latent space — the objective only penalises misclassification, so same-species embeddings may scatter and different species may overlap. This lack of geometric structure limits two capabilities essential for NCD: (a) detecting out-of-distribution samples (CE softmax scores are known to be overconfident for unknown inputs [15]), and (b) providing a metric space where proximity reflects morphological similarity."
-    },
-    "exp7": {
-      "motivation_title": "Why SupCon?",
-      "motivation": "From the literature [8] we know that Supervised Contrastive Learning produces more structured embeddings than CE: same-species samples are pulled together, different species are pushed apart. This organized latent space is essential for the subsequent Novel Class Discovery phase [7]. Exp 7 applies SupCon to all 6 architectures with two-phase training: (1) contrastive pretraining of backbone + projection head, (2) CE fine-tuning of the linear head only with frozen backbone.",
-      "title": "Exp 7 Analysis — SupCon",
-      "overview": "Exp 7 trained 6 architectures with SupCon + CE fine-tuning via 5-fold cross-validation, with final testing on 300 images (50 per species).",
-      "winner_title": "Overall Winner: DINOv2-Small",
-      "winner": "DINOv2-Small dominates the leaderboard with a Test F1 of 0.8958, outperforming the runner-up (ResNet-50, 0.7993) by nearly 10 percentage points. The gap between cross-validation (CV F1 0.9058) and test (0.8958) is only 0.01 — the lowest among all models — indicating excellent generalization. At the species level, it excels on O. sphegodes_Palena (F1=0.990) and O. majellensis (0.980), while the hardest species remains O. sphegodes (0.782). This result confirms DINOv2-Small as the ideal backbone for our domain: lightweight (42M parameters), pre-trained on 142M images, and effectively adaptable via LoRA to 2,232 Ophrys images.",
-      "overfitting_title": "Overfitting: the big model problem",
-      "overfitting": "The most striking finding of Exp 7 is the gap between cross-validation and test performance. DINOv2-Base (304M parameters) has a gap of 0.2262 — the worst overall — despite a CV F1 of 0.9135. On O. majellensis, its recall is only 0.12, meaning only 6 out of 50 test images are correctly classified. ConvNeXt-Small (gap 0.1935) and ConvNeXt-Tiny (0.1945) fare similarly poorly. Conversely, ResNet-50 shows a negative gap (-0.0635): its test F1 (0.7993) exceeds CV (0.7359), suggesting that 5-fold cross-validation underestimates its capabilities due to the small validation set size. This pattern suggests that for small datasets, models with fewer parameters and strong implicit regularization generalize better than massive architectures with generic pre-training.",
-      "species_title": "Easiest and hardest species",
-      "species": "O. sphegodes_Palena is the easiest species overall: DINOv2-Small achieves F1=0.990, ResNet-18 0.960. O. exaltata and O. incubacea are handled well by all models (mean F1 >0.80), likely due to their abundance in the training set (501 and 366 images respectively). O. majellensis is the most polarizing: DINOv2-Small scores F1=0.98, but ConvNeXt-Tiny and ConvNeXt-Small drop to F1=0.21 and 0.25, with recall of 0.12 and 0.14. O. sphegodes is universally the most problematic: no model exceeds F1=0.78, and ConvNeXt precision is below 0.50.",
-      "arch_title": "Architecture comparison",
-      "arch": "ResNet-50 and ResNet-18 show the most stable pattern: both have low or negative CV-test gaps, with ResNet-50 reaching 0.7993 despite its relatively simple architecture. ConvNeXt-Tiny (0.6810) and ConvNeXt-Small (0.6886), despite being more modern architectures, perform worse. A possible explanation is that BatchNorm, present in ResNet but absent in ConvNeXt, acts as a critical implicit regularizer for datasets with only a few hundred images per class."
-    },
-    "analysis": {
-      "title": "Cross-Experiment Analysis",
-      "description": "After training 24 models across four experiments (6 architectures × Exp 6/7/8/9), a systematic analysis of confusion matrices reveals a fundamental limitation of contrastive learning for ultra-fine-grained open-set recognition.",
-      "key_finding": "Key Finding: SupCon collapses visually similar species",
-      "key_finding_detail": "Cross-entropy (Exp 6) recognizes O. majellensis at 96–100% across all architectures. Switching to SupCon (Exp 7) collapses it with O. sphegodes — accuracy drops to 12–14%. The confusion matrix shows that up to 70% of majellensis images are misclassified as sphegodes. This occurs because SupCon optimizes for embedding similarity, pulling visually near-identical species into the same region of the latent space. The orthogonal prototype repulsion of SpHOR (Exp 8) does not resolve this — results are comparable to plain SupCon. In the NCD scenario (Exp 9), where O. majellensis is the hidden novel class, it is classified as O. sphegodes in 58–90% of cases, explaining the near-random AUROC (~0.5).",
-      "confusion_title": "Confusion Patterns",
-      "confusion_1": "O. majellensis → O. sphegodes: 46–70% in SupCon, 58–90% in NCD",
-      "confusion_2": "O. sphegodes → O. exaltata: 8–24% across all experiments",
-      "confusion_3": "O. sphegodes → O. garganica: 6–20% across all experiments",
-      "confusion_4": "O. sphegodes_Palena → O. sphegodes: 14–42% in SupCon/SpHOR",
-      "root_cause_title": "Root Cause",
-      "root_cause_detail": "SupCon pulls same-class embeddings together. For ultra-fine-grained classes where inter-class variance is smaller than intra-class variance (lighting, angle, flower maturity), visually similar but distinct species collapse into overlapping clusters. CE directly optimizes the decision boundary, hence it separates them — but CE embeddings are less structured for clustering and novel-class discovery.",
-      "literature_title": "Recent Literature Confirms This Pattern",
-      "literature_detail": "The Open-Insect benchmark [22], a NeurIPS 2025 spotlight evaluating 38 OSR algorithms on fine-grained species classification, finds that simple post-hoc approaches (Mahalanobis distance, KNN density ratio) consistently outperform complex training-time methods like OpenMax and SpHOR for biodiversity monitoring tasks. This supports our finding that the bottleneck is the embedding space structure, not the scoring function. Additionally, the Multi-Granularity Conceptual Experts (MGCE) framework [17] achieves state-of-the-art on fine-grained Generalized Category Discovery by combining multi-granularity features with dynamic contrastive learning — exactly the direction needed for our domain. Unlike Exp 9 where O. majellensis was the hidden class, Exp 10 includes all 6 species as known and will evaluate NCD on a separate unseen species."
-    },
-    "exp10": {
-      "title": "Exp 10 — MGH-NCD (Ultimate Experiment)",
-      "description": "MGH-NCD (Multi-Granularity Hard-negative Novel Class Discovery) is the final, definitive experiment of this thesis. It combines four innovations targeting the specific failure modes identified in the cross-experiment analysis. The goal is to maximize both closed-set accuracy and open-set detection (AUROC) for ultra-fine-grained novel class discovery.",
-      "innovation1_title": "Hard Negative Mining in SupCon",
-      "innovation1_detail": "The most critical innovation. During SupCon training, the contrastive loss contribution for pairs involving (O. majellensis, O. sphegodes) is multiplied by 5×, and for (O. sphegodes, O. sphegodes_Palena) pairs by 3×. This forces the model to explicitly separate these collapsed species in the embedding space, while maintaining the benefits of contrastive learning for the remaining classes. For Exp 10, all 6 species (including O. majellensis) are known during training. [8]",
-      "innovation2_title": "Multi-Granularity Feature Extraction",
-      "innovation2_detail": "For ViT-based architectures (DINOv2), features are extracted from three levels: the final CLS token (global semantics), attention-pooled patch tokens (local discriminative details), and the mid-layer CLS token (regional features). For CNN architectures (ResNet, ConvNeXt), features from the penultimate and final stages are concatenated. The concatenated multi-scale vector is projected to a unified 256-dim space via an MLP. This mimics the multi-granularity expert approach proposed in MGCE [17], adapted to our architectures.",
-      "innovation3_title": "Phase 2: Head-Only CE Fine-Tuning",
-      "innovation3_detail": "An initial attempt at deep fine-tuning (LoRA r=32 + unfreezing last 4 transformer blocks, ~29.5M trainable params) led to severe overfitting: cross-validation F1 reached 0.9266 but test F1 collapsed to 0.1413 (worse than random, 0.167). With only ~1,785 training images per fold, a ratio of ~16,500 parameters per image proved far too high, causing the model to memorize the validation folds instead of learning generalizable features. Phase 2 was therefore reverted to head-only CE fine-tuning (13K parameters, backbone frozen), following the same approach as Exp 7 that consistently generalized well. The backbone is trained with LoRA r=32 during Phase 1 (SupCon), which quadruples adapter capacity for richer embeddings, but is frozen during Phase 2. The head uses LR=0.01 with label smoothing (0.1), Adam, and up to 150 epochs with early stopping (patience=15). [11] This reversal confirms the bias–variance trade-off [18]: on small fine-grained datasets, model capacity must be tightly controlled to prevent overfitting.",
-      "innovation4_title": "OSR Ensemble (Mahalanobis + KNN + Energy)",
-      "innovation4_detail": "OpenMax is replaced by a post-hoc ensemble of three scoring functions, following the findings of Open-Insect [22]:",
-      "innovation4_maha": "Mahalanobis distance [21] — class-conditional Gaussian density estimation on the embedding space",
-      "innovation4_knn": "KNN density ratio — ratio of distance to nearest known-class neighbors vs. background neighbors",
-      "innovation4_energy": "Energy score [20] — log-sum-exp of logits, theoretically aligned with input probability density",
-      "innovation4_ensemble": "The final unknown score is a weighted combination: 0.4 × Mahalanobis + 0.3 × KNN + 0.3 × Energy. This ensemble is more robust than any single scoring function.",
-      "outcome_title": "Expected Outcome",
-      "outcome_known_f1": "Known class F1 (6 species)",
-      "outcome_majellensis": "O. majellensis accuracy",
-      "outcome_auroc": "Mean AUROC (novel species)",
-      "outcome_best_auroc": "Best AUROC",
-      "outcome_clustering": "Novel clustering ACC",
-      "outcome_baseline": "Exp 9 (baseline)",
-      "outcome_target": "Exp 10 (target)",
-      "outcome_note": "All 6 architectures will be trained with the same MGH-NCD recipe for completeness. Unlike Exp 9 where O. majellensis was the hidden class, Exp 10 includes all 6 known species during training. Novel class discovery will be evaluated using a separate unseen species collected for this purpose. Phase 2 uses head-only CE fine-tuning (backbone frozen) for all architectures, following the same approach as Exp 7. The backbone is trained with LoRA r=32 during Phase 1 (SupCon) for richer embeddings. The primary analysis will focus on DINOv2-Base (best tradeoff between embedding quality and GPU memory), with cross-architecture comparisons provided.",
-      "ncd_title": "NCD Results — Open-Set Detection per Detector"
-    }
-  },
   "experiment": {
     "comparing": "Comparing:",
     "compare": "Compare",
@@ -557,7 +384,8 @@
     "dataset_col_train": "Train",
     "dataset_col_test": "Test",
     "dataset_row_total": "Total",
-    "dataset_caption": "Image distribution per species in training and test splits. The novel species is present only in the test set (548 images).",
+    "dataset_caption": "Image distribution per species in training and test splits. O. garganica is in training for Exp 6–8 and excluded from training in Exp 9, where it is reserved for testing as the novel class.",
+    "dataset_intro": "The dataset comprises images of six taxonomic entities of the O. sphegodes complex, all photographed in Italian territory, mainly in Apulia and on the Gargano. Images come from two sources: field photographs taken by the researchers constitute the primary source for O. majellensis and O. sphegodes Palena (species with no counterpart in databases); images collected from open internet databases cover the four most common species: O. exaltata, O. garganica, O. incubacea and O. sphegodes.",
     "dataset_callout_leakage_title": "Data Leakage",
     "dataset_callout_leakage": "In the initial phases (Exp 1–5), the dataset presented a critical data leakage problem: visually identical images appeared in both training and test sets under different filenames. The discovery was made via MD5 content hashing. Starting from Exp 6, the dataset was cleaned using a three-phase protocol: (1) MD5 deduplication, (2) extraction of a balanced hold-out of 50 images per class, (3) stratified 5-fold cross-validation with seed 57. This clean split forms the basis of all experiments.",
     "dataset_callout_novel_title": "Novel Species: O. garganica",
@@ -570,7 +398,6 @@
     "sect_exp7": "Exp 7 — Supervised Contrastive Learning",
     "sect_exp8": "Exp 8 — Spherical Orthogonal Prototypes (SpHOR)",
     "sect_exp9": "Exp 9 — SpHOR with Hidden Novel Class",
-    "sect_exp10": "Exp 10 — Multi-Granularity NCD (MGH-NCD)",
     "sect_benchmark": "Consolidated Benchmark",
     "sect_conclusioni": "Conclusions",
     "sect_bibliografia": "Bibliography",
@@ -584,7 +411,6 @@
     "metodo_exp7": " introduces two-phase training. Phase 1: backbone + projection head (128-dim) trained with SupConLoss (τ=0.07) for 100 epochs, validated with 1-NN accuracy. Phase 2: frozen backbone, linear classifier trained with CE for 50 epochs.",
     "metodo_exp8": " like Exp 7 but with learnable L2-normalized prototypes on the unit sphere and orthogonal repulsion loss (λ=0.01). At test time, four OSR detectors (Mahalanobis, KNN, Energy, Ensemble) determine whether a sample is known or novel.",
     "metodo_exp9": " identical to Exp 8 but with O. garganica excluded from training: five known classes, garganica reserved for testing as the novel class for OSR and NCD evaluation.",
-    "metodo_exp10": " adapts MGCE to the ultra-FG context. Three clustering experts at multiple KNN resolutions (k=5, 15, 50) harmonized via JS divergence.",
     "metodo_validazione": "All experiments use stratified 5-fold cross-validation with seed 57. The main metric for closed-set classification is macro F1, robust to the natural class imbalance (152 images for O. majellensis vs 563 for O. garganica). For open-set, AUROC and the detection rate at 10% FPR are used: the rejection threshold is calibrated so that only 10% of novel images are erroneously accepted, and one measures how many known samples are correctly recognized.",
     "metodo_pipeline_osr": "For OSR evaluation, the model trained on five known classes is tested on a set that includes O. garganica as the unknown class. The procedure consists of three phases: (1) embedding extraction from training and test sets via a frozen backbone; (2) training of four detectors (Mahalanobis, KNN, Energy, Ensemble) on known embeddings only; (3) computation of AUROC and detection rate at 10% FPR.",
     "metodo_arch_fig_caption": "Diagram of the training and evaluation pipeline: from image collection to result publication.",
@@ -610,7 +436,6 @@
     "table_e7": "F1 (Exp 7)",
     "table_e8": "F1 (Exp 8)",
     "table_e9": "F1 (Exp 9)",
-    "table_e10": "F1 (Exp 10)",
     "table_osr9": "OSR AUROC (9)",
     "table_knn": "KNN Acc (Phase 1)",
     "table_auroc": "AUROC",
@@ -621,23 +446,13 @@
     "exp8_caption": "Exp 8 — Closed-set F1 per architecture.",
     "exp8_per_species_caption": "Per-species F1 in Exp 8: O. sphegodes is the most penalized; O. sphegodes Palena and O. majellensis the least affected.",
     "exp8_tsne_caption": "t-SNE for three architectures in Exp 8: (a) ConvNeXt-Tiny — well-separated embeddings; (b) DINOv2-Small — cohesive clusters; (c) DINOv2-Base — intermediate structure.",
-    "exp10_spotlight_caption": "Exp 10 collapse for DINOv2-Base. (a) Confusion matrix: the Palena column captures most predictions. (b) For each species, the Palena fraction exceeds the correct accuracy.",
-    "exp10_confusion_caption": "Confusion matrices for Exp 7 (SupCon), Exp 8 (SpHOR) and Exp 10 (MGH-NCD). The progressive degradation is evident: from a clean diagonal (SupCon) to the Palena collapse (MGH-NCD).",
-    "exp10_tsne_caption": "t-SNE projection of Exp 10 embeddings: the novel O. sphegodes Palena (red circles) completely overlaps the known classes.",
-    "exp10_per_species_caption": "Per-species F1 in Exp 10. No species reaches 0.5 F1. The collapse is uniform: all species suffer equally.",
-    "exp10_analisi_p1": "The failure of MGH-NCD in this ultra-fine-grained domain is instructive and can be analyzed on three levels.",
-    "exp10_analisi_collasso": "The multi-expert alignment of MGCE forces consensus among three KNN resolutions. In a standard dataset the resolutions capture different scales of the taxonomic hierarchy; in ultra-FGVC, where the \"coarse\" resolution (k=50) already captures only very fine differences, the consensus collapses onto the most distinctive class (O. sphegodes Palena). The fine-grained information, present in only one of the three experts, is lost by the alignment.",
-    "exp10_analisi_fullft": "The Exp 10 evaluation was conducted in full fine-tuning in the remote phase, allowing MGCE to fully exploit model capacity; in this case, however, the greater capacity amplified the collapse rather than mitigating it. Unlike Exp 8/Exp 9, the Exp 10 results were not retrained after the methodological correction that normalizes embeddings and disables hard negative mining, so the contribution of the MGCE framework cannot be separated with certainty from configuration differences.",
-    "exp10_analisi_complessita": "MGCE introduces three experts, a memory bank and three losses (contrastive, alignment, clustering). With about 2,200 training images distributed across 6 ultra-FG classes, this complexity is disproportionate to the available information: the model \"spends\" its capacity satisfying the alignment constraints rather than discriminating species.",
-    "exp10_lesson_title": "Lesson: simplicity beats complexity",
-    "exp10_lesson_body": "SpHOR, with a single contrastive objective and orthogonal prototypes, outperforms MGCE despite being less sophisticated. The choice of approach must be driven by the intrinsic scale of the problem, not by the sophistication of the technique. This is a valid scientific result: it shows that adding complexity does not necessarily improve ultra-FGVC.",
+    "exp8_confusion_caption": "Confusion matrices for Exp 7 (SupCon, DINOv2-Small) and Exp 8 (SpHOR, ConvNeXt-Tiny). The O. exaltata → O. sphegodes pair is the most frequent error in Exp 8 (16–20%), consistent with the taxonomy of the complex.",
     "benchmark_heatmap_caption": "Heatmap: test F1 per model and experiment.",
-    "closed_vs_open_caption": "Test F1 vs Detection Rate: the closed-set / open-set trade-off.",
+    "closed_vs_open_caption": "Test F1 vs Detection Rate for the six models in Exp 9 (SpHOR with novel O. garganica): DINOv2-Base and ConvNeXt-Tiny balance closed-set precision and open-set detection, while the ResNets remain weak on both.",
     "benchmark_bar_caption": "Bar comparison of test F1 across experiments and architectures.",
     "summary_dual_heatmap_caption": "Dual heatmap: test F1 (left) and Detection Rate (right) side by side for immediate comparison.",
-    "concl_species_evolution_caption": "Evolution of per-species F1 across experiments. The degradation is generalized, but some species (O. sphegodes, O. garganica) suffer more than others.",
+    "concl_species_evolution_caption": "Per-species F1 evolution for DINOv2-Small across Exp 6 (CE), Exp 7 (SupCon) and Exp 8 (SpHOR). Exp 9 is excluded because O. garganica is the novel class there, not part of the closed-set evaluation. The hardest species (O. sphegodes, O. garganica) show the most marked drop when moving to contrastive paradigms.",
     "loss_curves_aggregated_caption": "Aggregated loss curves per experiment. Convergence is faster in Exp 6 (CE) than in Exp 7–10 (contrastive).",
-    "exp10_caption": "Exp 10 — Closed-set F1 and open-set detection metrics.",
     "benchmark_caption": "Consolidated F1 and OSR metrics across all experiments. ★ Best value per column.",
     "subs_analisi": "Failure Analysis",
     "subs_risultati": "Key Results",
@@ -716,10 +531,8 @@
     "exp6_fig_caption": "Training and validation curves for DINOv2-Base in Exp 6 (CE). Stable convergence around 60 epochs, early stopping at 75.",
     "exp7_p1_before": "To address the structural limitation of CE, Supervised Contrastive Learning (SupCon) is adopted",
     "exp7_p1_after": ". The SupCon loss explicitly attracts samples of the same class and repels those of different classes in L2-normalized space. The result is a metric space where cosine distance reflects semantic similarity — an essential property for open-set recognition and novel class discovery",
-    "exp7_fig2_caption": "F1 per species across architectures and experiments. O. sphegodes is systematically the most difficult species; O. exaltata and O. sphegodes Palena are the easiest.",
+    "exp7_fig2_caption": "Per-species F1 for the best model of each experiment (Exp 6: ResNet-50, Exp 7: DINOv2-Small, Exp 8: ConvNeXt-Tiny, Exp 10: ResNet-18). O. sphegodes is systematically the most difficult species; O. sphegodes Palena and O. majellensis are the easiest.",
     "exp7_fig3_caption": "Training and validation curves for DINOv2-Small during SupCon training.",
-    "exp10_p1_before": "Building on the SpHOR results, we attempted to improve hidden class discovery by adopting MGCE",
-    "exp10_p1_after": ". Three clustering experts operate at multiple KNN resolutions (k=5, 15, 50), each generating pseudo-labels via InfoMap, and a contrastive memory bank aligns representations across scales. The hypothesis was that multi-granularity could capture the hierarchical structure of botanical taxonomy.",
     "benchmark_intro": "The following table consolidates the performance of all architectures across the experiments, for closed-set classification (test F1) and open-set (AUROC at 10% FPR).",
     "futuri_li1": "Dataset expansion via citizen science and generative AI.",
     "futuri_li2_before": "Part-based methods (APL",
@@ -736,7 +549,7 @@
     "risultati_li5": "Unsupervised clustering recovers species for high-capacity models (NMI up to 0.84 in Exp 9).",
     "exp6_subs_motivazione": "Motivation and Design",
     "exp6_training": "All six architectures were trained for a maximum of 150 epochs with patience 15 for early stopping, using the recipes defined in the configuration table.",
-    "exp6_risultati_before": "The table reports the F1 scores. DINOv2-Base achieved the highest test F1 (0.9271), followed by ConvNeXt-Tiny (0.8902) and DINOv2-Small (0.8883). The negative CV-Test gap observed for ConvNeXt and DINOv2-Small indicates moderate overfitting. Conversely, ResNet-18 and ResNet-50 show a positive gap, a pattern consistent with the ",
+    "exp6_risultati_before": "The table reports the F1 scores. ResNet-50 reaches the highest test F1 (0.980), followed by ResNet-18 (0.978) and DINOv2-Base (0.975): 11–25M parameters suffice to capture the variance of the six species with 2,192 training images. ConvNeXt models remain lower (0.821 and 0.793), with a wide CV-test gap for ConvNeXt-Small (+0.266) indicating high fold variance. DINOv2-Small (0.970) and DINOv2-Base (0.975) confirm the effectiveness of large-scale self-supervised pretraining. The CV-test gap is positive for all models: stratified CV on imbalanced classes tends to underestimate generalization, a pattern consistent with the ",
     "exp6_risultati_mid": " phenomenon: with approximately 2,200 training samples, ResNets (11–25M parameters) operate in the over-parameterized regime where generalization improves with model size, while ConvNeXt-Small (50M parameters) lies closer to the interpolation threshold where overfitting is more severe.",
     "exp6_risultati_after": "The gap tends to increase with model parameters for the ConvNeXt and DINOv2 families, while ResNets show stable or positive generalization thanks to the implicit regularization of batch normalization.",
     "exp6_subs_embedding": "Embedding Space Analysis",
@@ -745,7 +558,7 @@
     "exp7_subs_motivazione": "Motivation",
     "exp7_subs_protocollo": "Training Protocol",
     "exp7_protocollo": "A two-phase training procedure was employed. In Phase 1, the backbone and a projection head (embedding dimension → 128) were trained using the SupCon loss with temperature τ = 0.07. Validation was performed via 1-nearest neighbor accuracy on frozen backbone embeddings. In Phase 2, the projection head was removed and a linear classifier was trained on the frozen backbone using cross-entropy for 50 epochs. Freezing the backbone in Phase 2 is a fundamental methodological choice: it preserves the metric structure of the embedding space, preventing the classifier from distorting representations to maximize closed-set accuracy at the expense of open-set separability.",
-    "exp7_risultati": "The table presents the results. DINOv2-Base achieved the highest test F1 (0.936) with a minimal CV-test gap (+0.004). However, DINOv2-Small shows the best F1-to-parameters ratio (21M params, 0.888 test F1, gap −0.026). At the species level, DINOv2-Small excels on O. sphegodes Palena (F1 = 0.990) and O. majellensis (F1 = 0.980), while the most difficult species remains O. sphegodes (F1 = 0.782), consistent with its high intra-specific phenotypic variability. A notable finding is that large ConvNeXt models (Small) and ResNets underperform in the SupCon setting, suggesting that contrastive learning benefits more from the representational quality of the backbone than from raw capacity.",
+    "exp7_risultati": "The table presents the results. DINOv2-Base achieved the highest test F1 (0.936) with a minimal CV-test gap (+0.004). However, DINOv2-Small shows the best F1-to-parameters ratio (21M params, 0.888 test F1, gap −0.026). At the species level, DINOv2-Small excels on O. sphegodes Palena (F1 = 0.990) and O. majellensis (F1 = 0.990), while the most difficult species remains O. sphegodes (F1 = 0.784), consistent with its high intra-specific phenotypic variability. A notable finding is that large ConvNeXt models (Small) and ResNets underperform in the SupCon setting, suggesting that contrastive learning benefits more from the representational quality of the backbone than from raw capacity.",
     "exp7_overfitting_title": "Overfitting Analysis",
     "exp7_overfitting_detail": "ConvNeXt-Small shows the largest negative CV-test gap (−0.187), confirming that larger CNN architectures tend to overfit in low-data regimes when fine-tuned end-to-end. DINOv2-Base, by contrast, maintains a slightly positive gap (+0.004), reflecting the benefits of large-scale self-supervised pretraining. ResNet-50 shows a positive gap (+0.083), a pattern consistent with double descent and the implicit regularization of batch normalization layers that modern architectures (LayerNorm, GELU) lack.",
     "exp7_subs_embedding_osr": "Embedding Space and Open-Set Evaluation",
@@ -758,7 +571,7 @@
     "exp8_subs_closedset": "Closed-Set Results",
     "exp8_closedset": "The table reports closed-set metrics. Compared to the previous version of the study, the protocol was cleaned up: hard negative mining was disabled, embeddings L2-normalized before the linear head, and the dataset realigned to the current manifest. The result is a systematic improvement: ConvNeXt-Tiny reaches test F1 0.911 and DINOv2-Base 0.910, while the ResNets remain lower (0.560 and 0.750) due to their limited capacity to support the spherical prototype structure.",
     "exp8_subs_species": "Species Analysis",
-    "exp8_species": "The per-species F1 breakdown reveals that SpHOR affects species unevenly. O. sphegodes — the most phenotypically variable taxon — suffers the largest drop across all architectures. Conversely, O. sphegodes Palena and O. exaltata remain relatively well classified. This pattern suggests that the orthogonal prototype constraint penalizes more severely the classes with high intra-class variance, since their samples must be mapped into a compact conical region of the unit sphere.",
+    "exp8_species": "The per-species F1 breakdown reveals a coherent pattern for modern architectures. O. sphegodes — the most phenotypically variable taxon — is the most penalized species (F1 0.80–0.82 for ConvNeXt-Tiny and DINOv2-Base). Conversely, O. sphegodes Palena and O. majellensis reach F1 0.94–0.98, being the most distinctive taxa. O. exaltata and O. garganica show intermediate F1 (0.88–0.90). For the ResNets the pattern is more marked: O. garganica suffers the severest drop (F1 0.22 for ResNet-18, 0.60 for ResNet-50), being the class most sensitive to the limited discriminative capacity of the smaller architectures.",
     "exp9_subs_motivazione": "Motivation and Design",
     "exp9_motivazione": "Exp 9 is identical to Exp 8 in protocol (SupCon + SpHOR, two phases), but O. garganica is excluded from training, leaving five known classes. The model is evaluated on the test set that includes the hidden novel class, measuring open-set recognition: four detectors (Mahalanobis, KNN, Energy, Ensemble) determine whether a sample belongs to a known class or should be classified as unknown.",
     "exp9_caption": "Exp 9 — Closed-set F1 on five known classes, AUROC and Detection Rate on the novel class.",
@@ -772,19 +585,9 @@
     "exp9_subs_clustering": "Clustering Analysis",
     "exp9_clustering": "Unsupervised clustering on Exp 9 embeddings recovers species for high-capacity models: K-means reaches NMI 0.844 (ConvNeXt-Tiny), 0.828 (DINOv2-Small), and 0.756 (DINOv2-Base). Weaker architectures recover the structure only partially.",
     "exp9_tsne_novel_caption": "t-SNE projection of Exp 9 embeddings for DINOv2-Base: the five known species (circles) are well separated, while the novel class O. garganica (crosses) sits at the margins of the known clusters, remaining detectable by the open-set detectors.",
-    "exp10_subs_motivazione": "Motivation and Design",
-    "exp10_disegno": "All six architectures were trained with the same full fine-tuning regime on OVH as Exp 8, with the MGCE adaptation integrated into the SpHOR pipeline.",
-    "exp10_subs_collasso": "Results: Collapse to O. sphegodes Palena",
-    "exp10_collasso_intro": "Exp 10 did not merely underperform — it exhibited a qualitative collapse. All species collapse toward Palena, which acts as an attractor in the embedding space. This behavior suggests that the multi-expert alignment introduced by MGCE forces the KNN graphs toward a spurious consensus where Palena — the most distinctive population in the dataset — dominates the coarse-resolution expert. Fine-grained information is lost in the alignment process.",
-    "exp10_collasso_exaltata": "29 out of 50 images misclassified as Palena",
-    "exp10_collasso_garganica": "45 out of 50 images misclassified as Palena",
-    "exp10_collasso_sphegodes": "43 out of 50 images misclassified as Palena",
-    "exp10_risultati": "The table reports the quantitative results. The best closed-set test F1 is only 0.226 (ResNet-18), compared to 0.980 in Exp 6 and 0.936 in Exp 7. On the open-set side, DINOv2-Base reaches AUROC 0.914 and a detection rate of 0.688, higher than Exp 9 (0.875 and 0.560) despite the closed-set collapse toward Palena. The clustering metrics confirm the collapse: NMI reaches 0.549 (DINOv2-Small) and ACC 0.592, indicating that the multi-expert approach partially recovers structure but the closed-set objective fundamentally fails.",
-    "exp10_subs_analisi": "Analysis: Why MGH-NCD Failed",
-    "exp10_analisi": "The failure of MGH-NCD in this ultra-fine-grained domain is instructive. MGCE was designed and validated on standard fine-grained benchmarks (CUB-200, Stanford Cars) where inter-class differences are larger and hierarchical structure is meaningful. In ultra-FGVC, where granularity is already at the limit of visual discrimination, adding a second level of granularity does not reveal new structure — it introduces noise. Multi-expert alignment forces consensus across resolutions, but when the “coarse” resolution already captures only fine-grained differences, alignment collapses to the dominant mode (Palena) instead of preserving the six species. This confirms a key insight: in ultra-fine-grained domains, simplicity outperforms complexity.",
     "sintesi_title": "Synthesis and Discussion",
-    "sintesi_implicazioni": "This study demonstrates that cross-entropy and contrastive learning, although effective for closed-set classification, are insufficient for open-world scenarios in ultra-fine-grained domains. The morphological differences between species of the Ophrys sphegodes complex are so subtle that embedding spaces — learned via CE or SupCon — cannot reliably separate known from unknown classes. Spherical orthogonal prototypes provide a partial solution, but the failure of unsupervised clustering confirms that embedding separability is necessary but not sufficient for novel class discovery. Confusion matrices reveal systematic patterns: the O. exaltata → O. sphegodes pair is the most frequent error (12–20% across all experiments), followed by O. garganica ↔ O. incubacea. These patterns are consistent with the taxonomy of the O. sphegodes complex, where species share overlapping morphological traits.",
+    "sintesi_implicazioni": "This study demonstrates that open-set recognition is achievable at ultra-fine granularity: with O. garganica excluded from training, DINOv2-Base with SpHOR reaches AUROC 0.875 in Exp 9, clearly exceeding the chance level (0.5). Cross-entropy and SupCon alone are instead insufficient for open-world scenarios: CE does not structure the latent space and the SupCon detector fails (known accuracy 0.0). Spherical orthogonal prototypes provide the necessary regularization. Unsupervised clustering recovers species when the metric space is stable (NMI up to 0.84 in Exp 9), while the multi-granular alignment of Exp 10 collapses onto a dominant class. Confusion matrices reveal systematic patterns: the O. exaltata → O. sphegodes pair is the most frequent error (16–20% in Exp 8), consistent with the taxonomy of the O. sphegodes complex, where species share overlapping morphological traits.",
     "sintesi_necessita": "Discovering new Ophrys species from visual data alone would require additional cues — geographic context, phenological information, or part-based anatomical correspondence as proposed by recent methods such as APL and PartGCD. These methods decompose the visual representation into anatomical parts (labellum, gynostemium, sepals) and align them across species, potentially capturing the fine-grained diagnostic characters that taxonomists use.",
-    "sintesi_limitazioni": "Several limitations should be acknowledged. The open-set evaluation was conducted with a single novel species (O. garganica), belonging to the same taxonomic complex as the known classes. AUROC values are reported without confidence intervals or significance tests. The results of Exp 8 and Exp 9 were obtained in full fine-tuning on a local T2000 GPU, while Exp 10 retains the remote-phase evaluation without the methodological corrections. All experiments were conducted on a single dataset with limited geographic coverage (primarily Apulia and Gargano); generalizability to other Mediterranean populations is not guaranteed. Furthermore, the mixed provenance of images (field vs internet photos) introduces a potential domain bias, although all six species have field photos and only four have internet photos. The confusion patterns follow the taxonomy of the complex — O. exaltata ↔ O. sphegodes (16–28%) — indicating that the model learns genuine morphological traits rather than mere domain shortcuts."
+    "sintesi_limitazioni": "Several limitations should be acknowledged. The open-set evaluation was conducted with a single novel species (O. garganica), belonging to the same taxonomic complex as the known classes. AUROC values are reported without confidence intervals or significance tests. The results of Exp 8 and Exp 9 were obtained in full fine-tuning on a local T2000 GPU. All experiments were conducted on a single dataset with limited geographic coverage (primarily Apulia and Gargano); generalizability to other Mediterranean populations is not guaranteed. Furthermore, the mixed provenance of images (field vs internet photos) introduces a potential domain bias, although all six species have field photos and only four have internet photos. The confusion patterns follow the taxonomy of the complex — O. exaltata ↔ O. sphegodes (16–28%) — indicating that the model learns genuine morphological traits rather than mere domain shortcuts."
   }
 }

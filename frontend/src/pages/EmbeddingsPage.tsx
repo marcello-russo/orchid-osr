@@ -31,19 +31,19 @@ const EXP_OPTIONS = [
     { value: "exp8_sphor_dinov2_base", label: "DINOv2-Base" },
   ]},
 
-  { group: "Exp 10 (MGH-NCD)", prefix: "Exp 10", options: [
-    { value: "exp10_mgh_ncd_resnet18", label: "ResNet-18" },
-    { value: "exp10_mgh_ncd_resnet50", label: "ResNet-50" },
-    { value: "exp10_mgh_ncd_convnext_tiny", label: "ConvNeXt-Tiny" },
-    { value: "exp10_mgh_ncd_convnext_small", label: "ConvNeXt-Small" },
-    { value: "exp10_mgh_ncd_dinov2_small", label: "DINOv2-Small" },
-    { value: "exp10_mgh_ncd_dinov2_base", label: "DINOv2-Base" },
+  { group: "Exp 9 (NCD, novel O. garganica)", prefix: "Exp 9", options: [
+    { value: "exp9_ncd_resnet18", label: "ResNet-18" },
+    { value: "exp9_ncd_resnet50", label: "ResNet-50" },
+    { value: "exp9_ncd_convnext_tiny", label: "ConvNeXt-Tiny" },
+    { value: "exp9_ncd_convnext_small", label: "ConvNeXt-Small" },
+    { value: "exp9_ncd_dinov2_small", label: "DINOv2-Small" },
+    { value: "exp9_ncd_dinov2_base", label: "DINOv2-Base" },
   ]},
 ];
 
 export function EmbeddingsPage() {
   const { t } = useTranslation();
-  const [experiment, setExperiment] = useState("exp10_mgh_ncd_dinov2_small");
+  const [experiment, setExperiment] = useState("exp9_ncd_dinov2_base");
   const [method, setMethod] = useState("tsne_3d");
   const [split, setSplit] = useState("all");
   const [hidden, setHidden] = useState<Set<string>>(new Set());

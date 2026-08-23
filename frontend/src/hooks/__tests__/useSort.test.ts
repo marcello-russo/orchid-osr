@@ -5,13 +5,13 @@ import { useSort } from "../useSort";
 const items = [
   { id: "exp6", mean_f1: 0.85, test_accuracy: 0.82, model_variant: "resnet18" },
   { id: "exp7", mean_f1: 0.92, test_accuracy: 0.88, model_variant: "convnext" },
-  { id: "exp10", mean_f1: 0.78, test_accuracy: 0.75, model_variant: "dinov2" },
+  { id: "exp9", mean_f1: 0.78, test_accuracy: 0.75, model_variant: "dinov2" },
 ];
 
 describe("useSort", () => {
   it("sorts by default key ascending", () => {
     const { result } = renderHook(() => useSort(items, "id"));
-    expect(result.current.sorted[0].id).toBe("exp10");
+    expect(result.current.sorted[0].id).toBe("exp6");
     expect(result.current.dir).toBe("asc");
   });
 
