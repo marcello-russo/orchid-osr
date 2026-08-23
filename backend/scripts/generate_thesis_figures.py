@@ -30,8 +30,8 @@ PATIENCE = 15
 NOVEL_CLASS = "O. garganica"
 
 MODELS = ["resnet18", "resnet50", "convnext_tiny", "convnext_small", "dinov2_small", "dinov2_base"]
-EXPS_ALL = ["exp6", "exp7", "exp8", "exp9", "exp10"]
-EXPS_OSR = ["exp8", "exp9", "exp10"]
+EXPS_ALL = ["exp6", "exp7", "exp8", "exp9"]
+EXPS_OSR = ["exp9"]
 
 MODEL_LABELS = {
     "resnet18": "ResNet-18",
@@ -46,14 +46,12 @@ EXP_LABELS = {
     "exp7": "Exp 7 (SupCon)",
     "exp8": "Exp 8 (SpHOR)",
     "exp9": "Exp 9 (Novel)",
-    "exp10": "Exp 10 (MGH-NCD)",
 }
 EXP_PREFIXES = {
     "exp6": "exp6_clean_split",
     "exp7": "exp7_supcon",
     "exp8": "exp8_sphor",
     "exp9": "exp9_ncd",
-    "exp10": "exp10_mgh_ncd",
 }
 
 # Colorblind-friendly palette (ibm / tableau-inspired)
@@ -263,10 +261,9 @@ def fig_confusion_matrices():
     """Confusion matrices for best model in each experiment (exp7/8/10 only)."""
     panels = [
         ("exp7", "dinov2_small", "Exp 7 (SupCon)\nDINOv2-Small"),
-        ("exp8", "dinov2_small", "Exp 8 (SpHOR)\nDINOv2-Small"),
-        ("exp10", "dinov2_base", "Exp 10 (MGH-NCD)\nDINOv2-Base"),
+        ("exp8", "convnext_tiny", "Exp 8 (SpHOR)\nConvNeXt-Tiny"),
     ]
-    fig, axes = plt.subplots(1, 3, figsize=(16, 4.5))
+    fig, axes = plt.subplots(1, 2, figsize=(11, 4.5))
 
     for j, (exp, model, title) in enumerate(panels):
         ax = axes[j]
@@ -369,35 +366,32 @@ def fig_tsne_comparison():
 
 
 def fig_closed_vs_open_scatter():
-    """Scatter: test F1 vs detection_rate@10%FPR. Shows exp8+10 (only ones with OSR data)."""
+    """Scatter: test F1 vs detection_rate@10%FPR. Shows exp9+10 (only ones with OSR data)."""
     fig, ax = plt.subplots(figsize=(9, 6))
-    shapes = {"exp8": "^", "exp10": "D"}
-    colors_exp = {"exp8": "#0072B2", "exp10": "#D55E00"}
 
-    for exp in ["exp8", "exp10"]:
-        for model in MODELS:
-            f1 = get_test_f1(load_results(exp, model))
-            dr = get_detection_rate(exp, model)
-            ax.scatter(
-                f1,
-                dr,
-                s=130,
-                c=colors_exp[exp],
-                marker=shapes[exp],
-                label=EXP_LABELS[exp] if model == MODELS[0] else "",
-                zorder=3,
-                edgecolors="black",
-                linewidths=0.5,
-            )
-            ax.annotate(short_model(model), (f1, dr), textcoords="offset points", xytext=(5, 4), fontsize=7, alpha=0.8)
+    for model in MODELS:
+        f1 = get_test_f1(load_results("exp9", model))
+        dr = get_detection_rate("exp9", model)
+        ax.scatter(
+            f1,
+            dr,
+            s=130,
+            c=MODEL_COLORS.get(model, CB[0]),
+            marker="^",
+            label=short_model(model),
+            zorder=3,
+            edgecolors="black",
+            linewidths=0.5,
+        )
+        ax.annotate(short_model(model), (f1, dr), textcoords="offset points", xytext=(5, 4), fontsize=7, alpha=0.8)
 
     ax.axhline(y=0.5, color="gray", linestyle=":", alpha=0.4)
     ax.axvline(x=0.7, color="gray", linestyle=":", alpha=0.4)
     ax.text(0.72, 0.88, "HIGH F1 +\nHIGH OSR", fontsize=9, fontweight="bold", color="#0072B2", alpha=0.4)
     ax.text(0.72, 0.02, "HIGH F1 +\nLOW OSR", fontsize=9, fontweight="bold", color="#D55E00", alpha=0.4)
-    ax.set_xlabel("Closed-Set Test F1")
-    ax.set_ylabel("Open-Set Detection Rate @ 10% FPR")
-    ax.set_title("Closed-Set vs Open-World Performance", fontweight="bold")
+    ax.set_xlabel("Closed-Set Test F1 (Exp 9)")
+    ax.set_ylabel("Open-Set Detection Rate @ 10% FPR (Exp 9)")
+    ax.set_title("Closed-Set vs Open-World Performance — Exp 9 (novel O. garganica)", fontweight="bold")
     ax.legend(loc="upper left", framealpha=0.9)
     ax.set_xlim(0.3, 1.0)
     ax.set_ylim(-0.05, 1.05)
@@ -412,7 +406,7 @@ def fig_closed_vs_open_scatter():
 
 def fig_per_species_f1():
     """Grouped bar chart: F1 per species, best model per experiment."""
-    best = {"exp6": "dinov2_base", "exp7": "dinov2_small", "exp8": "dinov2_small", "exp10": "dinov2_base"}
+    best = {"exp6": "resnet50", "exp7": "dinov2_small", "exp8": "convnext_tiny"}
     order = ["O. exaltata", "O. garganica", "O. incubacea", "O. majellensis", "O. sphegodes", "O. sphegodes_Palena"]
     short = [short_species(s) for s in order]
     fig, ax = plt.subplots(figsize=(10, 5))
@@ -847,7 +841,7 @@ def fig_clustering_comparison():
 def fig_summary_dual_heatmap():
     """Closed-set F1 + open-set detection rate side by side."""
     data_f1 = np.full((len(MODELS), 5), np.nan)
-    data_det = np.full((len(MODELS), 3), np.nan)
+    data_det = np.full((len(MODELS), len(EXPS_OSR)), np.nan)
 
     for j, exp in enumerate(EXPS_ALL):
         for i, model in enumerate(MODELS):
@@ -890,8 +884,8 @@ def fig_summary_dual_heatmap():
 
 
 def fig_osr_detection_heatmap():
-    """Ensemble detection rate for all models, Exp 8/9/10."""
-    data = np.full((len(MODELS), 3), np.nan)
+    """Ensemble detection rate for all models, Exp 9/10."""
+    data = np.full((len(MODELS), len(EXPS_OSR)), np.nan)
     for j, exp in enumerate(EXPS_OSR):
         for i, model in enumerate(MODELS):
             data[i, j] = get_detection_rate(exp, model)
@@ -902,14 +896,14 @@ def fig_osr_detection_heatmap():
     im = ax.imshow(data, cmap=cmap, vmin=0.0, vmax=1.0, aspect="auto")
 
     for i in range(len(MODELS)):
-        for j in range(3):
+        for j in range(len(EXPS_OSR)):
             v = data[i, j]
             if not np.isnan(v):
                 c = "white" if v > 0.5 else "black"
                 ax.text(j, i, f"{v:.3f}", ha="center", va="center", fontsize=12, color=c, fontweight="bold")
 
-    ax.set_xticks(range(3))
-    ax.set_xticklabels(["SpHOR\n(Exp 8)", "Novel\n(Exp 9)", "MGH-NCD\n(Exp 10)"], fontsize=9)
+    ax.set_xticks(range(len(EXPS_OSR)))
+    ax.set_xticklabels(["Novel\n(Exp 9)"], fontsize=9)
     ax.set_yticks(range(len(MODELS)))
     ax.set_yticklabels([short_model(m) for m in MODELS], fontsize=9)
     ax.set_title("Detection Rate @ 10% FPR", fontweight="bold", pad=12)
@@ -1081,18 +1075,21 @@ def fig_spotlight_exp10_collapse():
 
 def fig_spotlight_species_evolution():
     """How per-species F1 changes across experiments for DINOv2-Small.
-    Shows the journey from CE → SupCon → SpHOR → MGH-NCD for each species."""
+    Shows the journey from CE → SupCon → SpHOR → MGH-NCD for each species.
+    Exp 9 is excluded: O. garganica is the novel class there (not in the
+    closed-set evaluation), so its per-species F1 would be a misleading 0."""
     model = "dinov2_small"
     order = ["O. exaltata", "O. garganica", "O. incubacea", "O. majellensis", "O. sphegodes", "O. sphegodes_Palena"]
     short = [short_species(s) for s in order]
     n_sp = len(order)
+    exps_shown = ["exp6", "exp7", "exp8"]
 
     fig, ax = plt.subplots(figsize=(10, 5))
-    exp_colors = {"exp6": "#757575", "exp7": "#E69F00", "exp8": "#0072B2", "exp9": "#009E73", "exp10": "#D55E00"}
-    markers = {"exp6": "o", "exp7": "s", "exp8": "^", "exp9": "P", "exp10": "D"}
+    exp_colors = {"exp6": "#757575", "exp7": "#E69F00", "exp8": "#0072B2", "exp9": "#009E73"}
+    markers = {"exp6": "o", "exp7": "s", "exp8": "^", "exp10": "D"}
     x = np.arange(n_sp)
 
-    for exp in EXPS_ALL:
+    for exp in exps_shown:
         res = load_results(exp, model)
         f1pc = res["test_metrics"].get("f1_per_class", {}) if res and "test_metrics" in res else {}
         vals = [f1pc.get(s, 0) for s in order]
@@ -1155,18 +1152,13 @@ def main():
         ("10. Per-species F1 all models", fig_exp8_per_species),
         ("--- EXP 9 (Novel: O. garganica) ---", None),
         ("10b. OSR AUROC (novel garganica)", fig_exp9_osr_auroc),
-        ("--- EXP 10 (MGH-NCD) ---", None),
-        ("11. Clustering comparison", fig_clustering_comparison),
-        ("12. OSR detection — SpHOR vs MGH-NCD", fig_osr_detection_comparison),
-        ("13. Per-species F1 all models", fig_exp10_per_species),
         ("--- CROSS-EXP ---", None),
         ("--- SPOTLIGHT FIGURES ---", None),
-        ("14. Closed vs Open scatter", fig_closed_vs_open_scatter),
-        ("15. Summary dual heatmap", fig_summary_dual_heatmap),
-        ("16. OSR detection heatmap", fig_osr_detection_heatmap),
-        ("17. Spotlight: ConvNeXt-Tiny OSR champion", fig_spotlight_convnext_osr),
-        ("18. Spotlight: Exp 10 collapse to Palena", fig_spotlight_exp10_collapse),
-        ("19. Spotlight: per-species evolution across exps", fig_spotlight_species_evolution),
+        ("11. Closed vs Open scatter", fig_closed_vs_open_scatter),
+        ("12. Summary dual heatmap", fig_summary_dual_heatmap),
+        ("13. OSR detection heatmap", fig_osr_detection_heatmap),
+        ("14. Spotlight: DINOv2-Base OSR champion", fig_spotlight_convnext_osr),
+        ("15. Spotlight: per-species evolution across exps", fig_spotlight_species_evolution),
     ]
 
     for name, func in todo:
