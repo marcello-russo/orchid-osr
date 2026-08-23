@@ -200,7 +200,7 @@ export function ExperimentDetailPage() {
           >
             {t("experiment.charts")}
           </button>
-          {(expNum === 8 || expNum === 9 || expNum === 10) && (
+          {(expNum === 9) && (
             <button
               onClick={() => setActiveTab("ncd")}
               className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${
@@ -245,7 +245,7 @@ export function ExperimentDetailPage() {
         </div>
       ))}
 
-      {!isCompareMode && activeTab === "ncd" && (expNum === 8 || expNum === 9 || expNum === 10) && (
+      {!isCompareMode && activeTab === "ncd" && expNum === 9 && (
         <NcdDetail modelVariant={summary.model_variant ?? config.model_variant ?? ""} exp={expNum} />
       )}
 
