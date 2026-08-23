@@ -91,10 +91,6 @@ async def list_experiments():
         if not d.is_dir():
             continue
 
-        # Nascondi exp9 (non rilevante)
-        if "exp9_ncd" in d.name:
-            continue
-
         config_path = d / "config.json"
         results_path = d / "results.json"
 
