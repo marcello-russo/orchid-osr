@@ -91,6 +91,11 @@ async def list_experiments():
         if not d.is_dir():
             continue
 
+        # Exp 10 (MGH-NCD) escluso: non riaddestrato con le correzioni
+        # metodologiche, risultati confounded e rimossi dallo studio.
+        if "exp10_mgh_ncd" in d.name:
+            continue
+
         config_path = d / "config.json"
         results_path = d / "results.json"
 
