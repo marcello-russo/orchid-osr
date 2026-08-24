@@ -13,7 +13,7 @@
   <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat&logo=react&logoColor=white" alt="React"/>
   <img src="https://img.shields.io/badge/SQLite-003B57?style=flat&logo=sqlite&logoColor=white" alt="SQLite"/>
   <br/>
-  <em>Ultra-fine-grained classification and Novel Class Discovery for <b>Ophrys</b> orchids</em>
+  <em>Ultra-fine-grained classification and open-set recognition for <b>Ophrys</b> orchids via deep contrastive learning</em>
 </p>
 
 <p align="center">
