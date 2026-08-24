@@ -524,7 +524,7 @@
     "arch_mid8": " (86M, ViT-B/14)",
     "arch_after": " are pre-trained in a self-supervised manner on 142 million images.",
     "exp6_p1_before": "Exp 6 establishes the closed-set classification baseline with standard CE loss. The softmax objective separates classes with decision hyperplanes but does not structure the latent space: two samples of the same species can project into arbitrary regions of space, as long as the classifier assigns them to the correct class. This lack of structure is acceptable for closed-set classification but becomes critical in open-world scenarios",
-    "exp6_fig_caption": "Training and validation curves for DINOv2-Base in Exp 6 (CE). Stable convergence around 60 epochs, early stopping at 75.",
+    "exp6_fig_caption": "Training and validation curves for DINOv2-Base in Exp 6 (CE), averaged over the 5 folds. Training loss converges toward 0 while validation reaches its minimum in the early epochs and then plateaus, indicating an overfitting regime typical of cross-entropy on small datasets.",
     "exp7_p1_before": "To address the structural limitation of CE, Supervised Contrastive Learning (SupCon) is adopted",
     "exp7_p1_after": ". The SupCon loss explicitly attracts samples of the same class and repels those of different classes in L2-normalized space. The result is a metric space where cosine distance reflects semantic similarity — an essential property for open-set recognition and novel class discovery",
     "exp7_fig2_caption": "Per-species F1 for the best model of each experiment (Exp 6: ResNet-50, Exp 7: DINOv2-Small, Exp 8: ConvNeXt-Tiny). O. sphegodes is systematically the most difficult species; O. sphegodes Palena and O. majellensis are the easiest.",
