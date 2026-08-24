@@ -125,6 +125,8 @@ export function EmbeddingsPage() {
           <option value="all" className="bg-card text-foreground">{t("research.split_all")}</option>
           <option value="train" className="bg-card text-foreground">{t("research.split_train")}</option>
           <option value="test" className="bg-card text-foreground">{t("research.split_test")}</option>
+          <option value="known" className="bg-card text-foreground">{t("research.split_known")}</option>
+          <option value="novel" className="bg-card text-foreground">{t("research.split_novel")}</option>
         </select>
         <Link to={`/experiments/${experiment}`}
           className="text-xs text-primary hover:underline px-2 py-1.5 font-medium">
