@@ -63,9 +63,29 @@ def _fake_experiments(tmp_path, monkeypatch):
             "best_fold": 1,
         },
         folds=5,
+    )
+
+    _make_exp(
+        tmp_path,
+        "exp9_ncd_resnet18",
+        {
+            "model_variant": "resnet18",
+            "num_classes": 5,
+            "ncd_mode": True,
+            "exclude_classes": ["O. garganica"],
+            "timestamp": "2026-01-06T00:00:00",
+        },
+        {
+            "mean_f1": 0.59,
+            "std_f1": 0.03,
+            "mean_accuracy": 0.59,
+            "test_metrics": {"accuracy": 0.60, "f1_macro": 0.59},
+            "best_fold": 0,
+        },
+        folds=5,
         ncd={
-            "detectors": {"Ensemble": {"auroc": 0.95}},
-            "clustering": {"kmeans_best": {"nmi": 0.30}},
+            "detectors": {"Ensemble": {"auroc": 0.42}, "KNN": {"auroc": 0.40}},
+            "novel_class": "O. garganica",
         },
     )
 
@@ -143,27 +163,27 @@ class TestExperimentsListNCD:
                 assert e.get("ncd_auroc") is None
 
     def test_sphor_experiment_has_ncd_auroc(self):
-        """Exp8 (SpHOR) ha ncd_auroc ma is_ncd=False."""
+        """Exp8 (SpHOR) è closed-set: senza ncd_auroc e is_ncd=False."""
         resp = client.get("/api/experiments")
         data = resp.json()
         for e in data:
             if "exp8" in e["id"]:
                 assert e.get("is_ncd") is False
-                assert e.get("ncd_auroc") == 0.95
-                assert e["test_accuracy"] == 0.95  # AUROC usato come accuracy
+                assert e.get("ncd_auroc") is None
+                # test_accuracy resta l'accuracy standard
+                assert e["test_accuracy"] == 0.83
 
     def test_ncd_experiment_is_ncd_true(self):
-        """Exp10 (NCD) deve avere is_ncd=True e ncd_auroc."""
+        """Exp9 (NCD) deve avere is_ncd=True e ncd_auroc."""
         resp = client.get("/api/experiments")
         data = resp.json()
         for e in data:
-            if "exp10" in e["id"] and "dinov2" in e["id"]:
+            if "exp9" in e["id"]:
                 assert e.get("is_ncd") is True
-                assert e.get("ncd_auroc") == 0.91
+                assert e.get("ncd_auroc") == 0.42
                 assert e.get("ncd_detector") == "Ensemble"
-                assert e.get("ncd_clustering_nmi") == 0.51
-                # test_accuracy deve mostrare AUROC (0.91), non l'accuracy standard (0.14)
-                assert e["test_accuracy"] == 0.91
+                # test_accuracy resta l'accuracy standard; l'AUROC è esposto in ncd_auroc
+                assert e["test_accuracy"] == 0.60
 
     def test_ncd_without_ncd_file_means_no_ncd(self):
         """Se exp ha ncd_mode=True ma non ncd_results.json, è NCD ma senza AUROC."""
@@ -185,16 +205,16 @@ class TestExperimentsListStructure:
     """Test struttura base dell'elenco."""
 
     def test_list_returns_all_experiments(self):
-        """Tutti gli exp tranne exp9 devono essere presenti."""
+        """Tutti gli exp, inclusi exp9, devono essere presenti; exp10 nascosto."""
         resp = client.get("/api/experiments")
         data = resp.json()
         ids = [e["id"] for e in data]
         assert "exp6_clean_resnet18" in ids
         assert "exp7_supcon_resnet18" in ids
         assert "exp8_sphor_convnext_tiny" in ids
-        assert "exp10_mgh_ncd_dinov2_base" in ids
-        # exp9 deve essere nascosto
-        assert not any("exp9" in eid for eid in ids)
+        assert "exp9_ncd_resnet18" in ids
+        # exp10 (MGH-NCD) rimosso dallo studio: deve essere nascosto
+        assert not any("exp10" in eid for eid in ids)
 
     def test_list_has_required_fields(self):
         """Ogni experimento deve avere i campi base."""
@@ -221,5 +241,5 @@ class TestExperimentsListStructure:
         resp = client.get("/api/experiments")
         data = resp.json()
         for e in data:
-            if "resnet18" in e["id"] and "exp10" in e["id"]:
-                assert e["folds_completed"] == 3  # ne abbiamo creati solo 3
+            if "resnet18" in e["id"] and "exp6" in e["id"]:
+                assert e["folds_completed"] == 5  # fold standard per exp6

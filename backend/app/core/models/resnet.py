@@ -60,6 +60,9 @@ class ResNetClassifier(ClassifierModel):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         if not self._multi_grain:
+            if self._config.normalize_embeddings:
+                emb = self.get_embeddings(x)
+                return self._backbone.fc(torch.nn.functional.normalize(emb, p=2, dim=1))
             return self._backbone(x)
 
         x = self._backbone.conv1(x)
@@ -77,6 +80,8 @@ class ResNetClassifier(ClassifierModel):
         layer3_gap = layer3_out.mean([-2, -1])
         layer4_gap = layer4_out.mean([-2, -1])
         emb = torch.cat([layer3_gap, layer4_gap], dim=1)
+        if self._config.normalize_embeddings:
+            emb = torch.nn.functional.normalize(emb, p=2, dim=1)
         return self._backbone.fc(emb)
 
     def get_embeddings(self, x: torch.Tensor) -> torch.Tensor:

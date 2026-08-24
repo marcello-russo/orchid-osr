@@ -5,9 +5,9 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from scripts.hf_config import HF_MODELS_REPO
-
 from huggingface_hub import HfApi
+
+from scripts.hf_config import HF_MODELS_REPO
 
 api = HfApi()
 REPO = HF_MODELS_REPO

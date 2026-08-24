@@ -200,7 +200,7 @@ export function ExperimentDetailPage() {
           >
             {t("experiment.charts")}
           </button>
-          {(expNum === 8 || expNum === 9 || expNum === 10) && (
+          {(expNum === 9) && (
             <button
               onClick={() => setActiveTab("ncd")}
               className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${
@@ -245,7 +245,7 @@ export function ExperimentDetailPage() {
         </div>
       ))}
 
-      {!isCompareMode && activeTab === "ncd" && (expNum === 8 || expNum === 9 || expNum === 10) && (
+      {!isCompareMode && activeTab === "ncd" && expNum === 9 && (
         <NcdDetail modelVariant={summary.model_variant ?? config.model_variant ?? ""} exp={expNum} />
       )}
 
@@ -518,7 +518,7 @@ function BaselineResults({ metrics }: { metrics: TestMetrics }) {
 const _SPECIES_PALETTE: Record<string, string> = {
   "O. exaltata": "#3B82F6", "O. garganica": "#D97706", "O. incubacea": "#10B981",
   "O. majellensis": "#8B5CF6", "O. sphegodes": "#EF4444", "O. sphegodes_Palena": "#EC4899",
-  "O. sphegodes_Napoli": "#14B8A6", "unknown": "#666666",
+  "novel": "#14B8A6", "unknown": "#666666",
 };
 
 function NcdDetail({ modelVariant, exp }: { modelVariant: string; exp?: number }) {
@@ -538,12 +538,16 @@ function NcdDetail({ modelVariant, exp }: { modelVariant: string; exp?: number }
   const openset = data.openset;
   const clustering = data.clustering ?? {};
   const meanAuroc = detectors?.Ensemble?.auroc ?? openset?.mean_auroc ?? 0;
-  const napoliAuroc = detectors?.Ensemble?.auroc ?? openset?.novel_class?.auroc;
+  const novelAuroc = detectors?.Ensemble?.auroc ?? openset?.novel_class?.auroc;
   const ablation = openset?.ablation;
   const perClass = openset?.per_class_metrics ?? [];
   const tsne2d = data.tsne_2d as [number, number][] | undefined;
   const tsne3d = data.tsne_3d as [number, number, number][] | undefined;
   const labels = data.novel_class_label as number[] | undefined;
+
+  // Nome della novel class: usato da class_names (novel_class è una classe
+  // nota per le exp non-NCD, mentre per exp 9 è la classe nascosta).
+  const novelClassName = data.novel_class ?? "novel";
 
   // Compute best clustering ACC
   const bestClustering = Object.values(clustering).reduce<NcdClusteringResult | null>(
@@ -556,7 +560,7 @@ function NcdDetail({ modelVariant, exp }: { modelVariant: string; exp?: number }
   const scatterPoints = tsne2d?.map((p, i) => ({
     x: p[0], y: p[1],
     species: labels?.[i] !== undefined && labels[i] >= 0 && labels[i] < classNames.length
-      ? classNames[labels[i]] : "O. sphegodes_Napoli",
+      ? classNames[labels[i]] : novelClassName,
     idx: i,
   })) ?? [];
 
@@ -585,15 +589,15 @@ function NcdDetail({ modelVariant, exp }: { modelVariant: string; exp?: number }
             })}
           </div>
         </div>
-        {napoliAuroc !== undefined && (
+        {novelAuroc !== undefined && (
           <div className="rounded-xl border-2 border-red-500/30 bg-red-500/5 p-4 text-center">
             <div className="text-xs text-muted-foreground uppercase font-bold mb-1">
-              {t("experiment_detail.ncd_napoli_auroc")}
+              {t("experiment_detail.ncd_novel_auroc")}
               <span className="ml-1.5 inline-block bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
                 {t("experiment_detail.ncd_novel_label")}
               </span>
             </div>
-            <div className="text-2xl font-black text-red-500">{(napoliAuroc * 100).toFixed(1)}%</div>
+            <div className="text-2xl font-black text-red-500">{(novelAuroc * 100).toFixed(1)}%</div>
             <div className="text-[10px] text-muted-foreground mt-0.5">{t("experiment.vs_random")}</div>
           </div>
         )}
@@ -691,7 +695,7 @@ function NcdDetail({ modelVariant, exp }: { modelVariant: string; exp?: number }
         <h3 className="text-lg font-bold mb-4">{t("experiment_detail.ncd_osr")}</h3>
 
         {/* AUROC per class chart */}
-        <PerClassAurocChart perClass={perClass} napoliAuroc={napoliAuroc} />
+        <PerClassAurocChart perClass={perClass} novelAuroc={novelAuroc} />
 
         {/* Per-class table */}
         {perClass.length > 0 && (
@@ -708,22 +712,22 @@ function NcdDetail({ modelVariant, exp }: { modelVariant: string; exp?: number }
               <tbody className="divide-y divide-border/30">
                 {perClass.map((pc) => (
                   <tr key={pc.left_out}
-                    className={pc.left_out.toLowerCase().includes("majellensis") ? "bg-red-500/10 font-bold" : ""}>
+                    className={pc.left_out === novelClassName || pc.left_out.toLowerCase().includes("garganica") ? "bg-red-500/10 font-bold" : ""}>
                     <td className="py-2 px-4 font-bold">{pc.left_out}</td>
                     <td className="text-center py-2 px-2 font-mono">{(pc.auroc * 100).toFixed(1)}%</td>
                     <td className="text-center py-2 px-2 font-mono">{(pc.known_acc * 100).toFixed(1)}%</td>
                     <td className="text-center py-2 px-2 font-mono">{(pc.unknown_recall * 100).toFixed(1)}%</td>
                   </tr>
                 ))}
-                {napoliAuroc !== undefined && (
+                {novelAuroc !== undefined && (
                   <tr className="bg-red-500/10 font-bold">
                     <td className="py-2 px-4 font-bold">
-                      O. sphegodes_Napoli
+                      {novelClassName}
                       <span className="ml-1.5 inline-block bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
                         {t("experiment_detail.ncd_novel_label")}
                       </span>
                     </td>
-                    <td className="text-center py-2 px-2 font-mono text-red-500">{(napoliAuroc * 100).toFixed(1)}%</td>
+                    <td className="text-center py-2 px-2 font-mono text-red-500">{(novelAuroc * 100).toFixed(1)}%</td>
                     <td className="text-center py-2 px-2 font-mono">—</td>
                     <td className="text-center py-2 px-2 font-mono">
                       {openset?.novel_class?.unknown_recall ? `${(openset.novel_class.unknown_recall * 100).toFixed(1)}%` : "—"}

@@ -20,9 +20,29 @@ from app.core.models import available_models
 logger = logging.getLogger(__name__)
 
 
-def _build_pair_weights(hard_weight: float) -> dict:
-    """Build pair_weights dict from class names (not hardcoded indices)."""
-    cls_map = {name: i for i, name in enumerate(TRAIN_CLASSES)}
+def _active_classes_for_exp(exp_id: int) -> list[str] | None:
+    """Classi attive per un esperimento (TRAIN_CLASSES meno exclude_classes).
+
+    Per Exp 9, garganica è esclusa: gli indici 0-4 sono riassegnati alle
+    classi residue. Nessun'altra exp ha exclude_classes → None (6 classi).
+    """
+    cfg = EXPERIMENTS.get(exp_id, {})
+    exclude = cfg.get("exclude_classes") or []
+    if not exclude:
+        return None
+    return [c for c in TRAIN_CLASSES if c not in set(exclude)]
+
+
+def _build_pair_weights(hard_weight: float, active_classes: list[str] | None = None) -> dict:
+    """Build pair_weights dict from class names (not hardcoded indices).
+
+    active_classes: lista delle classi effettivamente usate nel training
+    (dopo eventuale exclude_classes). Se None, usa TRAIN_CLASSES (6).
+    Necessario per Exp 9, dove garganica è esclusa e gli indici 0-4
+    sono riassegnati alle 5 classi residue.
+    """
+    cls_list = active_classes if active_classes is not None else TRAIN_CLASSES
+    cls_map = {name: i for i, name in enumerate(cls_list)}
     result = {}
 
     def _add(a, b, weight):
@@ -403,7 +423,14 @@ def _run_experiment_loop(args, phases: list[str], exp_ids: list[int]) -> int:
                 ce_epochs=args.ce_epochs,
                 use_prototypes=args.sphor,
                 repulse_weight=args.repulse_weight,
-                pair_weights=_build_pair_weights(args.hard_weight) if args.hard_weight > 0 else None,
+                pair_weights=(
+                    _build_pair_weights(
+                        args.hard_weight,
+                        active_classes=_active_classes_for_exp(exp_id),
+                    )
+                    if args.hard_weight > 0
+                    else None
+                ),
                 full_finetune=args.full_finetune,
                 osr_ensemble=args.osr_ensemble,
             )

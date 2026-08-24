@@ -13,6 +13,7 @@ class ModelConfig(BaseModel):
     num_classes: int = 7
     pretrained: bool = True
     seed: Optional[int] = 42
+    normalize_embeddings: bool = False
 
     def create_model(self) -> "ClassifierModel":
         """Create model instance from this config. Override in subclasses."""

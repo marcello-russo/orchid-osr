@@ -21,6 +21,7 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+
 def _upload_to_hf(output_dir, model_variant):
     """Upload only essential model files to HuggingFace: best fold weights + metadata."""
     try:
@@ -145,7 +146,7 @@ def final_test(best_model_path, model_variant, num_classes, test_dataset_dir, cl
     transform = create_transform(model_variant)
 
     # Carica modello
-    model = create_model(model_variant, num_classes=num_classes, pretrained=False)
+    model = create_model(model_variant, num_classes=num_classes, pretrained=False, normalize_embeddings=True)
     model.load_weights(best_model_path)
     model = model.to(device)
 

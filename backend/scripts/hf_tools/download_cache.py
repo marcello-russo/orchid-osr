@@ -5,9 +5,9 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
-from scripts.hf_config import HF_DATASET_REPO
-
 from huggingface_hub import snapshot_download
+
+from scripts.hf_config import HF_DATASET_REPO
 
 DATASET_REPO = HF_DATASET_REPO
 
