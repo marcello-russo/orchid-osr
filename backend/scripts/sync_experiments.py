@@ -14,11 +14,10 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from scripts.hf_config import HF_MODELS_REPO
-
 from huggingface_hub import HfApi
 
 from app.core.hf_sync import download_file, list_repo_files
+from scripts.hf_config import HF_MODELS_REPO
 
 
 def _is_essential(path: str) -> bool:

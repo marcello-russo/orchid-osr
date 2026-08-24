@@ -21,6 +21,7 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+
 def _upload_to_hf(output_dir, model_variant):
     """Upload only essential model files to HuggingFace: best fold weights + metadata."""
     try:

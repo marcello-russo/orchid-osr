@@ -5,10 +5,10 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
-from scripts.hf_config import HF_MODELS_REPO
-
 import torch
 from huggingface_hub import HfApi, snapshot_download
+
+from scripts.hf_config import HF_MODELS_REPO
 
 HF_REPO = HF_MODELS_REPO
 LOCAL_CACHE = "/tmp/pt_migration"

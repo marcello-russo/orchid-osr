@@ -10,9 +10,9 @@ The script is kept for reference but its output should NOT be used for
 conclusions about domain-specific shortcuts. The qualitative discussion
 in the thesis (confusion patterns) is more reliable.
 """
+
 import json
 import os
-import sys
 from pathlib import Path
 
 import numpy as np
@@ -37,9 +37,7 @@ def within_source_accuracy(confusion: np.ndarray, indices: list[int]) -> float:
     return correct / total if total > 0 else 0.0
 
 
-def cross_source_rate(
-    confusion: np.ndarray, indices_from: list[int], indices_to: list[int]
-) -> float:
+def cross_source_rate(confusion: np.ndarray, indices_from: list[int], indices_to: list[int]) -> float:
     errors = float(sum(confusion[i, j] for i in indices_from for j in indices_to))
     total = float(sum(confusion[i, :].sum() for i in indices_from))
     return errors / total if total > 0 else 0.0
@@ -111,15 +109,15 @@ def main() -> None:
             print(f"  Accuratezza within-campo:      {r['within_field_acc']:.3f}")
             print(f"  Tasso internet→campo:           {r['internet_to_field_rate']:.3f}")
             print(f"  Tasso campo→internet:           {r['field_to_internet_rate']:.3f}")
-            print(f"  F1 per classe:")
-            for i, (sp, f1) in enumerate(zip(SPECIES, r['f1_per_class'])):
+            print("  F1 per classe:")
+            for i, (sp, f1) in enumerate(zip(SPECIES, r["f1_per_class"])):
                 src = SRC_NAMES[SOURCE[i]]
                 print(f"    {sp:30s} ({src:>8s}) F1={f1:.4f}")
             print()
 
     # Summary table
     print(f"\n{'='*60}")
-    print(f"  TABELLA RIASSUNTIVA")
+    print("  TABELLA RIASSUNTIVA")
     print(f"{'='*60}")
     print(f"{'Modello':35s} {'Macro F1':>8s} {'W-I':>6s} {'W-F':>6s} {'I→F':>6s} {'F→I':>6s}")
     print("-" * 67)
@@ -130,7 +128,6 @@ def main() -> None:
             f"{r['internet_to_field_rate']:>6.3f} {r['field_to_internet_rate']:>6.3f}"
         )
 
-
     output = {
         r["label"]: {
             "macro_f1": r["macro_f1"],
@@ -138,9 +135,7 @@ def main() -> None:
             "within_field_acc": r["within_field_acc"],
             "internet_to_field_rate": r["internet_to_field_rate"],
             "field_to_internet_rate": r["field_to_internet_rate"],
-            "f1_per_class": {
-                SPECIES[i]: r["f1_per_class"][i] for i in range(len(SPECIES))
-            },
+            "f1_per_class": {SPECIES[i]: r["f1_per_class"][i] for i in range(len(SPECIES))},
         }
         for r in results
     }

@@ -9,7 +9,7 @@ Usa upload_large_folder per minimizzare i commit (1 per cartella) e
 create_commit con DeleteOperation per eliminare i file in un unico commit.
 Gestisce i rate limit HF (429) con retry automatico e wait.
 """
-import json
+
 import os
 import sys
 import time
@@ -22,7 +22,7 @@ PROJECT_DIR = Path(__file__).resolve().parent.parent.parent.parent
 BACKEND_DIR = PROJECT_DIR / "backend"
 sys.path.insert(0, str(BACKEND_DIR))
 
-from scripts.hf_config import HF_DATASET_REPO
+from scripts.hf_config import HF_DATASET_REPO  # noqa: E402
 
 _env = PROJECT_DIR / ".env"
 if _env.exists():
@@ -73,8 +73,7 @@ def upload_cropped():
 
     staging = tempfile.mkdtemp(prefix="hf_fix_")
     try:
-        for size, split in [("256x512", "train"), ("256x512", "test"),
-                            ("224x224", "train"), ("224x224", "test")]:
+        for size, split in [("256x512", "train"), ("256x512", "test"), ("224x224", "train"), ("224x224", "test")]:
             local = DATASET_DIR / f"cropped_{size}" / split
             if not local.is_dir():
                 log(f"SKIP cropped/{size}/{split}: {local} non esiste")

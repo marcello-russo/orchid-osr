@@ -487,9 +487,7 @@ def train_fold_supcon(
         )
         logger.info("  MGH-NCD mode: LoRA rank increased to 32 for richer embeddings")
     else:
-        model = create_model(
-            model_variant, num_classes=num_classes, pretrained=True, normalize_embeddings=True
-        )
+        model = create_model(model_variant, num_classes=num_classes, pretrained=True, normalize_embeddings=True)
     entry = get_registry_entry(model_variant)
     opt_type = entry.optimizer if optimizer_type is None else optimizer_type
     wd = weight_decay if weight_decay > 0 else entry.weight_decay

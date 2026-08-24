@@ -4,7 +4,7 @@
 Uploads results.json, config.json, fold_*.json, ncd_results.json for the
 freshly completed exp8/exp9 runs. Keeps exp6/7/10 untouched.
 """
-import json
+
 import os
 import sys
 from pathlib import Path
@@ -12,10 +12,10 @@ from pathlib import Path
 PROJECT_DIR = Path(__file__).resolve().parent.parent.parent.parent
 BACKEND_DIR = PROJECT_DIR / "backend"
 sys.path.insert(0, str(BACKEND_DIR))
-from scripts.hf_config import HF_MODELS_REPO
+from dotenv import load_dotenv  # noqa: E402
+from huggingface_hub import HfApi  # noqa: E402
 
-from dotenv import load_dotenv
-from huggingface_hub import HfApi
+from scripts.hf_config import HF_MODELS_REPO  # noqa: E402
 
 _env = PROJECT_DIR / ".env"
 if _env.exists():
@@ -54,19 +54,31 @@ for exp_prefix in ["exp8_sphor", "exp9_ncd"]:
         for pattern in ["results.json", "config.json"]:
             fp = local_dir / pattern
             if fp.exists():
-                api.upload_file(repo_id=HF_MODELS_REPO, path_in_repo=f"{remote_base}/{pattern}", path_or_fileobj=str(fp))
+                api.upload_file(
+                    repo_id=HF_MODELS_REPO,
+                    path_in_repo=f"{remote_base}/{pattern}",
+                    path_or_fileobj=str(fp),
+                )
                 uploaded += 1
                 print(f"  UP {remote_base}/{pattern}")
 
         for fp in sorted(local_dir.glob("fold_*.json")):
-            api.upload_file(repo_id=HF_MODELS_REPO, path_in_repo=f"{remote_base}/{fp.name}", path_or_fileobj=str(fp))
+            api.upload_file(
+                repo_id=HF_MODELS_REPO,
+                path_in_repo=f"{remote_base}/{fp.name}",
+                path_or_fileobj=str(fp),
+            )
             uploaded += 1
             print(f"  UP {remote_base}/{fp.name}")
 
         # Upload ncd_results.json for exp9
         ncd = local_dir / "ncd_results.json"
         if ncd.exists():
-            api.upload_file(repo_id=HF_MODELS_REPO, path_in_repo=f"{remote_base}/ncd_results.json", path_or_fileobj=str(ncd))
+            api.upload_file(
+                repo_id=HF_MODELS_REPO,
+                path_in_repo=f"{remote_base}/ncd_results.json",
+                path_or_fileobj=str(ncd),
+            )
             uploaded += 1
             print(f"  UP {remote_base}/ncd_results.json")
 
