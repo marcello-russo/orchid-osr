@@ -24,7 +24,6 @@ _EXP_META: dict[str, tuple[str, int]] = {
     "exp7_supcon": ("Exp 7 (SupCon)", 7),
     "exp8_sphor": ("Exp 8 (SpHOR)", 8),
     "exp9_ncd": ("Exp 9 (NCD)", 9),
-    "exp10_mgh_ncd": ("Exp 10 (MGH-NCD)", 10),
 }
 
 _HF_PREFIX_MAP: dict[str, str] = {
@@ -32,7 +31,6 @@ _HF_PREFIX_MAP: dict[str, str] = {
     "exp7_supcon": "exp7_supcon",
     "exp8_sphor": "exp8_sphor",
     "exp9_ncd": "exp9_ncd",
-    "exp10_mgh_ncd": "exp10_mgh_ncd",
 }
 
 

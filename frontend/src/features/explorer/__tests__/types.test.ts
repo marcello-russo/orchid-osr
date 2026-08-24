@@ -50,11 +50,11 @@ describe("getExperimentSeries", () => {
   it("returns Exp 8 for exp8_ prefix", () => {
     expect(getExperimentSeries("exp8_dinov2_small")).toBe("Exp 8");
   });
-  it("returns Exp 10 for exp10_ prefix", () => {
-    expect(getExperimentSeries("exp10_resnet50")).toBe("Exp 10");
+  it("returns Exp 9 for exp9_ prefix", () => {
+    expect(getExperimentSeries("exp9_dinov2_base")).toBe("Exp 9");
   });
-  it("returns null for unknown prefix", () => {
-    expect(getExperimentSeries("exp9_dinov2_small")).toBeNull();
+  it("returns null for exp10_ prefix", () => {
+    expect(getExperimentSeries("exp10_resnet50")).toBeNull();
   });
   it("returns null for unrelated string", () => {
     expect(getExperimentSeries("test")).toBeNull();

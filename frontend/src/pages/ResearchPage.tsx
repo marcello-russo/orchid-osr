@@ -19,7 +19,7 @@ const SECTIONS = [
   { id: "exp6", labelKey: "research.sect_exp6" },
   { id: "exp7", labelKey: "research.sect_exp7" },
   { id: "exp8", labelKey: "research.sect_exp8" },
-  { id: "exp10", labelKey: "research.sect_exp10" },
+  { id: "exp9", labelKey: "research.sect_exp9" },
   { id: "benchmark", labelKey: "research.sect_benchmark" },
   { id: "conclusioni", labelKey: "research.sect_conclusioni" },
   { id: "bibliografia", labelKey: "research.sect_bibliografia" },
@@ -185,11 +185,7 @@ export function ResearchPage() {
         {/* ── 2. DATASET ── */}
         <Section id="dataset" title={t("research.sect_dataset")}>
           <P>
-            Il dataset comprende immagini di sei entità tassonomiche del complesso <em>O. sphegodes</em>,
-            tutte fotografate nel territorio italiano, principalmente in Puglia e sul Gargano.
-            Le immagini provengono da due fonti: fotografie da campo scattate dai ricercatori
-            (fonte primaria per <em>O. majellensis</em> e <em>O. sphegodes</em> Palena) e
-            immagini raccolte da banche dati internet aperte per le altre specie.
+            {t("research.dataset_intro")}
           </P>
 
           <DataTable
@@ -205,8 +201,7 @@ export function ResearchPage() {
               { species: "O. majellensis", train: "152", test: "50" },
               { species: "O. sphegodes", train: "425", test: "50" },
               { species: "O. sphegodes Palena", train: "210", test: "50" },
-              { species: "O. sphegodes_Napoli (novel)", train: "0", test: "548" },
-              { species: t("research.dataset_row_total"), train: "2.192", test: "848" },
+              { species: t("research.dataset_row_total"), train: "2.192", test: "300" },
             ]}
             caption={t("research.dataset_caption")}
           />
@@ -216,12 +211,7 @@ export function ResearchPage() {
           </Callout>
 
           <Callout variant="info" title={t("research.dataset_callout_novel_title")}>
-            Una settima specie, <em>O. sphegodes_Napoli</em>, è stata volutamente esclusa dal training
-            set e riservata esclusivamente al test per gli esperimenti di Novel Class Discovery e
-            Open-Set Recognition (Exp 8, 10). Morfologicamente affine a <em>O. sphegodes</em> ma con
-            caratteri diagnostici distinti a livello di popolazione locale, costituisce il test ideale
-            per valutare la capacità del sistema di rilevare entità tassonomiche non precedentemente
-            osservate.
+            {t("research.dataset_callout_novel")}
           </Callout>
 
           <SubSection title={t("research.subs_preprocessing")}>
@@ -251,8 +241,8 @@ export function ResearchPage() {
               rows={[
                 { model: "ResNet-18", input: "256×512", lr: "10⁻³", wd: "0,0", optim: "Adam" },
                 { model: "ResNet-50", input: "256×512", lr: "10⁻³", wd: "0,0", optim: "Adam" },
-                { model: "ConvNeXt-T", input: "224×224", lr: "3·10⁻⁴", wd: "5·10⁻²", optim: "AdamW" },
-                { model: "ConvNeXt-S", input: "224×224", lr: "3·10⁻⁴", wd: "5·10⁻²", optim: "AdamW" },
+                { model: "ConvNeXt-T", input: "224×224", lr: "10⁻⁴", wd: "5·10⁻²", optim: "AdamW" },
+                { model: "ConvNeXt-S", input: "224×224", lr: "10⁻⁴", wd: "5·10⁻²", optim: "AdamW" },
                 { model: "DINOv2-S", input: "224×224", lr: "2·10⁻⁴", wd: "10⁻²", optim: "AdamW" },
                 { model: "DINOv2-B", input: "224×224", lr: "2·10⁻⁴", wd: "10⁻²", optim: "AdamW" },
               ]}
@@ -262,28 +252,19 @@ export function ResearchPage() {
 
           <SubSection title={t("research.subs_disegno")}>
             <P>
-              Gli esperimenti sono organizzati in quattro serie, ciascuna delle quali aggiunge
-              complessità metodologica alla precedente, in un percorso che va dalla classificazione
-              chiusa all&apos;open-world:
+              {t("research.metodo_disegno_intro")}
             </P>
             <ul className="list-disc list-inside text-muted-foreground space-y-2 text-sm mb-4">
-              <li><strong>Exp 6 — Cross-Entropy Baseline:</strong> tutte le architetture vengono addestrate con loss CE per 150 epoche con early stopping (patience 15). Stabilisce la baseline di performance closed-set.</li>
-              <li><strong>Exp 7 — Supervised Contrastive Learning:</strong> introduce il training in due fasi. Fase 1: backbone + projection head (128-dim) addestrati con SupConLoss (τ=0,07) per 100 epoche, validati con accuratezza 1-NN. Fase 2: backbone congelato, classificatore lineare addestrato con CE per 50 epoche<Cite id="khosla2020supervised" />.</li>
-              <li><strong>Exp 8 — SpHOR:</strong> come Exp 7 ma con prototipi apprendibili L2-normalizzati sulla sfera unitaria e loss di repulsione ortogonale (λ=0,01)<Cite id="bahavan2026sphor" />. Al test, quattro rivelatori OSR (Mahalanobis<Cite id="lee2018simple" />, KNN, Energy<Cite id="liu2020energy" />, Ensemble) determinano se un campione è noto o novel.</li>
-              <li><strong>Exp 10 — MGH-NCD:</strong> adatta MGCE<Cite id="zheng2025mgce" /> al contesto ultra-FG. Tre esperti di clustering a risoluzioni KNN multiple (k=5, 15, 50) armonizzati tramite divergenza JS.</li>
+              <li><strong>Exp 6 — Cross-Entropy Baseline:</strong>{t("research.metodo_exp6")}</li>
+              <li><strong>Exp 7 — Supervised Contrastive Learning:</strong>{t("research.metodo_exp7")}<Cite id="khosla2020supervised" /></li>
+              <li><strong>Exp 8 — SpHOR:</strong>{t("research.metodo_exp8")}<Cite id="bahavan2026sphor" /><Cite id="lee2018simple" /><Cite id="liu2020energy" /></li>
+              <li><strong>Exp 9 — OSR con Novel Nascosta:</strong>{t("research.metodo_exp9")}</li>
             </ul>
           </SubSection>
 
           <SubSection title={t("research.subs_validazione")}>
             <P>
-              Tutti gli esperimenti utilizzano cross-validation stratificata a 5 fold con seed 57.
-              La metrica principale per la classificazione closed-set è l&apos;F1 macro, robusta allo
-              squilibrio naturale del dataset (152 immagini per <em>O. majellensis</em> contro 570
-              per <em>O. garganica</em>). Per l&apos;open-set si utilizza il tasso di rilevamento
-              al 10% di FPR<Cite id="bendale2015openworld" />: la soglia di rifiuto viene calibrata
-              in modo che solo il 10% delle immagini novel venga erroneamente accettato, e si misura
-              quanti dei campioni noti vengono correttamente riconosciuti. Un valore di 0,907 significa
-              273/300 note riconosciute quando solo 5/50 novel sfuggono.
+              {t("research.metodo_validazione")}<Cite id="bendale2015openworld" />
             </P>
           </SubSection>
 
@@ -291,23 +272,19 @@ export function ResearchPage() {
             src="/figures/architecture.webp"
             alt="Architettura del sistema"
             className="max-h-[720px] w-auto"
-            caption="Diagramma della pipeline di addestramento e valutazione: dalla raccolta immagini alla pubblicazione dei risultati."
+            caption={t("research.metodo_arch_fig_caption")}
           />
 
           <SubSection title={t("research.subs_pipeline_osr")}>
             <P>
-              Per la valutazione OSR, il modello addestrato su 6 classi viene testato su un set
-              che include <em>O. sphegodes_Napoli</em> come classe sconosciuta. La procedura si
-              compone di tre fasi: (1) estrazione degli embedding dal training e test set tramite
-              backbone congelato; (2) addestramento di quattro rivelatori (Mahalanobis, KNN, Energy,
-              Ensemble) sui soli embedding noti; (3) calcolo del tasso di rilevamento al 10% FPR.
+              {t("research.metodo_pipeline_osr")}
             </P>
           </SubSection>
 
           <Figure
             src="/figures/osr-flow.webp"
             alt="Pipeline OSR"
-            caption="Pipeline di Open-Set Recognition: estrazione embedding, addestramento rivelatori, rilevamento novità. I rivelatori valutano la distanza/probabilità che un campione appartenga a una classe nota."
+            caption={t("research.metodo_osr_flow_caption")}
           />
         </Section>
 
@@ -338,7 +315,7 @@ export function ResearchPage() {
               { model: "DINOv2-Small", cv: "0,884", test: "0,970", params: "21M", gap: "+0,086" },
               { model: "DINOv2-Base", cv: "0,911", test: "0,975", params: "86M", gap: "+0,064" },
             ]}
-            highlightRow="DINOv2-Base"
+            highlightRow="ResNet-50"
             caption={t("research.exp6_caption")}
           />
 
@@ -397,7 +374,7 @@ export function ResearchPage() {
               { model: "DINOv2-Small", cv: "0,913", test: "0,888", gap: "−0,026" },
               { model: "DINOv2-Base", cv: "0,933", test: "0,936", gap: "+0,004" },
             ]}
-            highlightRow="DINOv2-Small"
+            highlightRow="DINOv2-Base"
             caption={t("research.exp7_caption")}
           />
 
@@ -447,47 +424,19 @@ export function ResearchPage() {
               { key: "model", label: t("research.table_model") },
               { key: "f1t", label: t("research.table_f1_test") },
               { key: "f1cv", label: t("research.table_f1_cv") },
-              { key: "det", label: t("research.table_detection") },
-              { key: "detector", label: t("research.table_best_detector") },
+              { key: "knn", label: t("research.table_knn") },
             ]}
             rows={[
-              { model: "ResNet-18", f1t: "0,520", f1cv: "0,398", det: "0,095", detector: "Mahalanobis" },
-              { model: "ResNet-50", f1t: "0,594", f1cv: "0,540", det: "0,538", detector: "Ensemble" },
-              { model: "ConvNeXt-Tiny", f1t: "0,829", f1cv: "0,815", det: "0,907", detector: "Ensemble" },
-              { model: "ConvNeXt-Small", f1t: "0,801", f1cv: "0,698", det: "0,480", detector: "Ensemble" },
-              { model: "DINOv2-Small", f1t: "0,904", f1cv: "0,917", det: "0,670", detector: "Ensemble" },
-              { model: "DINOv2-Base", f1t: "0,911", f1cv: "0,930", det: "0,746", detector: "Energy" },
+              { model: "ResNet-18", f1t: "0,560", f1cv: "0,473", knn: "0,456" },
+              { model: "ResNet-50", f1t: "0,750", f1cv: "0,738", knn: "0,719" },
+              { model: "ConvNeXt-Tiny", f1t: "0,911", f1cv: "0,893", knn: "0,884" },
+              { model: "ConvNeXt-Small", f1t: "0,874", f1cv: "0,812", knn: "0,879" },
+              { model: "DINOv2-Small", f1t: "0,894", f1cv: "0,851", knn: "0,854" },
+              { model: "DINOv2-Base", f1t: "0,910", f1cv: "0,896", knn: "0,875" },
             ]}
             highlightRow="ConvNeXt-Tiny"
             caption={t("research.exp8_caption")}
           />
-
-          <SubSection title={t("research.exp8_subs_openset")}>
-            <P>
-              {t("research.exp8_openset_intro")}
-            </P>
-            <ul className="list-disc list-inside text-muted-foreground space-y-2 text-sm">
-              <li><strong>ConvNeXt-Tiny:</strong> {t("research.exp8_openset_winner")}</li>
-              <li><strong>DINOv2-Base:</strong> {t("research.exp8_openset_dinov2")}</li>
-              <li><strong>ResNet-18:</strong> {t("research.exp8_openset_resnet")}</li>
-            </ul>
-            <P>
-              {t("research.exp8_openset_ensemble")}
-            </P>
-          </SubSection>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Figure
-              src="/figures/spotlight_convnext_osr.webp"
-              alt="Detection rate per rivelatore"
-              caption="Tasso di rilevamento per rivelatore. ConvNeXt-Tiny (arancione) raggiunge 0,907 con Ensemble."
-            />
-            <Figure
-              src="/figures/exp8_per_species.webp"
-              alt="F1 per specie Exp 8"
-              caption="F1 per specie in Exp 8: O. sphegodes è la più penalizzata; Palena e Exaltata le meno colpite."
-            />
-          </div>
 
           <SubSection title={t("research.exp8_subs_species")}>
             <P>
@@ -495,135 +444,86 @@ export function ResearchPage() {
             </P>
           </SubSection>
 
-          <P>
-            L&apos;analisi del clustering sugli embedding SpHOR conferma che la separazione
-             non supervisionata rimane aperta: l&apos;NMI al k reale (k=6) è 0,219 per ConvNeXt-Tiny
-             e 0,648 per DINOv2-Base. K-means converge a k=2 (separazione binaria tra i due cluster
-            principali). DBSCAN classifica il 96% dei punti come rumore.
-          </P>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Figure
-              src="/figures/osr_detection_rate.webp"
-              alt="OSR detection rate Exp 8"
-              caption="Detection rate al variare della soglia FPR per ogni rivelatore in Exp 8. Ensemble e KNN sono i più robusti."
+              src="/figures/exp8_per_species.webp"
+              alt="F1 per specie Exp 8"
+              caption={t("research.exp8_per_species_caption")}
             />
             <Figure
-              src="/figures/clustering_comparison.webp"
-              alt="Clustering comparison"
-              caption="Confronto del clustering (K-means, Spectral, DBSCAN) su embedding SpHOR vs MGH-NCD. Nessun metodo recupera le sei specie."
+              src="/figures/tsne_exp8_multimodel.webp"
+              alt="t-SNE multi-modello Exp 8"
+              caption={t("research.exp8_tsne_caption")}
             />
           </div>
 
           <Figure
-            src="/figures/tsne_exp8_multimodel.webp"
-            alt="t-SNE multi-modello Exp 8"
-            caption="t-SNE per tre architetture in Exp 8: (a) ConvNeXt-Tiny — embedding ben separati, outlier presenti; (b) DINOv2-Small — cluster più coesi ma meno separati; (c) DINOv2-Base — struttura intermedia."
+            src="/figures/confusion_matrices.webp"
+            alt="Confusion matrices"
+            caption={t("research.exp8_confusion_caption")}
           />
         </Section>
 
-        {/* ── 7. EXP 10: MGH-NCD ── */}
-        <Section id="exp10" title={t("research.sect_exp10")}>
-          <SubSection title={t("research.exp10_subs_motivazione")}>
+        {/* ── EXP 9: SpHOR con novel class nascosta (O. garganica) ── */}
+        <Section id="exp9" title={t("research.sect_exp9")}>
+          <SubSection title={t("research.exp9_subs_motivazione")}>
             <P>
-              {t("research.exp10_p1_before")}<Cite id="zheng2025mgce" />{t("research.exp10_p1_after")}
+              {t("research.exp9_motivazione")}
             </P>
-            <P>
-              {t("research.exp10_disegno")}
-            </P>
-          </SubSection>
-
-          <SubSection title={t("research.exp10_subs_collasso")}>
-            <P>
-              {t("research.exp10_collasso_intro")}
-            </P>
-            <ul className="list-disc list-inside text-muted-foreground space-y-1 text-sm">
-              <li><em>O. exaltata</em>: {t("research.exp10_collasso_exaltata")}</li>
-              <li><em>O. garganica</em>: {t("research.exp10_collasso_garganica")}</li>
-              <li><em>O. sphegodes</em>: {t("research.exp10_collasso_sphegodes")}</li>
-            </ul>
           </SubSection>
 
           <DataTable
             columns={[
               { key: "model", label: t("research.table_model") },
               { key: "f1t", label: t("research.table_f1_test") },
+              { key: "auroc", label: t("research.table_auroc") },
               { key: "det", label: t("research.table_detection") },
-              { key: "nmi", label: t("research.table_nmi") },
-              { key: "acc", label: t("research.table_acc_clust") },
-              { key: "palena", label: t("research.table_palena") },
+              { key: "detector", label: t("research.table_best_detector") },
             ]}
             rows={[
-              { model: "ResNet-18", f1t: "0,226", det: "0,257", nmi: "0,137", acc: "0,253", palena: "19%" },
-              { model: "ResNet-50", f1t: "0,064", det: "0,321", nmi: "0,032", acc: "0,206", palena: "0%" },
-              { model: "ConvNeXt-Tiny", f1t: "0,110", det: "0,566", nmi: "0,248", acc: "0,386", palena: "29%" },
-              { model: "ConvNeXt-Small", f1t: "0,078", det: "0,537", nmi: "0,162", acc: "0,330", palena: "98%" },
-              { model: "DINOv2-Small", f1t: "0,077", det: "0,610", nmi: "0,549", acc: "0,592", palena: "91%" },
-              { model: "DINOv2-Base", f1t: "0,057", det: "0,688", nmi: "0,425", acc: "0,511", palena: "78%" },
+              { model: "ResNet-18", f1t: "0,590", auroc: "0,507", det: "0,120", detector: "Mahalanobis" },
+              { model: "ResNet-50", f1t: "0,856", auroc: "0,776", det: "0,360", detector: "KNN" },
+              { model: "ConvNeXt-Tiny", f1t: "0,920", auroc: "0,850", det: "0,640", detector: "Ensemble" },
+              { model: "ConvNeXt-Small", f1t: "0,933", auroc: "0,840", det: "0,460", detector: "Ensemble" },
+              { model: "DINOv2-Small", f1t: "0,921", auroc: "0,760", det: "0,280", detector: "KNN" },
+              { model: "DINOv2-Base", f1t: "0,932", auroc: "0,875", det: "0,560", detector: "Ensemble" },
             ]}
             highlightRow="DINOv2-Base"
-            caption={t("research.exp10_caption")}
+            caption={t("research.exp9_caption")}
           />
 
-          <P>
-            {t("research.exp10_risultati")}
-          </P>
-
-          <SubSection title={t("research.exp10_subs_analisi")}>
+          <SubSection title={t("research.exp9_subs_osr")}>
             <P>
-              {t("research.exp10_analisi")}
+              {t("research.exp9_osr_intro")}
             </P>
+            <ul className="list-disc list-inside text-muted-foreground space-y-2 text-sm">
+              <li><strong>DINOv2-Base:</strong> {t("research.exp9_osr_dinov2b")}</li>
+              <li><strong>ConvNeXt-Tiny:</strong> {t("research.exp9_osr_convnext")}</li>
+              <li><strong>ResNet-18:</strong> {t("research.exp9_osr_resnet")}</li>
+            </ul>
+            <P>
+              {t("research.exp9_osr_ensemble")}
+            </P>
+            <Figure
+              src="/figures/exp9_osr_auroc.webp"
+              alt="AUROC OSR Exp 9"
+              caption={t("research.exp9_osr_auroc_caption")}
+            />
           </SubSection>
 
-          <Figure
-            src="/figures/spotlight_exp10_collapse.webp"
-            alt="Collasso Exp 10"
-            caption="Collasso di Exp 10 per DINOv2-Base. (a) Matrice di confusione: la colonna Palena cattura la maggior parte delle predizioni. (b) Per ogni specie, la frazione Palena supera l'accuratezza corretta."
-          />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Figure
-              src="/figures/confusion_matrices.webp"
-              alt="Confusion matrices"
-              caption="Matrici di confusione per Exp 7 (SupCon), Exp 8 (SpHOR) e Exp 10 (MGH-NCD). Il degrado progressivo è evidente: da una diagonale pulita (SupCon) al collasso su Palena (MGH-NCD)."
-            />
-            <Figure
-              src="/figures/tsne_novel_exp10.webp"
-              alt="t-SNE with novel Exp 10"
-              caption="Proiezione t-SNE degli embedding di Exp 10 con la classe novel O. sphegodes_Napoli (cerchi rossi). La novel si sovrappone completamente alle classi note."
-            />
-          </div>
-
-          <Figure
-            src="/figures/exp10_per_species.webp"
-            alt="F1 per specie Exp 10"
-            caption="F1 per specie in Exp 10. Nessuna specie raggiunge 0,5 F1. Il collasso è uniforme: tutte le specie soffrono allo stesso modo."
-          />
-
-          <SubSection title={t("research.subs_analisi")}>
+          <SubSection title={t("research.exp9_subs_clustering")}>
             <P>
-              Il fallimento si articola su tre livelli. (1) <strong>Consensus spuria</strong>:
-              l&apos;allineamento degli esperti forza il consenso tra tre risoluzioni KNN; in
-              ultra-FGVC, dove la risoluzione &ldquo;grossolana&rdquo; (k=50) cattura già solo
-              differenze finissime, il consenso collassa sulla classe più distintiva (Palena).
-              (2) <strong>Full FT impatta negativamente</strong>: a differenza di Exp 8, dove
-              LoRA regolarizzava, in Exp 10 la maggiore capacità ha amplificato il collasso.
-              (3) <strong>Complessità eccessiva</strong>: tre esperti, memory bank, tre loss per
-              2.232 immagini — il modello &ldquo;spende&rdquo; la sua capacità per soddisfare i
-              vincoli di allineamento.
+              {t("research.exp9_clustering")}
             </P>
+            <Figure
+              src="/figures/exp9_tsne_novel.webp"
+              alt="t-SNE known vs novel Exp 9"
+              caption={t("research.exp9_tsne_novel_caption")}
+            />
           </SubSection>
-
-          <Callout variant="info" title="Lezione: la semplicità supera la complessità">
-            SpHOR, con un singolo obiettivo contrastivo e prototipi ortogonali, supera MGCE
-            nonostante la minore sofisticazione. La scelta dell&apos;approccio deve essere guidata
-            dalla scala intrinseca del problema, non dalla sofisticazione della tecnica. Questo è
-            un risultato scientifico valido: dimostra che l&apos;aggiunta di complessità non porta
-            necessariamente a miglioramenti in ultra-FGVC.
-          </Callout>
         </Section>
 
-        {/* ── 8. BENCHMARK ── */}
+        {/* ── 7. BENCHMARK ── */}
         <Section id="benchmark" title={t("research.sect_benchmark")}>
           <P>
             {t("research.benchmark_intro")}
@@ -635,19 +535,18 @@ export function ResearchPage() {
               { key: "e6", label: t("research.table_e6") },
               { key: "e7", label: t("research.table_e7") },
               { key: "e8", label: t("research.table_e8") },
-              { key: "e10", label: t("research.table_e10") },
-              { key: "osr8", label: t("research.table_osr8") },
-              { key: "osr10", label: t("research.table_osr10") },
+              { key: "e9", label: t("research.table_e9") },
+              { key: "osr9", label: t("research.table_osr9") },
             ]}
             rows={[
-              { model: "ResNet-18", e6: "0,978", e7: "0,444", e8: "0,520", e10: "0,226", osr8: "0,095", osr10: "0,257" },
-              { model: "ResNet-50", e6: "0,980", e7: "0,465", e8: "0,594", e10: "0,064", osr8: "0,538", osr10: "0,321" },
-              { model: "ConvNeXt-Tiny", e6: "0,821", e7: "0,837", e8: "0,829", e10: "0,110", osr8: "0,907", osr10: "0,566" },
-              { model: "ConvNeXt-Small", e6: "0,793", e7: "0,517", e8: "0,801", e10: "0,078", osr8: "0,480", osr10: "0,537" },
-              { model: "DINOv2-Small", e6: "0,970", e7: "0,888", e8: "0,904", e10: "0,077", osr8: "0,670", osr10: "0,610" },
-              { model: "DINOv2-Base", e6: "0,975", e7: "0,936", e8: "0,911", e10: "0,057", osr8: "0,746", osr10: "0,688" },
+              { model: "ResNet-18", e6: "0,978", e7: "0,444", e8: "0,560", e9: "0,590", osr9: "0,507" },
+              { model: "ResNet-50", e6: "0,980", e7: "0,465", e8: "0,750", e9: "0,856", osr9: "0,776" },
+              { model: "ConvNeXt-Tiny", e6: "0,821", e7: "0,837", e8: "0,911", e9: "0,920", osr9: "0,850" },
+              { model: "ConvNeXt-Small", e6: "0,793", e7: "0,517", e8: "0,874", e9: "0,933", osr9: "0,840" },
+              { model: "DINOv2-Small", e6: "0,970", e7: "0,888", e8: "0,894", e9: "0,921", osr9: "0,760" },
+              { model: "DINOv2-Base", e6: "0,975", e7: "0,936", e8: "0,910", e9: "0,932", osr9: "0,875" },
             ]}
-            bests={{ e6: "DINOv2-Base", e7: "DINOv2-Base", osr8: "ConvNeXt-Tiny" }}
+            bests={{ e6: "ResNet-50", e7: "DINOv2-Base", e8: "ConvNeXt-Tiny", e9: "ConvNeXt-Small", osr9: "DINOv2-Base" }}
             caption={t("research.benchmark_caption")}
           />
 
@@ -655,19 +554,19 @@ export function ResearchPage() {
             <Figure
               src="/figures/benchmark_heatmap.webp"
               alt="Benchmark heatmap"
-              caption="Heatmap: F1 test per modello ed esperimento."
+              caption={t("research.benchmark_heatmap_caption")}
             />
             <Figure
               src="/figures/closed_vs_open_scatter.webp"
               alt="Closed vs open"
-              caption="F1 test vs Detection Rate: il trade-off closed-set / open-set."
+              caption={t("research.closed_vs_open_caption")}
             />
           </div>
 
           <SubSection title={t("research.subs_risultati")}>
             <ol className="list-decimal list-inside text-muted-foreground space-y-2">
-              <li><strong>{t("research.risultati_li1_before")}</strong>DINOv2-Small{t("research.risultati_li1_mid")}</li>
-              <li><strong>{t("research.risultati_li2_before")}</strong>ConvNeXt-Tiny{t("research.risultati_li2_mid")}</li>
+              <li><strong>{t("research.risultati_li1_before")}</strong>DINOv2-Base{t("research.risultati_li1_mid")}</li>
+              <li><strong>{t("research.risultati_li2_before")}</strong>DINOv2-Base{t("research.risultati_li2_mid")}</li>
               <li>{t("research.risultati_li3")}</li>
               <li>{t("research.risultati_li4")}</li>
               <li>{t("research.risultati_li5")}</li>
@@ -678,31 +577,25 @@ export function ResearchPage() {
             <Figure
               src="/figures/benchmark_bar.webp"
               alt="Benchmark bar chart"
-              caption="Confronto a barre dell'F1 test attraverso esperimenti e architetture."
+              caption={t("research.benchmark_bar_caption")}
             />
             <Figure
               src="/figures/summary_dual_heatmap.webp"
               alt="Dual heatmap"
-              caption="Heatmap duale: F1 test (sinistra) e Detection Rate (destra) affiancati per confronto immediato."
+              caption={t("research.summary_dual_heatmap_caption")}
             />
           </div>
 
           <Figure
-            src="/figures/osr_detection_comparison.webp"
-            alt="OSR detection comparison"
-            caption="Detection rate al 10% FPR per tutti i rivelatori: Exp 8 (sinistra) vs Exp 10 (destra)."
-          />
-
-          <Figure
             src="/figures/spotlight_species_evolution.webp"
             alt="Species evolution"
-            caption="Evoluzione dell'F1 per specie attraverso i quattro esperimenti. Il degrado è generalizzato, ma alcune specie (O. sphegodes, O. garganica) soffrono più di altre."
+            caption={t("research.concl_species_evolution_caption")}
           />
 
           <Figure
             src="/figures/loss_curves_aggregated.webp"
             alt="Loss curves aggregated"
-            caption="Curve di loss aggregate per esperimento. La convergenza è più rapida in Exp 6 (CE) rispetto a Exp 7–10 (contrastive)."
+            caption={t("research.loss_curves_aggregated_caption")}
           />
         </Section>
 

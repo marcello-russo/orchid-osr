@@ -41,7 +41,7 @@ export function foldToEpochPoints(fold: FoldData): EpochPoint[] {
 // --- Experiments page redesign helpers ---
 
 export type ArchitectureFamily = "ResNet" | "ConvNeXt" | "DINOv2";
-export type ExperimentSeries = "Exp 6" | "Exp 7" | "Exp 8" | "Exp 10";
+export type ExperimentSeries = "Exp 6" | "Exp 7" | "Exp 8" | "Exp 9";
 
 const FAMILY_MAP: Record<string, ArchitectureFamily> = {
   resnet18: "ResNet", resnet50: "ResNet",
@@ -50,7 +50,7 @@ const FAMILY_MAP: Record<string, ArchitectureFamily> = {
 };
 
 const SERIES_MAP: Record<string, ExperimentSeries> = {
-  exp6: "Exp 6", exp7: "Exp 7", exp8: "Exp 8", exp10: "Exp 10",
+  exp6: "Exp 6", exp7: "Exp 7", exp8: "Exp 8", exp9: "Exp 9",
 };
 
 export function getArchitectureFamily(variant: string | null): ArchitectureFamily | null {

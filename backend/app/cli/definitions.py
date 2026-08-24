@@ -7,7 +7,9 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 
 ALL_CLASSES = settings.class_names
 INTERNET_CLASSES = settings.internet_classes
-TRAIN_CLASSES = [c for c in ALL_CLASSES if c != "O. sphegodes_Napoli"]
+# Le sei classi note. La novel class di Exp 9 (O. garganica) viene esclusa
+# dal training tramite exclude_classes, non da questa lista.
+TRAIN_CLASSES = list(ALL_CLASSES)
 
 DATASET_PATHS = {
     "privato": {
@@ -86,29 +88,30 @@ EXPERIMENTS = {
         "num_classes": 6,
         "test_classes": TRAIN_CLASSES,
         "loss_type": "supcon",
-        "ncd_mode": True,
+        "ncd_mode": False,
         "phases": ["SupCon + SpHOR", "CE fine-tune"],
         "recipe": "Due fasi: (1) SupCon + SpHOR: come Exp 7 ma con prototipi ortogonali sferici "
         "(Spherical Orthogonal Prototypes). Loss addizionale repulsiva "
         "L_rep = (1/K(K-1)) Σ_{i≠j} cos(θ_ij)² che forza i prototipi "
         "ad essere ortogonali, massimizzando la copertura angolare sulla sfera. "
         "(2) CE fine-tuning: backbone congelato, testa lineare. "
-        "Novel class: O. sphegodes_Napoli (solo in test).",
-        "description": "SupCon + Spherical Orthogonal Prototypes (SpHOR-style, Exp 8)",
+        "Closed-set: tutte le 6 classi note, nessuna novel class.",
+        "description": "SupCon + Spherical Orthogonal Prototypes (SpHOR-style, Exp 8, closed-set)",
     },
     9: {
         "name": "exp9_ncd",
         "train_dataset": "clean",
         "test_dataset": "clean",
-        "num_classes": 6,
+        "num_classes": 5,
         "test_classes": TRAIN_CLASSES,
+        "exclude_classes": ["O. garganica"],
         "loss_type": "supcon",
-        "ncd_mode": True,
+        "ncd_mode": False,
         "phases": ["SupCon + SpHOR", "CE fine-tune"],
-        "recipe": "Come Exp 8. Novità: NCD mode attivo — la novel class "
-        "(O. sphegodes_Napoli) è esclusa dal training e usata solo in test "
-        "per valutare la scoperta di nuove specie.",
-        "description": "SpHOR with O. sphegodes_Napoli as hidden novel class (NCD)",
+        "recipe": "Identico a Exp 8 (150 epoche, patience 15 in entrambe le "
+        "fasi). Novità: O. garganica è esclusa dal training (5 classi note) "
+        "e usata solo in test come novel class per la valutazione OSR.",
+        "description": "SpHOR with O. garganica as hidden novel class (NCD)",
     },
     10: {
         "name": "exp10_mgh_ncd",

@@ -104,6 +104,7 @@ def kfold_experiment(
             "use_prototypes": use_prototypes if loss_type == "supcon" else None,
             "full_finetune": full_finetune if loss_type == "supcon" else None,
             "ncd_mode": ncd_mode if loss_type == "supcon" else None,
+            "normalize_embeddings": True if loss_type == "supcon" else False,
             "timestamp": datetime.now().isoformat(),
         }
         with open(config_path, "w") as f:
@@ -303,7 +304,42 @@ def kfold_experiment(
     if fold_index is not None:
         logger.info(f"\nFold {fold_index} completato.")
         logger.info(f"Per aggregare: --cross-validate --exp 6 --model {model_variant} --aggregate-only")
+        if "fold_metrics" not in locals():
+            # Fold singolo già completato in un run precedente: carica i metric
+            # dal fold JSON invece di crashare su una variabile non definita.
+            _fp = os.path.join(kfold_dir, f"fold_{fold_index}.json")
+            if os.path.exists(_fp):
+                with open(_fp) as f:
+                    fold_metrics = json.load(f)
+            else:
+                fold_metrics = {"fold": fold_index, "note": "fold gia' completato, metric non disponibili"}
         return {"fold_completed": fold_index, "fold_metrics": fold_metrics}
+
+    # Per esperimenti con exclude_classes (Exp 9): il test finale closed-set
+    # usa solo le classi di training (5), su test_ncd_exp9 (senza Napoli).
+    # La novel class (garganica) è valutata separatamente dal pipeline NCD.
+    test_class_names = class_names
+    test_num_classes = num_classes
+    test_dir_final = test_dataset_dir
+    exclude_set = set(exclude_classes or [])
+    if exclude_set:
+        test_class_names = [c for c in class_names if c not in exclude_set]
+        test_num_classes = len(test_class_names)
+        from app.core.models import get_registry_entry
+
+        _entry = get_registry_entry(model_variant)
+        _w, _h = _entry.input_size
+        _dedicated = os.path.join(
+            os.path.dirname(test_dataset_dir.rstrip(os.sep)),
+            "test_ncd_exp9",
+        )
+        if os.path.exists(_dedicated):
+            test_dir_final = _dedicated
+        else:
+            logger.warning(
+                f"test_ncd_exp9 non trovato in {os.path.dirname(test_dataset_dir)}, "
+                f"uso test standard (potrebbe includere classi non nel modello)"
+            )
 
     return aggregate_and_test(
         output_dir=kfold_dir,
@@ -313,7 +349,7 @@ def kfold_experiment(
         batch_size=batch_size,
         learning_rate=learning_rate,
         seed=seed,
-        test_dataset_dir=test_dataset_dir,
-        num_classes=num_classes,
-        class_names=class_names,
+        test_dataset_dir=test_dir_final,
+        num_classes=test_num_classes,
+        class_names=test_class_names,
     )

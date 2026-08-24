@@ -4,30 +4,35 @@
 Compares Exp 6 (CE) and Exp 7 (SupCon).
 Output: frontend/public/figures/cv_test_gap.webp
 """
+
 import json
 from pathlib import Path
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
 BASE = Path(__file__).resolve().parent.parent / "experiments"
-OUTPUT = (
-    Path(__file__).resolve().parent.parent.parent
-    / "frontend" / "public" / "figures" / "cv_test_gap.webp"
-)
+OUTPUT = Path(__file__).resolve().parent.parent.parent / "frontend" / "public" / "figures" / "cv_test_gap.webp"
 
 MODELS = ["ResNet-18", "ResNet-50", "ConvNeXt-Tiny", "ConvNeXt-Small", "DINOv2-Small", "DINOv2-Base"]
 EXP6_DIRS = [
-    "exp6_clean_split_resnet18", "exp6_clean_split_resnet50",
-    "exp6_clean_split_convnext_tiny", "exp6_clean_split_convnext_small",
-    "exp6_clean_split_dinov2_small", "exp6_clean_split_dinov2_base",
+    "exp6_clean_split_resnet18",
+    "exp6_clean_split_resnet50",
+    "exp6_clean_split_convnext_tiny",
+    "exp6_clean_split_convnext_small",
+    "exp6_clean_split_dinov2_small",
+    "exp6_clean_split_dinov2_base",
 ]
 EXP7_DIRS = [
-    "exp7_supcon_resnet18", "exp7_supcon_resnet50",
-    "exp7_supcon_convnext_tiny", "exp7_supcon_convnext_small",
-    "exp7_supcon_dinov2_small", "exp7_supcon_dinov2_base",
+    "exp7_supcon_resnet18",
+    "exp7_supcon_resnet50",
+    "exp7_supcon_convnext_tiny",
+    "exp7_supcon_convnext_small",
+    "exp7_supcon_dinov2_small",
+    "exp7_supcon_dinov2_base",
 ]
 
 

@@ -482,10 +482,12 @@ def train_fold_supcon(
     os.makedirs(ckpt_dir, exist_ok=True)
 
     if full_finetune:
-        model = create_model(model_variant, num_classes=num_classes, pretrained=True, lora_r=32)
+        model = create_model(
+            model_variant, num_classes=num_classes, pretrained=True, lora_r=32, normalize_embeddings=True
+        )
         logger.info("  MGH-NCD mode: LoRA rank increased to 32 for richer embeddings")
     else:
-        model = create_model(model_variant, num_classes=num_classes, pretrained=True)
+        model = create_model(model_variant, num_classes=num_classes, pretrained=True, normalize_embeddings=True)
     entry = get_registry_entry(model_variant)
     opt_type = entry.optimizer if optimizer_type is None else optimizer_type
     wd = weight_decay if weight_decay > 0 else entry.weight_decay
