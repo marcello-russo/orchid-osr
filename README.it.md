@@ -13,7 +13,7 @@
   <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat&logo=react&logoColor=white" alt="React"/>
   <img src="https://img.shields.io/badge/SQLite-003B57?style=flat&logo=sqlite&logoColor=white" alt="SQLite"/>
   <br/>
-  <em>Classificazione ultra-fine-grained e Novel Class Discovery per orchidee <b>Ophrys</b></em>
+  <em>Classificazione ultra-fine-grained e riconoscimento open-set per orchidee <b>Ophrys</b> tramite apprendimento contrastivo profondo</em>
 </p>
 
 <p align="center">

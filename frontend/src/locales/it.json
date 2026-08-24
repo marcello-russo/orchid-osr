@@ -361,8 +361,8 @@
   },
   "research": {
     "hero_badge": "Tesi Magistrale — 2024/2025",
-    "hero_title": "Ultra-Fine-Grained Classification of Ophrys Orchids",
-    "hero_subtitle": "via Deep Learning and Supervised Contrastive Learning",
+    "hero_title": "Classificazione Ultra-Fine-Grained e Riconoscimento Open-Set delle Orchidee Ophrys",
+    "hero_subtitle": "tramite Apprendimento Contrastivo Profondo",
     "hero_author_label": "Autore:",
     "hero_advisor_label": "Relatore:",
     "hero_coadvisor_label": "Correlatori:",
