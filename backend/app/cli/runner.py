@@ -217,6 +217,7 @@ def run_experiment(
             class_names = [c for c in class_names if c not in exclude]
             num_classes_val = len(class_names)
             from app.core.models import get_registry_entry
+
             _entry = get_registry_entry(model_variant)
             _w, _h = _entry.input_size
             _dedicated_test = str(PROJECT_ROOT / "dataset" / f"cropped_{_w}x{_h}" / "test_ncd_exp9")

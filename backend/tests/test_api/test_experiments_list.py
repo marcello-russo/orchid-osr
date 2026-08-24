@@ -68,7 +68,13 @@ def _fake_experiments(tmp_path, monkeypatch):
     _make_exp(
         tmp_path,
         "exp9_ncd_resnet18",
-        {"model_variant": "resnet18", "num_classes": 5, "ncd_mode": True, "exclude_classes": ["O. garganica"], "timestamp": "2026-01-06T00:00:00"},
+        {
+            "model_variant": "resnet18",
+            "num_classes": 5,
+            "ncd_mode": True,
+            "exclude_classes": ["O. garganica"],
+            "timestamp": "2026-01-06T00:00:00",
+        },
         {
             "mean_f1": 0.59,
             "std_f1": 0.03,

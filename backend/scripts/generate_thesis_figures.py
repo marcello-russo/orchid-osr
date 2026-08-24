@@ -625,6 +625,7 @@ def fig_exp9_osr_auroc():
 #  EXP 8 per-species + t-SNE
 # ══════════════════════════════════════════════════════════════════════
 
+
 def fig_exp8_per_species():
     """Per-species F1, all models, Exp 8."""
     order = ["O. exaltata", "O. garganica", "O. incubacea", "O. majellensis", "O. sphegodes", "O. sphegodes_Palena"]

@@ -326,11 +326,12 @@ def kfold_experiment(
         test_class_names = [c for c in class_names if c not in exclude_set]
         test_num_classes = len(test_class_names)
         from app.core.models import get_registry_entry
+
         _entry = get_registry_entry(model_variant)
         _w, _h = _entry.input_size
         _dedicated = os.path.join(
             os.path.dirname(test_dataset_dir.rstrip(os.sep)),
-            f"test_ncd_exp9",
+            "test_ncd_exp9",
         )
         if os.path.exists(_dedicated):
             test_dir_final = _dedicated

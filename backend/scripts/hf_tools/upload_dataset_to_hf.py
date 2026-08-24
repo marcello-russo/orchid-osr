@@ -22,9 +22,9 @@ import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
-from scripts.hf_config import HF_DATASET_REPO
-
 from huggingface_hub import HfApi, create_repo
+
+from scripts.hf_config import HF_DATASET_REPO
 
 REPO_ID = HF_DATASET_REPO
 PROJECT_ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", ".."))
