@@ -333,7 +333,7 @@ export function ResearchPage() {
           />
 
           <Figure
-            src="/figures/loss_curves_exp6_dinov2b.webp"
+            src="/figures/loss_curves_exp6_dinov2b_v2.webp"
             alt="Loss curves DINOv2-B Exp 6"
             caption={t("research.exp6_fig_caption")}
           />
