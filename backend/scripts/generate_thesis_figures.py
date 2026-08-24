@@ -550,6 +550,37 @@ def fig_loss_curves_aggregated():
     _save(fig, "loss_curves_aggregated.png")
 
 
+def fig_loss_curves_exp6_dinov2b():
+    """Train/val loss per DINOv2-Base in Exp 6 (CE), mean±std sui 5 fold."""
+    model = "dinov2_base"
+    fig, ax = plt.subplots(figsize=(9, 5))
+    folds = load_folds("exp6", model)
+    if not folds:
+        print("  exp6 dinov2_base: nessun fold")
+        return
+
+    trimmed = [trim_fold(f) for f in folds]
+    min_len = min(len(h["val_loss"]) for h in trimmed)
+    train = np.array([h["train_loss"][:min_len] for h in trimmed])
+    val = np.array([h["val_loss"][:min_len] for h in trimmed])
+    epochs = np.arange(1, min_len + 1)
+
+    t_mean, t_std = train.mean(axis=0), train.std(axis=0)
+    v_mean, v_std = val.mean(axis=0), val.std(axis=0)
+
+    ax.plot(epochs, t_mean, color="#0072B2", label="Train loss", linewidth=2)
+    ax.fill_between(epochs, t_mean - t_std, t_mean + t_std, color="#0072B2", alpha=0.15)
+    ax.plot(epochs, v_mean, color="#D55E00", label="Validation loss", linewidth=2)
+    ax.fill_between(epochs, v_mean - v_std, v_mean + v_std, color="#D55E00", alpha=0.15)
+
+    ax.set_xlabel("Epoch")
+    ax.set_ylabel("Loss")
+    ax.set_title("Exp 6 (CE) — DINOv2-Base: Train/Val Loss", fontweight="bold")
+    ax.legend(loc="upper right", framealpha=0.9)
+    fig.tight_layout()
+    _save(fig, "loss_curves_exp6_dinov2b.png")
+
+
 # ══════════════════════════════════════════════════════════════════════
 #  FIGURE 8: OSR Detection Rate — all models, Exp 8
 # ══════════════════════════════════════════════════════════════════════
@@ -914,6 +945,7 @@ def main():
         ("5. Per-species F1 (best models)", fig_per_species_f1),
         ("6. CV-test gap (double descent)", fig_cv_test_gap),
         ("7. Loss curves — aggregated", fig_loss_curves_aggregated),
+        ("7b. Loss curves Exp 6 — DINOv2-Base", fig_loss_curves_exp6_dinov2b),
         ("--- EXP 8 (SpHOR) ---", None),
         ("8. OSR detection rate", fig_osr_detection_rate),
         ("9. t-SNE Exp 8 — 3 architectures", fig_tsne_exp8_multimodel),
