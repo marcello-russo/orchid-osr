@@ -102,27 +102,47 @@ Aggiunte a `_chapters/4-experiments.tex`:
 
 ---
 
-## 5. PROSSIME COSE DA FARE (in ordine)
+## 5. COSE DA FARE — COMPLETATE (25/08/2026)
 
-### URGENTE (coerenza numeri — opzione 3)
-1. **Rimuovere i 40 duplicati dal train 224** (in `backend/dataset/cropped_224x224/train/`) — tenere il file "canonico", scartare il duplicato. Dopo: 2192 file.
-2. **Aggiornare HF dataset** (`marcellorusso/orchid-osr-dataset`) con il train pulito (manifest incluso).
-3. **Riscrivere il sommario** (`0-abstract.tex`) → "2 192 immagini di addestramento e 300 di test" senza la parentesi 2232.
-4. **Correggere** `3-dataset.tex:45`, `4-experiments.tex:39`, `README.md/it:30`, `locales it/en contrib_2` → tutti a 2192/300.
-5. **Commit della tesi nel repo separato** (documents/) — NON su /OrchID.
+### FATTO (tutti in questa sessione)
 
-### In sospeso / da decidere
-6. **Eliminare `orchid-ncd/`** (residuo, ok utente).
-7. **Backup tesi** se serve (gitignored dal /OrchID ma ha repo proprio).
+1. **Rimossi i 40 duplicati dal train 224x224** — ogni extra verificato con MD5:
+   gemello canonico presente nel 256x512 → 0 foto uniche perse. Train 224: 2192 file.
+   Script riproducibile: `backend/scripts/dedup_train_224.py`
+   
+2. **HF dataset allineato** — 40 file orfani eliminati, split_manifest.json e
+   hf_dataset_readme.md caricati. Script: `scripts/hf_tools/clean_dataset_hf.py`
+   
+3. **Testi aggiornati**:
+   - `0-abstract.tex` — rimosso "(2 232 per quelle a 224×224)"
+   - `3-dataset.tex` — caption riscritta (entrambe pipeline = 2192)
+   - `4-experiments.tex` — rimosso "differiscono di 40 immagini";
+     "numero di addestramento dipende" → "training set composto da 2.192"
+     classe meno rappresentata: "563--570" → "563"
+   - `README.md` / `README.it.md` — 2,232 → 2,192
+   - `locales/en.json` / `locales/it.json` — contrib_2 senza parentesi 2232
+   
+4. **Tesi ricompilata** — 75 pagine, 0 errori fatali, "All targets up-to-date"
+   (container `orchid-latex`, immagine `thesis-latex:latest`).
 
-### Verifiche utili prima di consegnare
-8. Ricompilare tesi dopo modifiche sommario/numeri.
-9. `npm run build` frontend + commit.
-10. Verificare deploy CI su main.
+5. **Frontend build** — `npm run build` OK (3.67s).
+
+6. **Commit+push documents repo** — `e22fbb2 fix: dataset numeri uniformati...`
+
+7. **Commit+force push orchid-osr** — `4930531 fix: dataset 224x224 deduplicato
+   (40 duplicati MD5 rimossi) — conteggi uniformati a 2192/300`
+
+8. **`orchid-ncd/` eliminato** (residuo, unico script presente in versione
+   più recente in `orchid-osr/backend/scripts/generate_thesis_figures.py`).
+
+### ANCORA IN SOSPESO
+- **`orchid-ncd-backup-20260705_183445/`** — backup non menzionato nel
+  summary originale; lasciato.
+- **CI workflow** — parte automaticamente su push a main (GitHub Actions).
 
 ---
 
-## 6. DATI CHIAVE (per riferimento rapido)
+## 6. DATI CHIAVE (per riferimento rapido, aggiornati 25/08/2026)
 
 | Exp | Miglior F1 test | Campione |
 |-----|----------------|----------|
@@ -134,5 +154,5 @@ Aggiunte a `_chapters/4-experiments.tex`:
 - Novel class: **O. garganica** (mai Napoli)
 - NMI clustering fino a 0,84 (convnext_tiny exp9)
 - AUROC OSR best: DINOv2-Base 0,875 (Ensemble), ConvNeXt-Tiny 0,850
-- Train/test: 2192/300 (uniformare da 2232) · 6 architetture · seed 57 · 5-fold
-- Container: thesis-latex, orchid-latex
+- Train/test: **2192/300** (entrambe pipeline, uniformato) · 6 architetture · seed 57 · 5-fold
+- Container: thesis-latex (orchid-latex), CI su push origin/main
