@@ -26,9 +26,7 @@ import os
 import sys
 from collections import defaultdict
 
-DATASET_DIR = os.path.normpath(
-    os.path.join(os.path.dirname(__file__), "..", "dataset")
-)
+DATASET_DIR = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "dataset"))
 MIXED_SPECIES = ["O. exaltata", "O. garganica", "O. incubacea", "O. sphegodes"]
 ALL_SPECIES = MIXED_SPECIES + ["O. majellensis", "O. sphegodes_Palena"]
 
@@ -90,18 +88,14 @@ def main() -> int:
         h = md5(os.path.join(train224, sp, fn))
         twins = [t for t in md5_index[h]]
         other_twins = [t for t in twins if (t[0], t[1]) != (sp, fn)]
-        canonical_twins = [
-            t for t in other_twins if t[1] in f256.get(t[0], set())
-        ]
+        canonical_twins = [t for t in other_twins if t[1] in f256.get(t[0], set())]
         if not other_twins:
             print(f"  ERRORE: {sp}/{fn} non ha gemelli MD5 in 224. Abort.")
             canon_ok = False
         if not canonical_twins:
             print(f"  ERRORE: {sp}/{fn} gemelli tutti extra (nessun canonico). Abort.")
             canon_ok = False
-        report.append(
-            (sp, fn, h[:8], ", ".join(f"{s}/{f}" for s, f in other_twins))
-        )
+        report.append((sp, fn, h[:8], ", ".join(f"{s}/{f}" for s, f in other_twins)))
     if not canon_ok:
         return 1
 
@@ -115,10 +109,7 @@ def main() -> int:
         print(f"  {sp}/{fn}  [{h}]  ->  {twins}")
 
     before = sum(len(v) for v in f224.values())
-    distinct_before = len(
-        {md5(os.path.join(train224, sp, fn))
-         for sp in ALL_SPECIES for fn in f224[sp]}
-    )
+    distinct_before = len({md5(os.path.join(train224, sp, fn)) for sp in ALL_SPECIES for fn in f224[sp]})
     print(f"\nPrima: {before} file, {distinct_before} MD5 unici")
 
     if not args.apply:
@@ -131,10 +122,7 @@ def main() -> int:
 
     f224 = list_files(train224)
     after = sum(len(v) for v in f224.values())
-    distinct_after = len(
-        {md5(os.path.join(train224, sp, fn))
-         for sp in ALL_SPECIES for fn in f224[sp]}
-    )
+    distinct_after = len({md5(os.path.join(train224, sp, fn)) for sp in ALL_SPECIES for fn in f224[sp]})
     print(f"Dopo: {after} file, {distinct_after} MD5 unici")
     assert after == 2192, f"Attesi 2192 file, trovati {after}"
     assert distinct_after == 2192, f"Attesi 2192 MD5 unici, trovati {distinct_after}"
@@ -144,9 +132,7 @@ def main() -> int:
         with open(manifest_path) as f:
             manifest = json.load(f)
         manifest["total_train_224x224"] = after
-        manifest["per_class_train_224x224"] = dict(
-            manifest.get("per_class_train_256x512", {})
-        )
+        manifest["per_class_train_224x224"] = dict(manifest.get("per_class_train_256x512", {}))
         manifest["note"] = (
             "sphegodes_Napoli rimossa dallo studio; train 224x224 deduplicato "
             "(40 duplicati MD5 rimossi) per uniformare i conteggi a 2192/300 "
