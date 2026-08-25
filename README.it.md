@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/images/banner.png" alt="OrchID OSR Banner" width="100%"/>
+  <img src="assets/images/banner.webp" alt="OrchID OSR Banner" width="100%"/>
 </p>
 
 <p align="center">
@@ -27,7 +27,7 @@
 
 ## Abstract
 
-Sei specie di *Ophrys* morfologicamente simili, una classe novel nascosta (*O. sphegodes* Napoli), 2.232 immagini di training + 300 di test. Confrontiamo 6 architetture (ResNet‑18/50, ConvNeXt‑T/S, DINOv2‑S/B) × 4 metodi (CE, SupCon, SpHOR, MGH‑NCD). **Campione closed-set:** DINOv2‑Small + SupCon (0.896 F1). **Campione open-set:** ConvNeXt‑Tiny + SpHOR (0.907 detection rate@10%FPR). Il Novel Class Discovery rimane un problema aperto (NMI 0.16–0.19).
+Sei specie di *Ophrys* morfologicamente simili, una classe novel nascosta (*O. garganica*), 2.232 immagini di training + 300 di test. Confrontiamo 6 architetture (ResNet‑18/50, ConvNeXt‑T/S, DINOv2‑S/B) × 3 paradigmi di apprendimento (CE, SupCon, SpHOR). **Campione closed-set:** DINOv2‑Base + SupCon (0.936 F1 test). **Campione open-set:** DINOv2‑Base + SpHOR (AUROC 0.875 sulla novel class nascosta). L'open-set recognition rimane dipendente dall'architettura e lontano dall'essere risolto in questo dominio ultra-fine-grained.
 
 ---
 
@@ -37,55 +37,57 @@ Sei specie di *Ophrys* morfologicamente simili, una classe novel nascosta (*O. s
 
 | Modello | F1 Test |
 |---------|:-------:|
-| **DINOv2‑Base** | **0.927** |
-| ConvNeXt‑Tiny | 0.890 |
-| DINOv2‑Small | 0.888 |
-| ResNet‑50 | 0.882 |
-| ResNet‑18 | 0.880 |
-| ConvNeXt‑Small | 0.863 |
+| **ResNet‑50** | **0.980** |
+| ResNet‑18 | 0.978 |
+| DINOv2‑Base | 0.975 |
+| DINOv2‑Small | 0.970 |
+| ConvNeXt‑Tiny | 0.821 |
+| ConvNeXt‑Small | 0.793 |
 
 ### Exp 7 — Supervised Contrastive Learning
 
 | Modello | F1 Test |
 |---------|:-------:|
-| **DINOv2‑Small** | **0.896** |
-| ResNet‑50 | 0.799 |
-| ResNet‑18 | 0.736 |
-| DINOv2‑Base | 0.687 |
-| ConvNeXt‑Small | 0.689 |
-| ConvNeXt‑Tiny | 0.681 |
+| **DINOv2‑Base** | **0.936** |
+| DINOv2‑Small | 0.888 |
+| ConvNeXt‑Tiny | 0.837 |
+| ConvNeXt‑Small | 0.517 |
+| ResNet‑50 | 0.465 |
+| ResNet‑18 | 0.444 |
 
 ### Exp 8 — SpHOR (Open-World)
 
-| Modello | F1 Test | Detection Rate@10%FPR |
-|---------|:-------:|:---------------------:|
-| **ConvNeXt‑Tiny** | 0.759 | **0.907** |
-| DINOv2‑Small | 0.747 | 0.670 |
-| DINOv2‑Base | 0.654 | 0.746 |
-| ConvNeXt‑Small | 0.668 | 0.480 |
-| ResNet‑50 | 0.609 | 0.538 |
-| ResNet‑18 | 0.520 | 0.093 |
+| Modello | F1 Test |
+|---------|:-------:|
+| **ConvNeXt‑Tiny** | **0.911** |
+| DINOv2‑Base | 0.910 |
+| DINOv2‑Small | 0.894 |
+| ConvNeXt‑Small | 0.874 |
+| ResNet‑50 | 0.750 |
+| ResNet‑18 | 0.560 |
 
-### Exp 10 — MGH-NCD
+### Exp 9 — NCD (Open-Set Recognition)
 
-| Modello | F1 Test | Detection Rate@10%FPR |
-|---------|:-------:|:---------------------:|
-| DINOv2‑Base | 0.369 | 0.688 |
-| ConvNeXt‑Tiny | 0.349 | 0.566 |
-| DINOv2‑Small | 0.270 | 0.391 |
-| ConvNeXt‑Small | 0.247 | 0.536 |
-| ResNet‑18 | 0.226 | 0.257 |
-| ResNet‑50 | 0.174 | 0.321 |
+| Modello | F1 Test | AUROC (miglior rivelatore) |
+|---------|:-------:|:--------------------------:|
+| **DINOv2‑Base** | **0.932** | **0.875** (Ensemble) |
+| ConvNeXt‑Small | 0.933 | 0.840 (Ensemble) |
+| DINOv2‑Small | 0.921 | 0.760 (KNN) |
+| ConvNeXt‑Tiny | 0.920 | 0.850 (Ensemble) |
+| ResNet‑50 | 0.856 | 0.776 (KNN) |
+| ResNet‑18 | 0.590 | 0.507 (Mahalanobis) |
+
+*Exp 9 esclude O. garganica dal training, lasciandola come novel class nascosta per la valutazione open-set.*
 
 ---
 
 ## Risultati Principali
 
-1. **Campione closed-set:** DINOv2‑Small + SupCon (0.896 F1, gap −0.01) — miglior compromesso accuratezza/generalizzazione
-2. **Campione open-set:** ConvNeXt‑Tiny + SpHOR (0.907 detection rate) — prima OSR funzionante in ultra-FGVC
-3. **SupCon fallisce OSR:** accuratezza classi note = **0,0** a ogni soglia (AUROC 0.485)
-4. **MGH-NCD collassa:** 74% delle predizioni → *O. sphegodes* Palena; in ultra-FGVC la semplicità batte la complessità
-5. **NCD irrisolto:** NMI clustering = 0.16–0.19 — risultato negativo pubblicabile
+1. **Campione closed-set:** DINOv2‑Base + SupCon (0.936 F1 test) — migliore accuratezza tra i paradigmi contrastivi
+2. **Campione open-set:** DINOv2‑Base + SpHOR (AUROC 0.875 sulla novel class nascosta) — migliore OSR in ultra-FGVC
+3. **OSR dipendente dall'architettura:** l'AUROC varia da 0.507 (ResNet‑18) a 0.875 (DINOv2‑Base); SpHOR non supera sistematicamente il caso
+4. **SupCon fallisce OSR:** il rivelatore SupCon da solo fallisce sulle classi note (AUROC 0.485) — i prototipi sferici sono necessari per la regolarizzazione open-set
+5. **NCD parzialmente risolto:** il clustering recupera le specie quando lo spazio metrico è stabile (NMI fino a 0.84) — un risultato promettente ma non del tutto risolto
 
 ---
 
@@ -110,7 +112,8 @@ cd backend
 python cli.py --cross-validate --exp 6 --model resnet18    # CE baseline
 python cli.py --cross-validate --exp 7 --model resnet18    # SupCon
 python cli.py --cross-validate --exp 8 --model resnet18 --sphor   # SpHOR
-python cli.py --cross-validate --exp 10 --model dinov2_base       # MGH-NCD
+python cli.py --cross-validate --exp 9 --model dinov2_small --sphor   # NCD (novel class nascosta)
+python cli.py --ncd --exp 9 --model dinov2_small                  # valutazione OSR + clustering
 ```
 
 Vedi [AGENTS.md](AGENTS.md) per tutti i comandi.
@@ -127,7 +130,8 @@ Vedi [AGENTS.md](AGENTS.md) per tutti i comandi.
 | O. majellensis | 152 | 50 | |
 | O. sphegodes | 433 | 50 | |
 | O. sphegodes Palena | 210 | 50 | |
-| **O. sphegodes Napoli** | — | 548 | **✓** |
+
+*O. garganica (riga precedente) è usata come novel class nascosta in Exp 9: esclusa dal training, riservata solo al test.*
 
 Download: `snapshot_download("marcellorusso/orchid-osr-dataset", repo_type="dataset")`
 
