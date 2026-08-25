@@ -34,8 +34,12 @@ if not TOKEN:
     sys.exit(1)
 
 ALL_SPECIES = [
-    "O. exaltata", "O. garganica", "O. incubacea", "O. majellensis",
-    "O. sphegodes", "O. sphegodes_Palena",
+    "O. exaltata",
+    "O. garganica",
+    "O. incubacea",
+    "O. majellensis",
+    "O. sphegodes",
+    "O. sphegodes_Palena",
 ]
 
 
@@ -115,8 +119,12 @@ def main() -> int:
     print(f"  ✓ eliminati {len(ops)} file orfani")
 
     # 2) Carica manifest e readme aggiornati
+    path_map = {
+        "split_manifest.json": DATASET_DIR / "split_manifest.json",
+        "hf_dataset_readme.md": (PROJECT_DIR / "backend" / "scripts" / "hf_tools" / "hf_dataset_readme.md"),
+    }
     for name in ["split_manifest.json", "hf_dataset_readme.md"]:
-        src = DATASET_DIR / name if name == "split_manifest.json" else PROJECT_DIR / "backend" / "scripts" / "hf_tools" / name
+        src = path_map[name]
         if not src.exists():
             print(f"  WARN: {src} non trovato, saltato")
             continue
