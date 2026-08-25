@@ -34,13 +34,13 @@ Six taxa from the *Ophrys sphegodes* complex:
 
 | Taxon | Train | Test | Source |
 |-------|------:|-----:|--------|
-| *O. exaltata* | 501 | 50 | private + internet |
-| *O. garganica* | 570 | 50 | private + internet |
-| *O. incubacea* | 366 | 50 | private + internet |
+| *O. exaltata* | 490 | 50 | private + internet |
+| *O. garganica* | 563 | 50 | private + internet |
+| *O. incubacea* | 352 | 50 | private + internet |
 | *O. majellensis* | 152 | 50 | private only |
-| *O. sphegodes* | 433 | 50 | private + internet |
+| *O. sphegodes* | 425 | 50 | private + internet |
 | *O. sphegodes* (Palena) | 210 | 50 | private only |
-| **Total** | **2232** | **300** | |
+| **Total** | **2192** | **300** | |
 
 These species are visually similar — even expert botanists struggle to distinguish them — making this a challenging ultra-fine-grained classification benchmark.
 

@@ -27,7 +27,7 @@
 
 ## Abstract
 
-Six morphologically similar *Ophrys* species, one held-out novel class (*O. garganica*), 2,232 training + 300 test images. We benchmark 6 architectures (ResNet‑18/50, ConvNeXt‑T/S, DINOv2‑S/B) × 3 learning paradigms (CE, SupCon, SpHOR). **Closed-set champion:** DINOv2‑Base + SupCon (0.936 F1 test). **Open-set champion:** DINOv2‑Base + SpHOR (AUROC 0.875 on the held-out novel class). Open-set recognition remains architecture-dependent and far from solved in this ultra-fine-grained domain.
+Six morphologically similar *Ophrys* species, one held-out novel class (*O. garganica*), 2,192 training + 300 test images. We benchmark 6 architectures (ResNet‑18/50, ConvNeXt‑T/S, DINOv2‑S/B) × 3 learning paradigms (CE, SupCon, SpHOR). **Closed-set champion:** DINOv2‑Base + SupCon (0.936 F1 test). **Open-set champion:** DINOv2‑Base + SpHOR (AUROC 0.875 on the held-out novel class). Open-set recognition remains architecture-dependent and far from solved in this ultra-fine-grained domain.
 
 ---
 

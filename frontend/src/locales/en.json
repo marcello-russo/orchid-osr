@@ -376,7 +376,7 @@
     "intro_p2_after": ".",
     "subs_contrib": "Contributions",
     "contrib_1": "Multi-architecture benchmark across three learning paradigms",
-    "contrib_2": "Curated dataset: 2,192 training images and 300 test images for the 256×512 architectures (2,232 for 224×224), 6 species with MD5 deduplication, and O. garganica used as the hidden novel class for open-set evaluation",
+    "contrib_2": "Curated dataset: 2,192 training images and 300 test images, 6 species with MD5 deduplication, and O. garganica used as the hidden novel class for open-set evaluation",
     "contrib_3": "Latent space analysis via t-SNE projections",
     "contrib_4": "Open-set evaluation with Mahalanobis, KNN, and Energy techniques",
     "sect_dataset": "Dataset",
