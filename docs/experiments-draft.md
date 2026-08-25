@@ -10,7 +10,7 @@
 - **DINOv2 (S/B)**: Tesla V100S, 32GB VRAM, batch=8, accum=1 (eff. 8) — OVH Cloud
 
 ### Dataset
-- 2.232 training, 300 test, 6 specie
+- 2.192 training, 300 test, 6 specie
 - 5-fold stratified CV, seed 57
 - Letterbox resize, normalizzazione ImageNet
 
@@ -77,7 +77,7 @@
 - **ResNet-18**: CE F1~0.88 → SupCon F1~0.41 (collasso)
 - **ConvNeXt-T**: CE F1~0.89 → SupCon F1~0.35-0.40 (stesso collasso)
 - **DINOv2-B**: CE F1~0.93 → SupCon F1~0.94 (leggero miglioramento)
-- Causa: **allineamento del pretraining**. DINOv2 è addestrato con self-supervision contrastiva su 142M immagini → le sue features sono già organizzate per similarità visiva. SupCon si limita a raffinare i confini tra specie. ResNet18/ConvNeXt arrivano da supervised learning su ImageNet (classi generiche) — devono reimparare lo spazio da zero, ma con solo 2232 immagini il segnale contrastivo è troppo debole.
+- Causa: **allineamento del pretraining**. DINOv2 è addestrato con self-supervision contrastiva su 142M immagini → le sue features sono già organizzate per similarità visiva. SupCon si limita a raffinare i confini tra specie. ResNet18/ConvNeXt arrivano da supervised learning su ImageNet (classi generiche) — devono reimparare lo spazio da zero, ma con solo 2.192 immagini il segnale contrastivo è troppo debole.
 - Implicazione: **non è questione di dimensione del modello, ma di allineamento pretraining/task**. DINOv2 parte già "allineato" perché la sua rappresentazione è intrinsecamente contrastiva.
 
 ### Finding 2: DINOv2-Base beneficia del LR fix
