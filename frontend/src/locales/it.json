@@ -376,7 +376,7 @@
     "intro_p2_after": ".",
     "subs_contrib": "Contributi",
     "contrib_1": "Benchmark multi-architettura su tre paradigmi di apprendimento",
-    "contrib_2": "Dataset curato: 2.192 immagini di training e 300 di test per le architetture a 256×512 (2.232 per quelle a 224×224), 6 specie con deduplicazione MD5, e O. garganica usata come novel class nascosta per la valutazione open-set",
+    "contrib_2": "Dataset curato: 2.192 immagini di training e 300 di test, 6 specie con deduplicazione MD5, e O. garganica usata come novel class nascosta per la valutazione open-set",
     "contrib_3": "Analisi dello spazio latente tramite proiezioni t-SNE",
     "contrib_4": "Valutazione open-set con tecniche Mahalanobis, KNN ed Energy",
     "sect_dataset": "Dataset",

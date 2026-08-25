@@ -27,7 +27,7 @@
 
 ## Abstract
 
-Sei specie di *Ophrys* morfologicamente simili, una classe novel nascosta (*O. garganica*), 2.232 immagini di training + 300 di test. Confrontiamo 6 architetture (ResNet‑18/50, ConvNeXt‑T/S, DINOv2‑S/B) × 3 paradigmi di apprendimento (CE, SupCon, SpHOR). **Campione closed-set:** DINOv2‑Base + SupCon (0.936 F1 test). **Campione open-set:** DINOv2‑Base + SpHOR (AUROC 0.875 sulla novel class nascosta). L'open-set recognition rimane dipendente dall'architettura e lontano dall'essere risolto in questo dominio ultra-fine-grained.
+Sei specie di *Ophrys* morfologicamente simili, una classe novel nascosta (*O. garganica*), 2.192 immagini di training + 300 di test. Confrontiamo 6 architetture (ResNet‑18/50, ConvNeXt‑T/S, DINOv2‑S/B) × 3 paradigmi di apprendimento (CE, SupCon, SpHOR). **Campione closed-set:** DINOv2‑Base + SupCon (0.936 F1 test). **Campione open-set:** DINOv2‑Base + SpHOR (AUROC 0.875 sulla novel class nascosta). L'open-set recognition rimane dipendente dall'architettura e lontano dall'essere risolto in questo dominio ultra-fine-grained.
 
 ---
 
