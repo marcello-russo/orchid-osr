@@ -102,7 +102,7 @@ def kfold_experiment(
             "temperature": temperature if loss_type == "supcon" else None,
             "ce_epochs": ce_epochs if loss_type == "supcon" else None,
             "use_prototypes": use_prototypes if loss_type == "supcon" else None,
-            "full_finetune": full_finetune if loss_type == "supcon" else None,
+            "full_finetune": full_finetune,
             "ncd_mode": ncd_mode if loss_type == "supcon" else None,
             "normalize_embeddings": True if loss_type == "supcon" else False,
             "timestamp": datetime.now().isoformat(),
