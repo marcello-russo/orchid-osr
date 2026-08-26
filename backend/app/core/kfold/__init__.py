@@ -267,6 +267,7 @@ def kfold_experiment(
                         gradient_accumulation_steps=gradient_accumulation_steps,
                         resume=True,
                         optimizer_type=optimizer_type,
+                        full_finetune=full_finetune,
                     )
 
                 fold_metrics["fold"] = fold_idx

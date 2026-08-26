@@ -99,6 +99,8 @@ def run_experiment(
     logger = logging.getLogger(__name__)
     config = EXPERIMENTS[exp_id]
     output_dir = os.path.join(PROJECT_ROOT, "experiments", f"{config['name']}_{model_variant}")
+    if tag:
+        output_dir += f"_{tag}"
     os.makedirs(output_dir, exist_ok=True)
 
     # Per-experiment log file
@@ -294,6 +296,16 @@ def run_experiment(
         )
     else:
         from app.core.kfold import kfold_experiment
+        from app.core.models import get_registry_entry
+
+        entry = get_registry_entry(model_variant)
+        w, h = entry.input_size
+        cropped_train = str(PROJECT_ROOT / "dataset" / f"cropped_{w}x{h}" / "train")
+        cropped_test = str(PROJECT_ROOT / "dataset" / f"cropped_{w}x{h}" / "test")
+        if os.path.exists(cropped_train) and os.path.exists(cropped_test):
+            train_path = cropped_train
+            test_path = cropped_test
+            logger.info(f"Using pre-cropped dataset: {cropped_train}")
 
         kfold_experiment(
             raw_dataset_dir=train_path,
@@ -313,6 +325,7 @@ def run_experiment(
             patience=patience,
             gradient_accumulation_steps=gradient_accumulation_steps,
             loss_type="ce",
-            optimizer_type="adam",
+            optimizer_type=None,
             exclude_classes=config.get("exclude_classes"),
+            full_finetune=full_finetune,
         )
