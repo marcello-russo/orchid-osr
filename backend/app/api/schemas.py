@@ -58,6 +58,7 @@ class ExperimentSummary(BaseModel):
     num_folds: Optional[int] = None
     folds_completed: Optional[int] = None
     test_accuracy: Optional[float] = None
+    test_f1: Optional[float] = None
     mean_f1: Optional[float] = None
     std_f1: Optional[float] = None
     timestamp: Optional[str] = None
