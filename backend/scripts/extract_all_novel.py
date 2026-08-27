@@ -29,12 +29,12 @@ TEST_DIR = "dataset/cropped_256x512/test"
 BATCH_SIZE = 8
 
 EXPERIMENTS = []
-for exp_num, exp_group in [(7, "exp7_supcon"), (8, "exp8_sphor"), (10, "exp10_mgh_ncd")]:
+for exp_num, exp_group in [(7, "exp2_supcon"), (8, "exp3_sphor"), (10, "exp10_mgh_ncd")]:
     for model in ["convnext_small", "convnext_tiny", "dinov2_base", "dinov2_small", "resnet18", "resnet50"]:
         if exp_num == 7:
-            exp_name = f"exp7_supcon_{model}"
+            exp_name = f"exp2_supcon_{model}"
         elif exp_num == 8:
-            exp_name = f"exp8_sphor_{model}"
+            exp_name = f"exp3_sphor_{model}"
         else:
             exp_name = f"exp10_mgh_ncd_{model}"
         EXPERIMENTS.append((exp_name, model, exp_group))

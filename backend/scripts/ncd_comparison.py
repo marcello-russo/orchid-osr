@@ -13,7 +13,7 @@ EXP_BASE = os.path.abspath(EXP_BASE)
 OUTPUT = os.path.join(EXP_BASE, "ncd_comparison.json")
 
 EXPERIMENTS = [
-    ("exp8_sphor", "Exp 8 (SpHOR)"),
+    ("exp3_sphor", "Exp 3 (SpHOR)"),
     ("exp10_mgh_ncd", "Exp 10 (MGH-NCD)"),
 ]
 

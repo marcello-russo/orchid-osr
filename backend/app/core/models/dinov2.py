@@ -33,6 +33,7 @@ class DINOv2Config(ModelConfig):
     lora_dropout: float = 0.1
     freeze_backbone: bool = True
     multi_grain: bool = False
+    full_finetune: bool = False
 
     def create_model(self) -> "DINOv2Classifier":
         return DINOv2Classifier(self)
@@ -51,15 +52,21 @@ class DINOv2Classifier(ClassifierModel):
         self._head = nn.Linear(self._embedding_dim, config.num_classes)
 
     def _create_backbone(self, config: DINOv2Config):
-        from peft import LoraConfig, get_peft_model
         from transformers import Dinov2Model
 
         model_id = _DINOV2_MODEL_IDS[config.variant]
         backbone = Dinov2Model.from_pretrained(model_id)
 
+        if config.full_finetune:
+            # Full fine-tuning: no LoRA, backbone unfrozen
+            logger.info("  DINOv2 full fine-tuning: backbone unfrozen, no LoRA")
+            return backbone
+
         if config.freeze_backbone:
             for param in backbone.parameters():
                 param.requires_grad = False
+
+        from peft import LoraConfig, get_peft_model
 
         lora_config = LoraConfig(
             r=config.lora_r,
@@ -185,6 +192,12 @@ class DINOv2Classifier(ClassifierModel):
 
     def save_weights(self, path: str) -> None:
         import os
+
+        if self._config.full_finetune:
+            # Full fine-tuning: save complete model state dict
+            torch.save(self.state_dict(), path)
+            logger.info(f"  Full FT checkpoint saved: {path}")
+            return
 
         adapter_dir = os.path.splitext(path)[0] + "_adapter"
         self._backbone.save_pretrained(adapter_dir)

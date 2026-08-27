@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Rigenera gli embedding del viewer per Exp 9 con il setup OSR corretto.
+"""Rigenera gli embedding del viewer per Exp 4 con il setup OSR corretto.
 
-Estrae embeddings dal test_ncd_exp9 (5 classi note + O. garganica novel,
+Estrae embeddings dal test_ncd_exp4 (5 classi note + O. garganica novel,
 300 punti) con il modello del best fold, e genera il metadata con la
-novel class marcata separatamente. Sovrascrive experiments/exp9_ncd_*/embeddings/.
+novel class marcata separatamente. Sovrascrive experiments/exp4_sphor_ncd_*/embeddings/.
 """
 
 import json
@@ -30,7 +30,7 @@ MODELS = ["resnet18", "resnet50", "convnext_tiny", "convnext_small", "dinov2_sma
 def extract_exp9(model_variant: str, device: torch.device):
     from app.core.ncd.extract import load_trained_model
 
-    exp_dir = BACKEND_DIR / "experiments" / f"exp9_ncd_{model_variant}"
+    exp_dir = BACKEND_DIR / "experiments" / f"exp4_sphor_ncd_{model_variant}"
     results = json.load(open(exp_dir / "results.json"))
     best_fold = results.get("best_fold")
     model_path = exp_dir / f"best_fold_{best_fold}.pt"
@@ -40,8 +40,8 @@ def extract_exp9(model_variant: str, device: torch.device):
     model.eval()
     transform = create_transform(model_variant)
 
-    # Estrai dal test_ncd_exp9 (5 note + novel garganica)
-    test_dir = BACKEND_DIR / "dataset" / "cropped_224x224" / "test_ncd_exp9"
+    # Estrai dal test_ncd_exp4 (5 note + novel garganica)
+    test_dir = BACKEND_DIR / "dataset" / "cropped_224x224" / "test_ncd_exp4"
     dataset = ImageFolderWithName(str(test_dir), transform=transform)
     loader = DataLoader(dataset, batch_size=8, shuffle=False)
 
@@ -96,7 +96,7 @@ def extract_exp9(model_variant: str, device: torch.device):
                 "species": sp,
                 "label": int(mapped[i]),
                 "filename": fn,
-                "image_url": f"/api/dataset/images/test_ncd_exp9/{sp}/{fn}",
+                "image_url": f"/api/dataset/images/test_ncd_exp4/{sp}/{fn}",
                 "split": "novel" if is_novel else "known",
             }
         )

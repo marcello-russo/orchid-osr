@@ -10,7 +10,7 @@ MODELS="resnet18 resnet50 convnext_tiny convnext_small dinov2_small dinov2_base"
 
 for exp in $EXPS; do
     for m in $MODELS; do
-        if [ "$exp" = "8" ]; then exp_dir="exp8_sphor_${m}"; fi
+        if [ "$exp" = "8" ]; then exp_dir="exp3_sphor_${m}"; fi
         if [ "$exp" = "10" ]; then exp_dir="exp10_mgh_ncd_${m}"; fi
         log="experiments/${exp_dir}/ncd_batch.log"
         echo "🚀 START exp${exp} $m"

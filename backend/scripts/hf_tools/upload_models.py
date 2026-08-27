@@ -1,6 +1,6 @@
 """Upload only essential model files to HuggingFace (best fold + metadata).
 
-Usage: python upload_models.py [--cleanup] [--exp all|exp6_ce|exp7_supcon]
+Usage: python upload_models.py [--cleanup] [--exp all|exp1_ce|exp2_supcon]
 """
 
 import json
@@ -35,10 +35,10 @@ VARIANT_DISPLAY = {
 }
 
 EXPERIMENTS = [
-    {"prefix": "exp6_clean_split", "exp": "exp6_ce", "label": "Exp 6 (CE)"},
-    {"prefix": "exp7_supcon", "exp": "exp7_supcon", "label": "Exp 7 (SupCon)"},
-    {"prefix": "exp8_sphor", "exp": "exp8_sphor", "label": "Exp 8 (SpHOR)"},
-    {"prefix": "exp9_ncd", "exp": "exp9_ncd", "label": "Exp 9 (NCD)"},
+    {"prefix": "exp1_ce", "exp": "exp6_ce", "label": "Exp 1 (CE)"},
+    {"prefix": "exp2_supcon", "exp": "exp7_supcon", "label": "Exp 2 (SupCon)"},
+    {"prefix": "exp3_sphor", "exp": "exp8_sphor", "label": "Exp 3 (SpHOR)"},
+    {"prefix": "exp4_sphor_ncd", "exp": "exp9_ncd", "label": "Exp 4 (SpHOR-NCD)"},
     {"prefix": "exp10_mgh_ncd", "exp": "exp10_mgh_ncd", "label": "Exp 10 (MGH-NCD)"},
 ]
 
@@ -186,10 +186,10 @@ def _build_results_yaml(exp6_rows, exp7_rows, exp8_rows, exp9_rows=None, exp10_r
     lines = ["model-index:"]
     all_rows = []
     for exp_label, rows in [
-        ("Exp 6 (CE)", exp6_rows),
-        ("Exp 7 (SupCon)", exp7_rows),
-        ("Exp 8 (SpHOR)", exp8_rows),
-        ("Exp 9 (NCD)", exp9_rows or []),
+        ("Exp 1 (CE)", exp6_rows),
+        ("Exp 2 (SupCon)", exp7_rows),
+        ("Exp 3 (SpHOR)", exp8_rows),
+        ("Exp 4 (SpHOR-NCD)", exp9_rows or []),
         ("Exp 10 (Ultimate)", exp10_rows or []),
     ]:
         for row in rows:
@@ -223,27 +223,26 @@ def update_readme(api):
     """Update HF model repo README with current results."""
     header = "| Model | Val F1 (macro) | Test F1 | Test Acc | Best Fold | Folds |\n|---|---|---|---|---|---|"
 
-    exp6_rows = _build_results_table("exp6_ce", "exp6_clean_split")
-    exp7_rows = _build_results_table("exp7_supcon", "exp7_supcon")
-    exp8_rows = _build_results_table("exp8_sphor", "exp8_sphor")
-    exp9_rows = _build_results_table("exp9_ncd", "exp9_ncd")
+    exp6_rows = _build_results_table("exp1_ce", "exp1_ce")
+    exp7_rows = _build_results_table("exp2_supcon", "exp2_supcon")
+    exp8_rows = _build_results_table("exp3_sphor", "exp3_sphor")
+    exp9_rows = _build_results_table("exp4_sphor_ncd", "exp4_sphor_ncd")
     exp10_rows = _build_results_table("exp10_mgh_ncd", "exp10_mgh_ncd")
 
     sections = []
 
     if exp6_rows:
-        sections.append(f"""## Exp 6: Cross-Entropy
+        sections.append(f"""## Exp 1: Cross-Entropy
 
-5-fold stratified cross-validation on deduplicated clean split (2,232 train, 300 test).
+5-fold stratified cross-validation on deduplicated clean split (2,192 train, 300 test).
 
-**Training recipe:** epochs=100, patience=15, effective batch=32
-(gradient accumulation ×4), per-architecture LR from registry.
+**Training recipe:** epochs=150, patience=15, batch=8, per-architecture LR from registry.
 
 {header}
 {chr(10).join(exp6_rows)}""")
 
     if exp7_rows:
-        sections.append(f"""## Exp 7: Supervised Contrastive Learning
+        sections.append(f"""## Exp 2: Supervised Contrastive Learning
 
 Two-phase training: SupCon pretraining (InfoNCE, τ=0.07) → CE fine-tuning with frozen backbone.
 
@@ -253,21 +252,21 @@ Two-phase training: SupCon pretraining (InfoNCE, τ=0.07) → CE fine-tuning wit
 {chr(10).join(exp7_rows)}""")
 
     if exp8_rows:
-        sections.append(f"""## Exp 8: Spherical Orthogonal Prototypes (SpHOR)
+        sections.append(f"""## Exp 3: Spherical Orthogonal Prototypes (SpHOR)
 
 Two-phase training: SupCon + Spherical Orthogonal Prototypes → CE fine-tuning with frozen backbone.
 
-**Recipe:** same as Exp 7, with spherical prototype repulsion (repulse=0.01).
+**Recipe:** same as Exp 2, with spherical prototype repulsion (repulse=0.01).
 
 {header}
 {chr(10).join(exp8_rows)}""")
 
     if exp9_rows:
-        sections.append(f"""## Exp 9: Novel Class Discovery (NCD)
+        sections.append(f"""## Exp 4: Novel Class Detection (NCD)
 
-NCD scenario: O. majellensis excluded from training (hidden novel class).
+NCD scenario: O. garganica excluded from training (hidden novel class).
 
-**Recipe:** same as Exp 8.
+**Recipe:** same as Exp 3.
 
 {header}
 {chr(10).join(exp9_rows)}""")
@@ -316,20 +315,20 @@ using ResNet-18/50, ConvNeXt-Tiny/Small, and DINOv2-Small/Base.
 ## Structure
 
 ```
-exp6_ce/                           — Exp 6 (Cross-Entropy)
-  exp6_clean_split_resnet18/
+exp1_ce/                           — Exp 1 (Cross-Entropy)
+  exp1_ce_resnet18/
     results.json                   — aggregated metrics + test results
     config.json                    — training configuration
     best_fold_N.pt                 — weights of the best fold
     best_fold_N_adapter/           — LoRA adapter (DINOv2 only)
-exp7_supcon/                       — Exp 7 (SupCon + CE fine-tune)
-  exp7_supcon_resnet18/
+exp2_supcon/                       — Exp 2 (SupCon)
+  exp2_supcon_resnet18/
     ...
-exp8_sphor/                        — Exp 8 (SpHOR)
-  exp8_sphor_resnet18/
+exp3_sphor/                        — Exp 3 (SpHOR)
+  exp3_sphor_resnet18/
     ...
-exp9_ncd/                          — Exp 9 (NCD)
-  exp9_ncd_resnet18/
+exp4_sphor_ncd/                          — Exp 4 (SpHOR-NCD)
+  exp4_sphor_ncd_resnet18/
     ...
 exp10_mgh_ncd/                     — Exp 10 (MGH-NCD)
   exp10_mgh_ncd_resnet18/

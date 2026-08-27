@@ -28,7 +28,7 @@ def _validate_id(value: str) -> str:
 
 def _parse_exp_num(name: str) -> int:
     """Extract experiment number from directory name for sorting.
-    'exp10_mgh_ncd_resnet18' → 10, 'exp6_clean_split' → 6."""
+    'exp10_mgh_ncd_resnet18' → 10, 'exp1_ce' → 6."""
     m = re.search(r"exp(\d+)", name)
     return int(m.group(1)) if m else 999
 
@@ -213,26 +213,26 @@ async def get_experiment(experiment_id: str):
             },
             8: {
                 "phases": ["Fase 1: SupCon + SpHOR", "Fase 2: CE fine-tuning"],
-                "recipe": "Stessa struttura a due fasi di Exp 7, con regolarizzazione aggiuntiva in Fase 1.\n\n"
+                "recipe": "Stessa struttura a due fasi di Exp 2, con regolarizzazione aggiuntiva in Fase 1.\n\n"
                 "Fase 1 — SupCon + SpHOR (Prototipi Ortogonali Sferici):\n"
                 "  • SupCon standard + loss repulsiva SpHOR.\n"
                 "  • Loss SpHOR: L_rep = (1/K²) Σ_{i≠j} cos(θ_ij)² — forza i prototipi "
                 "ad essere ortogonali, massimizzando la copertura angolare.\n"
                 "  • Previene il collasso dei prototipi e migliora la separazione open-set.\n"
-                "  • Stessi ottimizzatori e scheduling di Exp 7.\n\n"
+                "  • Stessi ottimizzatori e scheduling di Exp 2.\n\n"
                 "Fase 2 — CE Fine-Tuning:\n"
-                "  • Identica a Exp 7: backbone congelato, testa lineare.\n\n"
+                "  • Identica a Exp 2: backbone congelato, testa lineare.\n\n"
                 "Valutazione: closed-set su 6 classi note, nessuna novel class.",
             },
             9: {
                 "phases": ["Fase 1: SupCon + SpHOR", "Fase 2: CE fine-tuning"],
-                "recipe": "Strutturalmente identico a Exp 8 (stessa loss, stessi iperparametri).\n"
+                "recipe": "Strutturalmente identico a Exp 3 (stessa loss, stessi iperparametri).\n"
                 "L'unica differenza: O. garganica è esclusa dal training (5 classi note) "
                 "e riservata al test come novel class nascosta per la valutazione OSR/NCD.",
             },
             10: {
                 "phases": ["Fase 1: MGH-SupCon (Multi-Granularità Hard-negative)", "Fase 2: CE fine-tuning"],
-                "recipe": "Training a due fasi potenziato con due innovazioni chiave rispetto a Exp 8.\n\n"
+                "recipe": "Training a due fasi potenziato con due innovazioni chiave rispetto a Exp 3.\n\n"
                 "Fase 1 — MGH-SupCon:\n"
                 "  • Hard Negative Mining: pesi per coppia di classi:\n"
                 "    — (O. majellensis, O. sphegodes): 5× (coppia più confusa).\n"
@@ -245,9 +245,9 @@ async def get_experiment(experiment_id: str):
                 "del penultimo e ultimo stadio dopo global average pooling.\n"
                 "  • Dimensione embedding combinato: 1152 (DINOv2) o 3072 (ResNet50).\n"
                 "  • Proiettato a 256-dim via MLP prima della SupCon loss.\n"
-                "  • Stessi ottimizzatori e scheduling di Exp 8.\n\n"
+                "  • Stessi ottimizzatori e scheduling di Exp 3.\n\n"
                 "Fase 2 — CE Fine-Tuning:\n"
-                "  • Backbone congelato, testa lineare (come Exp 7-9).\n\n"
+                "  • Backbone congelato, testa lineare (come Exp 2-9).\n\n"
                 "Valutazione: O. sphegodes_Napoli novel class (solo in test). "
                 "Obiettivo: miglior rilevamento novel via embedding più separati.",
             },

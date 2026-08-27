@@ -20,22 +20,22 @@ CLASS_NAMES = settings.class_names  # 6 training classes
 NOVEL_CLASS_NAME = settings.novel_class_name
 # Mapping from experiment directory prefix → human label + number
 _EXP_META: dict[str, tuple[str, int]] = {
-    "exp6_clean_split": ("Exp 6 (CE)", 6),
-    "exp7_supcon": ("Exp 7 (SupCon)", 7),
-    "exp8_sphor": ("Exp 8 (SpHOR)", 8),
-    "exp9_ncd": ("Exp 9 (NCD)", 9),
+    "exp1_ce": ("Exp 1 (CE)", 1),
+    "exp2_supcon": ("Exp 2 (SupCon)", 2),
+    "exp3_sphor": ("Exp 3 (SpHOR)", 3),
+    "exp4_sphor_ncd": ("Exp 4 (SpHOR-NCD)", 4),
 }
 
 _HF_PREFIX_MAP: dict[str, str] = {
-    "exp6_clean_split": "exp6_ce",
-    "exp7_supcon": "exp7_supcon",
-    "exp8_sphor": "exp8_sphor",
-    "exp9_ncd": "exp9_ncd",
+    "exp1_ce": "exp6_ce",
+    "exp2_supcon": "exp7_supcon",
+    "exp3_sphor": "exp8_sphor",
+    "exp4_sphor_ncd": "exp9_ncd",
 }
 
 
 def _get_exp_num(model_id: str) -> int | None:
-    """Extract experiment number from a model_id (e.g. 'exp8_sphor_resnet18' → 8)."""
+    """Extract experiment number from a model_id (e.g. exp3_sphor_resnet18 -> 3)."""
     for prefix, (_, num) in _EXP_META.items():
         if model_id.startswith(prefix):
             return num
@@ -180,7 +180,7 @@ def _discover_models() -> list[ModelOption]:
     seen: set[str] = set()
     deduped: list[ModelOption] = []
     for m in options:
-        if "exp9_ncd" in m.id:
+        if "exp4_sphor_ncd" in m.id:
             continue
         if m.id not in seen:
             seen.add(m.id)
@@ -276,7 +276,7 @@ def _find_weights(model_type: str) -> Path | None:
             continue
         parent = results_json.parent
         dir_name = parent.name
-        if "exp9_" in dir_name:
+        if "_ncd" in dir_name or "exp9_" in dir_name:
             continue
         best_fold = results.get("best_fold")
         if best_fold is None:
