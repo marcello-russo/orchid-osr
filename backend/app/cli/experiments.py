@@ -581,9 +581,7 @@ Examples:
     )
 
     # Experiment selection
-    parser.add_argument(
-        "--exp", type=int, choices=[1, 2, 3, 4, 5, 10], help="Run specific experiment (1-10)"
-    )
+    parser.add_argument("--exp", type=int, choices=[1, 2, 3, 4, 5, 10], help="Run specific experiment (1-10)")
     parser.add_argument(
         "--tag",
         type=str,
