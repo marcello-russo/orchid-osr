@@ -7,7 +7,7 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 
 ALL_CLASSES = settings.class_names
 INTERNET_CLASSES = settings.internet_classes
-# Le sei classi note. La novel class di Exp 9 (O. garganica) viene esclusa
+# Le sei classi note. La novel class di Exp 4 (O. garganica) viene esclusa
 # dal training tramite exclude_classes, non da questa lista.
 TRAIN_CLASSES = list(ALL_CLASSES)
 
@@ -52,8 +52,8 @@ DEFAULT_CONFIG = {
 
 
 EXPERIMENTS = {
-    6: {
-        "name": "exp6_clean_split",
+    1: {
+        "name": "exp1_ce",
         "train_dataset": "clean",
         "test_dataset": "clean",
         "num_classes": 6,
@@ -65,8 +65,8 @@ EXPERIMENTS = {
         "150 epoche, Adam, LR 0.001, batch 8. Baseline per confronto.",
         "description": "Clean split: no data leakage, balanced test (50/class), all 6 classes",
     },
-    7: {
-        "name": "exp7_supcon",
+    2: {
+        "name": "exp2_supcon",
         "train_dataset": "clean",
         "test_dataset": "clean",
         "num_classes": 6,
@@ -79,10 +79,10 @@ EXPERIMENTS = {
         "Backbone + projection head addestrati. "
         "(2) CE fine-tuning: backbone congelato, sola testa lineare addestrata "
         "con CrossEntropyLoss. AdamW, LR 0.001 per SupCon, 0.01 per CE.",
-        "description": "Supervised Contrastive pretraining + CE fine-tuning (Exp 7)",
+        "description": "Supervised Contrastive pretraining + CE fine-tuning (Exp 2)",
     },
-    8: {
-        "name": "exp8_sphor",
+    3: {
+        "name": "exp3_sphor",
         "train_dataset": "clean",
         "test_dataset": "clean",
         "num_classes": 6,
@@ -90,16 +90,16 @@ EXPERIMENTS = {
         "loss_type": "supcon",
         "ncd_mode": False,
         "phases": ["SupCon + SpHOR", "CE fine-tune"],
-        "recipe": "Due fasi: (1) SupCon + SpHOR: come Exp 7 ma con prototipi ortogonali sferici "
+        "recipe": "Due fasi: (1) SupCon + SpHOR: come Exp 2 ma con prototipi ortogonali sferici "
         "(Spherical Orthogonal Prototypes). Loss addizionale repulsiva "
         "L_rep = (1/K(K-1)) Σ_{i≠j} cos(θ_ij)² che forza i prototipi "
         "ad essere ortogonali, massimizzando la copertura angolare sulla sfera. "
         "(2) CE fine-tuning: backbone congelato, testa lineare. "
         "Closed-set: tutte le 6 classi note, nessuna novel class.",
-        "description": "SupCon + Spherical Orthogonal Prototypes (SpHOR-style, Exp 8, closed-set)",
+        "description": "SupCon + Spherical Orthogonal Prototypes (SpHOR-style, Exp 3, closed-set)",
     },
-    9: {
-        "name": "exp9_ncd",
+    4: {
+        "name": "exp4_sphor_ncd",
         "train_dataset": "clean",
         "test_dataset": "clean",
         "num_classes": 5,
@@ -108,7 +108,7 @@ EXPERIMENTS = {
         "loss_type": "supcon",
         "ncd_mode": False,
         "phases": ["SupCon + SpHOR", "CE fine-tune"],
-        "recipe": "Identico a Exp 8 (150 epoche, patience 15 in entrambe le "
+        "recipe": "Identico a Exp 3 (150 epoche, patience 15 in entrambe le "
         "fasi). Novità: O. garganica è esclusa dal training (5 classi note) "
         "e usata solo in test come novel class per la valutazione OSR.",
         "description": "SpHOR with O. garganica as hidden novel class (NCD)",

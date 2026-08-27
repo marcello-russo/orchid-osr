@@ -32,12 +32,12 @@ run() {
 }
 
 # ConvNeXt exp 6 già fatto (F1 0.892 Tiny, 0.883 Small)
-# ResNet exp 7-8-10 in cloud
+# ResNet exp 7-3-10 in cloud
 
-run "exp7_supcon_convnext_tiny"  7 convnext_tiny   --epochs 100 --batch-size 8 --accumulation 4
-run "exp7_supcon_convnext_small" 7 convnext_small  --epochs 100 --batch-size 8 --accumulation 4
-run "exp8_sphor_convnext_tiny"   8 convnext_tiny   --epochs 100 --batch-size 8 --accumulation 4 --sphor
-run "exp8_sphor_convnext_small"  8 convnext_small  --epochs 100 --batch-size 8 --accumulation 4 --sphor
+run "exp2_supcon_convnext_tiny"  7 convnext_tiny   --epochs 100 --batch-size 8 --accumulation 4
+run "exp2_supcon_convnext_small" 7 convnext_small  --epochs 100 --batch-size 8 --accumulation 4
+run "exp3_sphor_convnext_tiny"   8 convnext_tiny   --epochs 100 --batch-size 8 --accumulation 4 --sphor
+run "exp3_sphor_convnext_small"  8 convnext_small  --epochs 100 --batch-size 8 --accumulation 4 --sphor
 run "exp10_mgh_ncd_convnext_tiny"  10 convnext_tiny   --epochs 100 --batch-size 8 --accumulation 4 --full-finetune --hard-weight 5.0
 run "exp10_mgh_ncd_convnext_small" 10 convnext_small  --epochs 100 --batch-size 8 --accumulation 4 --full-finetune --hard-weight 5.0
 

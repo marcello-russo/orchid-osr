@@ -263,6 +263,7 @@ def train_fold(
     resume=False,
     optimizer_type=None,
     weight_decay=0.0,
+    full_finetune=False,
 ):
     """
     Train di un singolo fold. Riutilizza train() da app.core.training.
@@ -279,7 +280,7 @@ def train_fold(
     ckpt_dir = os.path.dirname(checkpoint_path)
     os.makedirs(ckpt_dir, exist_ok=True)
 
-    model = create_model(model_variant, num_classes=num_classes, pretrained=True)
+    model = create_model(model_variant, num_classes=num_classes, pretrained=True, full_finetune=full_finetune)
 
     # Use architecture-specific optimizer settings from registry
     entry = get_registry_entry(model_variant)
@@ -483,9 +484,9 @@ def train_fold_supcon(
 
     if full_finetune:
         model = create_model(
-            model_variant, num_classes=num_classes, pretrained=True, lora_r=32, normalize_embeddings=True
+            model_variant, num_classes=num_classes, pretrained=True, full_finetune=True, normalize_embeddings=True
         )
-        logger.info("  MGH-NCD mode: LoRA rank increased to 32 for richer embeddings")
+        logger.info("  Full fine-tuning: backbone unfrozen, no LoRA")
     else:
         model = create_model(model_variant, num_classes=num_classes, pretrained=True, normalize_embeddings=True)
     entry = get_registry_entry(model_variant)

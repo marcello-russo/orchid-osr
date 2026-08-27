@@ -18,7 +18,7 @@ Trained models for **Ophrys** orchid classification (6 species), part of the **N
 
 All models trained on the [orchid-osr-dataset](https://huggingface.co/datasets/marcellorusso/orchid-osr-dataset) (exp6 clean split, zero data leakage).
 
-## Exp 6 — Cross-Entropy Loss
+## Exp 1 — Cross-Entropy Loss
 
 Fair comparison of 6 architectures with standard cross-entropy loss. All models share identical training configuration for comparability.
 
@@ -66,7 +66,7 @@ Fair comparison of 6 architectures with standard cross-entropy loss. All models 
 
 Each model directory contains:
 ```
-exp6_ce/exp6_clean_split_resnet18/
+exp1_ce/exp1_ce_resnet18/
   fold_0.json          # Per-fold training history (loss, F1, accuracy per epoch)
   fold_1.json
   fold_2.json
@@ -79,7 +79,7 @@ exp6_ce/exp6_clean_split_resnet18/
   config.json           # Training configuration
 ```
 
-## Exp 7 — Supervised Contrastive Learning
+## Exp 2 — Supervised Contrastive Learning
 
 Same 6 architectures with SupCon loss (Khosla et al., 2020). Trains same-class proximity + different-class separation in embedding space.
 
@@ -95,7 +95,7 @@ from huggingface_hub import snapshot_download
 # Download a specific model
 snapshot_download(
     repo_id="marcellorusso/orchid-osr-models",
-    allow_patterns="exp6_ce/exp6_clean_split_resnet18/*",
+    allow_patterns="exp1_ce/exp1_ce_resnet18/*",
     local_dir="models",
 )
 

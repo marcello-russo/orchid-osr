@@ -18,5 +18,5 @@ sudo docker compose up -d
 echo "=== Attesa startup ==="
 sleep 15
 echo "=== URL tunnel ==="
-sudo docker compose logs tunnel 2>/dev/null | grep -oP 'https://[a-z0-9-]+\.trycloudflare\.com' | head -1
+sudo docker compose logs tunnel 2>/dev/null | grep -oP 'https://[a-z0-4-]+\.trycloudflare\.com' | head -1
 echo "=== Fatto ==="

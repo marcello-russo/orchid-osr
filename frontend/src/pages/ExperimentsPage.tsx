@@ -40,7 +40,7 @@ function colAlign(col: Col): "left" | "right" | undefined {
 }
 
 const ALL_FAMILIES = ["ResNet", "ConvNeXt", "DINOv2"] as const;
-const ALL_SERIES = ["Exp 6", "Exp 7", "Exp 8", "Exp 9"] as const;
+const ALL_SERIES = ["Exp 1", "Exp 2", "Exp 3", "Exp 4"] as const;
 
 export function ExperimentsPage() {
   const { t } = useTranslation();

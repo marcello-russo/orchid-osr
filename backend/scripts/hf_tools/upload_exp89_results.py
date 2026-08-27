@@ -34,7 +34,7 @@ uploaded = 0
 skipped = 0
 failed = 0
 
-for exp_prefix in ["exp8_sphor", "exp9_ncd"]:
+for exp_prefix in ["exp3_sphor", "exp4_sphor_ncd"]:
     for model in MODELS:
         exp_name = f"{exp_prefix}_{model}"
         local_dir = EXP_BASE / exp_name

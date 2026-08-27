@@ -14,7 +14,7 @@ MODELS="resnet18 resnet50 convnext_tiny convnext_small dinov2_small dinov2_base"
 run_ncd() {
   local exp=$1 model=$2
   local exp_name
-  if [ "$exp" -eq 8 ]; then exp_name="exp8_sphor"; else exp_name="exp10_mgh_ncd"; fi
+  if [ "$exp" -eq 8 ]; then exp_name="exp3_sphor"; else exp_name="exp10_mgh_ncd"; fi
   local exp_dir="experiments/${exp_name}_${model}"
   local ncd_file="$exp_dir/ncd_results.json"
 

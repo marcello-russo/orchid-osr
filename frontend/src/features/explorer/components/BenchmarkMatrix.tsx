@@ -14,8 +14,8 @@ interface BenchmarkMatrixProps {
   seriesFilter: string | null;
 }
 
-const MATRIX_SERIES = ["Exp 6", "Exp 7", "Exp 8", "Exp 9"] as const;
-const OSR_SERIES = ["Exp 9"] as const;
+const MATRIX_SERIES = ["Exp 1", "Exp 2", "Exp 3", "Exp 4"] as const;
+const OSR_SERIES = ["Exp 4"] as const;
 
 export function BenchmarkMatrix({ experiments, familyFilter, seriesFilter }: BenchmarkMatrixProps) {
   const { t } = useTranslation();

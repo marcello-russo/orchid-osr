@@ -24,8 +24,8 @@ import { ExperimentsPage } from "../ExperimentsPage";
 
 const mockExperiments = [
   {
-    id: "exp6_resnet18",
-    name: "Exp 6 ResNet-18",
+    id: "exp1_ce_resnet18",
+    name: "Exp 1 ResNet-18",
     model_variant: "resnet18",
     type: "kfold" as const,
     status: "completed" as const,
@@ -40,8 +40,8 @@ const mockExperiments = [
     ncd_clustering_nmi: null,
   },
   {
-    id: "exp7_resnet18",
-    name: "Exp 7 ResNet-18",
+    id: "exp2_supcon_resnet18",
+    name: "Exp 2 ResNet-18",
     model_variant: "resnet18",
     type: "kfold" as const,
     status: "completed" as const,

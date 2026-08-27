@@ -30,8 +30,8 @@ PATIENCE = 15
 NOVEL_CLASS = "O. garganica"
 
 MODELS = ["resnet18", "resnet50", "convnext_tiny", "convnext_small", "dinov2_small", "dinov2_base"]
-EXPS_ALL = ["exp6", "exp7", "exp8", "exp9"]
-EXPS_OSR = ["exp9"]
+EXPS_ALL = ["exp1", "exp2", "exp3", "exp4"]
+EXPS_OSR = ["exp4"]
 
 MODEL_LABELS = {
     "resnet18": "ResNet-18",
@@ -42,16 +42,16 @@ MODEL_LABELS = {
     "dinov2_base": "DINOv2-B",
 }
 EXP_LABELS = {
-    "exp6": "Exp 6 (CE)",
-    "exp7": "Exp 7 (SupCon)",
-    "exp8": "Exp 8 (SpHOR)",
-    "exp9": "Exp 9 (Novel)",
+    "exp1": "Exp 1 (CE)",
+    "exp2": "Exp 2 (SupCon)",
+    "exp3": "Exp 3 (SpHOR)",
+    "exp4": "Exp 4 (Novel)",
 }
 EXP_PREFIXES = {
-    "exp6": "exp6_clean_split",
-    "exp7": "exp7_supcon",
-    "exp8": "exp8_sphor",
-    "exp9": "exp9_ncd",
+    "exp1": "exp1_ce",
+    "exp2": "exp2_supcon",
+    "exp3": "exp3_sphor",
+    "exp4": "exp4_sphor_ncd",
 }
 
 # Colorblind-friendly palette (ibm / tableau-inspired)
@@ -253,7 +253,7 @@ def fig_benchmark_heatmap():
 
 
 # ══════════════════════════════════════════════════════════════════════
-#  FIGURE 2: Confusion Matrices (Exp 7, 8 — exp6 has no test CM)
+#  FIGURE 2: Confusion Matrices (Exp 2, 8 — exp6 has no test CM)
 # ══════════════════════════════════════════════════════════════════════
 
 
@@ -281,8 +281,8 @@ def fig_benchmark_bar():
 def fig_confusion_matrices():
     """Confusion matrices for best model in each experiment (exp7/8/10 only)."""
     panels = [
-        ("exp7", "dinov2_small", "Exp 7 (SupCon)\nDINOv2-Small"),
-        ("exp8", "convnext_tiny", "Exp 8 (SpHOR)\nConvNeXt-Tiny"),
+        ("exp2", "dinov2_small", "Exp 2 (SupCon)\nDINOv2-Small"),
+        ("exp3", "convnext_tiny", "Exp 3 (SpHOR)\nConvNeXt-Tiny"),
     ]
     fig, axes = plt.subplots(1, 2, figsize=(11, 4.5))
 
@@ -328,7 +328,7 @@ def fig_confusion_matrices():
             ax.text(
                 0.5,
                 -0.25,
-                "Note: Exp 6 stored training-set CM (no test CM available)",
+                "Note: Exp 1 stored training-set CM (no test CM available)",
                 transform=ax.transAxes,
                 ha="center",
                 fontsize=7,
@@ -349,7 +349,7 @@ def fig_confusion_matrices():
 def fig_tsne_comparison():
     """t-SNE of DINOv2-Small: CE -> SupCon -> SpHOR."""
     model = "dinov2_small"
-    exps = ["exp6", "exp7", "exp8"]
+    exps = ["exp1", "exp2", "exp3"]
     fig, axes = plt.subplots(1, 3, figsize=(18, 5.5))
 
     for j, exp in enumerate(exps):
@@ -366,6 +366,8 @@ def fig_tsne_comparison():
         for cls in unique:
             mask = labels == cls
             name = cnames[int(cls)] if int(cls) < len(cnames) else f"C{cls}"
+            if name == "O. sphegodes_Napoli":
+                continue
             sn = short_species(name)
             c = SPECIES_COLORS.get(name, CB[int(cls) % len(CB)])
             ax.scatter(tsne[mask, 0], tsne[mask, 1], c=c, label=sn, s=12, alpha=0.6, edgecolors="none", rasterized=True)
@@ -391,8 +393,8 @@ def fig_closed_vs_open_scatter():
     fig, ax = plt.subplots(figsize=(9, 6))
 
     for model in MODELS:
-        f1 = get_test_f1(load_results("exp9", model))
-        dr = get_detection_rate("exp9", model)
+        f1 = get_test_f1(load_results("exp4", model))
+        dr = get_detection_rate("exp4", model)
         ax.scatter(
             f1,
             dr,
@@ -410,9 +412,9 @@ def fig_closed_vs_open_scatter():
     ax.axvline(x=0.7, color="gray", linestyle=":", alpha=0.4)
     ax.text(0.72, 0.88, "HIGH F1 +\nHIGH OSR", fontsize=9, fontweight="bold", color="#0072B2", alpha=0.4)
     ax.text(0.72, 0.02, "HIGH F1 +\nLOW OSR", fontsize=9, fontweight="bold", color="#D55E00", alpha=0.4)
-    ax.set_xlabel("Closed-Set Test F1 (Exp 9)")
-    ax.set_ylabel("Open-Set Detection Rate @ 10% FPR (Exp 9)")
-    ax.set_title("Closed-Set vs Open-World Performance — Exp 9 (novel O. garganica)", fontweight="bold")
+    ax.set_xlabel("Closed-Set Test F1 (Exp 4)")
+    ax.set_ylabel("Open-Set Detection Rate @ 10% FPR (Exp 4)")
+    ax.set_title("Closed-Set vs Open-World Performance — Exp 4 (novel O. garganica)", fontweight="bold")
     ax.legend(loc="upper left", framealpha=0.9)
     ax.set_xlim(0.3, 1.0)
     ax.set_ylim(-0.05, 1.05)
@@ -427,7 +429,7 @@ def fig_closed_vs_open_scatter():
 
 def fig_per_species_f1():
     """Grouped bar chart: F1 per species, best model per experiment."""
-    best = {"exp6": "resnet50", "exp7": "dinov2_small", "exp8": "convnext_tiny"}
+    best = {"exp1": "resnet50", "exp2": "dinov2_small", "exp3": "convnext_tiny"}
     order = ["O. exaltata", "O. garganica", "O. incubacea", "O. majellensis", "O. sphegodes", "O. sphegodes_Palena"]
     short = [short_species(s) for s in order]
     fig, ax = plt.subplots(figsize=(10, 5))
@@ -479,7 +481,7 @@ def fig_cv_test_gap():
     }
     fig, ax = plt.subplots(figsize=(8, 5))
 
-    for exp in ["exp6", "exp7"]:
+    for exp in ["exp1", "exp2"]:
         gaps = []
         for model in MODELS:
             res = load_results(exp, model)
@@ -487,7 +489,7 @@ def fig_cv_test_gap():
             test = get_test_f1(res)
             gaps.append(test - cv)
 
-        c = CB[0] if exp == "exp6" else CB[1]
+        c = CB[0] if exp == "exp1" else CB[1]
         ax.scatter(
             [params[m] for m in MODELS],
             gaps,
@@ -526,8 +528,8 @@ def fig_loss_curves_aggregated():
     of the three main paradigms (CE → SupCon → SpHOR → MGH-NCD)."""
     model = "dinov2_small"
     fig, ax = plt.subplots(figsize=(9, 5))
-    exp_colors = {"exp6": "#757575", "exp7": "#E69F00", "exp8": "#0072B2", "exp9": "#009E73", "exp10": "#D55E00"}
-    exp_styles = {"exp6": "-", "exp7": "--", "exp8": "-.", "exp9": ":", "exp10": ":"}
+    exp_colors = {"exp1": "#757575", "exp2": "#E69F00", "exp3": "#0072B2", "exp4": "#009E73", "exp10": "#D55E00"}
+    exp_styles = {"exp1": "-", "exp2": "--", "exp3": "-.", "exp4": ":", "exp10": ":"}
 
     for idx, exp in enumerate(EXPS_ALL):
         folds = load_folds(exp, model)
@@ -551,10 +553,10 @@ def fig_loss_curves_aggregated():
 
 
 def fig_loss_curves_exp6_dinov2b():
-    """Train/val loss per DINOv2-Base in Exp 6 (CE), mean±std sui 5 fold."""
+    """Train/val loss per DINOv2-Base in Exp 1 (CE), mean±std sui 5 fold."""
     model = "dinov2_base"
     fig, ax = plt.subplots(figsize=(9, 5))
-    folds = load_folds("exp6", model)
+    folds = load_folds("exp1", model)
     if not folds:
         print("  exp6 dinov2_base: nessun fold")
         return
@@ -575,19 +577,19 @@ def fig_loss_curves_exp6_dinov2b():
 
     ax.set_xlabel("Epoch")
     ax.set_ylabel("Loss")
-    ax.set_title("Exp 6 (CE) — DINOv2-Base: Train/Val Loss", fontweight="bold")
+    ax.set_title("Exp 1 (CE) — DINOv2-Base: Train/Val Loss", fontweight="bold")
     ax.legend(loc="upper right", framealpha=0.9)
     fig.tight_layout()
     _save(fig, "loss_curves_exp6_dinov2b.png")
 
 
 # ══════════════════════════════════════════════════════════════════════
-#  FIGURE 8: OSR Detection Rate — all models, Exp 8
+#  FIGURE 8: OSR Detection Rate — all models, Exp 3
 # ══════════════════════════════════════════════════════════════════════
 
 
 def fig_osr_detection_rate():
-    """Detection rate @ 10% FPR per detector, all models, Exp 9 (novel = O. garganica)."""
+    """Detection rate @ 10% FPR per detector, all models, Exp 4 (novel = O. garganica)."""
     detectors = ["Mahalanobis", "KNN", "Energy", "Ensemble"]
     fig, ax = plt.subplots(figsize=(9, 5))
     x = np.arange(len(MODELS))
@@ -596,7 +598,7 @@ def fig_osr_detection_rate():
     for j, det in enumerate(detectors):
         vals = []
         for model in MODELS:
-            p = EXPERIMENTS / f"{EXP_PREFIXES['exp9']}_{model}" / "ncd_results.json"
+            p = EXPERIMENTS / f"{EXP_PREFIXES['exp4']}_{model}" / "ncd_results.json"
             v = 0
             if p.exists():
                 with open(p) as f:
@@ -611,7 +613,7 @@ def fig_osr_detection_rate():
     ax.set_xticks(x)
     ax.set_xticklabels([short_model(m) for m in MODELS], rotation=30, ha="right")
     ax.set_ylabel("Detection Rate @ 10% FPR")
-    ax.set_title("Exp 9 (SpHOR, novel O. garganica): Detection @ 10% FPR", fontweight="bold")
+    ax.set_title("Exp 4 (SpHOR, novel O. garganica): Detection @ 10% FPR", fontweight="bold")
     ax.axhline(y=0.5, color="gray", linestyle="--", alpha=0.5)
     ax.legend(loc="lower right", framealpha=0.9)
     ax.set_ylim(0, 1.05)
@@ -620,7 +622,7 @@ def fig_osr_detection_rate():
 
 
 def fig_exp9_osr_auroc():
-    """AUROC OSR per detector, all models, Exp 9 (novel = O. garganica)."""
+    """AUROC OSR per detector, all models, Exp 4 (novel = O. garganica)."""
     detectors = ["Mahalanobis", "KNN", "Energy", "Ensemble"]
     fig, ax = plt.subplots(figsize=(9, 5))
     x = np.arange(len(MODELS))
@@ -629,7 +631,7 @@ def fig_exp9_osr_auroc():
     for j, det in enumerate(detectors):
         vals = []
         for model in MODELS:
-            p = EXPERIMENTS / f"{EXP_PREFIXES['exp9']}_{model}" / "ncd_results.json"
+            p = EXPERIMENTS / f"{EXP_PREFIXES['exp4']}_{model}" / "ncd_results.json"
             v = 0
             if p.exists():
                 with open(p) as f:
@@ -644,7 +646,7 @@ def fig_exp9_osr_auroc():
     ax.set_xticks(x)
     ax.set_xticklabels([short_model(m) for m in MODELS], rotation=30, ha="right")
     ax.set_ylabel("AUROC")
-    ax.set_title("Exp 9 (SpHOR, novel O. garganica): OSR AUROC", fontweight="bold")
+    ax.set_title("Exp 4 (SpHOR, novel O. garganica): OSR AUROC", fontweight="bold")
     ax.axhline(y=0.5, color="gray", linestyle="--", alpha=0.5, label="chance (0.5)")
     ax.legend(loc="lower right", framealpha=0.9)
     ax.set_ylim(0, 1.05)
@@ -658,7 +660,7 @@ def fig_exp9_osr_auroc():
 
 
 def fig_exp8_per_species():
-    """Per-species F1, all models, Exp 8."""
+    """Per-species F1, all models, Exp 3."""
     order = ["O. exaltata", "O. garganica", "O. incubacea", "O. majellensis", "O. sphegodes", "O. sphegodes_Palena"]
     short = [short_species(s) for s in order]
     fig, ax = plt.subplots(figsize=(10, 5))
@@ -666,7 +668,7 @@ def fig_exp8_per_species():
     x = np.arange(len(order))
 
     for i, model in enumerate(MODELS):
-        res = load_results("exp8", model)
+        res = load_results("exp3", model)
         f1pc = res["test_metrics"].get("f1_per_class", {}) if res and "test_metrics" in res else {}
         vals = [f1pc.get(s, 0) for s in order]
         off = (i - len(MODELS) / 2 + 0.5) * width
@@ -685,7 +687,7 @@ def fig_exp8_per_species():
     ax.set_xticks(x)
     ax.set_xticklabels(short)
     ax.set_ylabel("F1 Score")
-    ax.set_title("Exp 8 (SpHOR): Per-Species F1 by Architecture", fontweight="bold")
+    ax.set_title("Exp 3 (SpHOR): Per-Species F1 by Architecture", fontweight="bold")
     ax.legend(loc="upper left", bbox_to_anchor=(1.01, 1), framealpha=0.9, fontsize=8)
     ax.set_ylim(0, 1.1)
     fig.tight_layout()
@@ -693,23 +695,25 @@ def fig_exp8_per_species():
 
 
 def fig_tsne_exp8_multimodel():
-    """t-SNE for 3 architectures in Exp 8."""
+    """t-SNE for 3 architectures in Exp 3."""
     sel = [("resnet50", "ResNet-50"), ("dinov2_small", "DINOv2-Small"), ("convnext_tiny", "ConvNeXt-Tiny")]
     fig, axes = plt.subplots(1, 3, figsize=(18, 5.5))
 
     for j, (model, label) in enumerate(sel):
         ax = axes[j]
-        _, _, tsne, cnames = load_embeddings("exp8", model)
+        _, _, tsne, cnames = load_embeddings("exp3", model)
         if tsne is None:
             ax.text(0.5, 0.5, "N/A", ha="center", va="center", transform=ax.transAxes)
             ax.set_title(label, fontweight="bold")
             continue
 
-        labs = np.load(EXPERIMENTS / f"{EXP_PREFIXES['exp8']}_{model}" / "embeddings" / "labels.npy")
+        labs = np.load(EXPERIMENTS / f"{EXP_PREFIXES['exp3']}_{model}" / "embeddings" / "labels.npy")
         unique = sorted(np.unique(labs))
         for cls in unique:
             mask = labs == cls
             name = cnames[int(cls)] if int(cls) < len(cnames) else f"C{cls}"
+            if name == "O. sphegodes_Napoli":
+                continue
             sn = short_species(name)
             c = SPECIES_COLORS.get(name, CB[int(cls) % len(CB)])
             ax.scatter(tsne[mask, 0], tsne[mask, 1], c=c, label=sn, s=10, alpha=0.6, edgecolors="none", rasterized=True)
@@ -720,13 +724,13 @@ def fig_tsne_exp8_multimodel():
         ax.legend(loc="upper left", bbox_to_anchor=(1.01, 1), markerscale=2, framealpha=0.9)
         ax.text(-0.15, -0.1, f"({chr(97 + j)})", transform=ax.transAxes, fontsize=11, fontweight="bold")
 
-    fig.suptitle("Exp 8 (SpHOR): t-SNE per Architecture", fontweight="bold", y=1.02)
+    fig.suptitle("Exp 3 (SpHOR): t-SNE per Architecture", fontweight="bold", y=1.02)
     fig.tight_layout()
     _save(fig, "tsne_exp8_multimodel.png")
 
 
 # ══════════════════════════════════════════════════════════════════════
-#  FIGURE 9: OSR Detection Rate — Exp 8 vs Exp 10 side-by-side
+#  FIGURE 9: OSR Detection Rate — Exp 3 vs Exp 10 side-by-side
 # ══════════════════════════════════════════════════════════════════════
 
 
@@ -771,12 +775,12 @@ def fig_summary_dual_heatmap():
 
 
 # ══════════════════════════════════════════════════════════════════════
-#  FIGURE 16: OSR detection heatmap (Exp 8 vs Exp 10)
+#  FIGURE 16: OSR detection heatmap (Exp 3 vs Exp 10)
 # ══════════════════════════════════════════════════════════════════════
 
 
 def fig_osr_detection_heatmap():
-    """Ensemble detection rate for all models, Exp 9/10."""
+    """Ensemble detection rate for all models, Exp 4/10."""
     data = np.full((len(MODELS), len(EXPS_OSR)), np.nan)
     for j, exp in enumerate(EXPS_OSR):
         for i, model in enumerate(MODELS):
@@ -795,7 +799,7 @@ def fig_osr_detection_heatmap():
                 ax.text(j, i, f"{v:.3f}", ha="center", va="center", fontsize=12, color=c, fontweight="bold")
 
     ax.set_xticks(range(len(EXPS_OSR)))
-    ax.set_xticklabels(["Novel\n(Exp 9)"], fontsize=9)
+    ax.set_xticklabels(["Novel\n(Exp 4)"], fontsize=9)
     ax.set_yticks(range(len(MODELS)))
     ax.set_yticklabels([short_model(m) for m in MODELS], fontsize=9)
     ax.set_title("Detection Rate @ 10% FPR", fontweight="bold", pad=12)
@@ -810,7 +814,7 @@ def fig_osr_detection_heatmap():
 
 
 def fig_spotlight_convnext_osr():
-    """Spotlight: DINOv2-Base achieves AUROC 0.875 in Exp 9 (novel = O. garganica).
+    """Spotlight: DINOv2-Base achieves AUROC 0.875 in Exp 4 (novel = O. garganica).
     Shows AUROC across ALL detectors + models, highlighting DINOv2-Base."""
     detectors = ["Mahalanobis", "KNN", "Energy", "Ensemble"]
     fig, ax = plt.subplots(figsize=(10, 5))
@@ -818,7 +822,7 @@ def fig_spotlight_convnext_osr():
     width = 0.12
 
     for i, model in enumerate(MODELS):
-        p = EXPERIMENTS / f"{EXP_PREFIXES['exp9']}_{model}" / "ncd_results.json"
+        p = EXPERIMENTS / f"{EXP_PREFIXES['exp4']}_{model}" / "ncd_results.json"
         vals = [0] * len(detectors)
         if p.exists():
             with open(p) as f:
@@ -859,7 +863,7 @@ def fig_spotlight_convnext_osr():
     ax.set_xticklabels(detectors)
     ax.set_ylabel("AUROC")
 
-    ax.set_title("OSR Champion: DINOv2-Base + SpHOR (Exp 9, novel O. garganica)", fontweight="bold")
+    ax.set_title("OSR Champion: DINOv2-Base + SpHOR (Exp 4, novel O. garganica)", fontweight="bold")
     ax.legend(loc="upper left", bbox_to_anchor=(1.01, 1), framealpha=0.9, fontsize=8)
     ax.set_ylim(0, 1.05)
     ax.grid(True, axis="y", alpha=0.3)
@@ -875,17 +879,17 @@ def fig_spotlight_convnext_osr():
 def fig_spotlight_species_evolution():
     """How per-species F1 changes across experiments for DINOv2-Small.
     Shows the journey from CE → SupCon → SpHOR → MGH-NCD for each species.
-    Exp 9 is excluded: O. garganica is the novel class there (not in the
+    Exp 4 is excluded: O. garganica is the novel class there (not in the
     closed-set evaluation), so its per-species F1 would be a misleading 0."""
     model = "dinov2_small"
     order = ["O. exaltata", "O. garganica", "O. incubacea", "O. majellensis", "O. sphegodes", "O. sphegodes_Palena"]
     short = [short_species(s) for s in order]
     n_sp = len(order)
-    exps_shown = ["exp6", "exp7", "exp8"]
+    exps_shown = ["exp1", "exp2", "exp3"]
 
     fig, ax = plt.subplots(figsize=(10, 5))
-    exp_colors = {"exp6": "#757575", "exp7": "#E69F00", "exp8": "#0072B2", "exp9": "#009E73"}
-    markers = {"exp6": "o", "exp7": "s", "exp8": "^", "exp10": "D"}
+    exp_colors = {"exp1": "#757575", "exp2": "#E69F00", "exp3": "#0072B2", "exp4": "#009E73"}
+    markers = {"exp1": "o", "exp2": "s", "exp3": "^", "exp10": "D"}
     x = np.arange(n_sp)
 
     for exp in exps_shown:
@@ -945,10 +949,10 @@ def main():
         ("5. Per-species F1 (best models)", fig_per_species_f1),
         ("6. CV-test gap (double descent)", fig_cv_test_gap),
         ("7. Loss curves — aggregated", fig_loss_curves_aggregated),
-        ("7b. Loss curves Exp 6 — DINOv2-Base", fig_loss_curves_exp6_dinov2b),
+        ("7b. Loss curves Exp 1 — DINOv2-Base", fig_loss_curves_exp6_dinov2b),
         ("--- EXP 8 (SpHOR) ---", None),
         ("8. OSR detection rate", fig_osr_detection_rate),
-        ("9. t-SNE Exp 8 — 3 architectures", fig_tsne_exp8_multimodel),
+        ("9. t-SNE Exp 3 — 3 architectures", fig_tsne_exp8_multimodel),
         ("10. Per-species F1 all models", fig_exp8_per_species),
         ("--- EXP 9 (Novel: O. garganica) ---", None),
         ("10b. OSR AUROC (novel garganica)", fig_exp9_osr_auroc),

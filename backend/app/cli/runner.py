@@ -99,6 +99,8 @@ def run_experiment(
     logger = logging.getLogger(__name__)
     config = EXPERIMENTS[exp_id]
     output_dir = os.path.join(PROJECT_ROOT, "experiments", f"{config['name']}_{model_variant}")
+    if tag:
+        output_dir += f"_{tag}"
     os.makedirs(output_dir, exist_ok=True)
 
     # Per-experiment log file
@@ -151,19 +153,19 @@ def run_experiment(
         if not os.path.exists(cropped_train):
             logger.error(f"Dataset not found: {cropped_train}")
             return
-        # Per esperimenti con exclude_classes (Exp 9: garganica come novel),
+        # Per esperimenti con exclude_classes (Exp 4: garganica come novel),
         # usa dataset dedicati senza garganica (train e test).
         train_dir = cropped_train
         test_dir = cropped_test if os.path.exists(cropped_test) else None
         if config.get("exclude_classes"):
-            dedicated_train = str(PROJECT_ROOT / "dataset" / f"cropped_{w}x{h}" / "train_ncd_exp9")
+            dedicated_train = str(PROJECT_ROOT / "dataset" / f"cropped_{w}x{h}" / "train_ncd_exp4")
             if os.path.exists(dedicated_train):
                 train_dir = dedicated_train
-            dedicated_test = str(PROJECT_ROOT / "dataset" / f"cropped_{w}x{h}" / "test_ncd_exp9")
+            dedicated_test = str(PROJECT_ROOT / "dataset" / f"cropped_{w}x{h}" / "test_ncd_exp4")
             if os.path.exists(dedicated_test):
                 test_dir = dedicated_test
         # NCD mode è forzato a True per esperimenti con exclude_classes
-        # (Exp 9): la novel class è quella esclusa dal training. Per gli
+        # (Exp 4): la novel class è quella esclusa dal training. Per gli
         # altri exp (6-8,10) resta il valore della config.
         ncd_eval = config.get("ncd_mode", False) or bool(config.get("exclude_classes"))
         run_ncd_pipeline(
@@ -208,9 +210,9 @@ def run_experiment(
         num_classes_val = config.get("num_classes", 6)
         class_names = config.get("test_classes", ALL_CLASSES)
 
-        # Per esperimenti con exclude_classes (Exp 9: garganica come novel),
+        # Per esperimenti con exclude_classes (Exp 4: garganica come novel),
         # il test finale closed-set usa solo le classi di training (5),
-        # su test_ncd_exp9. La novel (garganica) è valutata separatamente
+        # su test_ncd_exp4. La novel (garganica) è valutata separatamente
         # dal pipeline NCD, non qui.
         exclude = set(config.get("exclude_classes") or [])
         if exclude:
@@ -220,7 +222,7 @@ def run_experiment(
 
             _entry = get_registry_entry(model_variant)
             _w, _h = _entry.input_size
-            _dedicated_test = str(PROJECT_ROOT / "dataset" / f"cropped_{_w}x{_h}" / "test_ncd_exp9")
+            _dedicated_test = str(PROJECT_ROOT / "dataset" / f"cropped_{_w}x{_h}" / "test_ncd_exp4")
             if os.path.exists(_dedicated_test):
                 test_dir = _dedicated_test
 
@@ -294,6 +296,16 @@ def run_experiment(
         )
     else:
         from app.core.kfold import kfold_experiment
+        from app.core.models import get_registry_entry
+
+        entry = get_registry_entry(model_variant)
+        w, h = entry.input_size
+        cropped_train = str(PROJECT_ROOT / "dataset" / f"cropped_{w}x{h}" / "train")
+        cropped_test = str(PROJECT_ROOT / "dataset" / f"cropped_{w}x{h}" / "test")
+        if os.path.exists(cropped_train) and os.path.exists(cropped_test):
+            train_path = cropped_train
+            test_path = cropped_test
+            logger.info(f"Using pre-cropped dataset: {cropped_train}")
 
         kfold_experiment(
             raw_dataset_dir=train_path,
@@ -313,6 +325,7 @@ def run_experiment(
             patience=patience,
             gradient_accumulation_steps=gradient_accumulation_steps,
             loss_type="ce",
-            optimizer_type="adam",
+            optimizer_type=None,
             exclude_classes=config.get("exclude_classes"),
+            full_finetune=full_finetune,
         )

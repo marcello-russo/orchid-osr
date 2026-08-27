@@ -16,7 +16,7 @@ class TestCLI:
     def test_experiments_defined(self):
         """Test that only valid experiments are defined."""
         assert len(EXPERIMENTS) == 5
-        assert all(i in EXPERIMENTS for i in [6, 7, 8, 9])
+        assert all(i in EXPERIMENTS for i in [1, 2, 3, 4])
 
     def test_experiment_structure(self):
         """Test that experiments have required fields."""
@@ -111,5 +111,5 @@ class TestCLI:
         captured = capsys.readouterr()
 
         assert "EXPERIMENT STATUS" in captured.out
-        assert "Exp6" in captured.out
+        assert "Exp1" in captured.out
         assert "Clean split" in captured.out or "clean_split" in captured.out

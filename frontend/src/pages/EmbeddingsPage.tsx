@@ -14,36 +14,36 @@ const PALETTE = [
 const API_BASE = import.meta.env.VITE_API_URL ?? "";
 
 const EXP_OPTIONS = [
-  { group: "Exp 7 (SupCon)", prefix: "Exp 7", options: [
-    { value: "exp7_supcon_resnet18", label: "ResNet-18" },
-    { value: "exp7_supcon_resnet50", label: "ResNet-50" },
-    { value: "exp7_supcon_convnext_tiny", label: "ConvNeXt-Tiny" },
-    { value: "exp7_supcon_convnext_small", label: "ConvNeXt-Small" },
-    { value: "exp7_supcon_dinov2_small", label: "DINOv2-Small" },
-    { value: "exp7_supcon_dinov2_base", label: "DINOv2-Base" },
+  { group: "Exp 2 (SupCon)", prefix: "Exp 2", options: [
+    { value: "exp2_supcon_resnet18", label: "ResNet-18" },
+    { value: "exp2_supcon_resnet50", label: "ResNet-50" },
+    { value: "exp2_supcon_convnext_tiny", label: "ConvNeXt-Tiny" },
+    { value: "exp2_supcon_convnext_small", label: "ConvNeXt-Small" },
+    { value: "exp2_supcon_dinov2_small", label: "DINOv2-Small" },
+    { value: "exp2_supcon_dinov2_base", label: "DINOv2-Base" },
   ]},
-  { group: "Exp 8 (SpHOR)", prefix: "Exp 8", options: [
-    { value: "exp8_sphor_resnet18", label: "ResNet-18" },
-    { value: "exp8_sphor_resnet50", label: "ResNet-50" },
-    { value: "exp8_sphor_convnext_tiny", label: "ConvNeXt-Tiny" },
-    { value: "exp8_sphor_convnext_small", label: "ConvNeXt-Small" },
-    { value: "exp8_sphor_dinov2_small", label: "DINOv2-Small" },
-    { value: "exp8_sphor_dinov2_base", label: "DINOv2-Base" },
+  { group: "Exp 3 (SpHOR)", prefix: "Exp 3", options: [
+    { value: "exp3_sphor_resnet18", label: "ResNet-18" },
+    { value: "exp3_sphor_resnet50", label: "ResNet-50" },
+    { value: "exp3_sphor_convnext_tiny", label: "ConvNeXt-Tiny" },
+    { value: "exp3_sphor_convnext_small", label: "ConvNeXt-Small" },
+    { value: "exp3_sphor_dinov2_small", label: "DINOv2-Small" },
+    { value: "exp3_sphor_dinov2_base", label: "DINOv2-Base" },
   ]},
 
-  { group: "Exp 9 (NCD, novel O. garganica)", prefix: "Exp 9", options: [
-    { value: "exp9_ncd_resnet18", label: "ResNet-18" },
-    { value: "exp9_ncd_resnet50", label: "ResNet-50" },
-    { value: "exp9_ncd_convnext_tiny", label: "ConvNeXt-Tiny" },
-    { value: "exp9_ncd_convnext_small", label: "ConvNeXt-Small" },
-    { value: "exp9_ncd_dinov2_small", label: "DINOv2-Small" },
-    { value: "exp9_ncd_dinov2_base", label: "DINOv2-Base" },
+  { group: "Exp 4 (NCD, novel O. garganica)", prefix: "Exp 4", options: [
+    { value: "exp4_sphor_ncd_resnet18", label: "ResNet-18" },
+    { value: "exp4_sphor_ncd_resnet50", label: "ResNet-50" },
+    { value: "exp4_sphor_ncd_convnext_tiny", label: "ConvNeXt-Tiny" },
+    { value: "exp4_sphor_ncd_convnext_small", label: "ConvNeXt-Small" },
+    { value: "exp4_sphor_ncd_dinov2_small", label: "DINOv2-Small" },
+    { value: "exp4_sphor_ncd_dinov2_base", label: "DINOv2-Base" },
   ]},
 ];
 
 export function EmbeddingsPage() {
   const { t } = useTranslation();
-  const [experiment, setExperiment] = useState("exp9_ncd_dinov2_base");
+  const [experiment, setExperiment] = useState("exp4_sphor_ncd_dinov2_base");
   const [method, setMethod] = useState("tsne_3d");
   const [split, setSplit] = useState("all");
   const [hidden, setHidden] = useState<Set<string>>(new Set());

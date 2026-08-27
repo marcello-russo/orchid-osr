@@ -33,7 +33,7 @@ def _load_json(path: Path) -> dict | None:
 @router.get("", response_model=EmbeddingResponse)
 async def get_embeddings(
     user=Depends(require_role("user")),
-    experiment: str = Query("", description="Experiment directory name (e.g. exp6_clean_split_resnet50)"),
+    experiment: str = Query("", description="Experiment directory name (e.g. exp1_ce_resnet50)"),
     method: str = Query("tsne_3d", description="Dimensionality reduction: tsne_3d, tsne_2d, umap_2d"),
 ):
     exp_dir = Path(settings.results_dir)

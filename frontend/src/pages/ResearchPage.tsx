@@ -16,10 +16,10 @@ const SECTIONS = [
   { id: "contesto", labelKey: "research.sect_contesto" },
   { id: "dataset", labelKey: "research.sect_dataset" },
   { id: "metodologia", labelKey: "research.sect_metodologia" },
-  { id: "exp6", labelKey: "research.sect_exp6" },
-  { id: "exp7", labelKey: "research.sect_exp7" },
-  { id: "exp8", labelKey: "research.sect_exp8" },
-  { id: "exp9", labelKey: "research.sect_exp9" },
+  { id: "exp1", labelKey: "research.sect_exp1" },
+  { id: "exp2", labelKey: "research.sect_exp2" },
+  { id: "exp3", labelKey: "research.sect_exp3" },
+  { id: "exp4", labelKey: "research.sect_exp4" },
   { id: "benchmark", labelKey: "research.sect_benchmark" },
   { id: "conclusioni", labelKey: "research.sect_conclusioni" },
   { id: "bibliografia", labelKey: "research.sect_bibliografia" },
@@ -255,10 +255,10 @@ export function ResearchPage() {
               {t("research.metodo_disegno_intro")}
             </P>
             <ul className="list-disc list-inside text-muted-foreground space-y-2 text-sm mb-4">
-              <li><strong>Exp 6 — Cross-Entropy Baseline:</strong>{t("research.metodo_exp6")}</li>
-              <li><strong>Exp 7 — Supervised Contrastive Learning:</strong>{t("research.metodo_exp7")}<Cite id="khosla2020supervised" /></li>
-              <li><strong>Exp 8 — SpHOR:</strong>{t("research.metodo_exp8")}<Cite id="bahavan2026sphor" /><Cite id="lee2018simple" /><Cite id="liu2020energy" /></li>
-              <li><strong>Exp 9 — OSR con Novel Nascosta:</strong>{t("research.metodo_exp9")}</li>
+              <li><strong>Exp 1 — Cross-Entropy Baseline:</strong>{t("research.metodo_exp1")}</li>
+              <li><strong>Exp 2 — Supervised Contrastive Learning:</strong>{t("research.metodo_exp2")}<Cite id="khosla2020supervised" /></li>
+              <li><strong>Exp 3 — SpHOR:</strong>{t("research.metodo_exp3")}<Cite id="bahavan2026sphor" /><Cite id="lee2018simple" /><Cite id="liu2020energy" /></li>
+              <li><strong>Exp 4 — OSR con Novel Nascosta:</strong>{t("research.metodo_exp4")}</li>
             </ul>
           </SubSection>
 
@@ -289,13 +289,13 @@ export function ResearchPage() {
         </Section>
 
         {/* ── 4. EXP 6: CE ── */}
-        <Section id="exp6" title={t("research.sect_exp6")}>
-          <SubSection title={t("research.exp6_subs_motivazione")}>
+        <Section id="exp1" title={t("research.sect_exp6")}>
+          <SubSection title={t("research.exp1_subs_motivazione")}>
             <P>
-              {t("research.exp6_p1_before")}<Cite id="geng2020openset" />.
+              {t("research.exp1_p1_before")}<Cite id="geng2020openset" />.
             </P>
             <P>
-              {t("research.exp6_training")}
+              {t("research.exp1_training")}
             </P>
           </SubSection>
 
@@ -316,46 +316,46 @@ export function ResearchPage() {
               { model: "DINOv2-Base", cv: "0,911", test: "0,975", params: "86M", gap: "+0,064" },
             ]}
             highlightRow="ResNet-50"
-            caption={t("research.exp6_caption")}
+            caption={t("research.exp1_caption")}
           />
 
           <P>
-            {t("research.exp6_risultati_before")}<em>double descent</em>{t("research.exp6_risultati_mid")}
+            {t("research.exp1_risultati_before")}<em>double descent</em>{t("research.exp1_risultati_mid")}
           </P>
           <P>
-            {t("research.exp6_risultati_after")}
+            {t("research.exp1_risultati_after")}
           </P>
 
           <Figure
             src="/figures/cv_test_gap.webp"
             alt="Generalization gap"
-            caption={t("research.exp6_fig_cv_gap")}
+            caption={t("research.exp1_fig_cv_gap")}
           />
 
           <Figure
             src="/figures/loss_curves_exp6_dinov2b_v2.webp"
-            alt="Loss curves DINOv2-B Exp 6"
-            caption={t("research.exp6_fig_caption")}
+            alt="Loss curves DINOv2-B Exp 1"
+            caption={t("research.exp1_fig_caption")}
           />
 
-          <SubSection title={t("research.exp6_subs_embedding")}>
+          <SubSection title={t("research.exp1_subs_embedding")}>
             <P>
-              {t("research.exp6_embedding")}<Cite id="vaze2022gcd" />.
+              {t("research.exp1_embedding")}<Cite id="vaze2022gcd" />.
             </P>
           </SubSection>
         </Section>
 
         {/* ── 5. EXP 7: SUPCON ── */}
-        <Section id="exp7" title={t("research.sect_exp7")}>
-          <SubSection title={t("research.exp7_subs_motivazione")}>
+        <Section id="exp2" title={t("research.sect_exp7")}>
+          <SubSection title={t("research.exp2_subs_motivazione")}>
             <P>
-              {t("research.exp7_p1_before")}<Cite id="khosla2020supervised" />{t("research.exp7_p1_after")}<Cite id="liu2024novel" />.
+              {t("research.exp2_p1_before")}<Cite id="khosla2020supervised" />{t("research.exp2_p1_after")}<Cite id="liu2024novel" />.
             </P>
           </SubSection>
 
-          <SubSection title={t("research.exp7_subs_protocollo")}>
+          <SubSection title={t("research.exp2_subs_protocollo")}>
             <P>
-              {t("research.exp7_protocollo")}<Cite id="vaze2022gcd" />.
+              {t("research.exp2_protocollo")}<Cite id="vaze2022gcd" />.
             </P>
           </SubSection>
 
@@ -375,47 +375,47 @@ export function ResearchPage() {
               { model: "DINOv2-Base", cv: "0,933", test: "0,936", gap: "+0,004" },
             ]}
             highlightRow="DINOv2-Base"
-            caption={t("research.exp7_caption")}
+            caption={t("research.exp2_caption")}
           />
 
           <P>
-            {t("research.exp7_risultati")}
+            {t("research.exp2_risultati")}
           </P>
 
-          <Callout variant="info" title={t("research.exp7_overfitting_title")}>
-            {t("research.exp7_overfitting_detail")}
+          <Callout variant="info" title={t("research.exp2_overfitting_title")}>
+            {t("research.exp2_overfitting_detail")}
           </Callout>
 
-          <SubSection title={t("research.exp7_subs_embedding_osr")}>
+          <SubSection title={t("research.exp2_subs_embedding_osr")}>
             <P>
-              {t("research.exp7_embedding_osr")}
+              {t("research.exp2_embedding_osr")}
             </P>
           </SubSection>
 
           <Figure
             src="/figures/per_species_f1.webp"
             alt="F1 per specie"
-            caption={t("research.exp7_fig2_caption")}
+            caption={t("research.exp2_fig2_caption")}
           />
 
           <Figure
             src="/figures/metric_curves_dinov2s.webp"
             alt="Metric curves DINOv2-S"
-            caption={t("research.exp7_fig3_caption")}
+            caption={t("research.exp2_fig3_caption")}
           />
         </Section>
 
         {/* ── 6. EXP 8: SPHOR ── */}
-        <Section id="exp8" title={t("research.sect_exp8")}>
-          <SubSection title={t("research.exp8_subs_motivazione")}>
+        <Section id="exp3" title={t("research.sect_exp8")}>
+          <SubSection title={t("research.exp3_subs_motivazione")}>
             <P>
-              {t("research.exp8_motivazione_before")}<Cite id="bahavan2026sphor" />{t("research.exp8_motivazione_mid")}<Cite id="lee2018simple" />{t("research.exp8_motivazione_after")}<Cite id="liu2020energy" />{t("research.exp8_motivazione_end")}
+              {t("research.exp3_motivazione_before")}<Cite id="bahavan2026sphor" />{t("research.exp3_motivazione_mid")}<Cite id="lee2018simple" />{t("research.exp3_motivazione_after")}<Cite id="liu2020energy" />{t("research.exp3_motivazione_end")}
             </P>
           </SubSection>
 
-          <SubSection title={t("research.exp8_subs_closedset")}>
+          <SubSection title={t("research.exp3_subs_closedset")}>
             <P>
-              {t("research.exp8_closedset")}
+              {t("research.exp3_closedset")}
             </P>
           </SubSection>
 
@@ -435,40 +435,40 @@ export function ResearchPage() {
               { model: "DINOv2-Base", f1t: "0,910", f1cv: "0,896", knn: "0,875" },
             ]}
             highlightRow="ConvNeXt-Tiny"
-            caption={t("research.exp8_caption")}
+            caption={t("research.exp3_caption")}
           />
 
-          <SubSection title={t("research.exp8_subs_species")}>
+          <SubSection title={t("research.exp3_subs_species")}>
             <P>
-              {t("research.exp8_species")}
+              {t("research.exp3_species")}
             </P>
           </SubSection>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Figure
               src="/figures/exp8_per_species.webp"
-              alt="F1 per specie Exp 8"
-              caption={t("research.exp8_per_species_caption")}
+              alt="F1 per specie Exp 3"
+              caption={t("research.exp3_per_species_caption")}
             />
             <Figure
               src="/figures/tsne_exp8_multimodel.webp"
-              alt="t-SNE multi-modello Exp 8"
-              caption={t("research.exp8_tsne_caption")}
+              alt="t-SNE multi-modello Exp 3"
+              caption={t("research.exp3_tsne_caption")}
             />
           </div>
 
           <Figure
             src="/figures/confusion_matrices.webp"
             alt="Confusion matrices"
-            caption={t("research.exp8_confusion_caption")}
+            caption={t("research.exp3_confusion_caption")}
           />
         </Section>
 
         {/* ── EXP 9: SpHOR con novel class nascosta (O. garganica) ── */}
-        <Section id="exp9" title={t("research.sect_exp9")}>
-          <SubSection title={t("research.exp9_subs_motivazione")}>
+        <Section id="exp4" title={t("research.sect_exp9")}>
+          <SubSection title={t("research.exp4_subs_motivazione")}>
             <P>
-              {t("research.exp9_motivazione")}
+              {t("research.exp4_motivazione")}
             </P>
           </SubSection>
 
@@ -489,36 +489,36 @@ export function ResearchPage() {
               { model: "DINOv2-Base", f1t: "0,932", auroc: "0,875", det: "0,560", detector: "Ensemble" },
             ]}
             highlightRow="DINOv2-Base"
-            caption={t("research.exp9_caption")}
+            caption={t("research.exp4_caption")}
           />
 
-          <SubSection title={t("research.exp9_subs_osr")}>
+          <SubSection title={t("research.exp4_subs_osr")}>
             <P>
-              {t("research.exp9_osr_intro")}
+              {t("research.exp4_osr_intro")}
             </P>
             <ul className="list-disc list-inside text-muted-foreground space-y-2 text-sm">
-              <li><strong>DINOv2-Base:</strong> {t("research.exp9_osr_dinov2b")}</li>
-              <li><strong>ConvNeXt-Tiny:</strong> {t("research.exp9_osr_convnext")}</li>
-              <li><strong>ResNet-18:</strong> {t("research.exp9_osr_resnet")}</li>
+              <li><strong>DINOv2-Base:</strong> {t("research.exp4_osr_dinov2b")}</li>
+              <li><strong>ConvNeXt-Tiny:</strong> {t("research.exp4_osr_convnext")}</li>
+              <li><strong>ResNet-18:</strong> {t("research.exp4_osr_resnet")}</li>
             </ul>
             <P>
-              {t("research.exp9_osr_ensemble")}
+              {t("research.exp4_osr_ensemble")}
             </P>
             <Figure
               src="/figures/exp9_osr_auroc.webp"
-              alt="AUROC OSR Exp 9"
-              caption={t("research.exp9_osr_auroc_caption")}
+              alt="AUROC OSR Exp 4"
+              caption={t("research.exp4_osr_auroc_caption")}
             />
           </SubSection>
 
-          <SubSection title={t("research.exp9_subs_clustering")}>
+          <SubSection title={t("research.exp4_subs_clustering")}>
             <P>
-              {t("research.exp9_clustering")}
+              {t("research.exp4_clustering")}
             </P>
             <Figure
               src="/figures/exp9_tsne_novel.webp"
               alt="t-SNE known vs novel Exp 9"
-              caption={t("research.exp9_tsne_novel_caption")}
+              caption={t("research.exp4_tsne_novel_caption")}
             />
           </SubSection>
         </Section>

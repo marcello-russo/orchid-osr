@@ -29,7 +29,7 @@ export function DashboardPage() {
   const [datasetOpen, setDatasetOpen] = useState(true);
 
   const cleanSplitExps = (experiments ?? []).filter(
-    (e) => e.type === "kfold" && e.id.startsWith("exp6")
+    (e) => e.type === "kfold" && e.id.startsWith("exp1")
   );
   const completedCount = (experiments ?? []).filter(
     (e) => e.status === "completed"
