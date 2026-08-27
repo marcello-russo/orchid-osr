@@ -67,6 +67,7 @@ class DINOv2Classifier(ClassifierModel):
                 param.requires_grad = False
 
         from peft import LoraConfig, get_peft_model
+
         lora_config = LoraConfig(
             r=config.lora_r,
             lora_alpha=config.lora_alpha,

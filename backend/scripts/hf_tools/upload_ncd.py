@@ -40,8 +40,11 @@ if os.path.exists(OVH_EXP_DIR):
 def main():
     for local_prefix, hf_root in MODELS:
         # find all local experiment dirs starting with local_prefix
-        matches = [d for d in os.listdir(EXPERIMENTS_DIR)
-                   if d.startswith(local_prefix + "_") and os.path.isdir(os.path.join(EXPERIMENTS_DIR, d))]
+        matches = [
+            d
+            for d in os.listdir(EXPERIMENTS_DIR)
+            if d.startswith(local_prefix + "_") and os.path.isdir(os.path.join(EXPERIMENTS_DIR, d))
+        ]
         if not matches:
             logger.warning(f"No local dirs found for prefix {local_prefix}")
             continue
