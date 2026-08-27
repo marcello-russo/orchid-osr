@@ -111,5 +111,5 @@ class TestCLI:
         captured = capsys.readouterr()
 
         assert "EXPERIMENT STATUS" in captured.out
-        assert "Exp6" in captured.out
+        assert "Exp1" in captured.out
         assert "Clean split" in captured.out or "clean_split" in captured.out
