@@ -289,7 +289,7 @@ export function ResearchPage() {
         </Section>
 
         {/* ── 4. EXP 6: CE ── */}
-        <Section id="exp1" title={t("research.sect_exp6")}>
+        <Section id="exp1" title={t("research.sect_exp1")}>
           <SubSection title={t("research.exp1_subs_motivazione")}>
             <P>
               {t("research.exp1_p1_before")}<Cite id="geng2020openset" />.
@@ -346,7 +346,7 @@ export function ResearchPage() {
         </Section>
 
         {/* ── 5. EXP 7: SUPCON ── */}
-        <Section id="exp2" title={t("research.sect_exp7")}>
+        <Section id="exp2" title={t("research.sect_exp2")}>
           <SubSection title={t("research.exp2_subs_motivazione")}>
             <P>
               {t("research.exp2_p1_before")}<Cite id="khosla2020supervised" />{t("research.exp2_p1_after")}<Cite id="liu2024novel" />.
@@ -406,7 +406,7 @@ export function ResearchPage() {
         </Section>
 
         {/* ── 6. EXP 8: SPHOR ── */}
-        <Section id="exp3" title={t("research.sect_exp8")}>
+        <Section id="exp3" title={t("research.sect_exp3")}>
           <SubSection title={t("research.exp3_subs_motivazione")}>
             <P>
               {t("research.exp3_motivazione_before")}<Cite id="bahavan2026sphor" />{t("research.exp3_motivazione_mid")}<Cite id="lee2018simple" />{t("research.exp3_motivazione_after")}<Cite id="liu2020energy" />{t("research.exp3_motivazione_end")}
@@ -465,7 +465,7 @@ export function ResearchPage() {
         </Section>
 
         {/* ── EXP 9: SpHOR con novel class nascosta (O. garganica) ── */}
-        <Section id="exp4" title={t("research.sect_exp9")}>
+        <Section id="exp4" title={t("research.sect_exp4")}>
           <SubSection title={t("research.exp4_subs_motivazione")}>
             <P>
               {t("research.exp4_motivazione")}

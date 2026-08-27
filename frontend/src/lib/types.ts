@@ -269,8 +269,9 @@ export interface SeriesModelEntry {
 }
 
 export interface ExperimentComparisonResponse {
-  exp6: ModelComparisonEntry[];
-  exp7: ModelComparisonEntry[];
+  exp1: ModelComparisonEntry[];
+  exp2: ModelComparisonEntry[];
+  exp3: ModelComparisonEntry[];
   delta: SeriesModelEntry[];
 }
 

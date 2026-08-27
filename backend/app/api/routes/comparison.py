@@ -188,31 +188,31 @@ async def compare_experiments():
     cached = _cache_get("experiments")
     if cached:
         return cached
-    exp6 = _build_exp_group("exp1_ce")
-    exp7 = _build_exp_group("exp2_supcon")
-    exp8 = _build_exp_group("exp3_sphor")
+    exp1 = _build_exp_group("exp1_ce")
+    exp2 = _build_exp_group("exp2_supcon")
+    exp3 = _build_exp_group("exp3_sphor")
 
-    # Build delta for exp6→exp7→exp8
-    all_models = list({m.model_variant for m in exp6 + exp7 + exp8})
+    # Build delta for exp1→exp2→exp3
+    all_models = list({m.model_variant for m in exp1 + exp2 + exp3})
     delta = []
     for variant in sorted(all_models):
-        m6 = next((m for m in exp6 if m.model_variant == variant), None)
-        m7 = next((m for m in exp7 if m.model_variant == variant), None)
-        m8 = next((m for m in exp8 if m.model_variant == variant), None)
+        m1 = next((m for m in exp1 if m.model_variant == variant), None)
+        m2 = next((m for m in exp2 if m.model_variant == variant), None)
+        m3 = next((m for m in exp3 if m.model_variant == variant), None)
         delta.append(
             SeriesModelEntry(
                 variant=variant,
                 display_name=_DISPLAY_NAMES.get(variant, variant),
-                f1_ce=m6.mean_f1 if m6 else None,
-                f1_supcon=m7.mean_f1 if m7 else None,
-                f1_sphor=m8.mean_f1 if m8 else None,
+                f1_ce=m1.mean_f1 if m1 else None,
+                f1_supcon=m2.mean_f1 if m2 else None,
+                f1_sphor=m3.mean_f1 if m3 else None,
             )
         )
 
     result = ExperimentComparisonResponse(
-        exp6=exp6,
-        exp7=exp7,
-        exp8=exp8,
+        exp1=exp1,
+        exp2=exp2,
+        exp3=exp3,
         delta=delta,
     )
     _cache_set("experiments", result)

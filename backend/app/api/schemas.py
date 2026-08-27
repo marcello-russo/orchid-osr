@@ -278,9 +278,9 @@ class SeriesModelEntry(BaseModel):
 class ExperimentComparisonResponse(BaseModel):
     """Comparison across all experiments."""
 
-    exp6: list[ModelComparisonEntry]
-    exp7: list[ModelComparisonEntry]
-    exp8: list[ModelComparisonEntry]
+    exp1: list[ModelComparisonEntry]
+    exp2: list[ModelComparisonEntry]
+    exp3: list[ModelComparisonEntry]
     delta: list[SeriesModelEntry]
 
 
