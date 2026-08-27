@@ -316,8 +316,8 @@ def kfold_experiment(
                 fold_metrics = {"fold": fold_index, "note": "fold gia' completato, metric non disponibili"}
         return {"fold_completed": fold_index, "fold_metrics": fold_metrics}
 
-    # Per esperimenti con exclude_classes (Exp 9): il test finale closed-set
-    # usa solo le classi di training (5), su test_ncd_exp9 (senza Napoli).
+    # Per esperimenti con exclude_classes (Exp 4): il test finale closed-set
+    # usa solo le classi di training (5), su test_ncd_exp4 (senza Napoli).
     # La novel class (garganica) è valutata separatamente dal pipeline NCD.
     test_class_names = class_names
     test_num_classes = num_classes
@@ -332,13 +332,13 @@ def kfold_experiment(
         _w, _h = _entry.input_size
         _dedicated = os.path.join(
             os.path.dirname(test_dataset_dir.rstrip(os.sep)),
-            "test_ncd_exp9",
+            "test_ncd_exp4",
         )
         if os.path.exists(_dedicated):
             test_dir_final = _dedicated
         else:
             logger.warning(
-                f"test_ncd_exp9 non trovato in {os.path.dirname(test_dataset_dir)}, "
+                f"test_ncd_exp4 non trovato in {os.path.dirname(test_dataset_dir)}, "
                 f"uso test standard (potrebbe includere classi non nel modello)"
             )
 

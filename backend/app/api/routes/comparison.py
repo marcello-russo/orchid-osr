@@ -39,8 +39,8 @@ _EXPERIMENT_META = {
     3: {"label": "Exp 3", "description": "Domain shift: train private, test internet cropped", "leakage": True},
     4: {"label": "Exp 4", "description": "Combined dataset, test internet cropped", "leakage": True},
     5: {"label": "Exp 5", "description": "Combined dataset, test private (catastrophic forgetting)", "leakage": True},
-    6: {"label": "Exp 6", "description": "Clean split, no leakage, 6 architectures", "leakage": False},
-    7: {"label": "Exp 7 (SupCon)", "description": "Supervised Contrastive + CE fine-tuning", "leakage": False},
+    6: {"label": "Exp 1", "description": "Clean split, no leakage, 6 architectures", "leakage": False},
+    7: {"label": "Exp 2 (SupCon)", "description": "Supervised Contrastive + CE fine-tuning", "leakage": False},
 }
 
 
@@ -188,9 +188,9 @@ async def compare_experiments():
     cached = _cache_get("experiments")
     if cached:
         return cached
-    exp6 = _build_exp_group("exp6_clean_split")
-    exp7 = _build_exp_group("exp7_supcon")
-    exp8 = _build_exp_group("exp8_sphor")
+    exp6 = _build_exp_group("exp1_ce")
+    exp7 = _build_exp_group("exp2_supcon")
+    exp8 = _build_exp_group("exp3_sphor")
 
     # Build delta for exp6→exp7→exp8
     all_models = list({m.model_variant for m in exp6 + exp7 + exp8})

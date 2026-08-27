@@ -25,7 +25,7 @@ cd "$(cd "$(dirname "$0")/.." && pwd)"
 FORCE="${FORCE:-0}"
 EXPS="8 9"
 MODELS="resnet18 resnet50 convnext_tiny convnext_small dinov2_small dinov2_base"
-declare -A EXP_NAME=([8]="exp8_sphor" [9]="exp9_ncd")
+declare -A EXP_NAME=([8]="exp3_sphor" [9]="exp4_sphor_ncd")
 # Per-architecture gradient accumulation (effective batch = batch × accum)
 declare -A ACCUM=([resnet18]=4 [resnet50]=4 [convnext_tiny]=4 [convnext_small]=4 [dinov2_small]=1 [dinov2_base]=4)
 # Batch size per architecture

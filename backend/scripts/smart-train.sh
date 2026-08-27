@@ -5,8 +5,8 @@ if [ -z "${BASH_VERSION:-}" ]; then exec bash "$0" "$@"; fi
 #
 # Usage:
 #   ./smart-train.sh                          # Exp 6
-#   ./smart-train.sh --exp 7                  # Exp 7 (SupCon)
-#   ./smart-train.sh --exp 8                  # Exp 8 (SpHOR)
+#   ./smart-train.sh --exp 7                  # Exp 2 (SupCon)
+#   ./smart-train.sh --exp 8                  # Exp 3 (SpHOR)
 #   ./smart-train.sh --exp 9                  # Exp 9 (SpHOR, no O. majellensis)
 #   ./smart-train.sh --exp 10                 # Exp 10 (MGH-NCD: multi-grano + hard negative + deep f.t.)
 #   ./smart-train.sh --model resnet18         # Solo un modello
@@ -53,20 +53,20 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [ "$EXP" -eq 6 ]; then
-    EXP_PREFIX="exp6_clean_split"
-    HF_PREFIX="exp6_ce"
+    EXP_PREFIX="exp1_ce"
+    HF_PREFIX="exp1_ce"
     MODELS=("${EXP6_MODELS[@]}")
 elif [ "$EXP" -eq 7 ]; then
-    EXP_PREFIX="exp7_supcon"
-    HF_PREFIX="exp7_supcon"
+    EXP_PREFIX="exp2_supcon"
+    HF_PREFIX="exp2_supcon"
     MODELS=("${EXP7_MODELS[@]}")
 elif [ "$EXP" -eq 8 ]; then
-    EXP_PREFIX="exp8_sphor"
-    HF_PREFIX="exp8_sphor"
+    EXP_PREFIX="exp3_sphor"
+    HF_PREFIX="exp3_sphor"
     MODELS=("${EXP8_MODELS[@]}")
 elif [ "$EXP" -eq 9 ]; then
-    EXP_PREFIX="exp9_ncd"
-    HF_PREFIX="exp9_ncd"
+    EXP_PREFIX="exp4_sphor_ncd"
+    HF_PREFIX="exp4_sphor_ncd"
     MODELS=("${EXP9_MODELS[@]}")
 else
     EXP=10

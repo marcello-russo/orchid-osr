@@ -33,7 +33,7 @@ Six morphologically similar *Ophrys* species, one held-out novel class (*O. garg
 
 ## Results (from thesis)
 
-### Exp 6 — Cross-Entropy Baseline
+### Exp 1 — Cross-Entropy Baseline
 
 | Model | F1 Test |
 |-------|:-------:|
@@ -44,7 +44,7 @@ Six morphologically similar *Ophrys* species, one held-out novel class (*O. garg
 | ConvNeXt‑Tiny | 0.821 |
 | ConvNeXt‑Small | 0.793 |
 
-### Exp 7 — Supervised Contrastive Learning
+### Exp 2 — Supervised Contrastive Learning
 
 | Model | F1 Test |
 |-------|:-------:|
@@ -55,7 +55,7 @@ Six morphologically similar *Ophrys* species, one held-out novel class (*O. garg
 | ResNet‑50 | 0.465 |
 | ResNet‑18 | 0.444 |
 
-### Exp 8 — SpHOR (Open-World)
+### Exp 3 — SpHOR (Open-World)
 
 | Model | F1 Test |
 |-------|:-------:|
@@ -66,7 +66,7 @@ Six morphologically similar *Ophrys* species, one held-out novel class (*O. garg
 | ResNet‑50 | 0.750 |
 | ResNet‑18 | 0.560 |
 
-### Exp 9 — NCD (Open-Set Recognition)
+### Exp 4 — NCD (Open-Set Recognition)
 
 | Model | F1 Test | AUROC (best detector) |
 |-------|:-------:|:---------------------:|
@@ -77,7 +77,7 @@ Six morphologically similar *Ophrys* species, one held-out novel class (*O. garg
 | ResNet‑50 | 0.856 | 0.776 (KNN) |
 | ResNet‑18 | 0.590 | 0.507 (Mahalanobis) |
 
-*Exp 9 excludes O. garganica from training, leaving it as the hidden novel class for open-set evaluation.*
+*Exp 4 excludes O. garganica from training, leaving it as the hidden novel class for open-set evaluation.*
 
 ---
 
@@ -111,11 +111,11 @@ npm run dev                 # → http://localhost:5175
 
 ```bash
 cd backend
-python cli.py --cross-validate --exp 6 --model resnet18    # CE baseline
-python cli.py --cross-validate --exp 7 --model resnet18    # SupCon
-python cli.py --cross-validate --exp 8 --model resnet18 --sphor   # SpHOR
-python cli.py --cross-validate --exp 9 --model dinov2_small --sphor   # NCD (hidden novel class)
-python cli.py --ncd --exp 9 --model dinov2_small                  # OSR + clustering evaluation
+python cli.py --cross-validate --exp 1 --model resnet18    # CE baseline
+python cli.py --cross-validate --exp 2 --model resnet18    # SupCon
+python cli.py --cross-validate --exp 3 --model resnet18 --sphor   # SpHOR
+python cli.py --cross-validate --exp 4 --model dinov2_small --sphor   # NCD (hidden novel class)
+python cli.py --ncd --exp 4 --model dinov2_small                  # OSR + clustering evaluation
 ```
 
 See [AGENTS.md](AGENTS.md) for the full command reference.
@@ -146,7 +146,7 @@ All experiments use 5-fold stratified CV with seed 57 over 6 backbones.
 | O. sphegodes | 433 | 50 | |
 | O. sphegodes Palena | 210 | 50 | |
 
-*O. garganica (row above) is used as the hidden novel class in Exp 9: excluded from training, reserved for test only.*
+*O. garganica (row above) is used as the hidden novel class in Exp 4: excluded from training, reserved for test only.*
 
 Download from HuggingFace: `snapshot_download("marcellorusso/orchid-osr-dataset", repo_type="dataset")`
 

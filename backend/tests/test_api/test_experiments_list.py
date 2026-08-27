@@ -39,7 +39,7 @@ def _fake_experiments(tmp_path, monkeypatch):
 
     _make_exp(
         tmp_path,
-        "exp7_supcon_resnet18",
+        "exp2_supcon_resnet18",
         {"model_variant": "resnet18", "num_classes": 6, "timestamp": "2026-01-02T00:00:00"},
         {
             "mean_f1": 0.38,
@@ -53,7 +53,7 @@ def _fake_experiments(tmp_path, monkeypatch):
 
     _make_exp(
         tmp_path,
-        "exp8_sphor_convnext_tiny",
+        "exp3_sphor_convnext_tiny",
         {"model_variant": "convnext_tiny", "num_classes": 6, "timestamp": "2026-01-03T00:00:00"},
         {
             "mean_f1": 0.81,
@@ -67,7 +67,7 @@ def _fake_experiments(tmp_path, monkeypatch):
 
     _make_exp(
         tmp_path,
-        "exp9_ncd_resnet18",
+        "exp4_sphor_ncd_resnet18",
         {
             "model_variant": "resnet18",
             "num_classes": 5,
@@ -148,7 +148,7 @@ class TestExperimentsListNCD:
         assert resp.status_code == 200
         data = resp.json()
         for e in data:
-            if "exp6" in e["id"]:
+            if "exp1" in e["id"]:
                 assert e.get("is_ncd") is False
                 assert e.get("ncd_auroc") is None
                 assert e["test_accuracy"] == 0.79  # standard CE accuracy
@@ -158,7 +158,7 @@ class TestExperimentsListNCD:
         resp = client.get("/api/experiments")
         data = resp.json()
         for e in data:
-            if "exp7" in e["id"]:
+            if "exp2" in e["id"]:
                 assert e.get("is_ncd") is False
                 assert e.get("ncd_auroc") is None
 
@@ -167,7 +167,7 @@ class TestExperimentsListNCD:
         resp = client.get("/api/experiments")
         data = resp.json()
         for e in data:
-            if "exp8" in e["id"]:
+            if "exp3" in e["id"]:
                 assert e.get("is_ncd") is False
                 assert e.get("ncd_auroc") is None
                 # test_accuracy resta l'accuracy standard
@@ -178,7 +178,7 @@ class TestExperimentsListNCD:
         resp = client.get("/api/experiments")
         data = resp.json()
         for e in data:
-            if "exp9" in e["id"]:
+            if "exp4" in e["id"]:
                 assert e.get("is_ncd") is True
                 assert e.get("ncd_auroc") == 0.42
                 assert e.get("ncd_detector") == "Ensemble"
@@ -210,9 +210,9 @@ class TestExperimentsListStructure:
         data = resp.json()
         ids = [e["id"] for e in data]
         assert "exp6_clean_resnet18" in ids
-        assert "exp7_supcon_resnet18" in ids
-        assert "exp8_sphor_convnext_tiny" in ids
-        assert "exp9_ncd_resnet18" in ids
+        assert "exp2_supcon_resnet18" in ids
+        assert "exp3_sphor_convnext_tiny" in ids
+        assert "exp4_sphor_ncd_resnet18" in ids
         # exp10 (MGH-NCD) rimosso dallo studio: deve essere nascosto
         assert not any("exp10" in eid for eid in ids)
 
@@ -241,5 +241,5 @@ class TestExperimentsListStructure:
         resp = client.get("/api/experiments")
         data = resp.json()
         for e in data:
-            if "resnet18" in e["id"] and "exp6" in e["id"]:
+            if "resnet18" in e["id"] and "exp1" in e["id"]:
                 assert e["folds_completed"] == 5  # fold standard per exp6

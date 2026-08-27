@@ -65,7 +65,7 @@ class TestEmbeddings:
 
     def test_embeddings_filter_by_experiment(self, client, user_token):
         _make_embeddings(Path(settings.results_dir), "exp6_clean_resnet18", seed=42, n_points=5)
-        _make_embeddings(Path(settings.results_dir), "exp7_supcon_resnet18", seed=99, n_points=8)
+        _make_embeddings(Path(settings.results_dir), "exp2_supcon_resnet18", seed=99, n_points=8)
 
         resp = client.get(
             "/api/embeddings",

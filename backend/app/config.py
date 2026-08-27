@@ -21,7 +21,7 @@ class Settings(BaseSettings):
 
     # Model configuration
     model_type: str = "resnet18"
-    num_classes: int = 6  # 6 training species; the novel class (garganica in Exp 9) is only used for OSR evaluation
+    num_classes: int = 6  # 6 training species; the novel class (garganica in Exp 4) is only used for OSR evaluation
     class_names: list[str] = [
         "O. exaltata",
         "O. garganica",
@@ -30,7 +30,7 @@ class Settings(BaseSettings):
         "O. sphegodes",
         "O. sphegodes_Palena",
     ]
-    # Novel class di riferimento (Exp 9): O. garganica è esclusa dal training
+    # Novel class di riferimento (Exp 4): O. garganica è esclusa dal training
     # e riservata al test come classe nascosta. Exp 10 usa invece la
     # sphegodes_Napoli legacy, gestita localmente nella sua config.
     novel_class_name: str = "O. garganica"
@@ -70,7 +70,7 @@ class Settings(BaseSettings):
     cropper_num_classes: int = 2  # background + flower
 
     # Comparison (which experiment prefix to compare in the results table)
-    experiment_comparison_prefix: str = "exp6_clean_split"
+    experiment_comparison_prefix: str = "exp1_ce"
 
     # API configuration
     api_host: str = "0.0.0.0"
