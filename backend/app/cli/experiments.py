@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 def _active_classes_for_exp(exp_id: int) -> list[str] | None:
     """Classi attive per un esperimento (TRAIN_CLASSES meno exclude_classes).
 
-    Per Exp 9, garganica è esclusa: gli indici 0-4 sono riassegnati alle
+    Per Exp 4, garganica è esclusa: gli indici 0-4 sono riassegnati alle
     classi residue. Nessun'altra exp ha exclude_classes → None (6 classi).
     """
     cfg = EXPERIMENTS.get(exp_id, {})
@@ -38,7 +38,7 @@ def _build_pair_weights(hard_weight: float, active_classes: list[str] | None = N
 
     active_classes: lista delle classi effettivamente usate nel training
     (dopo eventuale exclude_classes). Se None, usa TRAIN_CLASSES (6).
-    Necessario per Exp 9, dove garganica è esclusa e gli indici 0-4
+    Necessario per Exp 4, dove garganica è esclusa e gli indici 0-4
     sono riassegnati alle 5 classi residue.
     """
     cls_list = active_classes if active_classes is not None else TRAIN_CLASSES
@@ -582,7 +582,7 @@ Examples:
 
     # Experiment selection
     parser.add_argument(
-        "--exp", type=int, choices=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10], help="Run specific experiment (1-10)"
+        "--exp", type=int, choices=[1, 2, 3, 4, 5, 10], help="Run specific experiment (1-10)"
     )
     parser.add_argument(
         "--tag",

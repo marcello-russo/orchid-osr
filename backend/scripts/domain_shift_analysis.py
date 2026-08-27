@@ -88,12 +88,12 @@ def analyze_experiment(exp_dir: str, label: str) -> dict | None:
 
 def main() -> None:
     experiments = [
-        ("exp6_clean_split_resnet50", "CE ResNet-50"),
-        ("exp6_clean_split_dinov2_base", "CE DINOv2-Base"),
-        ("exp7_supcon_dinov2_base", "SupCon DINOv2-Base"),
-        ("exp7_supcon_convnext_tiny", "SupCon ConvNeXt-Tiny"),
-        ("exp8_sphor_convnext_tiny", "SpHOR ConvNeXt-Tiny"),
-        ("exp8_sphor_dinov2_base", "SpHOR DINOv2-Base"),
+        ("exp1_ce_resnet50", "CE ResNet-50"),
+        ("exp1_ce_dinov2_base", "CE DINOv2-Base"),
+        ("exp2_supcon_dinov2_base", "SupCon DINOv2-Base"),
+        ("exp2_supcon_convnext_tiny", "SupCon ConvNeXt-Tiny"),
+        ("exp3_sphor_convnext_tiny", "SpHOR ConvNeXt-Tiny"),
+        ("exp3_sphor_dinov2_base", "SpHOR DINOv2-Base"),
     ]
 
     results = []

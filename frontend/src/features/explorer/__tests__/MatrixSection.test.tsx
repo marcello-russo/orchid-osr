@@ -20,8 +20,8 @@ import { MatrixSection } from "../components/MatrixSection";
 import type { ExperimentSummary } from "@/lib/types";
 
 const mockExperiment: ExperimentSummary = {
-  id: "exp6_resnet18",
-  name: "Exp 6 ResNet-18",
+  id: "exp1_ce_resnet18",
+  name: "Exp 1 ResNet-18",
   model_variant: "resnet18",
   type: "kfold",
   status: "completed",
@@ -36,15 +36,15 @@ const mockExperiment: ExperimentSummary = {
   ncd_clustering_nmi: null,
 };
 
-const mockLookup = { resnet18: { "Exp 6": mockExperiment } };
+const mockLookup = { resnet18: { "Exp 1": mockExperiment } };
 
 const defaultProps = {
   lookup: mockLookup,
   architectureRows: ["ResNet-18"],
-  columns: ["Exp 6"],
+  columns: ["Exp 1"],
   accessor: (e: ExperimentSummary) => e.mean_f1,
   colorFn: (v: number) => `oklch(${0.15 + v * 0.6} 0.15 145)`,
-  bestPerColumn: { "Exp 6": 0.85 },
+  bestPerColumn: { "Exp 1": 0.85 },
   tooltipLabel: "F1 CV",
 };
 
@@ -85,7 +85,7 @@ describe("MatrixSection", () => {
     render(<MatrixSection {...defaultProps} />);
     const cell = screen.getByRole("button");
     await user.click(cell);
-    expect(mockNavigate).toHaveBeenCalledWith("/experiments/exp6_resnet18");
+    expect(mockNavigate).toHaveBeenCalledWith("/experiments/exp1_ce_resnet18");
   });
 
   it("renders title when provided", () => {
@@ -104,7 +104,7 @@ describe("MatrixSection", () => {
     const cell = screen.getByRole("button");
     cell.focus();
     await user.keyboard("{Enter}");
-    expect(mockNavigate).toHaveBeenCalledWith("/experiments/exp6_resnet18");
+    expect(mockNavigate).toHaveBeenCalledWith("/experiments/exp1_ce_resnet18");
   });
 
   it("keyboard navigation on Space", async () => {
@@ -113,6 +113,6 @@ describe("MatrixSection", () => {
     const cell = screen.getByRole("button");
     cell.focus();
     await user.keyboard(" ");
-    expect(mockNavigate).toHaveBeenCalledWith("/experiments/exp6_resnet18");
+    expect(mockNavigate).toHaveBeenCalledWith("/experiments/exp1_ce_resnet18");
   });
 });

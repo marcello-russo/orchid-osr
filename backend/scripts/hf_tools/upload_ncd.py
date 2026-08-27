@@ -20,16 +20,11 @@ REPO_ID = HF_MODELS_REPO
 HF_TOKEN = os.environ.get("HF_TOKEN", "")
 api = HfApi(token=HF_TOKEN)
 
-# (exp_prefix, model) pairs from the v22 job
+# (local_dir_prefix, hf_root) pairs — hf_root = remote HF root folder, local_dir_prefix = local dir prefix.
 MODELS = [
-    ("exp8_sphor", "exp8_sphor_dinov2_small"),
-    ("exp8_sphor", "exp8_sphor_dinov2_base"),
-    ("exp8_sphor", "exp8_sphor_resnet18"),
-    ("exp8_sphor", "exp8_sphor_resnet50"),
-    ("exp10_mgh_ncd", "exp10_mgh_ncd_dinov2_small"),
-    ("exp10_mgh_ncd", "exp10_mgh_ncd_dinov2_base"),
-    ("exp10_mgh_ncd", "exp10_mgh_ncd_resnet18"),
-    ("exp10_mgh_ncd", "exp10_mgh_ncd_resnet50"),
+    ("exp3_sphor", "exp8_sphor"),
+    ("exp4_sphor_ncd", "exp9_ncd"),
+    ("exp10_mgh_ncd", "exp10_mgh_ncd"),
 ]
 
 EXPERIMENTS_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "experiments")
@@ -43,38 +38,46 @@ if os.path.exists(OVH_EXP_DIR):
 
 
 def main():
-    for hf_prefix, exp_name in MODELS:
-        exp_dir = os.path.join(EXPERIMENTS_DIR, exp_name)
-        if not os.path.exists(exp_dir):
-            logger.warning(f"Skip {exp_name}: directory not found")
+    for local_prefix, hf_root in MODELS:
+        # find all local experiment dirs starting with local_prefix
+        matches = [d for d in os.listdir(EXPERIMENTS_DIR)
+                   if d.startswith(local_prefix + "_") and os.path.isdir(os.path.join(EXPERIMENTS_DIR, d))]
+        if not matches:
+            logger.warning(f"No local dirs found for prefix {local_prefix}")
             continue
 
-        hf_path = f"{hf_prefix}/{exp_name}"
-        logger.info(f"Uploading NCD results to {hf_path}")
+        for exp_name in sorted(matches):
+            exp_dir = os.path.join(EXPERIMENTS_DIR, exp_name)
+            if not os.path.exists(exp_dir):
+                continue
+            # remote dir name: replace local prefix with the HF prefix (e.g. exp3_sphor_* -> exp8_sphor_*)
+            remote_dir_name = exp_name.replace(local_prefix, hf_root, 1)
+            hf_path = f"{hf_root}/{remote_dir_name}"
+            logger.info(f"Uploading NCD results to {hf_path}")
 
-        # Upload ncd_results.json
-        ncd_json = os.path.join(exp_dir, "ncd_results.json")
-        if os.path.exists(ncd_json):
-            api.upload_file(
-                repo_id=REPO_ID,
-                path_in_repo=f"{hf_path}/ncd_results.json",
-                path_or_fileobj=ncd_json,
-            )
-            logger.info("  -> ncd_results.json")
-
-        # Upload ncd_figures/
-        ncd_figures = os.path.join(exp_dir, "ncd_figures")
-        if os.path.isdir(ncd_figures):
-            for fname in os.listdir(ncd_figures):
-                fpath = os.path.join(ncd_figures, fname)
-                if not os.path.isfile(fpath):
-                    continue
+            # Upload ncd_results.json
+            ncd_json = os.path.join(exp_dir, "ncd_results.json")
+            if os.path.exists(ncd_json):
                 api.upload_file(
                     repo_id=REPO_ID,
-                    path_in_repo=f"{hf_path}/ncd_figures/{fname}",
-                    path_or_fileobj=fpath,
+                    path_in_repo=f"{hf_path}/ncd_results.json",
+                    path_or_fileobj=ncd_json,
                 )
-            logger.info(f"  -> ncd_figures/ ({len(os.listdir(ncd_figures))} files)")
+                logger.info("  -> ncd_results.json")
+
+            # Upload ncd_figures/
+            ncd_figures = os.path.join(exp_dir, "ncd_figures")
+            if os.path.isdir(ncd_figures):
+                for fname in os.listdir(ncd_figures):
+                    fpath = os.path.join(ncd_figures, fname)
+                    if not os.path.isfile(fpath):
+                        continue
+                    api.upload_file(
+                        repo_id=REPO_ID,
+                        path_in_repo=f"{hf_path}/ncd_figures/{fname}",
+                        path_or_fileobj=fpath,
+                    )
+                logger.info(f"  -> ncd_figures/ ({len(os.listdir(ncd_figures))} files)")
 
     # Upload ncd_comparison.json
     comp_path = os.path.join(EXPERIMENTS_DIR, "ncd_comparison.json")

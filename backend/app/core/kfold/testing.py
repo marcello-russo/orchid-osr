@@ -37,14 +37,14 @@ def _upload_to_hf(output_dir, model_variant):
         return
 
     exp_name = os.path.basename(output_dir)
-    if exp_name.startswith("exp9"):
-        exp_group = "exp9_ncd"
-    elif exp_name.startswith("exp8"):
-        exp_group = "exp8_sphor"
-    elif exp_name.startswith("exp7"):
-        exp_group = "exp7_supcon"
+    if exp_name.startswith("exp4"):
+        exp_group = "exp4_sphor_ncd"
+    elif exp_name.startswith("exp3"):
+        exp_group = "exp3_sphor"
+    elif exp_name.startswith("exp2"):
+        exp_group = "exp2_supcon"
     else:
-        exp_group = "exp6_ce"
+        exp_group = "exp1_ce"
     remote_dir = f"{exp_group}/{exp_name}"
     logger.info(f"Uploading results to HF: {settings.hf_models_repo}/{remote_dir}/")
 

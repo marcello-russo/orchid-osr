@@ -157,7 +157,7 @@ def main():
             continue
         name = d.name
         exp_num = next(
-            (n for p, n in [("exp6", 6), ("exp7", 7), ("exp8", 8), ("exp9", 9), ("exp10", 10)] if p in name), None
+            (n for p, n in [("exp1", 6), ("exp2", 7), ("exp3", 8), ("exp4", 9), ("exp10", 10)] if p in name), None
         )
         if exp_num is None or not _EXPERIMENTS.get(exp_num, {}).get("ncd_mode", False):
             continue

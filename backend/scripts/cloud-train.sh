@@ -13,7 +13,7 @@ LOG_FILE="$LOG_DIR/cloud-train-$(date +%Y%m%d-%H%M).log"
 EXPERIMENTS=(7 8 9 10)
 MODELS=("resnet18" "resnet50" "convnext_tiny" "convnext_small" "dinov2_small" "dinov2_base")
 declare -A EXP_FLAGS=([7]="" [8]="--sphor" [9]="--sphor" [10]="--sphor --full-finetune --osr-ensemble")
-declare -A EXP_NAMES=([7]="exp7_supcon" [8]="exp8_sphor" [9]="exp9_ncd" [10]="exp10_mgh_ncd")
+declare -A EXP_NAMES=([7]="exp2_supcon" [8]="exp3_sphor" [9]="exp4_sphor_ncd" [10]="exp10_mgh_ncd")
 RESUME=false
 FILTER_EXP=""
 FILTER_MODEL=""
@@ -118,7 +118,7 @@ import json, os
 
 exp_ids = [int(x) for x in os.environ['_PY_EXPS'].split()]
 models = os.environ['_PY_MODELS'].split()
-exp_names = {7: 'exp7_supcon', 8: 'exp8_sphor', 9: 'exp9_ncd', 10: 'exp10_mgh_ncd'}
+exp_names = {7: 'exp2_supcon', 8: 'exp3_sphor', 9: 'exp4_sphor_ncd', 10: 'exp10_mgh_ncd'}
 results = {
     'total': int(os.environ['_PY_TOTAL']),
     'completed': int(os.environ['_PY_COMPLETED']),

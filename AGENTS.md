@@ -24,21 +24,21 @@ All code lives under `orchid-osr/`. Commands must be relative to that subtree:
 cd backend
 
 # Training
-python cli.py --cross-validate --exp 6 --model resnet18   # CE baseline
-python cli.py --cross-validate --exp 7 --model resnet18   # SupCon
-python cli.py --cross-validate --exp 8 --model resnet18 --sphor  # SpHOR (open-world)
-python cli.py --cross-validate --exp 9 --model dinov2_small --sphor  # NCD (hidden majellensis)
+python cli.py --cross-validate --exp 1 --model resnet18   # CE baseline
+python cli.py --cross-validate --exp 2 --model resnet18   # SupCon
+python cli.py --cross-validate --exp 3 --model resnet18 --sphor  # SpHOR (open-world)
+python cli.py --cross-validate --exp 4 --model dinov2_small --sphor  # NCD (hidden majellensis)
 
 # Single fold / aggregation
-python cli.py --cross-validate --exp 6 --model resnet50 --fold 0
-python cli.py --cross-validate --exp 6 --model resnet50 --aggregate-only
+python cli.py --cross-validate --exp 1 --model resnet50 --fold 0
+python cli.py --cross-validate --exp 1 --model resnet50 --aggregate-only
 
 # NCD pipeline (Novel Class Discovery)
-python cli.py --ncd --exp 9 --model dinov2_small   # OSR + clustering + figures
+python cli.py --ncd --exp 4 --model dinov2_small   # OSR + clustering + figures
 python cli.py --ncd-comparison                      # cross-model comparison table
 
 # Embedding extraction for latent space viewer
-python cli.py --embeddings --exp 8 --model dinov2_small
+python cli.py --embeddings --exp 3 --model dinov2_small
 
 # Preprocessing pipeline
 python cli.py --crop           # Faster R-CNN flower cropping
@@ -73,9 +73,9 @@ cd orchid-osr
 docker compose up -d                       # Dev server (CPU, --reload, volume-mounts)
 docker compose --profile gpu up -d         # GPU container (training/serve)
 docker compose --profile gpu run gpu bash  # Esegui comandi nel container GPU
-./backend/scripts/smart-train.sh --exp 7       # SupCon experiments
-./backend/scripts/smart-train.sh --exp 8       # SpHOR experiments
-./backend/scripts/smart-train.sh --exp 9       # NCD experiments (hidden majellensis)
+./backend/scripts/smart-train.sh --exp 2       # SupCon experiments
+./backend/scripts/smart-train.sh --exp 3       # SpHOR experiments
+./backend/scripts/smart-train.sh --exp 4       # NCD experiments (hidden majellensis)
 ```
 
 ## Architecture
@@ -125,7 +125,7 @@ orchid-osr/
 ## Critical gotchas
 
 ### Data leakage
-Experiments 1–5 had undetected train/test overlap (images from same source with different crops). **Exp 6 (clean split) and Exp 7 (SupCon) are the valid ones.** MD5 content hashing prevents leakage. Always use `--exp 6` or `--exp 7`.
+Experiments 1–5 had undetected train/test overlap (images from same source with different crops). **Exp 1 (clean split) and Exp 2 (SupCon) are the valid ones.** MD5 content hashing prevents leakage. Always use `--exp 1` or `--exp 2`.
 
 ### GPU vs CPU
 - Training requires CUDA (or MPS on macOS). The `smart-train.sh` script expects `/sys/class/power_supply/BAT0` for battery monitoring — it won't work on desktops/servers.
@@ -148,13 +148,13 @@ No `ruff`, `mypy`, `black`, or `pre-commit` setup. Only `pytest` as a quality ga
 ### Database / state
 No database. All state is filesystem-based: experiments JSON, model `.pt` files, dataset images. The backend API scans `experiments/` at runtime to discover available models (LRU cache, max 5 loaded at once).
 
-### Exp 8 (SpHOR) and Exp 9 (NCD)
-- Exp 8 adds Spherical Orthogonal Prototypes (SpHOR) on top of SupCon. Prototypes are L2-normalized hypersphere embeddings with repulsion loss.
-- Exp 9 is identical to Exp 8 but excludes O. majellensis from training — left as hidden novel class for NCD evaluation.
-- Use `--sphor` flag for both Exp 8 and Exp 9.
+### Exp 3 (SpHOR) and Exp 4 (SpHOR-NCD)
+- Exp 3 adds Spherical Orthogonal Prototypes (SpHOR) on top of SupCon. Prototypes are L2-normalized hypersphere embeddings with repulsion loss.
+- Exp 4 is identical to Exp 3 but excludes O. majellensis from training — left as hidden novel class for NCD evaluation.
+- Use `--sphor` flag for both Exp 3 and Exp 4.
 
 ### NCD results summary
-All 6 architectures in Exp 9 fail to significantly detect O. majellensis as a novel class (best AUROC = 0.497 for ConvNeXt-Tiny, near random). SpHOR does not improve open-set detection in this ultra-fine-grained domain. This is a publishable negative result.
+All 6 architectures in Exp 4 fail to significantly detect O. majellensis as a novel class (best AUROC = 0.497 for ConvNeXt-Tiny, near random). SpHOR does not improve open-set detection in this ultra-fine-grained domain. This is a publishable negative result.
 
-### SupCon mode (exp 7)
+### SupCon mode (exp 2)
 Two-phase training: (1) contrastive pretraining with KNN validation using `SupConLoss`, (2) MLP head fine-tuning with cross-entropy on frozen backbone. Uses `app/core/kfold/` with phase-specific logic.
