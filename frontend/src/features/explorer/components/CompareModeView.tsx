@@ -196,11 +196,21 @@ export function CompareModeView({ experiments }: Props) {
                 return (
                   <tr key={mf.key} className="hover:bg-muted/20">
                     <td className="py-2 px-3 font-medium text-muted-foreground">{mf.label}</td>
-                    {vals.map((v, i) => (
-                      <td key={experiments[i].id} className={cn("text-center py-2 px-3 tabular-nums", v === best && "font-bold")}>
-                        {v != null ? `${(v * 100).toFixed(2)}%` : "—"}
-                      </td>
-                    ))}
+                    {vals.map((v, i) => {
+                      const std =
+                        mf.key === "mean_f1"
+                          ? (experiments[i].summary as any).std_f1
+                          : mf.key === "mean_accuracy"
+                            ? (experiments[i].summary as any).std_accuracy
+                            : null;
+                      return (
+                        <td key={experiments[i].id} className={cn("text-center py-2 px-3 tabular-nums", v === best && "font-bold")}>
+                          {v != null
+                            ? `${(v * 100).toFixed(2)}%${std != null ? ` ± ${(std * 100).toFixed(2)}%` : ""}`
+                            : "—"}
+                        </td>
+                      );
+                    })}
                   </tr>
                 );
               })}

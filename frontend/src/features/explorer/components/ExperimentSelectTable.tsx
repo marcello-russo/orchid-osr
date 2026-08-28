@@ -69,7 +69,9 @@ export function ExperimentSelectTable({ currentId, onCompare }: Props) {
                     <Badge variant="outline" className="text-xs">{exp.type}</Badge>
                   </TableCell>
                   <TableCell className="text-right font-mono">
-                    {exp.mean_f1 != null ? `${(exp.mean_f1 * 100).toFixed(2)}%` : "—"}
+                    {exp.mean_f1 != null
+                      ? `${(exp.mean_f1 * 100).toFixed(2)}%${exp.std_f1 != null ? ` ± ${(exp.std_f1 * 100).toFixed(2)}%` : ""}`
+                      : "—"}
                   </TableCell>
                 </TableRow>
               );

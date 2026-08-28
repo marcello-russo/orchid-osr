@@ -61,6 +61,7 @@ export function MatrixSection({
     const value = exp ? accessor(exp) : null;
     const isBest = value !== null && value === bestPerColumn[col];
     const formattedValue = value !== null ? `${(value * 100).toFixed(1)}%` : "—";
+    const stdValue = exp?.std_f1 != null ? ` ± ${(exp.std_f1 * 100).toFixed(1)}%` : "";
 
     return (
       <td
@@ -85,7 +86,10 @@ export function MatrixSection({
         onMouseEnter={(e) => exp && handleMouseEnter(e, exp, formattedValue, value)}
         onMouseLeave={handleMouseLeave}
       >
-        <span>{formattedValue}</span>
+        <div className="flex flex-col items-center leading-tight">
+          <span>{formattedValue}</span>
+          {stdValue && <span className="text-[10px] opacity-70">{stdValue}</span>}
+        </div>
         {isBest && <span className="ml-0.5 text-yellow-300" aria-label="best performing architecture">★</span>}
       </td>
     );

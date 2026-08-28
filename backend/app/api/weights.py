@@ -168,6 +168,7 @@ def _discover_models() -> list[ModelOption]:
                 name=_format_model_name(dir_name, mv),
                 model_variant=mv,
                 mean_f1=_get_mean_f1(results),
+                std_f1=results.get("std_f1"),
                 test_accuracy=test_metrics.get("accuracy"),
                 num_folds=results.get("num_folds"),
                 is_cached=is_cached,
