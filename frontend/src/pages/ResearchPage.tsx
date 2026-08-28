@@ -537,16 +537,17 @@ export function ResearchPage() {
               { key: "e8", label: t("research.table_e8") },
               { key: "e9", label: t("research.table_e9") },
               { key: "osr9", label: t("research.table_osr9") },
+              { key: "nmi4", label: "NMI" },
             ]}
             rows={[
-              { model: "ResNet-18", e6: "0,978", e7: "0,444", e8: "0,560", e9: "0,590", osr9: "0,507" },
-              { model: "ResNet-50", e6: "0,980", e7: "0,465", e8: "0,750", e9: "0,856", osr9: "0,776" },
-              { model: "ConvNeXt-Tiny", e6: "0,821", e7: "0,837", e8: "0,911", e9: "0,920", osr9: "0,850" },
-              { model: "ConvNeXt-Small", e6: "0,793", e7: "0,517", e8: "0,874", e9: "0,933", osr9: "0,840" },
-              { model: "DINOv2-Small", e6: "0,970", e7: "0,888", e8: "0,894", e9: "0,921", osr9: "0,760" },
-              { model: "DINOv2-Base", e6: "0,975", e7: "0,936", e8: "0,910", e9: "0,932", osr9: "0,875" },
+              { model: "ResNet-18", e6: "0,978", e7: "0,444", e8: "0,560", e9: "0,590", osr9: "0,507", nmi4: "0,428" },
+              { model: "ResNet-50", e6: "0,980", e7: "0,465", e8: "0,750", e9: "0,856", osr9: "0,776", nmi4: "0,654" },
+              { model: "ConvNeXt-Tiny", e6: "0,821", e7: "0,837", e8: "0,911", e9: "0,920", osr9: "0,850", nmi4: "0,844" },
+              { model: "ConvNeXt-Small", e6: "0,793", e7: "0,517", e8: "0,874", e9: "0,933", osr9: "0,840", nmi4: "0,707" },
+              { model: "DINOv2-Small", e6: "0,970", e7: "0,888", e8: "0,894", e9: "0,921", osr9: "0,760", nmi4: "0,828" },
+              { model: "DINOv2-Base", e6: "0,975", e7: "0,936", e8: "0,910", e9: "0,932", osr9: "0,875", nmi4: "0,756" },
             ]}
-            bests={{ e6: "ResNet-50", e7: "DINOv2-Base", e8: "ConvNeXt-Tiny", e9: "ConvNeXt-Small", osr9: "DINOv2-Base" }}
+            bests={{ e6: "ResNet-50", e7: "DINOv2-Base", e8: "ConvNeXt-Tiny", e9: "ConvNeXt-Small", osr9: "DINOv2-Base", nmi4: "ConvNeXt-Tiny" }}
             caption={t("research.benchmark_caption")}
           />
 
