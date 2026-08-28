@@ -86,10 +86,10 @@ export function MatrixSection({
         onMouseEnter={(e) => exp && handleMouseEnter(e, exp, formattedValue, value)}
         onMouseLeave={handleMouseLeave}
       >
-        <div className="flex flex-col items-center leading-tight">
-          <span>{formattedValue}</span>
-          {stdValue && <span className="text-[10px] opacity-70">{stdValue}</span>}
-        </div>
+        <span className="tabular-nums">
+          {formattedValue}
+          {stdValue && <span className="text-[11px] opacity-60 ml-1">{stdValue}</span>}
+        </span>
         {isBest && <span className="ml-0.5 text-yellow-300" aria-label="best performing architecture">★</span>}
       </td>
     );
