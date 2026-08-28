@@ -103,7 +103,7 @@
       "all_experiments": "Tutti gli esperimenti"
     },
     "matrix": {
-      "osr_title": "Tasso di Rilevamento OSR (@10% FPR)",
+      "osr_title": "AUROC OSR — Rilevamento Open-Set",
       "f1_tooltip": "F1 CV",
       "auroc_tooltip": "AUROC"
     },
@@ -528,7 +528,7 @@
     "exp2_p1_after": ". La loss SupCon attira esplicitamente i campioni della stessa classe e respinge quelli di classi diverse nello spazio normalizzato L2. Il risultato è uno spazio metrico dove la distanza coseno riflette la similarità semantica — proprietà essenziale per l'open-set recognition e il novel class discovery",
     "exp2_fig2_caption": "F1 per specie per il miglior modello di ciascun esperimento (Exp 6: ResNet-50, Exp 7: DINOv2-Small, Exp 8: ConvNeXt-Tiny). O. sphegodes è sistematicamente la specie più difficile; O. sphegodes Palena e O. majellensis le più facili.",
     "exp2_fig3_caption": "Curve di training e validazione per DINOv2-Small durante l'addestramento SupCon.",
-    "benchmark_intro": "La tabella seguente consolida le prestazioni di tutte le architetture attraverso gli esperimenti, per classificazione closed-set (F1 test) e open-set (AUROC al 10% FPR).",
+    "benchmark_intro": "La tabella seguente consolida le prestazioni di tutte le architetture attraverso gli esperimenti, per classificazione closed-set (F1 test), open-set (AUROC) e clustering non supervisionato (NMI).",
     "futuri_li1": "Espansione del dataset tramite citizen science e generative AI.",
     "futuri_li2_before": "Metodi part-based (APL",
     "futuri_li2_after": ", PartGCD",
