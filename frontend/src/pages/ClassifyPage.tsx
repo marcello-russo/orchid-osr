@@ -81,7 +81,7 @@ function ModelSelect({
               <Flower2 className="size-4 text-primary shrink-0" />
               <span>{sel.name}</span>
               <Badge variant="outline" className="text-[10px] font-mono px-1.5 py-0">
-                F1 {(sel.mean_f1! * 100).toFixed(1)}%
+                F1 {(sel.mean_f1! * 100).toFixed(1)}%{sel.std_f1 != null ? ` ± ${(sel.std_f1 * 100).toFixed(1)}%` : ""}
               </Badge>
               {sel.tags?.map((tag) => <TagBadge key={tag} tag={tag} />)}
               {!sel.is_cached && (
@@ -144,7 +144,7 @@ function ModelSelect({
                       <div className="font-medium truncate">{m.name}</div>
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <span className="text-[11px] text-muted-foreground">
-                          F1 {(m.mean_f1! * 100).toFixed(1)}%
+                          F1 {(m.mean_f1! * 100).toFixed(1)}%{m.std_f1 != null ? ` ± ${(m.std_f1 * 100).toFixed(1)}%` : ""}
                         </span>
                         {m.tags?.map((tag) => <TagBadge key={tag} tag={tag} />)}
                       </div>

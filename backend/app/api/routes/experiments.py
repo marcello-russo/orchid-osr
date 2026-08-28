@@ -364,6 +364,7 @@ def _build_experiment_response(
             "type": "kfold" if folds else "baseline",
             "num_folds": len(folds),
             "mean_accuracy": (results or {}).get("mean_accuracy"),
+            "std_accuracy": (results or {}).get("std_accuracy"),
             "mean_f1": (
                 (results or {}).get("mean_f1")
                 if (results or {}).get("mean_f1") is not None

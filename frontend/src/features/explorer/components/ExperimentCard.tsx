@@ -44,7 +44,10 @@ export function ExperimentCard({ experiment }: ExperimentCardProps) {
               </span>
             )}
             {experiment.mean_f1 !== null && (
-              <span>{`${t("experiment_detail.charts.f1_label")}:`} {(experiment.mean_f1 * 100).toFixed(2)}%</span>
+              <span>
+                {`${t("experiment_detail.charts.f1_label")}:`} {(experiment.mean_f1 * 100).toFixed(2)}%
+                {experiment.std_f1 != null && ` ± ${(experiment.std_f1 * 100).toFixed(2)}%`}
+              </span>
             )}
             {experiment.test_accuracy !== null && (
               <span>

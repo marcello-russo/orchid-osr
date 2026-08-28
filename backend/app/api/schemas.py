@@ -152,6 +152,7 @@ class ModelOption(BaseModel):
     name: str
     model_variant: str
     mean_f1: float | None = None
+    std_f1: float | None = None
     test_accuracy: float | None = None
     num_folds: int | None = None
     is_cached: bool = False

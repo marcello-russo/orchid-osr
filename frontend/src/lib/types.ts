@@ -116,6 +116,7 @@ export interface ExperimentDetail {
     type: "baseline" | "kfold";
     num_folds: number;
     mean_accuracy: number | null;
+    std_accuracy: number | null;
     mean_f1: number | null;
     std_f1: number | null;
     test_accuracy: number | null;
@@ -169,6 +170,7 @@ export interface ModelOption {
   name: string;
   model_variant: string;
   mean_f1: number | null;
+  std_f1: number | null;
   test_accuracy: number | null;
   num_folds: number | null;
   is_cached?: boolean;
