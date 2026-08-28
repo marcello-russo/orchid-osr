@@ -602,6 +602,13 @@ function NcdDetail({ modelVariant, exp }: { modelVariant: string; exp?: number }
           </div>
         )}
         <div className="rounded-xl border border-border/40 bg-background p-4 text-center">
+          <div className="text-xs text-muted-foreground uppercase font-bold mb-1">NMI</div>
+          <div className="text-2xl font-black text-purple-500">
+            {bestClustering?.nmi ? bestClustering.nmi.toFixed(3) : "—"}
+          </div>
+          <div className="text-[10px] text-muted-foreground mt-0.5">clustering</div>
+        </div>
+        <div className="rounded-xl border border-border/40 bg-background p-4 text-center">
           <div className="text-xs text-muted-foreground uppercase font-bold mb-1">{t("experiment_detail.ncd_best_acc")}</div>
           <div className="text-2xl font-black text-green-500">
             {bestClustering?.acc ? `${(bestClustering.acc * 100).toFixed(1)}%` : "—"}
