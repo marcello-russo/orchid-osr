@@ -1,6 +1,4 @@
-"""
-K-Fold Cross-Validation con augmentation bilanciata per fold.
-"""
+"""K-Fold Cross-Validation con augmentation bilanciata per fold."""
 
 import json
 import logging

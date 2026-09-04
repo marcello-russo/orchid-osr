@@ -5,7 +5,7 @@ import secrets
 import threading
 import time
 from collections import OrderedDict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import bcrypt
@@ -228,7 +228,7 @@ def generate_invite(role: str = "user", count: int = 1) -> list[str]:
                     "code": code,
                     "used": False,
                     "role": role,
-                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "created_at": datetime.now(UTC).isoformat(),
                 }
             )
             codes.append(code)

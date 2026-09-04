@@ -74,14 +74,16 @@ def decode_base64_image(image_base64: str, model_type: str) -> torch.Tensor:
 
 @router.post("/classify", response_model=ClassifyResponse)
 async def classify_image(request: ClassifyRequest):
-    """
-    Classify an orchid image.
+    """Classify an orchid image.
 
     Args:
+    ----
         request: ClassifyRequest with base64 encoded image
 
     Returns:
+    -------
         ClassifyResponse with predicted class and probabilities
+
     """
     # Get model and device
     model_type = request.model_type

@@ -79,6 +79,19 @@ Sei specie di *Ophrys* morfologicamente simili, una classe novel nascosta (*O. g
 
 *Exp 4 esclude O. garganica dal training, lasciandola come novel class nascosta per la valutazione open-set.*
 
+### Exp 5 — NCD con 2 Novel Nascoste (preliminare)
+
+| Modello | F1 Test (4 cls) | AUROC (Ensemble) |
+|---------|:---------------:|:----------------:|
+| **ConvNeXt‑Tiny** | **0.906** | **0.843** |
+| ResNet‑18 | 0.808 | 0.666 |
+| ConvNeXt‑Small | 0.531 | 0.718 |
+| DINOv2‑Small | 0.291 | 0.734 |
+| ResNet‑50 | 0.240 | 0.634 |
+| DINOv2‑Base | 0.110 | 0.805 |
+
+*Exp 5 esclude O. garganica + O. majellensis (4 classi note). OSR scala (ConvNeXt-Tiny 0,843); la GCD discovery crolla (SS-KMeans ACC new 0,12–0,38, NMI 0,92–0,95 stabile). Vedi tesi Sec. 4.5.*
+
 ---
 
 ## Risultati Principali
@@ -114,7 +127,19 @@ python cli.py --cross-validate --exp 2 --model resnet18    # SupCon
 python cli.py --cross-validate --exp 3 --model resnet18 --sphor   # SpHOR
 python cli.py --cross-validate --exp 4 --model dinov2_small --sphor   # NCD (novel class nascosta)
 python cli.py --ncd --exp 4 --model dinov2_small                  # valutazione OSR + clustering
+python cli.py --cross-validate --exp 3 --model resnet18 --novel garganica,majellensis  # generico: 2 novel override
 ```
+
+### Orchid CLI (Typer)
+
+```bash
+orchid --help
+orchid train --help
+orchid train --exp 4 --model dinov2_small --sphor
+orchid figures --all  # rigenera le figure in documents/_figures/ (§3.5 riproducibile)
+```
+
+> `python cli.py` rimane disponibile come alias deprecato di `orchid`.
 
 Vedi [AGENTS.md](AGENTS.md) per tutti i comandi.
 

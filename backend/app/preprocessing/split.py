@@ -1,5 +1,4 @@
-"""
-Clean train/test split from cropped images.
+"""Clean train/test split from cropped images.
 
 Creates a deduplicated split with:
   - Internet classes: test from internet cropped, train from private + remaining internet
@@ -49,6 +48,7 @@ def create_clean_split(
     """Create a clean train/test split from cropped images.
 
     Args:
+    ----
         cropped_dir: Cropped private images root (dataset/cropped/).
         internet_dir: Cropped internet images root (parent of {class}_Int/ dirs).
                       Can be None if all classes are private-only.
@@ -59,7 +59,9 @@ def create_clean_split(
         seed: Random seed for reproducibility.
 
     Returns:
+    -------
         Manifest dict with split details.
+
     """
     cropped_dir = Path(cropped_dir)
     output_dir = Path(output_dir)

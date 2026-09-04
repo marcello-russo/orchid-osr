@@ -1,10 +1,10 @@
 # app/core/losses.py
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
+from torch import nn
 
 
-class SupConLoss(nn.Module):
+class SupConLoss(nn.Module):  # type: ignore[misc]
     """Supervised Contrastive Loss (Khosla et al., 2020).
 
     Operates on L2-normalized feature vectors. For each anchor, pulls
@@ -17,7 +17,7 @@ class SupConLoss(nn.Module):
     work harder on separating difficult pairs (e.g., visually similar species).
     """
 
-    def __init__(self, temperature: float = 0.07, pair_weights: dict | None = None):
+    def __init__(self, temperature: float = 0.07, pair_weights: dict[tuple[int, int], float] | None = None) -> None:
         super().__init__()
         self.temperature = temperature
         self.pair_weights = pair_weights or {}
@@ -60,7 +60,7 @@ class SupConLoss(nn.Module):
         return loss
 
 
-class SphericalPrototypes(nn.Module):
+class SphericalPrototypes(nn.Module):  # type: ignore[misc]
     """Orthogonal prototypes on the unit sphere for SpHOR-style open-set.
 
     Each class has a prototype vector on the unit sphere. Prototypes are
@@ -68,11 +68,13 @@ class SphericalPrototypes(nn.Module):
     latent space that improves open-set detection.
 
     Args:
+    ----
         num_classes: Number of known classes.
         proj_dim: Projection dimension (default 128, matches SupCon proj head).
+
     """
 
-    def __init__(self, num_classes: int, proj_dim: int = 128):
+    def __init__(self, num_classes: int, proj_dim: int = 128) -> None:
         super().__init__()
         self.num_classes = num_classes
         self.prototypes = nn.Parameter(torch.zeros(num_classes, proj_dim))
@@ -82,10 +84,13 @@ class SphericalPrototypes(nn.Module):
         """Compute similarity scores between features and prototypes.
 
         Args:
+        ----
             features: (batch_size, proj_dim) — L2-normalized projection.
 
         Returns:
+        -------
             sim: (batch_size, num_classes) cosine similarities.
+
         """
         prototypes = F.normalize(self.prototypes, dim=1)
         return torch.mm(features, prototypes.T)
@@ -97,8 +102,10 @@ class SphericalPrototypes(nn.Module):
         This creates a 'spherical' space where each class occupies a distinct
         direction, improving separability for open-set detection.
 
-        Returns:
+        Returns
+        -------
             Scalar loss.
+
         """
         prots = F.normalize(self.prototypes, dim=1)
         sim = torch.mm(prots, prots.T)

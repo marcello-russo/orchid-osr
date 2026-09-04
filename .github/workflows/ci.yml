@@ -18,10 +18,30 @@ jobs:
         with:
           python-version: "3.11"
           cache: "pip"
+      # CPU-only torch: CUDA wheels (~5GB) exhaust runner disk (Errno 28).
+      # pip keeps the pre-installed CPU build when resolving ".[dev]".
+      - run: pip install --index-url https://download.pytorch.org/whl/cpu torch torchvision
       - run: pip install ".[dev]"
       - run: ruff check app/ tests/ scripts/
       - run: ruff format --check app/ tests/ scripts/ --diff
       - run: pytest -x -q --cov=app --cov=scripts --cov-report=term --cov-fail-under=30
+
+  mypy:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+      - run: pip install mypy
+      # B-temp: strict solo su app/cli nuovo; legacy app/core/* ignorato via pyproject overrides
+      # TODO(strict): riabilitare --disallow-untyped-defs dopo tipizzazione runner/reports
+      - run: mypy app/cli --ignore-missing-imports
 
   docker:
     runs-on: ubuntu-latest

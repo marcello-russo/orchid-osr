@@ -36,6 +36,10 @@ dependencies = [
     "uvicorn",
 ]
 
+[project.scripts]
+orchid = "app.cli.main:app"
+orchid-osr = "app.cli.main:app"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0.0",
@@ -67,6 +71,69 @@ select = ["E", "F", "I", "W"]
 
 [tool.ruff.format]
 quote-style = "double"
+
+[tool.coverage.run]
+omit = ["app/figures/*", "app/api/*"]
+
+[tool.coverage.report]
+fail_under = 50
+
+[tool.mypy]
+strict = true
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "app.api.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "app.core.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "app.preprocessing.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "app.visualization.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "app.explainability.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "scripts.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "app.config"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "app.cli.experiments"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "app.cli.reports"
+ignore_errors = true
+
+# B-temp: new Typer CLI still untyped — strict deferred post-Exp5
+[[tool.mypy.overrides]]
+module = "app.cli.runner"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "app.cli.definitions"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "app.cli.commands.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "app.cli.main"
+ignore_errors = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

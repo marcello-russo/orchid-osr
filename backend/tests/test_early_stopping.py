@@ -26,13 +26,12 @@ def _simulate_supcon_epochs(knn_history, patience=5, use_strict_gt=True):
                 best_epoch = epoch
             else:
                 epochs_no_improve += 1
+        elif knn_acc >= best_knn:
+            best_knn = knn_acc
+            epochs_no_improve = 0
+            best_epoch = epoch
         else:
-            if knn_acc >= best_knn:
-                best_knn = knn_acc
-                epochs_no_improve = 0
-                best_epoch = epoch
-            else:
-                epochs_no_improve += 1
+            epochs_no_improve += 1
 
         if epochs_no_improve >= patience:
             early_stopped = True

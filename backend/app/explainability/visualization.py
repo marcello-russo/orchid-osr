@@ -10,8 +10,8 @@ import torch
 from captum.attr import IntegratedGradients, Occlusion
 from matplotlib.colors import LinearSegmentedColormap
 
-import app.preprocessing.normalization as normalization
 from app.explainability.core import get_percentages, inference
+from app.preprocessing import normalization
 
 
 def _normalize_attr(attr, sign="all", outlier_perc=2, reduction_axis=None):

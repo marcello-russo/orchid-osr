@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Upload NCD results from volume to HF.
 Utility script — NCD upload is now handled by the HF Space entrypoint.
-This script exists as a fallback for manual sync if needed."""
+This script exists as a fallback for manual sync if needed.
+"""
 
 import logging
 import os
@@ -24,6 +25,7 @@ api = HfApi(token=HF_TOKEN)
 MODELS = [
     ("exp3_sphor", "exp8_sphor"),
     ("exp4_sphor_ncd", "exp9_ncd"),
+    ("exp5_sphor_ncd", "exp5_sphor_ncd"),
     ("exp10_mgh_ncd", "exp10_mgh_ncd"),
 ]
 

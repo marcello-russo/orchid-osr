@@ -41,7 +41,7 @@ export function foldToEpochPoints(fold: FoldData): EpochPoint[] {
 // --- Experiments page redesign helpers ---
 
 export type ArchitectureFamily = "ResNet" | "ConvNeXt" | "DINOv2";
-export type ExperimentSeries = "Exp 1" | "Exp 2" | "Exp 3" | "Exp 4";
+export type ExperimentSeries = `Exp ${number}`;
 
 const FAMILY_MAP: Record<string, ArchitectureFamily> = {
   resnet18: "ResNet", resnet50: "ResNet",
@@ -50,7 +50,7 @@ const FAMILY_MAP: Record<string, ArchitectureFamily> = {
 };
 
 const SERIES_MAP: Record<string, ExperimentSeries> = {
-  exp1: "Exp 1", exp2: "Exp 2", exp3: "Exp 3", exp4: "Exp 4",
+  exp1: "Exp 1", exp2: "Exp 2", exp3: "Exp 3", exp4: "Exp 4", exp5: "Exp 5",
 };
 
 export function getArchitectureFamily(variant: string | null): ArchitectureFamily | null {
@@ -58,8 +58,11 @@ export function getArchitectureFamily(variant: string | null): ArchitectureFamil
 }
 
 export function getExperimentSeries(id: string): ExperimentSeries | null {
-  const prefix = id.split("_")[0];
-  return SERIES_MAP[prefix] ?? null;
+  const prefix = id.split("_")[0].toLowerCase();
+  if (SERIES_MAP[prefix]) return SERIES_MAP[prefix];
+  const m = prefix.match(/^exp(\d+)$/);
+  if (m) return `Exp ${parseInt(m[1], 10)}` as ExperimentSeries;
+  return null;
 }
 
 export const FAMILY_COLORS: Record<ArchitectureFamily, string> = {

@@ -88,7 +88,7 @@ plt.style.use("seaborn-v0_8-whitegrid")
 plt.rcParams.update(
     {
         "figure.dpi": 300,
-        "savefig.dpi": 600,
+        "savefig.dpi": 300,
         "savefig.bbox": "tight",
         "font.family": "sans-serif",
         "font.size": 12,
@@ -162,26 +162,41 @@ def get_test_f1(res):
     return 0.0
 
 
-def get_detection_rate(exp, model):
-    """Get Ensemble detection_rate_at_10pct_fpr from NCD results."""
-    p = EXPERIMENTS / f"{EXP_PREFIXES[exp]}_{model}" / "ncd_results.json"
-    if not p.exists():
-        return 0.0
-    with open(p) as f:
-        d = json.load(f)
-    dets = d.get("detectors", {})
-    ens = dets.get("Ensemble", {})
-    if isinstance(ens, dict):
-        return ens.get("detection_rate_at_10pct_fpr", 0.0)
-    return float(ens) if isinstance(ens, (int, float)) else 0.0
-
-
 def trim_fold(fold):
     """Trim history to best_epoch + PATIENCE."""
     hist = dict(fold["history"])
     be = fold.get("best_epoch", len(hist.get("train_loss", [])))
     cutoff = min(be + PATIENCE, len(hist.get("train_loss", [])))
     return {k: v[:cutoff] for k, v in hist.items()}
+
+
+# ── Global epoch limits (stessi 2 numeri per tutti i grafici) ─────────────
+def _get_global_epoch_limits() -> tuple[int, int]:
+    """Ritorna (max_fase1, max_fase2) uguali per tutti i grafici."""
+    max_f1 = 0
+    max_f2 = 0
+    for exp in EXPS_ALL:
+        for model in ["resnet18", "resnet50", "convnext_tiny", "convnext_small", "dinov2_small", "dinov2_base"]:
+            folds = load_folds(exp, model)
+            for f in folds:
+                be = f.get("best_epoch", 0)
+                hist_len = len(f.get("history", {}).get("train_loss", []))
+                max_f1 = max(max_f1, be)
+                max_f2 = max(max_f2, hist_len)
+
+    def round_up(x, base=25):
+        return max(50, ((x + 24) // base) * base + 10)
+
+    return round_up(max_f1), round_up(max_f2)
+
+
+_GLOBAL_FASE1_MAX, _GLOBAL_FASE2_MAX = None, None  # lazy, calcolati al primo uso
+
+
+def _ensure_global_limits():
+    global _GLOBAL_FASE1_MAX, _GLOBAL_FASE2_MAX
+    if _GLOBAL_FASE1_MAX is None:
+        _GLOBAL_FASE1_MAX, _GLOBAL_FASE2_MAX = _get_global_epoch_limits()
 
 
 def load_embeddings(exp, model):
@@ -298,7 +313,8 @@ def fig_confusion_matrices():
         labels_raw = res["test_metrics"].get(
             "confusion_matrix_labels", list(res.get("class_names", [f"C{i}" for i in range(len(cm))]))
         )
-        short = [short_species(label) for label in labels_raw]
+        # Full species names for thesis readability (10/10 audit)
+        short = list(labels_raw)
 
         row_sums = cm.sum(axis=1)
         is_trainset = any(rs > 100 for rs in row_sums)
@@ -318,8 +334,8 @@ def fig_confusion_matrices():
 
         ax.set_xticks(range(len(short)))
         ax.set_yticks(range(len(short)))
-        ax.set_xticklabels(short, fontsize=8, rotation=45, ha="right")
-        ax.set_yticklabels(short, fontsize=8)
+        ax.set_xticklabels(short, fontsize=7, rotation=45, ha="right")
+        ax.set_yticklabels(short, fontsize=7)
         ax.set_xlabel("Predicted", fontsize=9)
         ax.set_ylabel("Actual", fontsize=9)
         ax.text(-0.25, -0.1, f"({chr(97 + j)})", transform=ax.transAxes, fontsize=11, fontweight="bold")
@@ -385,45 +401,6 @@ def fig_tsne_comparison():
 
 # ══════════════════════════════════════════════════════════════════════
 #  FIGURE 4: Closed-Set vs Open-Set Scatter
-# ══════════════════════════════════════════════════════════════════════
-
-
-def fig_closed_vs_open_scatter():
-    """Scatter: test F1 vs detection_rate@10%FPR. Shows exp9+10 (only ones with OSR data)."""
-    fig, ax = plt.subplots(figsize=(9, 6))
-
-    for model in MODELS:
-        f1 = get_test_f1(load_results("exp4", model))
-        dr = get_detection_rate("exp4", model)
-        ax.scatter(
-            f1,
-            dr,
-            s=130,
-            c=MODEL_COLORS.get(model, CB[0]),
-            marker="^",
-            label=short_model(model),
-            zorder=3,
-            edgecolors="black",
-            linewidths=0.5,
-        )
-        ax.annotate(short_model(model), (f1, dr), textcoords="offset points", xytext=(5, 4), fontsize=7, alpha=0.8)
-
-    ax.axhline(y=0.5, color="gray", linestyle=":", alpha=0.4)
-    ax.axvline(x=0.7, color="gray", linestyle=":", alpha=0.4)
-    ax.text(0.72, 0.88, "HIGH F1 +\nHIGH OSR", fontsize=9, fontweight="bold", color="#0072B2", alpha=0.4)
-    ax.text(0.72, 0.02, "HIGH F1 +\nLOW OSR", fontsize=9, fontweight="bold", color="#D55E00", alpha=0.4)
-    ax.set_xlabel("Closed-Set Test F1 (Exp 4)")
-    ax.set_ylabel("Open-Set Detection Rate @ 10% FPR (Exp 4)")
-    ax.set_title("Closed-Set vs Open-World Performance — Exp 4 (novel O. garganica)", fontweight="bold")
-    ax.legend(loc="upper left", framealpha=0.9)
-    ax.set_xlim(0.3, 1.0)
-    ax.set_ylim(-0.05, 1.05)
-    fig.tight_layout()
-    _save(fig, "closed_vs_open_scatter.png")
-
-
-# ══════════════════════════════════════════════════════════════════════
-#  FIGURE 5: Per-Species F1 (best model per experiment)
 # ══════════════════════════════════════════════════════════════════════
 
 
@@ -525,7 +502,8 @@ def fig_cv_test_gap():
 def fig_loss_curves_aggregated():
     """Validation loss: one panel, one colored line per experiment.
     Each line is mean±std across folds for DINOv2-Small. Shows training dynamics
-    of the three main paradigms (CE → SupCon → SpHOR → MGH-NCD)."""
+    of the three main paradigms (CE → SupCon → SpHOR → MGH-NCD).
+    """
     model = "dinov2_small"
     fig, ax = plt.subplots(figsize=(9, 5))
     exp_colors = {"exp1": "#757575", "exp2": "#E69F00", "exp3": "#0072B2", "exp4": "#009E73", "exp10": "#D55E00"}
@@ -548,6 +526,8 @@ def fig_loss_curves_aggregated():
     ax.set_ylabel("Validation Loss")
     ax.set_title("Training Dynamics — DINOv2-Small", fontweight="bold")
     ax.legend(loc="upper right", framealpha=0.9)
+    _ensure_global_limits()
+    ax.set_xlim(0, _GLOBAL_FASE1_MAX)
     fig.tight_layout()
     _save(fig, "loss_curves_aggregated.png")
 
@@ -579,83 +559,14 @@ def fig_loss_curves_exp6_dinov2b():
     ax.set_ylabel("Loss")
     ax.set_title("Exp 1 (CE) — DINOv2-Base: Train/Val Loss", fontweight="bold")
     ax.legend(loc="upper right", framealpha=0.9)
+    _ensure_global_limits()
+    ax.set_xlim(0, _GLOBAL_FASE1_MAX)
     fig.tight_layout()
     _save(fig, "loss_curves_exp6_dinov2b.png")
 
 
 # ══════════════════════════════════════════════════════════════════════
 #  FIGURE 8: OSR Detection Rate — all models, Exp 3
-# ══════════════════════════════════════════════════════════════════════
-
-
-def fig_osr_detection_rate():
-    """Detection rate @ 10% FPR per detector, all models, Exp 4 (novel = O. garganica)."""
-    detectors = ["Mahalanobis", "KNN", "Energy", "Ensemble"]
-    fig, ax = plt.subplots(figsize=(9, 5))
-    x = np.arange(len(MODELS))
-    width = 0.8 / len(detectors)
-
-    for j, det in enumerate(detectors):
-        vals = []
-        for model in MODELS:
-            p = EXPERIMENTS / f"{EXP_PREFIXES['exp4']}_{model}" / "ncd_results.json"
-            v = 0
-            if p.exists():
-                with open(p) as f:
-                    d = json.load(f)
-                dets = d.get("detectors", {})
-                dd = dets.get(det, {})
-                v = dd.get("detection_rate_at_10pct_fpr", 0) if isinstance(dd, dict) else 0
-            vals.append(v)
-        off = (j - len(detectors) / 2 + 0.5) * width
-        ax.bar(x + off, vals, width, label=det, color=plt.cm.Set2(j / len(detectors)))
-
-    ax.set_xticks(x)
-    ax.set_xticklabels([short_model(m) for m in MODELS], rotation=30, ha="right")
-    ax.set_ylabel("Detection Rate @ 10% FPR")
-    ax.set_title("Exp 4 (SpHOR, novel O. garganica): Detection @ 10% FPR", fontweight="bold")
-    ax.axhline(y=0.5, color="gray", linestyle="--", alpha=0.5)
-    ax.legend(loc="lower right", framealpha=0.9)
-    ax.set_ylim(0, 1.05)
-    fig.tight_layout()
-    _save(fig, "osr_detection_rate.png")
-
-
-def fig_exp9_osr_auroc():
-    """AUROC OSR per detector, all models, Exp 4 (novel = O. garganica)."""
-    detectors = ["Mahalanobis", "KNN", "Energy", "Ensemble"]
-    fig, ax = plt.subplots(figsize=(9, 5))
-    x = np.arange(len(MODELS))
-    width = 0.8 / len(detectors)
-
-    for j, det in enumerate(detectors):
-        vals = []
-        for model in MODELS:
-            p = EXPERIMENTS / f"{EXP_PREFIXES['exp4']}_{model}" / "ncd_results.json"
-            v = 0
-            if p.exists():
-                with open(p) as f:
-                    d = json.load(f)
-                dets = d.get("detectors", {})
-                dd = dets.get(det, {})
-                v = dd.get("auroc", 0) if isinstance(dd, dict) else 0
-            vals.append(v)
-        off = (j - len(detectors) / 2 + 0.5) * width
-        ax.bar(x + off, vals, width, label=det, color=plt.cm.Set2(j / len(detectors)))
-
-    ax.set_xticks(x)
-    ax.set_xticklabels([short_model(m) for m in MODELS], rotation=30, ha="right")
-    ax.set_ylabel("AUROC")
-    ax.set_title("Exp 4 (SpHOR, novel O. garganica): OSR AUROC", fontweight="bold")
-    ax.axhline(y=0.5, color="gray", linestyle="--", alpha=0.5, label="chance (0.5)")
-    ax.legend(loc="lower right", framealpha=0.9)
-    ax.set_ylim(0, 1.05)
-    fig.tight_layout()
-    _save(fig, "exp9_osr_auroc.png")
-
-
-# ══════════════════════════════════════════════════════════════════════
-#  EXP 8 per-species + t-SNE
 # ══════════════════════════════════════════════════════════════════════
 
 
@@ -734,88 +645,10 @@ def fig_tsne_exp8_multimodel():
 # ══════════════════════════════════════════════════════════════════════
 
 
-def fig_summary_dual_heatmap():
-    """Closed-set F1 + open-set detection rate side by side."""
-    data_f1 = np.full((len(MODELS), 5), np.nan)
-    data_det = np.full((len(MODELS), len(EXPS_OSR)), np.nan)
-
-    for j, exp in enumerate(EXPS_ALL):
-        for i, model in enumerate(MODELS):
-            data_f1[i, j] = get_test_f1(load_results(exp, model))
-
-    for j, exp in enumerate(EXPS_OSR):
-        for i, model in enumerate(MODELS):
-            data_det[i, j] = get_detection_rate(exp, model)
-
-    fig, axes = plt.subplots(1, 2, figsize=(11, 4.5))
-    cmap = plt.cm.Blues.copy()
-    cmap.set_bad("#f0f0f0")
-
-    for ax, data, title, vmin, vmax, labels in [
-        (axes[0], data_f1, "Closed-Set Test F1", 0.3, 1.0, [EXP_LABELS[e] for e in EXPS_ALL]),
-        (axes[1], data_det, "OSR Detection@10%FPR", 0.0, 1.0, [EXP_LABELS[e] for e in EXPS_OSR]),
-    ]:
-        ax.imshow(data, cmap=cmap, vmin=vmin, vmax=vmax, aspect="auto")
-        ax.set_xticks(range(data.shape[1]))
-        ax.set_xticklabels(labels, fontsize=8, rotation=25, ha="right")
-        ax.set_yticks(range(len(MODELS)))
-        ax.set_yticklabels([short_model(m) for m in MODELS], fontsize=8)
-        ax.set_title(title, fontweight="bold", fontsize=10)
-        for i in range(len(MODELS)):
-            for jj in range(data.shape[1]):
-                v = data[i, jj]
-                if not np.isnan(v):
-                    thr = 0.6 if title.startswith("OSR") else 0.7
-                    c = "white" if v > thr else "black"
-                    ax.text(jj, i, f"{v:.3f}", ha="center", va="center", fontsize=10, color=c, fontweight="bold")
-
-    fig.suptitle("Summary: Closed-Set and Open-World Performance", fontweight="bold", y=1.05)
-    fig.tight_layout()
-    _save(fig, "summary_dual_heatmap.png")
-
-
-# ══════════════════════════════════════════════════════════════════════
-#  FIGURE 16: OSR detection heatmap (Exp 3 vs Exp 10)
-# ══════════════════════════════════════════════════════════════════════
-
-
-def fig_osr_detection_heatmap():
-    """Ensemble detection rate for all models, Exp 4/10."""
-    data = np.full((len(MODELS), len(EXPS_OSR)), np.nan)
-    for j, exp in enumerate(EXPS_OSR):
-        for i, model in enumerate(MODELS):
-            data[i, j] = get_detection_rate(exp, model)
-
-    fig, ax = plt.subplots(figsize=(6, 4.5))
-    cmap = plt.cm.Blues.copy()
-    cmap.set_bad("#f0f0f0")
-    im = ax.imshow(data, cmap=cmap, vmin=0.0, vmax=1.0, aspect="auto")
-
-    for i in range(len(MODELS)):
-        for j in range(len(EXPS_OSR)):
-            v = data[i, j]
-            if not np.isnan(v):
-                c = "white" if v > 0.5 else "black"
-                ax.text(j, i, f"{v:.3f}", ha="center", va="center", fontsize=12, color=c, fontweight="bold")
-
-    ax.set_xticks(range(len(EXPS_OSR)))
-    ax.set_xticklabels(["Novel\n(Exp 4)"], fontsize=9)
-    ax.set_yticks(range(len(MODELS)))
-    ax.set_yticklabels([short_model(m) for m in MODELS], fontsize=9)
-    ax.set_title("Detection Rate @ 10% FPR", fontweight="bold", pad=12)
-    fig.colorbar(im, ax=ax, shrink=0.8, label="Detection Rate")
-    fig.tight_layout()
-    _save(fig, "osr_detection_heatmap.png")
-
-
-# ══════════════════════════════════════════════════════════════════════
-#  SPOTLIGHT 17: ConvNeXt-Tiny — the OSR champion
-# ══════════════════════════════════════════════════════════════════════
-
-
 def fig_spotlight_convnext_osr():
     """Spotlight: DINOv2-Base achieves AUROC 0.875 in Exp 4 (novel = O. garganica).
-    Shows AUROC across ALL detectors + models, highlighting DINOv2-Base."""
+    Shows AUROC across ALL detectors + models, highlighting DINOv2-Base.
+    """
     detectors = ["Mahalanobis", "KNN", "Energy", "Ensemble"]
     fig, ax = plt.subplots(figsize=(10, 5))
     x = np.arange(len(detectors))
@@ -880,7 +713,8 @@ def fig_spotlight_species_evolution():
     """How per-species F1 changes across experiments for DINOv2-Small.
     Shows the journey from CE → SupCon → SpHOR → MGH-NCD for each species.
     Exp 4 is excluded: O. garganica is the novel class there (not in the
-    closed-set evaluation), so its per-species F1 would be a misleading 0."""
+    closed-set evaluation), so its per-species F1 would be a misleading 0.
+    """
     model = "dinov2_small"
     order = ["O. exaltata", "O. garganica", "O. incubacea", "O. majellensis", "O. sphegodes", "O. sphegodes_Palena"]
     short = [short_species(s) for s in order]
@@ -950,17 +784,8 @@ def main():
         ("6. CV-test gap (double descent)", fig_cv_test_gap),
         ("7. Loss curves — aggregated", fig_loss_curves_aggregated),
         ("7b. Loss curves Exp 1 — DINOv2-Base", fig_loss_curves_exp6_dinov2b),
-        ("--- EXP 8 (SpHOR) ---", None),
-        ("8. OSR detection rate", fig_osr_detection_rate),
         ("9. t-SNE Exp 3 — 3 architectures", fig_tsne_exp8_multimodel),
         ("10. Per-species F1 all models", fig_exp8_per_species),
-        ("--- EXP 9 (Novel: O. garganica) ---", None),
-        ("10b. OSR AUROC (novel garganica)", fig_exp9_osr_auroc),
-        ("--- CROSS-EXP ---", None),
-        ("--- SPOTLIGHT FIGURES ---", None),
-        ("11. Closed vs Open scatter", fig_closed_vs_open_scatter),
-        ("12. Summary dual heatmap", fig_summary_dual_heatmap),
-        ("13. OSR detection heatmap", fig_osr_detection_heatmap),
         ("14. Spotlight: DINOv2-Base OSR champion", fig_spotlight_convnext_osr),
         ("15. Spotlight: per-species evolution across exps", fig_spotlight_species_evolution),
     ]

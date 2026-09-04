@@ -6,6 +6,7 @@ import tempfile
 from unittest.mock import patch
 
 import numpy as np
+import pytest
 import torch
 
 from app.core.models import create_model
@@ -173,3 +174,48 @@ class TestNcdPipelineValidation:
                 )
                 assert isinstance(result, dict), "Dovrebbe tornare un dict"
                 assert "clustering" in result
+
+
+_GPU_WEIGHTS = "experiments/exp5_sphor_ncd_resnet18/best_fold_1.pt"
+_needs_gpu_data = not (torch.cuda.is_available() and os.path.exists(_GPU_WEIGHTS))
+
+
+@pytest.mark.skipif(_needs_gpu_data, reason="requires CUDA + Exp5 resnet18 weights + dataset (GPU machine only)")
+def test_ncd_pipeline_saves_osr_scores():
+    """run_ncd_pipeline must write osr_scores.npz with y_true + per-detector scores.
+
+    GPU-only (loads best_fold_1.pt 43M + CUDA, ~3 min). Uses the real Exp5
+    resnet18 dir because the pipeline resolves the checkpoint from
+    <exp_dir>/results.json; a tmp dir would exit early with no model.
+    Skipped (not failed) on CI without data.
+    """
+    import numpy as np
+
+    from app.core.ncd import pipeline as pipe
+
+    exp_dir = "experiments/exp5_sphor_ncd_resnet18"
+    pipe.run_ncd_pipeline(
+        exp_dir=exp_dir,
+        model_variant="resnet18",
+        num_classes=4,
+        class_names=["O. exaltata", "O. incubacea", "O. sphegodes", "O. sphegodes_Palena"],
+        data_dir="dataset/cropped_256x512/train_ncd_exp5",
+        test_dir="dataset/cropped_256x512/test",
+        run_osr=True,
+        ncd_mode=True,
+        exclude_classes=["O. garganica", "O. majellensis"],
+        all_classes=[
+            "O. exaltata",
+            "O. garganica",
+            "O. incubacea",
+            "O. majellensis",
+            "O. sphegodes",
+            "O. sphegodes_Palena",
+        ],
+    )
+    scores_path = os.path.join(exp_dir, "osr_scores.npz")
+    assert os.path.exists(scores_path)
+    z = np.load(scores_path)
+    assert "y_true" in z and set(np.unique(z["y_true"])) == {0, 1}
+    assert int(z["y_true"].sum()) == 100
+    assert len(z["y_true"]) == 300

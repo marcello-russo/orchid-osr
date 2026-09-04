@@ -1,5 +1,4 @@
-"""
-Produce architecture-specific resized datasets from cropped images.
+"""Produce architecture-specific resized datasets from cropped images.
 
 Reads from a cropped directory and produces letterbox-resized versions
 for each target architecture size, derived from the model registry.
@@ -22,8 +21,10 @@ def resize_dataset(input_dir, output_dir, target_width, target_height):
     Applies rotate-if-landscape before resizing. Preserves class subdirectory
     structure.
 
-    Returns:
+    Returns
+    -------
         Summary dict {total, resized, errors}.
+
     """
     input_dir = Path(input_dir)
     output_dir = Path(output_dir)
@@ -67,12 +68,15 @@ def resize_for_all_architectures(input_dir, base_dir, split_name=None):
     output goes to cropped_{W}x{H}/{split_name}/{class}/.
 
     Args:
+    ----
         input_dir: Cropped dataset root (e.g. dataset/cropped/train/).
         base_dir: Parent for output directories (e.g. dataset/).
         split_name: Optional split subdirectory name.
 
     Returns:
+    -------
         Dict mapping size label → output directory path.
+
     """
     from app.core.models.registry import unique_input_sizes
 

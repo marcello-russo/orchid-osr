@@ -1,6 +1,6 @@
 # tests/test_core/test_training.py
 import torch
-import torch.nn as nn
+from torch import nn
 from torch.utils.data import DataLoader
 
 from app.core.models.resnet import ResNetClassifier, ResNetConfig
@@ -40,8 +40,7 @@ class TestTraining:
         assert 0.0 <= f1 <= 1.0
 
     def test_overfit_single_batch(self, tiny_dataset, device):
-        """
-        Core sanity check: model can overfit a tiny dataset.
+        """Core sanity check: model can overfit a tiny dataset.
         If this fails, something is fundamentally broken.
         """
         set_seed(42)

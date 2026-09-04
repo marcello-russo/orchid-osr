@@ -1,6 +1,5 @@
 # app/api/schemas.py
 from datetime import datetime
-from typing import Dict, Optional
 
 from pydantic import BaseModel, Field
 
@@ -18,7 +17,7 @@ class ClassifyResponse(BaseModel):
     predicted_class: str
     predicted_class_id: int
     confidence: float
-    probabilities: Dict[str, float]
+    probabilities: dict[str, float]
     novelty: dict | None = None
 
 
@@ -52,21 +51,21 @@ class ExperimentSummary(BaseModel):
 
     id: str
     name: str
-    model_variant: Optional[str] = None
+    model_variant: str | None = None
     type: str
     status: str
-    num_folds: Optional[int] = None
-    folds_completed: Optional[int] = None
-    test_accuracy: Optional[float] = None
-    test_f1: Optional[float] = None
-    mean_f1: Optional[float] = None
-    std_f1: Optional[float] = None
-    timestamp: Optional[str] = None
+    num_folds: int | None = None
+    folds_completed: int | None = None
+    test_accuracy: float | None = None
+    test_f1: float | None = None
+    mean_f1: float | None = None
+    std_f1: float | None = None
+    timestamp: str | None = None
     is_ncd: bool = False
-    ncd_auroc: Optional[float] = None
-    ncd_aupr: Optional[float] = None
-    ncd_detector: Optional[str] = None
-    ncd_clustering_nmi: Optional[float] = None
+    ncd_auroc: float | None = None
+    ncd_aupr: float | None = None
+    ncd_detector: str | None = None
+    ncd_clustering_nmi: float | None = None
 
 
 class ExperimentDetailResponse(BaseModel):
@@ -75,10 +74,10 @@ class ExperimentDetailResponse(BaseModel):
     id: str
     config: dict
     folds: list[dict]
-    results: Optional[dict] = None
-    detectors: Optional[dict] = None
-    openset: Optional[dict] = None
-    clustering: Optional[dict] = None
+    results: dict | None = None
+    detectors: dict | None = None
+    openset: dict | None = None
+    clustering: dict | None = None
     summary: dict
 
 

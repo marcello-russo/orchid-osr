@@ -113,6 +113,25 @@ EXPERIMENTS = {
         "e usata solo in test come novel class per la valutazione OSR.",
         "description": "SpHOR with O. garganica as hidden novel class (NCD)",
     },
+    5: {
+        "name": "exp5_sphor_ncd",
+        "train_dataset": "clean",
+        "test_dataset": "clean",
+        "num_classes": 4,
+        "test_classes": [c for c in TRAIN_CLASSES if c not in ["O. garganica", "O. majellensis"]],
+        "exclude_classes": ["O. garganica", "O. majellensis"],
+        "loss_type": "supcon",
+        "ncd_mode": True,
+        "phases": ["SupCon + SpHOR", "CE fine-tune"],
+        "num_epochs": 150,
+        "ce_epochs": 100,
+        "recipe": "Identico a Exp 4 ma con 2 novel nascoste (garganica+majellensis).",
+        "description": "SpHOR with 2 hidden novel classes (garganica+majellensis)",
+    },
+}
+
+# MGH escluso dalla narrazione 1-5
+EXPERIMENTS_ARCHIVED = {
     10: {
         "name": "exp10_mgh_ncd",
         "train_dataset": "clean",
@@ -137,3 +156,36 @@ EXPERIMENTS = {
         ),
     },
 }
+
+ALL_SPECIES = ["O. exaltata", "O. garganica", "O. incubacea", "O. majellensis", "O. sphegodes", "O. sphegodes_Palena"]
+
+
+def parse_novel_arg(s: str) -> list[str]:
+    parts = [p.strip() for p in s.split(",") if p.strip()]
+    normed = []
+    for p in parts:
+        low = p.lower().replace("o.", "").strip()
+        # match esatto dopo normalizzazione
+        match = next((sp for sp in ALL_SPECIES if low == sp.lower().replace("o.", "").strip()), None)
+        if not match:
+            raise ValueError(f"Specie '{p}' non trovata. Valide: {ALL_SPECIES}")
+        normed.append(match)
+    return normed
+
+
+def resolve_experiment(exp_id: int, novel_override: list[str] | None = None) -> dict:
+    import copy
+
+    if exp_id not in EXPERIMENTS:
+        raise ValueError(f"Exp {exp_id} non trovato")
+    cfg = copy.deepcopy(EXPERIMENTS[exp_id])
+    if novel_override is not None:
+        if len(novel_override) >= 6:
+            raise ValueError("Troppe novel class")
+        for cls in novel_override:
+            if cls not in ALL_SPECIES:
+                raise ValueError(f"Specie '{cls}' non trovata. Valide: {ALL_SPECIES}")
+        cfg["exclude_classes"] = novel_override
+        cfg["num_classes"] = 6 - len(novel_override)
+        cfg["test_classes"] = [c for c in TRAIN_CLASSES if c not in novel_override]
+    return cfg

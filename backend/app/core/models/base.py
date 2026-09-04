@@ -1,6 +1,5 @@
 # app/core/models/base.py
 from abc import ABC, abstractmethod
-from typing import Optional
 
 import torch
 from pydantic import BaseModel
@@ -12,7 +11,7 @@ class ModelConfig(BaseModel):
 
     num_classes: int = 7
     pretrained: bool = True
-    seed: Optional[int] = 42
+    seed: int | None = 42
     normalize_embeddings: bool = False
 
     def create_model(self) -> "ClassifierModel":
@@ -21,8 +20,7 @@ class ModelConfig(BaseModel):
 
 
 class ClassifierModel(ABC, nn.Module):
-    """
-    Abstract base class for all classifier models.
+    """Abstract base class for all classifier models.
 
     Any model (ResNet, ConvNeXt, DINOv2, etc.) must implement this interface
     to be used with the training and evaluation pipeline.
@@ -35,60 +33,68 @@ class ClassifierModel(ABC, nn.Module):
     @classmethod
     @abstractmethod
     def from_config(cls, config: ModelConfig) -> "ClassifierModel":
-        """
-        Factory method to create model from config.
+        """Factory method to create model from config.
 
         Args:
+        ----
             config: Model configuration
 
         Returns:
+        -------
             Initialized model instance
+
         """
         pass
 
     @abstractmethod
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """
-        Forward pass through the model.
+        """Forward pass through the model.
 
         Args:
+        ----
             x: Input tensor of shape (batch, channels, height, width)
 
         Returns:
+        -------
             Logits tensor of shape (batch, num_classes)
+
         """
         pass
 
     @abstractmethod
     def get_embeddings(self, x: torch.Tensor) -> torch.Tensor:
-        """
-        Extract embeddings from penultimate layer.
+        """Extract embeddings from penultimate layer.
 
         Args:
+        ----
             x: Input tensor of shape (batch, channels, height, width)
 
         Returns:
+        -------
             Embeddings tensor of shape (batch, embedding_dim)
+
         """
         pass
 
     @abstractmethod
     def load_weights(self, path: str) -> None:
-        """
-        Load model weights from file.
+        """Load model weights from file.
 
         Args:
+        ----
             path: Path to weights file
+
         """
         pass
 
     @abstractmethod
     def save_weights(self, path: str) -> None:
-        """
-        Save model weights to file.
+        """Save model weights to file.
 
         Args:
+        ----
             path: Path to save weights
+
         """
         pass
 

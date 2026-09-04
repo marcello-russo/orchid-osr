@@ -11,7 +11,7 @@ import numpy as np
 import torch
 
 from app.core.ncd.detector import get_detector, list_detectors
-from app.core.ncd.evaluation import evaluate_loo, evaluate_novel
+from app.core.ncd.evaluation import evaluate_loo, evaluate_novel, evaluate_osr
 from app.core.ncd.extract import extract_all
 
 logger = logging.getLogger(__name__)
@@ -152,8 +152,9 @@ def run_ncd_pipeline(
         grid_search_kmeans,
         kmeans_clustering,
         spectral_clustering,
+        ss_kmeans_clustering,
     )
-    from app.core.ncd.evaluation import compute_all_metrics
+    from app.core.ncd.evaluation import compute_all_metrics, compute_ari, compute_nmi, gcd_old_new_all_acc
 
     logger.info("\n--- K-means grid search ---")
     best_kmeans = grid_search_kmeans(combined_emb, combined_labels, k_range)
@@ -187,21 +188,69 @@ def run_ncd_pipeline(
         metrics_sp = compute_all_metrics(combined_labels, pred_sp)
         results["clustering"]["spectral"] = {**metrics_sp, "info": info_sp}
 
+    # ---- GCD (Vaze et al. 2022): SS-KMeans vincolato + ACC Old/New/All ----
+    # In ncd_mode il pool combinato contiene classi note (train+test) e novel:
+    # labeled = campioni train, pool = combined (protocollo Generalized Category Discovery).
+    if ncd_mode and all_classes:
+        novel_candidates = [c for c in all_classes if c not in set(bundle.train_class_names)]
+        if novel_candidates and not run_osr:
+            results["novel_classes"] = novel_candidates
+        try:
+            labeled_mask = combined_labels < num_classes
+            pool_norm = combined_emb / (np.linalg.norm(combined_emb, axis=1, keepdims=True) + 1e-12)
+            labeled_lab = combined_labels[labeled_mask]
+            n_known = num_classes
+            n_novel = combined_n_classes - n_known
+
+            pred_ss, _ = ss_kmeans_clustering(
+                pool_norm,
+                labeled_mask,
+                labeled_lab,
+                n_known=n_known,
+                n_novel=n_novel,
+            )
+            gcd_ss = gcd_old_new_all_acc(combined_labels, pred_ss, labeled_mask)
+            results["gcd"] = {
+                "protocol": "GCD (Vaze et al. 2022)",
+                "novel_classes": novel_candidates,
+                "ss_kmeans": {
+                    **gcd_ss,
+                    "nmi": compute_nmi(combined_labels, pred_ss),
+                    "ari": compute_ari(combined_labels, pred_ss),
+                },
+            }
+            logger.info(
+                "\n=== GCD (SS-KMeans) === All=%.4f Old=%.4f New=%.4f NMI=%.4f",
+                gcd_ss["acc_all"],
+                gcd_ss["acc_old"],
+                gcd_ss["acc_new"],
+                results["gcd"]["ss_kmeans"]["nmi"],
+            )
+        except Exception as e:
+            logger.warning("GCD SS-KMeans fallito: %s", e)
+            import traceback
+
+            traceback.print_exc()
+
     if run_osr:
         novel_name: str | None = None
+        novel_candidates: list[str] = []
         if ncd_mode and all_classes:
             train_classes = set(bundle.train_class_names)
             novel_candidates = [c for c in all_classes if c not in train_classes]
             if novel_candidates:
                 novel_name = novel_candidates[0]
-                logger.info("Novel class: %s", novel_name)
+                logger.info("Novel class(es): %s", novel_candidates)
             else:
                 logger.warning("Nessuna novel class in all_classes vs train")
 
         results["detectors"] = {}
-        if novel_name:
-            results["novel_class"] = novel_name
+        if novel_candidates:
+            # per compatibilità singola novel + supporto 2 novel
+            results["novel_class"] = novel_candidates[0] if len(novel_candidates) == 1 else None
+            results["novel_classes"] = novel_candidates
 
+        osr_scores: dict[str, np.ndarray] = {}
         for det_name in list_detectors():
             detector = get_detector(det_name)
 
@@ -215,14 +264,24 @@ def run_ncd_pipeline(
                     bundle.test_embeddings,
                     logits=bundle.test_logits if detector.requires_logits else None,
                 )
+                osr_scores[det_name] = np.asarray(scores, dtype=float)
 
-                if ncd_mode and novel_name:
-                    results["detectors"][det_name] = evaluate_novel(
-                        scores,
-                        bundle.test_labels,
-                        novel_name,
-                        bundle.test_class_names,
-                    )
+                if ncd_mode and novel_candidates:
+                    if len(novel_candidates) == 1:
+                        results["detectors"][det_name] = evaluate_novel(
+                            scores,
+                            bundle.test_labels,
+                            novel_candidates[0],
+                            bundle.test_class_names,
+                        )
+                    else:
+                        # 2 novel: 3 AUROC (globale + per-novel)
+                        results["detectors"][det_name] = evaluate_osr(
+                            scores,
+                            bundle.test_labels,
+                            bundle.test_class_names,
+                            novel_candidates,
+                        )
                 else:
                     results["detectors"][det_name] = evaluate_loo(scores, bundle.test_labels, bundle.test_class_names)
             except Exception as e:
@@ -239,6 +298,19 @@ def run_ncd_pipeline(
             else:
                 au = metrics.get("auroc", metrics.get("mean_auroc", float("nan")))
                 logger.info("  %20s: AUROC = %.4f", det_name, au)
+        if ncd_mode and novel_candidates:
+            try:
+                novel_idx = [bundle.test_class_names.index(c) for c in novel_candidates]
+                y_true_osr = np.isin(np.asarray(bundle.test_labels), novel_idx).astype(np.int64)
+                np.savez(
+                    os.path.join(exp_dir, "osr_scores.npz"),
+                    y_true=y_true_osr,
+                    class_names=np.asarray(bundle.test_class_names),
+                    **osr_scores,
+                )
+                logger.info("OSR scores salvati in: %s", os.path.join(exp_dir, "osr_scores.npz"))
+            except Exception as e:
+                logger.warning("Salvataggio osr_scores.npz fallito (ncd_results.json intatto): %s", e)
 
     if combined_emb.shape[1] > 2:
         try:
@@ -255,8 +327,8 @@ def run_ncd_pipeline(
             known_mask = combined_labels < num_classes if ncd_mode else np.ones(len(combined_labels), dtype=bool)
             if ncd_mode:
                 combined_class_names = list(bundle.train_class_names)
-                if novel_name:
-                    combined_class_names.append(novel_name)
+                if novel_candidates:
+                    combined_class_names.extend(novel_candidates)
             else:
                 combined_class_names = class_names
             plot_tsne_known_vs_unknown(

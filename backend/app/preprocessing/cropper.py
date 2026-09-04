@@ -1,5 +1,4 @@
-"""
-Flower cropper using Faster R-CNN.
+"""Flower cropper using Faster R-CNN.
 
 Loads a pretrained Faster R-CNN detector, runs inference on raw images,
 and crops to the detected flower bounding box.
@@ -22,12 +21,15 @@ def load_cropper_model(model_path, device=None, num_classes=2):
     """Load the Faster R-CNN cropper model.
 
     Args:
+    ----
         model_path: Path to .pth state_dict.
         num_classes: Number of classes (default 2 = background + flower).
         device: Target device (auto-detected if None).
 
     Returns:
+    -------
         Model in eval mode.
+
     """
     if device is None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -44,8 +46,10 @@ def load_cropper_model(model_path, device=None, num_classes=2):
 def detect_flower(model, image, score_threshold=DEFAULT_SCORE_THRESHOLD):
     """Detect the most prominent flower in an image.
 
-    Returns:
+    Returns
+    -------
         Bounding box (x_min, y_min, x_max, y_max) or None.
+
     """
     tensor = T.ToTensor()(image)
     device = next(model.parameters()).device
@@ -69,11 +73,14 @@ def crop_to_bbox(image, bbox, padding=0):
     """Crop image to bounding box with optional padding.
 
     Args:
+    ----
         bbox: (x_min, y_min, x_max, y_max).
         padding: Extra pixels around bbox (clamped to image bounds).
 
     Returns:
+    -------
         Cropped PIL Image.
+
     """
     x_min, y_min, x_max, y_max = bbox
     iw, ih = image.size
@@ -90,10 +97,13 @@ def crop_single_image(model, image_path, score_threshold=DEFAULT_SCORE_THRESHOLD
     """Crop a single image using the detector.
 
     Args:
+    ----
         fallback: "full" (return full image), "skip" (return None).
 
     Returns:
+    -------
         (cropped_image, metadata_dict) or (None, metadata_dict) if skip.
+
     """
     image = Image.open(image_path).convert("RGB")
     metadata = {"path": image_path, "detected": False, "score": None, "fallback_used": False}
@@ -126,8 +136,10 @@ def crop_dataset(
 
     Preserves class subdirectory structure. Processes all jpg/jpeg/png files.
 
-    Returns:
+    Returns
+    -------
         Summary dict with counts.
+
     """
     model = load_cropper_model(model_path, device, num_classes)
     input_dir = Path(input_dir)

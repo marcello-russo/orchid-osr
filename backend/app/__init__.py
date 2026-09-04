@@ -1,6 +1,5 @@
 # app/__init__.py
-"""
-Orchid Classification App.
+"""Orchid Classification App.
 
 Modular structure for Ophrys orchid classification.
 """

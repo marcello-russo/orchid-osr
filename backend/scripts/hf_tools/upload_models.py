@@ -1,6 +1,6 @@
 """Upload only essential model files to HuggingFace (best fold + metadata).
 
-Usage: python upload_models.py [--cleanup] [--exp all|exp1_ce|exp2_supcon]
+Usage: python upload_models.py [--cleanup] [--exp all|exp1_ce|exp2_supcon|exp5_sphor_ncd]
 """
 
 import json
@@ -39,6 +39,7 @@ EXPERIMENTS = [
     {"prefix": "exp2_supcon", "exp": "exp7_supcon", "label": "Exp 2 (SupCon)"},
     {"prefix": "exp3_sphor", "exp": "exp8_sphor", "label": "Exp 3 (SpHOR)"},
     {"prefix": "exp4_sphor_ncd", "exp": "exp9_ncd", "label": "Exp 4 (SpHOR-NCD)"},
+    {"prefix": "exp5_sphor_ncd", "exp": "exp5_sphor_ncd", "label": "Exp 5 (SpHOR-NCD 2 novel)"},
     {"prefix": "exp10_mgh_ncd", "exp": "exp10_mgh_ncd", "label": "Exp 10 (MGH-NCD)"},
 ]
 
@@ -143,15 +144,13 @@ def cleanup_old_files(api):
                 if fname.startswith(best_adapter):
                     continue
 
-                if fname.startswith("best_fold_") and fname.endswith(".pt"):
-                    print(f"    DELETE {f}")
-                    api.delete_file(repo_id=HF_REPO, path_in_repo=f)
-                    removed += 1
-                elif fname.startswith("fold_") and fname.endswith(".json"):
-                    print(f"    DELETE {f}")
-                    api.delete_file(repo_id=HF_REPO, path_in_repo=f)
-                    removed += 1
-                elif fname.startswith("REPORT_"):
+                if (
+                    fname.startswith("best_fold_")
+                    and fname.endswith(".pt")
+                    or fname.startswith("fold_")
+                    and fname.endswith(".json")
+                    or fname.startswith("REPORT_")
+                ):
                     print(f"    DELETE {f}")
                     api.delete_file(repo_id=HF_REPO, path_in_repo=f)
                     removed += 1
@@ -227,6 +226,7 @@ def update_readme(api):
     exp7_rows = _build_results_table("exp2_supcon", "exp2_supcon")
     exp8_rows = _build_results_table("exp3_sphor", "exp3_sphor")
     exp9_rows = _build_results_table("exp4_sphor_ncd", "exp4_sphor_ncd")
+    exp5_rows = _build_results_table("exp5_sphor_ncd", "exp5_sphor_ncd")
     exp10_rows = _build_results_table("exp10_mgh_ncd", "exp10_mgh_ncd")
 
     sections = []
@@ -270,6 +270,16 @@ NCD scenario: O. garganica excluded from training (hidden novel class).
 
 {header}
 {chr(10).join(exp9_rows)}""")
+
+    if exp5_rows:
+        sections.append(f"""## Exp 5: NCD with 2 Hidden Novel Classes
+
+NCD scenario: O. garganica + O. majellensis excluded from training (4 known classes).
+
+**Recipe:** same as Exp 3 (150 epochs, patience 15).
+
+{header}
+{chr(10).join(exp5_rows)}""")
 
     if exp10_rows:
         sections.append(f"""## Exp 10: Ultimate Experiment
@@ -329,6 +339,9 @@ exp3_sphor/                        — Exp 3 (SpHOR)
     ...
 exp4_sphor_ncd/                          — Exp 4 (SpHOR-NCD)
   exp4_sphor_ncd_resnet18/
+    ...
+exp5_sphor_ncd/                    — Exp 5 (SpHOR-NCD 2 novel)
+  exp5_sphor_ncd_resnet18/
     ...
 exp10_mgh_ncd/                     — Exp 10 (MGH-NCD)
   exp10_mgh_ncd_resnet18/

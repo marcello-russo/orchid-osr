@@ -6,8 +6,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 
 
 def letterbox_resize(image, target_width, target_height):
-    """
-    Resizes image maintaining aspect ratio and adds padding (letterbox) to reach target size.
+    """Resizes image maintaining aspect ratio and adds padding (letterbox) to reach target size.
     Prevents both distortion and information loss.
     """
     iw, ih = image.size

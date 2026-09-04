@@ -9,7 +9,6 @@ from huggingface_hub import HfApi, hf_hub_download
 
 def download_file(api: HfApi, repo: str, src_path: str, dst_path: str | Path, token: str):
     """Download a single file from HF with atomic .tmp+os.replace."""
-
     dl = hf_hub_download(repo, src_path, token=token)
     tmp = str(dst_path) + ".tmp"
     shutil.copy2(dl, tmp)

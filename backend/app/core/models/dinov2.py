@@ -3,7 +3,7 @@ import logging
 from typing import Literal
 
 import torch
-import torch.nn as nn
+from torch import nn
 
 from app.core.models.base import ClassifierModel, ModelConfig
 

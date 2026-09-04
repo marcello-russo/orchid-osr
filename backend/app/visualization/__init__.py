@@ -14,12 +14,13 @@ from app.visualization.utils import load_experiment_data
 
 
 def plot_experiment(exp_dir, output_dir=None):
-    """
-    Generate all plots for a k-fold experiment.
+    """Generate all plots for a k-fold experiment.
 
     Args:
+    ----
         exp_dir: path to experiment directory (contains fold_*.json, results.json)
         output_dir: where to save PNGs (default: exp_dir/figures/)
+
     """
     if output_dir is None:
         output_dir = os.path.join(exp_dir, "figures")

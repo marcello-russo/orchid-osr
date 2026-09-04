@@ -7,8 +7,8 @@ import os
 
 import numpy as np
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
+from torch import nn
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 from app.core.losses import SupConLoss
@@ -272,8 +272,10 @@ def extract_embeddings(
 ) -> tuple[np.ndarray, np.ndarray, list[str]]:
     """Extract embeddings for an entire dataset.
 
-    Returns:
+    Returns
+    -------
         (embeddings, labels, paths) — embeddings is (N, embedding_dim) numpy array.
+
     """
     model.eval()
     all_embeddings = []
