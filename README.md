@@ -79,6 +79,19 @@ Six morphologically similar *Ophrys* species, one held-out novel class (*O. garg
 
 *Exp 4 excludes O. garganica from training, leaving it as the hidden novel class for open-set evaluation.*
 
+### Exp 5 — NCD with 2 Hidden Novel Classes (preliminare)
+
+| Model | F1 Test (4 cls) | AUROC (Ensemble) |
+|-------|:---------------:|:----------------:|
+| **ConvNeXt‑Tiny** | **0.906** | **0.843** |
+| ResNet‑18 | 0.808 | 0.666 |
+| ConvNeXt‑Small | 0.531 | 0.718 |
+| DINOv2‑Small | 0.291 | 0.734 |
+| ResNet‑50 | 0.240 | 0.634 |
+| DINOv2‑Base | 0.110 | 0.805 |
+
+*Exp 5 excludes O. garganica + O. majellensis (4 known classes). OSR scales (ConvNeXt-Tiny 0.843); GCD discovery collapses (SS-KMeans ACC new 0.12–0.38, NMI 0.92–0.95 stable). See thesis Sec. 4.5.*
+
 ---
 
 ## Key Findings
@@ -116,7 +129,19 @@ python cli.py --cross-validate --exp 2 --model resnet18    # SupCon
 python cli.py --cross-validate --exp 3 --model resnet18 --sphor   # SpHOR
 python cli.py --cross-validate --exp 4 --model dinov2_small --sphor   # NCD (hidden novel class)
 python cli.py --ncd --exp 4 --model dinov2_small                  # OSR + clustering evaluation
+python cli.py --cross-validate --exp 3 --model resnet18 --novel garganica,majellensis  # generic: 2 novel override
 ```
+
+### Orchid CLI (Typer)
+
+```bash
+orchid --help
+orchid train --help
+orchid train --exp 4 --model dinov2_small --sphor
+orchid figures --all  # rigenera le figure in documents/_figures/ (§3.5 riproducibile)
+```
+
+> `python cli.py` remains available as a deprecated alias for `orchid`.
 
 See [AGENTS.md](AGENTS.md) for the full command reference.
 
@@ -126,10 +151,11 @@ See [AGENTS.md](AGENTS.md) for the full command reference.
 
 | Exp | Method | Phases | Description |
 |-----|--------|--------|-------------|
-| 6 | CE baseline | 1 (CE) | Standard cross-entropy, backbone + head trained jointly |
-| 7 | SupCon | 2 (SupCon → CE) | Supervised contrastive pretraining → linear probe |
-| 8 | SpHOR | 2 (SupCon+SpHOR → CE) | Orthogonal spherical prototypes for open-set regularisation |
-| 9 | NCD | 2 (SupCon+SpHOR → CE) | O. garganica excluded as hidden novel class; OSR + clustering evaluation |
+| 1 | CE baseline | 1 (CE) | Standard cross-entropy, backbone + head trained jointly |
+| 2 | SupCon | 2 (SupCon → CE) | Supervised contrastive pretraining → linear probe |
+| 3 | SpHOR | 2 (SupCon+SpHOR → CE) | Orthogonal spherical prototypes for open-set regularisation |
+| 4 | NCD | 2 (SupCon+SpHOR → CE) | O. garganica excluded as hidden novel class; OSR + clustering evaluation |
+| 5 | NCD (2 novel) | 2 (SupCon+SpHOR → CE) | O. garganica + O. majellensis excluded as hidden novel classes; OSR + clustering evaluation |
 
 All experiments use 5-fold stratified CV with seed 57 over 6 backbones.
 

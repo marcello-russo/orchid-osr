@@ -9,8 +9,7 @@ from PIL import Image
 from torch.utils.data import Dataset
 from torchvision.datasets import ImageFolder
 
-import app.preprocessing.resizing as resizing
-import app.preprocessing.rotation as rotation
+from app.preprocessing import resizing, rotation
 
 config = dotenv_values(".env")
 
@@ -82,8 +81,7 @@ def augmentDataPath(data_path, output_path, max_images_per_class, width, height,
 
 
 def CalculateBalancedTargets(raw_data_path, class_names, augmentation_functions):
-    """
-    Calculates balanced target images per class.
+    """Calculates balanced target images per class.
     Target = min_class_size * num_augmentations (all classes reach the same number)
     """
     class_sizes = {}
@@ -125,8 +123,7 @@ def _process_single_image(args):
 def augmentDataPathBalanced(
     data_path, output_path, target_images, width, height, augmentation_functions, current_count
 ):
-    """
-    Augments images until target_images is reached.
+    """Augments images until target_images is reached.
     Parallelized with ProcessPoolExecutor.
     If originals > target: undersample to target.
     If originals < target: oversample with augmentation.

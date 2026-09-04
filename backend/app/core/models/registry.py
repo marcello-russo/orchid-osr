@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Type
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from app.core.models.base import ClassifierModel, ModelConfig  # noqa: F401
@@ -10,8 +10,8 @@ if TYPE_CHECKING:
 
 @dataclass
 class ModelRegistryEntry:
-    config_cls: Type[ModelConfig]
-    classifier_cls: Type[ClassifierModel]
+    config_cls: type[ModelConfig]
+    classifier_cls: type[ClassifierModel]
     input_size: tuple[int, int]  # (width, height)
     norm_mean: list[float]
     norm_std: list[float]
@@ -72,8 +72,10 @@ def available_models() -> list[str]:
 def unique_input_sizes() -> dict[str, tuple[int, int]]:
     """Return unique input sizes across all registered models.
 
-    Returns:
+    Returns
+    -------
         Dict mapping label "WxH" → (width, height).
+
     """
     seen = {}
     for entry in MODEL_REGISTRY.values():

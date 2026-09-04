@@ -2,7 +2,7 @@
 from typing import Literal
 
 import torch
-import torch.nn as nn
+from torch import nn
 from torchvision import models
 
 from app.core.models.base import ClassifierModel, ModelConfig

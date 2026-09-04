@@ -5,7 +5,7 @@ import os
 
 import torch
 
-from app.cli.definitions import EXPERIMENTS, PROJECT_ROOT
+from app.cli.definitions import EXPERIMENTS, PROJECT_ROOT, parse_novel_arg, resolve_experiment
 
 
 def setup_logging(log_dir: str | None = None, level: int = logging.INFO) -> str:
@@ -88,16 +88,27 @@ def run_experiment(
     pair_weights: dict | None = None,
     full_finetune: bool = False,
     osr_ensemble: bool = False,
+    novel: str | None = None,
 ):
     """Run a single experiment (k-fold cross-validation or single fold)."""
-    import logging
-
-    from app.cli.definitions import ALL_CLASSES, DATASET_PATHS, EXPERIMENTS, PROJECT_ROOT
+    from app.cli.definitions import ALL_CLASSES, DATASET_PATHS
     from app.cli.phases import detect_phase
     from app.core.kfold.testing import aggregate_results
 
     logger = logging.getLogger(__name__)
-    config = EXPERIMENTS[exp_id]
+    # Generic CLI: resolve experiment via resolver with optional --novel override
+    novel_override = parse_novel_arg(novel) if novel else None
+    try:
+        config = resolve_experiment(exp_id, novel_override)
+    except ValueError as e:
+        raise SystemExit(f"error: {e}") from e
+    if novel_override:
+        logger.info(f"Exp {exp_id} con novel override: escluse {novel_override} → {config['num_classes']} classi note")
+    # Use config num_epochs/ce_epochs unless CLI explicitly overrides (fix 26 default overriding 150)
+    if epochs == 26 and "num_epochs" in config:
+        epochs = config["num_epochs"]
+    if ce_epochs == 50 and "ce_epochs" in config:
+        ce_epochs = config["ce_epochs"]
     output_dir = os.path.join(PROJECT_ROOT, "experiments", f"{config['name']}_{model_variant}")
     if tag:
         output_dir += f"_{tag}"
@@ -153,17 +164,26 @@ def run_experiment(
         if not os.path.exists(cropped_train):
             logger.error(f"Dataset not found: {cropped_train}")
             return
-        # Per esperimenti con exclude_classes (Exp 4: garganica come novel),
-        # usa dataset dedicati senza garganica (train e test).
+        # Per esperimenti con exclude_classes (Exp 4/5 novel), usa dataset generico
+        # e lascia filtrare la pipeline via exclude_classes; i dedicated train_ncd_exp4
+        # sono legacy per Exp 4 singolo-novel e non vanno usati per Exp 5 (2 novel).
         train_dir = cropped_train
         test_dir = cropped_test if os.path.exists(cropped_test) else None
-        if config.get("exclude_classes"):
+        # Dedicated train per Exp 4 (1 novel) e Exp 5 (2 novel) — symlink a 5 e 4 classi
+        excl = config.get("exclude_classes") or []
+        if excl == ["O. garganica"]:
             dedicated_train = str(PROJECT_ROOT / "dataset" / f"cropped_{w}x{h}" / "train_ncd_exp4")
             if os.path.exists(dedicated_train):
                 train_dir = dedicated_train
             dedicated_test = str(PROJECT_ROOT / "dataset" / f"cropped_{w}x{h}" / "test_ncd_exp4")
             if os.path.exists(dedicated_test):
                 test_dir = dedicated_test
+        elif set(excl) == {"O. garganica", "O. majellensis"}:
+            dedicated_train = str(PROJECT_ROOT / "dataset" / f"cropped_{w}x{h}" / "train_ncd_exp5")
+            if os.path.exists(dedicated_train):
+                train_dir = dedicated_train
+            # test per Exp5 è il test completo 6 classi (300), non deduciamo
+            test_dir = cropped_test if os.path.exists(cropped_test) else None
         # NCD mode è forzato a True per esperimenti con exclude_classes
         # (Exp 4): la novel class è quella esclusa dal training. Per gli
         # altri exp (6-8,10) resta il valore della config.

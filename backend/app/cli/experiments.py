@@ -1,6 +1,5 @@
 # app/cli/experiments.py
-"""
-Thin CLI entrypoint: parse_args() + main() only.
+"""Thin CLI entrypoint: parse_args() + main() only.
 
 All experiment logic lives in:
   - definitions.py  — constants and experiment definitions
@@ -286,6 +285,7 @@ def _resolve_experiments(args, phases: list[str]) -> list[int] | None:
 def _log_config(args, phases: list[str], exp_ids: list[int]) -> None:
     """Log experiment configuration."""
     is_inference = set(phases).issubset({"ncd", "embeddings"})
+    from app.cli.definitions import EXPERIMENTS as _EXP
 
     logging.info("=" * 70)
     logging.info("ORCHID CLASSIFICATION EXPERIMENTS")
@@ -298,7 +298,17 @@ def _log_config(args, phases: list[str], exp_ids: list[int]) -> None:
         logging.info("Batch size: N/A")
         logging.info("Learning rate: N/A")
     else:
-        logging.info(f"Epochs: {args.epochs}")
+        # Mostra epoche effettive dalla config se disponibili
+        if len(exp_ids) == 1 and exp_ids[0] in _EXP:
+            cfg = _EXP[exp_ids[0]]
+            eff_epochs = cfg.get("num_epochs", args.epochs)
+            eff_ce = cfg.get("ce_epochs", args.ce_epochs) if cfg.get("loss_type") == "supcon" else None
+            if eff_ce:
+                logging.info(f"Epochs: {eff_epochs} + {eff_ce} (CE)")
+            else:
+                logging.info(f"Epochs: {eff_epochs}")
+        else:
+            logging.info(f"Epochs: {args.epochs}")
         logging.info(f"Batch size: {args.batch_size}")
         logging.info(f"Learning rate: {args.lr}")
     if args.patience > 0:
@@ -402,14 +412,20 @@ def _run_embeddings_missing(args, valid_models: list[str]) -> int:
 
 def _run_experiment_loop(args, phases: list[str], exp_ids: list[int]) -> int:
     """Run the experiment loop for training/testing/cross-validation."""
+    from app.cli.definitions import EXPERIMENTS as _EXP
+
     success_count = 0
     for exp_id in exp_ids:
+        # Usa epoche dalla config dell'esperimento se definite, altrimenti da CLI
+        cfg = _EXP.get(exp_id, {})
+        exp_epochs = cfg.get("num_epochs", args.epochs)
+        exp_ce = cfg.get("ce_epochs", args.ce_epochs)
         try:
             run_experiment(
                 exp_id=exp_id,
                 phases=phases,
                 model_variant=args.model,
-                epochs=args.epochs,
+                epochs=exp_epochs,
                 batch_size=args.batch_size,
                 learning_rate=args.lr,
                 num_folds=args.folds,
@@ -420,7 +436,7 @@ def _run_experiment_loop(args, phases: list[str], exp_ids: list[int]) -> int:
                 gradient_accumulation_steps=args.accumulation,
                 proj_dim=args.proj_dim,
                 temperature=args.temperature,
-                ce_epochs=args.ce_epochs,
+                ce_epochs=exp_ce,
                 use_prototypes=args.sphor,
                 repulse_weight=args.repulse_weight,
                 pair_weights=(
@@ -433,6 +449,7 @@ def _run_experiment_loop(args, phases: list[str], exp_ids: list[int]) -> int:
                 ),
                 full_finetune=args.full_finetune,
                 osr_ensemble=args.osr_ensemble,
+                novel=args.novel,
             )
             success_count += 1
         except Exception as e:
@@ -583,6 +600,12 @@ Examples:
     # Experiment selection
     parser.add_argument("--exp", type=int, choices=[1, 2, 3, 4, 5, 10], help="Run specific experiment (1-10)")
     parser.add_argument(
+        "--dry-run", action="store_true", help="Validate config and print resolved experiment without training"
+    )
+    parser.add_argument(
+        "--novel", type=str, default=None, help="Comma-separated novel classes to hide (e.g. garganica,majellensis)"
+    )
+    parser.add_argument(
         "--tag",
         type=str,
         default=None,
@@ -646,6 +669,40 @@ def main():
     if args.plot:
         _run_plot_mode(args)
         return 0
+
+    # --dry-run: validate and print resolved config without training
+    if getattr(args, "dry_run", False):
+        from app.cli.definitions import parse_novel_arg, resolve_experiment
+
+        try:
+            novel_override = parse_novel_arg(args.novel) if args.novel else None
+        except ValueError as e:
+            print(f"Specie '{args.novel}' non trovata" if "non trovata" in str(e) else str(e), file=sys.stderr)
+            import argparse as _ap
+
+            _ap.ArgumentParser().error(str(e))
+        target = args.exp or 5
+        try:
+            cfg = resolve_experiment(target, novel_override)
+        except ValueError as e:
+            import argparse as _ap
+
+            _ap.ArgumentParser().error(str(e))
+        excl = cfg.get("exclude_classes") or []
+        print(f"Exp {target} con {cfg['num_classes']} classi note, escluse {excl} — {cfg.get('description','')}")
+        print(f"  name={cfg['name']} phases={cfg.get('phases')} novel_override={novel_override}")
+        return 0
+
+    # Early validation of --novel so that errors surface as argparse errors
+    if args.novel:
+        from app.cli.definitions import parse_novel_arg as _parse_novel
+
+        try:
+            _parse_novel(args.novel)
+        except ValueError as e:
+            import argparse as _ap
+
+            _ap.ArgumentParser().error(str(e))
 
     setup_logging()
     phases = _resolve_phases(args)

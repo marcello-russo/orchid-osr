@@ -7,7 +7,7 @@ from typing import Optional
 
 import numpy as np
 import torch
-import torch.nn as nn
+from torch import nn
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.utils.data import DataLoader
@@ -35,11 +35,12 @@ def train_one_epoch(
     device: torch.device,
     gradient_accumulation_steps: int = 1,
 ) -> float:
-    """
-    Train model for one epoch with optional gradient accumulation.
+    """Train model for one epoch with optional gradient accumulation.
 
-    Returns:
+    Returns
+    -------
         Average training loss for the epoch
+
     """
     model.train()
     running_loss = 0.0
@@ -71,11 +72,12 @@ def validate_one_epoch(
     device: torch.device,
     num_classes: int,
 ) -> tuple[float, float, float]:
-    """
-    Validate model for one epoch.
+    """Validate model for one epoch.
 
-    Returns:
+    Returns
+    -------
         Tuple of (average loss, accuracy, f1 score)
+
     """
     model.eval()
     running_loss = 0.0
@@ -151,18 +153,18 @@ def train(
     learning_rate: float,
     device: torch.device,
     num_classes: int,
-    checkpoint_dir: Optional[str] = None,
+    checkpoint_dir: str | None = None,
     start_epoch: int = 0,
     patience: int = 0,
     gradient_accumulation_steps: int = 1,
-    resume_from: Optional[str] = None,
+    resume_from: str | None = None,
     optimizer_type: str = "adam",
     weight_decay: float = 0.0,
 ) -> tuple[ClassifierModel, dict]:
-    """
-    Train a classifier model.
+    """Train a classifier model.
 
     Args:
+    ----
         model: Model to train
         train_loader: Training data loader
         val_loader: Validation data loader
@@ -179,7 +181,9 @@ def train(
         weight_decay: Weight decay for the optimizer
 
     Returns:
+    -------
         Tuple of (trained model, training history dict)
+
     """
     model = model.to(device)
 

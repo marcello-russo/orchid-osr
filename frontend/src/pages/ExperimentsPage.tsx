@@ -40,7 +40,8 @@ function colAlign(col: Col): "left" | "right" | undefined {
 }
 
 const ALL_FAMILIES = ["ResNet", "ConvNeXt", "DINOv2"] as const;
-const ALL_SERIES = ["Exp 1", "Exp 2", "Exp 3", "Exp 4"] as const;
+// Dinamico: mostra solo le serie effettivamente presenti nei dati (supporta Exp 5+ senza hardcode)
+const KNOWN_SERIES = ["Exp 1", "Exp 2", "Exp 3", "Exp 4", "Exp 5"] as const;
 
 export function ExperimentsPage() {
   const { t } = useTranslation();
@@ -50,6 +51,14 @@ export function ExperimentsPage() {
   const [familyFilter, setFamilyFilter] = useState<string | null>(null);
   const [seriesFilter, setSeriesFilter] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  const allSeries = useMemo(() => {
+    if (!experiments) return [...KNOWN_SERIES] as string[];
+    const seen = new Set(experiments.map((e) => getExperimentSeries(e.id)).filter(Boolean) as string[]);
+    // Mantieni ordine KNOWN_SERIES + eventuali nuove Exp N in coda ordinata
+    const extra = [...seen].filter((s) => !(KNOWN_SERIES as readonly string[]).includes(s)).sort();
+    return [...KNOWN_SERIES.filter((s) => seen.has(s)), ...extra] as string[];
+  }, [experiments]);
 
   const filtered = useMemo(() => {
     if (!experiments) return [];
@@ -108,7 +117,7 @@ export function ExperimentsPage() {
           <select value={seriesFilter ?? ""} onChange={(e) => setSeriesFilter(e.target.value || null)}
             className="text-xs bg-card border border-border/50 rounded-lg px-2.5 py-1.5 text-foreground cursor-pointer appearance-auto">
             <option value="">{t("experiments.filters.all_experiments")}</option>
-            {ALL_SERIES.map((s) => <option key={s} value={s}>{s}</option>)}
+            {allSeries.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
       </div>

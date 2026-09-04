@@ -12,8 +12,7 @@ from app.visualization.style import COLORS, DPI, FIGURE_SIZE
 
 
 def plot_loss_curves(data, output_dir):
-    """
-    Plot train loss and val loss per epoch, one line per fold.
+    """Plot train loss and val loss per epoch, one line per fold.
     Vertical dashed line at each fold's best_epoch.
     """
     folds = data["folds"]
@@ -50,8 +49,7 @@ def plot_loss_curves(data, output_dir):
 
 
 def plot_metric_curves(data, output_dir):
-    """
-    Plot val F1 and val accuracy per epoch, one line per fold.
+    """Plot val F1 and val accuracy per epoch, one line per fold.
     Horizontal dashed line at mean best F1.
     """
     folds = data["folds"]
@@ -168,8 +166,7 @@ def plot_confusion_matrix(data, output_dir):
 
 
 def plot_overfitting_proxy(data, output_dir):
-    """
-    Ratio val_loss / train_loss per epoch per fold.
+    """Ratio val_loss / train_loss per epoch per fold.
     Values > 1 indicate potential overfitting.
     """
     folds = data["folds"]

@@ -69,3 +69,4 @@ backend/data/jwt_secret.txt
 
 backend/data/osr_stats/
 keys/
+.mypy_cache/

@@ -9,11 +9,12 @@ logger = logging.getLogger(__name__)
 
 
 def generate_report(results, variant, output_dir):
-    """
-    Genera un report testuale simile a REPORT_CORRETTO.txt.
+    """Genera un report testuale simile a REPORT_CORRETTO.txt.
 
-    Returns:
+    Returns
+    -------
         str: contenuto del report
+
     """
     lines = []
     lines.append("=" * 80)

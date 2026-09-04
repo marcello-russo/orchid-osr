@@ -5,6 +5,7 @@ from app.cli.definitions import (
     DATASET_PATHS,
     DEFAULT_CONFIG,
     EXPERIMENTS,
+    EXPERIMENTS_ARCHIVED,
 )
 from app.cli.experiments import parse_args
 from app.cli.runner import get_device, show_status
@@ -16,7 +17,9 @@ class TestCLI:
     def test_experiments_defined(self):
         """Test that only valid experiments are defined."""
         assert len(EXPERIMENTS) == 5
-        assert all(i in EXPERIMENTS for i in [1, 2, 3, 4])
+        assert all(i in EXPERIMENTS for i in [1, 2, 3, 4, 5])
+        assert 10 in EXPERIMENTS_ARCHIVED
+        assert 10 not in EXPERIMENTS
 
     def test_experiment_structure(self):
         """Test that experiments have required fields."""

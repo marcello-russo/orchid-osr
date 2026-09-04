@@ -12,7 +12,7 @@ FIGURE_SIZE = (8, 5)
 DPI = 300
 
 
-def setup_style():
+def setup_style() -> None:
     """Apply ggplot style with custom overrides for publication quality."""
     plt.style.use("ggplot")
     plt.rcParams.update(

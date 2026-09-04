@@ -28,7 +28,8 @@ def _validate_id(value: str) -> str:
 
 def _parse_exp_num(name: str) -> int:
     """Extract experiment number from directory name for sorting.
-    'exp10_mgh_ncd_resnet18' → 10, 'exp1_ce' → 6."""
+    'exp10_mgh_ncd_resnet18' → 10, 'exp1_ce' → 6.
+    """
     m = re.search(r"exp(\d+)", name)
     return int(m.group(1)) if m else 999
 
@@ -385,7 +386,8 @@ def _build_experiment_response(
 @router.get("/{experiment_id}/log")
 async def get_experiment_log(experiment_id: str):
     """Get the training log file for an experiment.
-    On HF Space (no log files synced), returns available=false."""
+    On HF Space (no log files synced), returns available=false.
+    """
     experiment_id = _validate_id(experiment_id)
     exp_dir = _get_experiments_dir() / experiment_id
     log_file = exp_dir / f"{experiment_id}.log"

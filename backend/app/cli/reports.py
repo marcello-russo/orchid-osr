@@ -1,7 +1,5 @@
 # app/cli/reports.py
-"""
-Report generation for experiment results.
-"""
+"""Report generation for experiment results."""
 
 from datetime import datetime
 

@@ -8,23 +8,24 @@ import shutil
 
 import numpy as np
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 from sklearn.metrics import accuracy_score, f1_score
 from sklearn.model_selection import StratifiedKFold
+from torch import nn
 from torch.utils.data import DataLoader, Subset
 
 logger = logging.getLogger(__name__)
 
 
 def split_raw_images(raw_dataset_dir, class_names, num_folds, seed, exclude_classes=None):
-    """
-    Divide le immagini originali in fold con StratifiedKFold.
+    """Divide le immagini originali in fold con StratifiedKFold.
 
     exclude_classes: classi da escludere dal training (es. lasciate come novel per NCD).
 
-    Returns:
+    Returns
+    -------
         tuple: (all_paths, all_labels, folds) dove folds e' lista di (train_idx, val_idx)
+
     """
     all_paths = []
     all_labels = []
@@ -56,12 +57,13 @@ def split_raw_images(raw_dataset_dir, class_names, num_folds, seed, exclude_clas
 
 
 def copy_fold_images(all_paths, all_labels, class_names, train_idx, val_idx, fold_dir):
-    """
-    Copia le immagini originali nelle directory del fold.
+    """Copia le immagini originali nelle directory del fold.
     Anti-leakage: le immagini sono fisicamente separate prima dell'augmentation.
 
-    Returns:
+    Returns
+    -------
         tuple: (train_dir, val_dir)
+
     """
     train_dir = os.path.join(fold_dir, "train")
     val_dir = os.path.join(fold_dir, "val")
@@ -97,15 +99,16 @@ def copy_fold_images(all_paths, all_labels, class_names, train_idx, val_idx, fol
 
 
 def augment_fold_train(fold_train_dir, class_names, width, height, cache_dir=None):
-    """
-    Augmentation bilanciata sulla directory train del fold.
+    """Augmentation bilanciata sulla directory train del fold.
     Usa augmentDataPathBalanced per classe con target calcolato sul fold corrente.
 
     Se cache_dir e' specificato, salva l'augmented in quella directory permanente
     e la riutilizza se esiste gia' (l'augmentation dipende solo dal dataset, non dal modello).
 
-    Returns:
+    Returns
+    -------
         str: percorso della directory augmentata
+
     """
     from app.preprocessing.augment import get_augmentation_functions
     from app.preprocessing.dataset_tool import augmentDataPathBalanced
@@ -189,15 +192,17 @@ def augment_fold_train(fold_train_dir, class_names, width, height, cache_dir=Non
 
 
 def prepare_fold_data(augmented_train_dir, val_dir, batch_size, seed, model_variant, stratified=False):
-    """
-    Crea DataLoaders per un fold.
+    """Crea DataLoaders per un fold.
 
     Args:
+    ----
         stratified: Se True, usa StratifiedBatchSampler per garantire ≥2 campioni/classe/batch.
                     Utile per SupConLoss (evita batch degeneri con gradiente zero).
 
     Returns:
+    -------
         tuple: (train_loader, val_loader)
+
     """
     from app.core.models import create_transform
     from app.preprocessing.dataset_tool import ImageFolderWithName
@@ -265,14 +270,15 @@ def train_fold(
     weight_decay=0.0,
     full_finetune=False,
 ):
-    """
-    Train di un singolo fold. Riutilizza train() da app.core.training.
+    """Train di un singolo fold. Riutilizza train() da app.core.training.
 
     Supports intra-fold resume: if resume=True and a last_ckpt.pt exists in the
     checkpoint directory, training continues from the saved epoch.
 
-    Returns:
+    Returns
+    -------
         tuple: (modello, fold_metrics_dict)
+
     """
     from app.core.models import create_model, get_registry_entry
     from app.core.training import train
@@ -473,8 +479,10 @@ def train_fold_supcon(
 
     If pair_weights is provided, applies hard negative mining during Phase 1.
 
-    Returns:
+    Returns
+    -------
         tuple: (model, fold_metrics_dict with both phases)
+
     """
     from app.core.models import create_model, get_registry_entry
     from app.core.supcon import train_supcon

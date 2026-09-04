@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-FastAPI server entrypoint.
+"""FastAPI server entrypoint.
 
 Usage:
     python server.py                    # Run on http://localhost:5000
@@ -8,8 +7,8 @@ Usage:
     python server.py --reload           # Enable auto-reload for development
 """
 
-import os
 import argparse
+import os
 
 import uvicorn
 
@@ -25,7 +24,7 @@ def main():
     parser.add_argument("--reload", action="store_true", help="Enable auto-reload")
     args = parser.parse_args()
 
-    print(f"Starting Orchid Classification API...")
+    print("Starting Orchid Classification API...")
     print(f"Host: {args.host}")
     print(f"Port: {args.port}")
     print(f"Reload: {args.reload or settings.api_reload}")

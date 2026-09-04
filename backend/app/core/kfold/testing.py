@@ -96,11 +96,12 @@ def _upload_to_hf(output_dir, model_variant):
 
 
 def aggregate_results(fold_results):
-    """
-    Aggrega i risultati dei fold: mean +- std.
+    """Aggrega i risultati dei fold: mean +- std.
 
-    Returns:
+    Returns
+    -------
         dict con mean_accuracy, std_accuracy, mean_f1, std_f1, best_fold
+
     """
     all_f1 = [r["best_f1"] for r in fold_results]
     all_acc = [r["best_accuracy"] for r in fold_results]
@@ -120,15 +121,16 @@ def aggregate_results(fold_results):
 
 
 def final_test(best_model_path, model_variant, num_classes, test_dataset_dir, class_names, batch_size, device):
-    """
-    Valutazione finale del modello migliore sul test set.
+    """Valutazione finale del modello migliore sul test set.
 
     Gestisce il mapping delle classi: il modello ha 6 classi (class_names),
     il test set puo' avere un sottoinsieme con indici diversi (es. ImageFolder
     assegna O. sphegodes all'indice 3, ma nel modello e' all'indice 4).
 
-    Returns:
+    Returns
+    -------
         dict con metriche complete
+
     """
     from sklearn.metrics import (
         accuracy_score,
@@ -278,9 +280,7 @@ def aggregate_and_test(
     num_classes,
     class_names,
 ):
-    """
-    Legge i risultati dei fold completati, aggrega, fa test finale e genera report.
-    """
+    """Legge i risultati dei fold completati, aggrega, fa test finale e genera report."""
     import json
 
     from app.core.kfold.reporting import generate_report
@@ -292,7 +292,7 @@ def aggregate_and_test(
     for fold_idx in range(num_folds):
         fold_json = os.path.join(output_dir, f"fold_{fold_idx}.json")
         if os.path.exists(fold_json):
-            with open(fold_json, "r") as f:
+            with open(fold_json) as f:
                 fold_results.append(json.load(f))
         else:
             logger.warning(f"Fold {fold_idx} non trovato: {fold_json}")

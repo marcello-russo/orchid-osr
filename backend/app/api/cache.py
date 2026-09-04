@@ -33,6 +33,7 @@ _HF_PREFIX_MAP = {
     "exp2_supcon": "exp7_supcon",
     "exp3_sphor": "exp8_sphor",
     "exp4_sphor_ncd": "exp9_ncd",
+    "exp5_sphor_ncd": "exp5_sphor_ncd",
 }
 
 _STATS_CACHE_DIR = Path.home() / ".cache" / "orchid-weights" / "osr_stats"

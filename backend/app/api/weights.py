@@ -24,6 +24,7 @@ _EXP_META: dict[str, tuple[str, int]] = {
     "exp2_supcon": ("Exp 2 (SupCon)", 2),
     "exp3_sphor": ("Exp 3 (SpHOR)", 3),
     "exp4_sphor_ncd": ("Exp 4 (SpHOR-NCD)", 4),
+    "exp5_sphor_ncd": ("Exp 5 (SpHOR-NCD 2 novel)", 5),
 }
 
 _HF_PREFIX_MAP: dict[str, str] = {
@@ -31,6 +32,7 @@ _HF_PREFIX_MAP: dict[str, str] = {
     "exp2_supcon": "exp7_supcon",
     "exp3_sphor": "exp8_sphor",
     "exp4_sphor_ncd": "exp9_ncd",
+    "exp5_sphor_ncd": "exp5_sphor_ncd",
 }
 
 
@@ -178,13 +180,21 @@ def _discover_models() -> list[ModelOption]:
             )
         )
 
+    # Classify serving is 6-class only: drop non-6-class heads (their
+    # checkpoints would crash load_state_dict and mislabel indices) and
+    # models below the quality gate (mean F1 < 0.8). Data-driven from
+    # config.json/results.json — no hardcoded experiment names.
+    MIN_SERVE_F1 = 0.8
     seen: set[str] = set()
     deduped: list[ModelOption] = []
     for m in options:
-        if "exp4_sphor_ncd" in m.id:
-            continue
         if m.id not in seen:
             seen.add(m.id)
+            cfg = _safe_json_load(Path(settings.results_dir) / m.id / "config.json") or {}
+            if cfg.get("num_classes", 6) != 6:
+                continue
+            if (m.mean_f1 or 0) < MIN_SERVE_F1:
+                continue
             deduped.append(m)
 
     # Compute tags on deduped models only
@@ -277,7 +287,8 @@ def _find_weights(model_type: str) -> Path | None:
             continue
         parent = results_json.parent
         dir_name = parent.name
-        if "_ncd" in dir_name or "exp9_" in dir_name:
+        cfg = _safe_json_load(parent / "config.json") or {}
+        if cfg.get("num_classes", 6) != 6:
             continue
         best_fold = results.get("best_fold")
         if best_fold is None:

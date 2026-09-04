@@ -14,8 +14,9 @@ interface BenchmarkMatrixProps {
   seriesFilter: string | null;
 }
 
-const MATRIX_SERIES = ["Exp 1", "Exp 2", "Exp 3", "Exp 4"] as const;
-const OSR_SERIES = ["Exp 4"] as const;
+const MATRIX_SERIES: readonly string[] = ["Exp 1", "Exp 2", "Exp 3", "Exp 4", "Exp 5"];
+// OSR è dinamico: qualsiasi Exp con ncd_auroc verrà mostrato — mantieni Exp 4 per retrocompatibilità
+const OSR_SERIES_HINT = ["Exp 4", "Exp 5"] as const;
 
 export function BenchmarkMatrix({ experiments, familyFilter, seriesFilter }: BenchmarkMatrixProps) {
   const { t } = useTranslation();
@@ -39,15 +40,33 @@ export function BenchmarkMatrix({ experiments, familyFilter, seriesFilter }: Ben
     return map;
   }, [experiments]);
 
-  const visibleSeries = useMemo(() =>
-    seriesFilter ? [seriesFilter] : [...MATRIX_SERIES],
-  [seriesFilter]);
+  const visibleSeries = useMemo(() => {
+    if (seriesFilter) return [seriesFilter];
+    // Mostra solo le serie effettivamente presenti nei dati (supporta Exp 5+ senza ricompilare)
+    const present = new Set<string>();
+    for (const e of experiments) {
+      const s = getExperimentSeries(e.id);
+      if (s) present.add(s);
+    }
+    const ordered = (MATRIX_SERIES as readonly string[]).filter((s) => present.has(s));
+    const extra = [...present].filter((s) => !(MATRIX_SERIES as readonly string[]).includes(s)).sort();
+    return [...ordered, ...extra];
+  }, [experiments, seriesFilter]);
 
-  const visibleOSR = useMemo(() =>
-    seriesFilter
-      ? (OSR_SERIES.includes(seriesFilter as typeof OSR_SERIES[number]) ? [seriesFilter] : [])
-      : [...OSR_SERIES],
-  [seriesFilter]);
+  const visibleOSR = useMemo(() => {
+    if (seriesFilter) {
+      return (OSR_SERIES_HINT as readonly string[]).includes(seriesFilter) || experiments.some((e) => getExperimentSeries(e.id) === seriesFilter && e.ncd_auroc != null)
+        ? [seriesFilter]
+        : [];
+    }
+    const presentOSR = new Set<string>();
+    for (const e of experiments) {
+      const s = getExperimentSeries(e.id);
+      if (s && e.ncd_auroc != null) presentOSR.add(s);
+    }
+    if (presentOSR.size > 0) return [...presentOSR].sort();
+    return [...OSR_SERIES_HINT];
+  }, [experiments, seriesFilter]);
 
   const architectureRows = useMemo(() =>
     ARCHITECTURE_ORDER.filter((archLabel) => {
