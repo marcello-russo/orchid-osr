@@ -8,6 +8,7 @@ from pathlib import Path
 from fastapi import APIRouter, HTTPException
 
 from app.api.schemas import ExperimentDetailResponse, ExperimentSummary, FoldDataResponse
+from app.api.weights import _EXP_META
 from app.config import settings
 
 logger = logging.getLogger(__name__)
@@ -92,9 +93,11 @@ async def list_experiments():
         if not d.is_dir():
             continue
 
-        # Exp 10 (MGH-NCD) escluso: non riaddestrato con le correzioni
-        # metodologiche, risultati confounded e rimossi dallo studio.
-        if "exp10_mgh_ncd" in d.name:
+        # Allowlist prefissi correnti: taglia fuori dir legacy appiattite dal
+        # sync HF (exp6_clean_split_*, exp9_ncd_*, ...) e cartelle di lavoro
+        # (_archived, _backup_*, ...). Exp 10 resta escluso: non riaddestrato
+        # con le correzioni metodologiche, risultati confounded e rimossi.
+        if not any(d.name.startswith(p) for p in _EXP_META):
             continue
 
         config_path = d / "config.json"

@@ -25,7 +25,7 @@ def _fake_experiments(tmp_path, monkeypatch):
     # Crea esperimenti finti
     _make_exp(
         tmp_path,
-        "exp6_clean_resnet18",
+        "exp1_ce_resnet18",
         {"model_variant": "resnet18", "num_classes": 6, "timestamp": "2026-01-01T00:00:00"},
         {
             "mean_f1": 0.85,
@@ -205,16 +205,37 @@ class TestExperimentsListStructure:
     """Test struttura base dell'elenco."""
 
     def test_list_returns_all_experiments(self):
-        """Tutti gli exp, inclusi exp9, devono essere presenti; exp10 nascosto."""
+        """Solo i 5 prefissi correnti; legacy (exp6_clean_*, exp9_*) ed exp10 nascosti."""
         resp = client.get("/api/experiments")
         data = resp.json()
         ids = [e["id"] for e in data]
-        assert "exp6_clean_resnet18" in ids
+        assert "exp1_ce_resnet18" in ids
         assert "exp2_supcon_resnet18" in ids
         assert "exp3_sphor_convnext_tiny" in ids
         assert "exp4_sphor_ncd_resnet18" in ids
         # exp10 (MGH-NCD) rimosso dallo studio: deve essere nascosto
         assert not any("exp10" in eid for eid in ids)
+
+    def test_list_excludes_legacy_prefixes(self):
+        """Dir legacy appiattite dal sync (exp6_clean_*, exp9_ncd_*) non mostrate."""
+        import shutil
+
+        from app.api.routes import experiments as exp_route
+
+        legacy = exp_route._get_experiments_dir() / "exp6_clean_resnet18"
+        if legacy.exists():
+            shutil.rmtree(legacy)
+        shutil.copytree(
+            exp_route._get_experiments_dir() / "exp1_ce_resnet18",
+            legacy,
+        )
+        try:
+            resp = client.get("/api/experiments")
+            ids = [e["id"] for e in resp.json()]
+            assert "exp6_clean_resnet18" not in ids
+            assert "exp1_ce_resnet18" in ids
+        finally:
+            shutil.rmtree(legacy, ignore_errors=True)
 
     def test_list_has_required_fields(self):
         """Ogni experimento deve avere i campi base."""
@@ -242,4 +263,4 @@ class TestExperimentsListStructure:
         data = resp.json()
         for e in data:
             if "resnet18" in e["id"] and "exp1" in e["id"]:
-                assert e["folds_completed"] == 5  # fold standard per exp6
+                assert e["folds_completed"] == 5  # fold standard per exp correnti
