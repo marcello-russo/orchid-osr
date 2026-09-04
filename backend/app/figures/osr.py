@@ -139,7 +139,7 @@ def _dual_1vs2(fig_dir: Path) -> list[Path]:
     ax.set_xticks(x)
     ax.set_xticklabels(ARCH_LABELS, fontsize=8)
     ax.set_ylabel("AUROC Ensemble (supplement)")
-    ax.set_ylim(0.5, 1.0)
+    ax.set_ylim(0.48, 1.0)
     ax.axhline(0.5, color="gray", linestyle="--", linewidth=1, label="chance")
     ax.set_title("OSR: 1 vs 2 Novel (AUROC Ensemble)", fontsize=12, fontweight="bold")
     ax.legend(fontsize=8)
