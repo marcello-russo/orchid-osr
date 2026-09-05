@@ -79,7 +79,7 @@ Sei specie di *Ophrys* morfologicamente simili, una classe novel nascosta (*O. g
 
 *Exp 4 esclude O. garganica dal training, lasciandola come novel class nascosta per la valutazione open-set.*
 
-### Exp 5 — NCD con 2 Novel Nascoste (preliminare)
+### Exp 5 — NCD con 2 Novel Nascoste
 
 | Modello | F1 Test (4 cls) | AUROC (Ensemble) |
 |---------|:---------------:|:----------------:|

@@ -79,7 +79,7 @@ Six morphologically similar *Ophrys* species, one held-out novel class (*O. garg
 
 *Exp 4 excludes O. garganica from training, leaving it as the hidden novel class for open-set evaluation.*
 
-### Exp 5 — NCD with 2 Hidden Novel Classes (preliminare)
+### Exp 5 — NCD with 2 Hidden Novel Classes
 
 | Model | F1 Test (4 cls) | AUROC (Ensemble) |
 |-------|:---------------:|:----------------:|
