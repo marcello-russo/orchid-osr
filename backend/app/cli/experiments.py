@@ -712,7 +712,7 @@ def main():
     _log_config(args, phases, exp_ids)
 
     if "ncd_comparison" in phases:
-        from scripts.ncd_comparison import main as _ncd_comp
+        from app.core.ncd.comparison import main as _ncd_comp
 
         _ncd_comp()
         return 0
