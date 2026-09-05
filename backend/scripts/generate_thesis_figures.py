@@ -526,8 +526,9 @@ def fig_loss_curves_aggregated():
     ax.set_ylabel("Validation Loss")
     ax.set_title("Training Dynamics — DINOv2-Small", fontweight="bold")
     ax.legend(loc="upper right", framealpha=0.9)
-    _ensure_global_limits()
-    ax.set_xlim(0, _GLOBAL_FASE1_MAX)
+    # Limite locale sui dati plottati: il limite globale (tutte le architetture)
+    # lascia la figura mezza vuota quando questa configurazione converge prima.
+    ax.set_xlim(0, min_len)
     fig.tight_layout()
     _save(fig, "loss_curves_aggregated.png")
 

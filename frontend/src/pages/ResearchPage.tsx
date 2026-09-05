@@ -20,6 +20,7 @@ const SECTIONS = [
   { id: "exp2", labelKey: "research.sect_exp2" },
   { id: "exp3", labelKey: "research.sect_exp3" },
   { id: "exp4", labelKey: "research.sect_exp4" },
+  { id: "exp5", labelKey: "research.sect_exp5" },
   { id: "benchmark", labelKey: "research.sect_benchmark" },
   { id: "conclusioni", labelKey: "research.sect_conclusioni" },
   { id: "bibliografia", labelKey: "research.sect_bibliografia" },
@@ -259,6 +260,7 @@ export function ResearchPage() {
               <li><strong>Exp 2 — Supervised Contrastive Learning:</strong>{t("research.metodo_exp2")}<Cite id="khosla2020supervised" /></li>
               <li><strong>Exp 3 — SpHOR:</strong>{t("research.metodo_exp3")}<Cite id="bahavan2026sphor" /><Cite id="lee2018simple" /><Cite id="liu2020energy" /></li>
               <li><strong>Exp 4 — OSR con Novel Nascosta:</strong>{t("research.metodo_exp4")}</li>
+              <li><strong>Exp 5 — OSR con 2 Novel Nascoste:</strong>{t("research.metodo_exp5")}</li>
             </ul>
           </SubSection>
 
@@ -288,7 +290,7 @@ export function ResearchPage() {
           />
         </Section>
 
-        {/* ── 4. EXP 6: CE ── */}
+        {/* ── 4. EXP 1: CE ── */}
         <Section id="exp1" title={t("research.sect_exp1")}>
           <SubSection title={t("research.exp1_subs_motivazione")}>
             <P>
@@ -345,7 +347,7 @@ export function ResearchPage() {
           </SubSection>
         </Section>
 
-        {/* ── 5. EXP 7: SUPCON ── */}
+        {/* ── 5. EXP 2: SUPCON ── */}
         <Section id="exp2" title={t("research.sect_exp2")}>
           <SubSection title={t("research.exp2_subs_motivazione")}>
             <P>
@@ -405,7 +407,7 @@ export function ResearchPage() {
           />
         </Section>
 
-        {/* ── 6. EXP 8: SPHOR ── */}
+        {/* ── 6. EXP 3: SPHOR ── */}
         <Section id="exp3" title={t("research.sect_exp3")}>
           <SubSection title={t("research.exp3_subs_motivazione")}>
             <P>
@@ -464,7 +466,7 @@ export function ResearchPage() {
           />
         </Section>
 
-        {/* ── EXP 9: SpHOR con novel class nascosta (O. garganica) ── */}
+        {/* ── EXP 4: SpHOR con novel class nascosta (O. garganica) ── */}
         <Section id="exp4" title={t("research.sect_exp4")}>
           <SubSection title={t("research.exp4_subs_motivazione")}>
             <P>
@@ -517,9 +519,81 @@ export function ResearchPage() {
             </P>
             <Figure
               src="/figures/exp9_tsne_novel.webp"
-              alt="t-SNE known vs novel Exp 9"
+              alt="t-SNE known vs novel Exp 4"
               caption={t("research.exp4_tsne_novel_caption")}
             />
+          </SubSection>
+        </Section>
+
+        {/* ── 6b. EXP 5: 2 NOVEL NASCOSTE ── */}
+        <Section id="exp5" title={t("research.sect_exp5")}>
+          <SubSection title={t("research.exp5_subs_motivazione")}>
+            <P>
+              {t("research.exp5_motivazione")}
+            </P>
+          </SubSection>
+
+          <DataTable
+            columns={[
+              { key: "model", label: t("research.table_model") },
+              { key: "cv", label: t("research.table_f1_cv") },
+              { key: "test", label: t("research.table_f1_test") },
+            ]}
+            rows={[
+              { model: "ResNet-18", cv: "0,813", test: "0,808" },
+              { model: "ResNet-50", cv: "0,816", test: "0,240" },
+              { model: "ConvNeXt-Tiny", cv: "0,939", test: "0,906" },
+              { model: "ConvNeXt-Small", cv: "0,932", test: "0,531" },
+              { model: "DINOv2-Small", cv: "0,913", test: "0,291" },
+              { model: "DINOv2-Base", cv: "0,928", test: "0,110" },
+            ]}
+            highlightRow="ConvNeXt-Tiny"
+            caption={t("research.exp5_caption")}
+          />
+
+          <SubSection title={t("research.exp5_subs_osr")}>
+            <P>
+              {t("research.exp5_osr")}
+            </P>
+            <Figure
+              src="/figures/osr_1vs2_novel.webp"
+              alt="OSR 1 vs 2 novel"
+              caption={t("research.osr_1vs2_caption")}
+            />
+          </SubSection>
+
+          <DataTable
+            columns={[
+              { key: "model", label: t("research.table_model") },
+              { key: "maha", label: "Mahalanobis" },
+              { key: "knn", label: "KNN" },
+              { key: "en", label: "Energy" },
+              { key: "ens", label: "Ensemble*" },
+            ]}
+            rows={[
+              { model: "ResNet-18", maha: "0,604", knn: "0,664", en: "0,559", ens: "0,666" },
+              { model: "ResNet-50", maha: "0,621", knn: "0,689", en: "0,440", ens: "0,634" },
+              { model: "ConvNeXt-Tiny", maha: "0,849", knn: "0,836", en: "0,703", ens: "0,843" },
+              { model: "ConvNeXt-Small", maha: "0,785", knn: "0,774", en: "0,410", ens: "0,718" },
+              { model: "DINOv2-Small", maha: "0,723", knn: "0,787", en: "0,505", ens: "0,734" },
+              { model: "DINOv2-Base", maha: "0,835", knn: "0,835", en: "0,488", ens: "0,805" },
+            ]}
+            highlightRow="ConvNeXt-Tiny"
+            caption={t("research.exp5_osr_caption")}
+          />
+
+          <SubSection title={t("research.exp5_subs_gcd")}>
+            <P>
+              {t("research.exp5_gcd")}
+            </P>
+            <Figure
+              src="/figures/gcd_old_new.webp"
+              alt="GCD 1 vs 2 novel"
+              caption={t("research.gcd_exp5_caption")}
+            />
+            <P>
+              {t("research.exp5_delong")}
+            </P>
           </SubSection>
         </Section>
 
