@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from typing import Annotated, Optional
+from typing import Annotated
 
 import typer
 
-hf_app = typer.Typer(help="HuggingFace upload/download/sync.")
+hf_app = typer.Typer(help="HuggingFace upload/download/sync.", no_args_is_help=True)
 
 
 @hf_app.command("upload-models")
@@ -46,23 +46,7 @@ def download_cmd(
     sample_ratio: Annotated[float, typer.Option("--sample-ratio", help="Keep fraction per class dir")] = 1.0,
 ) -> None:
     """Download + reshape the cropped dataset from HF."""
-
     from app.hf.sync import download_dataset
 
     ok = download_dataset(sample_ratio=sample_ratio)
     typer.echo(f"dataset download {'ok' if ok else 'failed'}")
-
-
-@hf_app.callback(invoke_without_command=True)
-def hf(
-    ctx: typer.Context,
-    action: Annotated[Optional[str], typer.Argument(help="upload|download (legacy)")] = None,
-    model: Annotated[str, typer.Option(help="Model variant (legacy)")] = "resnet18",
-) -> None:
-    """HuggingFace upload/download (legacy alias: use subcommands)."""
-    if ctx.invoked_subcommand is not None:
-        return
-    if action == "upload" or action is None:
-        upload_models()
-    else:
-        typer.echo(f"hf action={action} model={model} (legacy: see `orchid hf --help`)")

@@ -106,7 +106,7 @@ EXPERIMENTS = {
         "test_classes": TRAIN_CLASSES,
         "exclude_classes": ["O. garganica"],
         "loss_type": "supcon",
-        "ncd_mode": False,
+        "ncd_mode": True,
         "phases": ["SupCon + SpHOR", "CE fine-tune"],
         "recipe": "Identico a Exp 3 (150 epoche, patience 15 in entrambe le "
         "fasi). Novità: O. garganica è esclusa dal training (5 classi note) "
