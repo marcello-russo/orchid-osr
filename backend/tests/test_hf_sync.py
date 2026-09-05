@@ -1,45 +1,49 @@
-import pytest
+"""Tests for app.hf.sync (filters + sync flow, no network)."""
 
-from app.core.hf_sync import parse_exp_dir_name
+import os
 
 
-@pytest.mark.parametrize(
-    "dir_name,expected_exp,expected_model",
-    [
-        ("exp1_ce_resnet18", 1, "resnet18"),
-        ("exp1_ce_resnet50", 1, "resnet50"),
-        ("exp1_ce_convnext_tiny", 1, "convnext_tiny"),
-        ("exp1_ce_convnext_small", 1, "convnext_small"),
-        ("exp1_ce_dinov2_small", 1, "dinov2_small"),
-        ("exp1_ce_dinov2_base", 1, "dinov2_base"),
-        ("exp2_supcon_resnet18", 2, "resnet18"),
-        ("exp2_supcon_resnet50", 2, "resnet50"),
-        ("exp2_supcon_convnext_tiny", 2, "convnext_tiny"),
-        ("exp2_supcon_convnext_small", 2, "convnext_small"),
-        ("exp2_supcon_dinov2_small", 2, "dinov2_small"),
-        ("exp2_supcon_dinov2_base", 2, "dinov2_base"),
-        ("exp3_sphor_resnet18", 3, "resnet18"),
-        ("exp3_sphor_resnet50", 3, "resnet50"),
-        ("exp3_sphor_convnext_tiny", 3, "convnext_tiny"),
-        ("exp3_sphor_convnext_small", 3, "convnext_small"),
-        ("exp3_sphor_dinov2_small", 3, "dinov2_small"),
-        ("exp3_sphor_dinov2_base", 3, "dinov2_base"),
-        ("exp4_sphor_ncd_resnet18", 4, "resnet18"),
-        ("exp4_sphor_ncd_resnet50", 4, "resnet50"),
-        ("exp4_sphor_ncd_convnext_tiny", 4, "convnext_tiny"),
-        ("exp4_sphor_ncd_convnext_small", 4, "convnext_small"),
-        ("exp4_sphor_ncd_dinov2_small", 4, "dinov2_small"),
-        ("exp4_sphor_ncd_dinov2_base", 4, "dinov2_base"),
-        ("exp10_mgh_ncd_resnet18", 10, "resnet18"),
-        ("exp10_mgh_ncd_resnet50", 10, "resnet50"),
-        ("exp10_mgh_ncd_convnext_tiny", 10, "convnext_tiny"),
-        ("exp10_mgh_ncd_convnext_small", 10, "convnext_small"),
-        ("exp10_mgh_ncd_dinov2_small", 10, "dinov2_small"),
-        ("exp10_mgh_ncd_dinov2_base", 10, "dinov2_base"),
-    ],
-)
-def test_parse_exp_dir(dir_name, expected_exp, expected_model):
-    """Verify exp directory name parsing matches expected exp_id and model."""
-    exp_id, model = parse_exp_dir_name(dir_name)
-    assert exp_id == expected_exp, f"{dir_name}: expected exp {expected_exp}, got {exp_id}"
-    assert model == expected_model, f"{dir_name}: expected model {expected_model}, got {model}"
+class _StubApi:
+    def __init__(self, files):
+        self._files = files
+        self.downloaded = []
+
+    def list_repo_files(self, repo):
+        return list(self._files)
+
+    def get_paths_info(self, repo, path):
+        return None
+
+
+def test_is_essential_filters():
+    from app.hf.sync import _is_essential
+
+    assert _is_essential("exp1_ce_resnet18/results.json")
+    assert _is_essential("exp1_ce_resnet18/embeddings/labels.npy")
+    assert not _is_essential("old/exp1/results.json")
+    assert not _is_essential("exp1/ncd_figures/plot.png")
+    assert not _is_essential("exp1/best_fold_0.pt")
+
+
+def test_sync_experiments_downloads_essential(tmp_path, monkeypatch):
+    from app.hf import sync as sync_mod
+    from app.hf.sync import sync_experiments
+
+    monkeypatch.setattr(sync_mod, "download_file", lambda api, repo, src, dst, token: open(dst, "w").write("{}"))
+    monkeypatch.setattr(sync_mod, "list_repo_files", lambda api, repo: api.list_repo_files(repo))
+    monkeypatch.setenv("HF_TOKEN", "hf_dummy_token_for_test")
+    api = _StubApi(["exp1_ce/exp1_ce_resnet18/results.json", "exp1_ce/exp1_ce_resnet18/best_fold_0.pt"])
+    out = sync_experiments(dst=str(tmp_path), repo="dummy/repo", api=api)
+    assert out["synced"] == 1
+    assert out["errors"] == 0
+    assert os.path.exists(os.path.join(str(tmp_path), "exp1_ce_resnet18", "results.json"))
+    assert os.path.exists(os.path.join(str(tmp_path), "_index.json"))
+
+
+def test_sync_experiments_no_token_skips(monkeypatch):
+    import app.hf.sync as sync_mod
+
+    monkeypatch.delenv("HF_TOKEN", raising=False)
+    monkeypatch.setattr(sync_mod.settings, "hf_token", "")
+    out = sync_mod.sync_experiments(dst="/nonexistent-xyz", repo="dummy/repo")
+    assert out == {"synced": 0, "skipped": 0, "errors": 0}

@@ -35,8 +35,10 @@ python cli.py --cross-validate --exp 1 --model resnet50 --fold 0
 python cli.py --cross-validate --exp 1 --model resnet50 --aggregate-only
 
 # NCD pipeline (Novel Class Discovery)
-python cli.py --ncd --exp 4 --model dinov2_small   # OSR + clustering + figures
-python cli.py --ncd-comparison                      # cross-model comparison table
+orchid ncd --exp 4 --model dinov2_small         # OSR + clustering (GPU)
+orchid ncd --stats                                    # calibration stats
+orchid ncd --delong                                   # DeLong report
+orchid ncd-comparison                           # cross-model comparison table
 
 # Embedding extraction for latent space viewer
 python cli.py --embeddings --exp 3 --model dinov2_small
@@ -149,7 +151,7 @@ No `ruff`, `mypy`, `black`, or `pre-commit` setup. Only `pytest` as a quality ga
 ### HuggingFace integration
 - Dataset: `marcellorusso/orchid-osr-dataset`
 - Models: `marcellorusso/orchid-osr-models`
-- Download during build: `scripts/hf_tools/download_cache.py` (requires `HF_TOKEN`)
+- Sync via CLI (logic in `app/hf/`, tested): `orchid hf download|sync|upload-models|upload-ncd` (requires `HF_TOKEN`)
 - Live demo: `marcellorusso-orchid-osr.hf.space`
 
 ### Database / state
@@ -162,7 +164,7 @@ No database. All state is filesystem-based: experiments JSON, model `.pt` files,
 
 ### Exp 4 results (OSR + GCD)
 - **OSR**: best AUROC 0.875 (DINOv2-Base + SpHOR + Ensemble), ConvNeXt-Tiny 0.850. Open-set recognition at ultra-fine granularity is achievable.
-- **GCD** (Vaze et al. 2022 protocol; `scripts/gcd_analysis.py`, results in `experiments/gcd_summary.json`): known-class recovery works (SS-KM ACC old up to 0.93), but novel-class discovery fails with the standard semi-supervised method (ACC new ~0). Only DINOv2-Base discovers the hidden species uninformed (K-means ACC new 0.83±0.04), consistent with its best OSR AUROC. Figure: `scripts/generate_gcd_figure.py` → `documents/_figures/gcd_old_new.png`.
+- **GCD** (Vaze et al. 2022 protocol; `orchid ncd`, SS-KM in `app/core/ncd/`): known-class recovery works (SS-KM ACC old up to 0.93), but novel-class discovery fails with the standard semi-supervised method (ACC new ~0). Only DINOv2-Base discovers the hidden species uninformed (K-means ACC new 0.83±0.04), consistent with its best OSR AUROC. Figure: `orchid figures --all` → `documents/_figures/gcd_old_new.png`. One-shots frozen in `scripts/archive/thesis-figures/`.
 - GCD protocol: labeled = train embeddings of 5 known classes (1.629); pool = test (300 = 250 old + 50 garganica), L2-normalized. Metrics: ACC old/new/all (global Hungarian), NMI, ARI.
 
 ### Exp 5 (in progress, branch feat/exp5-2novel-generic-cli)

@@ -5,7 +5,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from scripts.sync_experiments import _is_essential
+from app.hf.sync import _is_essential
 
 
 def test_essential_json():
