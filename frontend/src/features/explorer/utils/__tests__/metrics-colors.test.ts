@@ -1,39 +1,50 @@
 import { describe, it, expect } from "vitest";
-import { f1Color, aurocColor } from "../metrics-colors";
+import { f1Color, aurocColor, heatColor, heatTextColor } from "../metrics-colors";
+
+describe("heatColor", () => {
+  it("is red at 0", () => {
+    expect(heatColor(0)).toContain("30.0");
+  });
+
+  it("is yellow at 0.5", () => {
+    expect(heatColor(0.5)).toContain("100.0");
+  });
+
+  it("is green at 1", () => {
+    expect(heatColor(1)).toContain("145.0");
+  });
+
+  it("clamps out-of-range values", () => {
+    expect(heatColor(-1)).toBe(heatColor(0));
+    expect(heatColor(2)).toBe(heatColor(1));
+  });
+});
+
+describe("heatTextColor", () => {
+  it("is dark ink on the yellow band", () => {
+    expect(heatTextColor(0.5)).not.toBe("#ffffff");
+  });
+
+  it("is white on saturated red/green", () => {
+    expect(heatTextColor(0)).toBe("#ffffff");
+    expect(heatTextColor(1)).toBe("#ffffff");
+  });
+});
 
 describe("f1Color", () => {
   it("returns valid oklch string", () => {
     expect(f1Color(0.5)).toMatch(/^oklch\(/);
   });
 
-  it("is green hue for high f1", () => {
-    expect(f1Color(0.9)).toContain("145");
-  });
-
-  it("is amber hue for low f1", () => {
-    expect(f1Color(0.3)).toContain("25");
-  });
-
-  it("lightness increases with f1", () => {
-    const dark = f1Color(0);
-    const bright = f1Color(1);
-    expect(parseFloat(dark.split(" ")[0].slice(6))).toBeLessThan(
-      parseFloat(bright.split(" ")[0].slice(6)),
-    );
+  it("maps 0/1 to red/green", () => {
+    expect(f1Color(0)).toContain("30.0");
+    expect(f1Color(1)).toContain("145.0");
   });
 });
 
 describe("aurocColor", () => {
-  it("returns gray for random (0.5)", () => {
-    expect(aurocColor(0.5)).toBe("oklch(0.45 0.015 200)");
-  });
-
-  it("returns color for good (0.8)", () => {
-    expect(aurocColor(0.8)).toMatch(/^oklch\(/);
+  it("uses the same 0-1 red-yellow-green scale", () => {
+    expect(aurocColor(0.5)).toContain("100.0");
     expect(aurocColor(0.8)).not.toBe(aurocColor(0.5));
-  });
-
-  it("returns gray for below random (0.3)", () => {
-    expect(aurocColor(0.3)).toMatch(/^oklch\(0\.45/);
   });
 });

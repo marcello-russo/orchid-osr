@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
+import { heatTextColor } from "@/features/explorer/utils/metrics-colors";
 import type { ExperimentSummary } from "@/lib/types";
 import {
   getArchitectureFamily, FAMILY_COLORS, LABEL_TO_VARIANT,
@@ -72,7 +73,10 @@ export function MatrixSection({
             ? "cursor-pointer focus-visible:ring-2 focus-visible:ring-ring hover:brightness-110"
             : "text-muted-foreground",
         )}
-        style={{ backgroundColor: value !== null ? colorFn(value) : undefined }}
+        style={{
+          backgroundColor: value !== null ? colorFn(value) : undefined,
+          color: value !== null ? heatTextColor(value) : undefined,
+        }}
         onClick={() => exp && navigate(`/experiments/${exp.id}`)}
         onKeyDown={(e) => {
           if ((e.key === "Enter" || e.key === " ") && exp) {
