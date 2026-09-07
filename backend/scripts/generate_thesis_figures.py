@@ -261,8 +261,8 @@ def fig_benchmark_heatmap():
     ax.set_xticklabels([EXP_LABELS[e] for e in EXPS_ALL], rotation=35, ha="right", fontsize=9)
     ax.set_yticks(range(len(MODELS)))
     ax.set_yticklabels([short_model(m) for m in MODELS], fontsize=9)
-    ax.set_title("Test F1 Score — All Models × Experiments", fontweight="bold", pad=12)
-    fig.colorbar(im, ax=ax, shrink=0.8, label="F1 Score")
+    ax.set_title("F1 test — tutti i modelli × esperimenti", fontweight="bold", pad=12)
+    fig.colorbar(im, ax=ax, shrink=0.8, label="F1")
     fig.tight_layout()
     _save(fig, "benchmark_heatmap.png")
 
@@ -285,8 +285,8 @@ def fig_benchmark_bar():
 
     ax.set_xticks(x)
     ax.set_xticklabels([EXP_LABELS[e] for e in EXPS_ALL])
-    ax.set_ylabel("Test F1 Score")
-    ax.set_title("Benchmark: All Models × All Experiments", fontweight="bold")
+    ax.set_ylabel("F1 test")
+    ax.set_title("Benchmark: tutti i modelli × tutti gli esperimenti", fontweight="bold")
     ax.legend(loc="upper left", bbox_to_anchor=(1.01, 1), framealpha=0.9, fontsize=10)
     ax.set_ylim(0, 1.05)
     fig.tight_layout()
@@ -336,8 +336,8 @@ def fig_confusion_matrices():
         ax.set_yticks(range(len(short)))
         ax.set_xticklabels(short, fontsize=7, rotation=45, ha="right")
         ax.set_yticklabels(short, fontsize=7)
-        ax.set_xlabel("Predicted", fontsize=9)
-        ax.set_ylabel("Actual", fontsize=9)
+        ax.set_xlabel("Predetta", fontsize=9)
+        ax.set_ylabel("Vera", fontsize=9)
         ax.text(-0.25, -0.1, f"({chr(97 + j)})", transform=ax.transAxes, fontsize=11, fontweight="bold")
 
         if is_trainset:
@@ -352,7 +352,7 @@ def fig_confusion_matrices():
                 color="gray",
             )
 
-    fig.suptitle("Confusion Matrices on Test Set", fontweight="bold", y=1.08)
+    fig.suptitle("Matrici di confusione sul test set", fontweight="bold", y=1.08)
     fig.tight_layout()
     _save(fig, "confusion_matrices.png")
 
@@ -394,7 +394,7 @@ def fig_tsne_comparison():
         ax.legend(loc="upper left", bbox_to_anchor=(1.01, 1), markerscale=2, framealpha=0.9)
         ax.text(-0.15, -0.1, f"({chr(97 + j)})", transform=ax.transAxes, fontsize=11, fontweight="bold")
 
-    fig.suptitle("t-SNE Embedding Space — DINOv2-Small", fontweight="bold", y=1.02)
+    fig.suptitle("Spazio degli embedding (t-SNE) — DINOv2-Small", fontweight="bold", y=1.02)
     fig.tight_layout()
     _save(fig, "tsne_comparison.png")
 
@@ -433,8 +433,8 @@ def fig_per_species_f1():
 
     ax.set_xticks(x)
     ax.set_xticklabels(short)
-    ax.set_ylabel("F1 Score")
-    ax.set_title("Per-Species F1 — Best Model per Experiment", fontweight="bold")
+    ax.set_ylabel("F1")
+    ax.set_title("F1 per specie — miglior modello per esperimento", fontweight="bold")
     ax.legend(loc="lower right", framealpha=0.9)
     ax.set_ylim(0, 1.1)
     fig.tight_layout()
@@ -485,9 +485,9 @@ def fig_cv_test_gap():
     ax.axhline(y=0, color="gray", linestyle="--", alpha=0.5, linewidth=1)
     ax.text(60, 0.03, "Overfits on val\n(test > CV)", fontsize=8, color="gray", fontstyle="italic")
     ax.text(60, -0.08, "Underfits on val\n(test < CV)", fontsize=8, color="gray", fontstyle="italic")
-    ax.set_xlabel("Model Parameters (millions)")
-    ax.set_ylabel("Test F1 − CV F1  (gap)")
-    ax.set_title("Generalisation Gap vs Model Size", fontweight="bold")
+    ax.set_xlabel("Parametri del modello (milioni)")
+    ax.set_ylabel("F1 test − F1 CV (gap)")
+    ax.set_title("Gap di generalizzazione vs dimensione del modello", fontweight="bold")
     ax.legend()
     ax.set_xlim(5, 100)
     fig.tight_layout()
@@ -522,9 +522,9 @@ def fig_loss_curves_aggregated():
         ax.plot(epochs, mean, color=exp_colors[exp], linestyle=exp_styles[exp], label=EXP_LABELS[exp], linewidth=2)
         ax.fill_between(epochs, mean - std, mean + std, color=exp_colors[exp], alpha=0.1)
 
-    ax.set_xlabel("Epoch")
-    ax.set_ylabel("Validation Loss")
-    ax.set_title("Training Dynamics — DINOv2-Small", fontweight="bold")
+    ax.set_xlabel("Epoca")
+    ax.set_ylabel("Loss di validazione")
+    ax.set_title("Dinamica di training — DINOv2-Small", fontweight="bold")
     ax.legend(loc="upper right", framealpha=0.9)
     # Limite locale sui dati plottati: il limite globale (tutte le architetture)
     # lascia la figura mezza vuota quando questa configurazione converge prima.
@@ -551,14 +551,14 @@ def fig_loss_curves_exp6_dinov2b():
     t_mean, t_std = train.mean(axis=0), train.std(axis=0)
     v_mean, v_std = val.mean(axis=0), val.std(axis=0)
 
-    ax.plot(epochs, t_mean, color="#0072B2", label="Train loss", linewidth=2)
+    ax.plot(epochs, t_mean, color="#0072B2", label="Loss train", linewidth=2)
     ax.fill_between(epochs, t_mean - t_std, t_mean + t_std, color="#0072B2", alpha=0.15)
-    ax.plot(epochs, v_mean, color="#D55E00", label="Validation loss", linewidth=2)
+    ax.plot(epochs, v_mean, color="#D55E00", label="Loss validazione", linewidth=2)
     ax.fill_between(epochs, v_mean - v_std, v_mean + v_std, color="#D55E00", alpha=0.15)
 
-    ax.set_xlabel("Epoch")
+    ax.set_xlabel("Epoca")
     ax.set_ylabel("Loss")
-    ax.set_title("Exp 1 (CE) — DINOv2-Base: Train/Val Loss", fontweight="bold")
+    ax.set_title("Exp 1 (CE) — DINOv2-Base: loss train/validazione", fontweight="bold")
     ax.legend(loc="upper right", framealpha=0.9)
     _ensure_global_limits()
     ax.set_xlim(0, _GLOBAL_FASE1_MAX)
@@ -598,8 +598,8 @@ def fig_exp8_per_species():
 
     ax.set_xticks(x)
     ax.set_xticklabels(short)
-    ax.set_ylabel("F1 Score")
-    ax.set_title("Exp 3 (SpHOR): Per-Species F1 by Architecture", fontweight="bold")
+    ax.set_ylabel("F1")
+    ax.set_title("Exp 3 (SpHOR): F1 per specie e architettura", fontweight="bold")
     ax.legend(loc="upper left", bbox_to_anchor=(1.01, 1), framealpha=0.9, fontsize=8)
     ax.set_ylim(0, 1.1)
     fig.tight_layout()
@@ -697,7 +697,7 @@ def fig_spotlight_convnext_osr():
     ax.set_xticklabels(detectors)
     ax.set_ylabel("AUROC")
 
-    ax.set_title("OSR Champion: DINOv2-Base + SpHOR (Exp 4, novel O. garganica)", fontweight="bold")
+    ax.set_title("OSR: DINOv2-Base + SpHOR (Exp 4, novel O. garganica)", fontweight="bold")
     ax.legend(loc="upper left", bbox_to_anchor=(1.01, 1), framealpha=0.9, fontsize=8)
     ax.set_ylim(0, 1.05)
     ax.grid(True, axis="y", alpha=0.3)

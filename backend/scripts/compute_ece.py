@@ -84,18 +84,24 @@ def main() -> int:
     print("non-empty bins:", sum(1 for n in cnt if n > 0), "counts:", cnt)
 
     fig, ax = plt.subplots(figsize=(6, 6))
-    ax.plot([0, 1], [0, 1], linestyle="--", color="gray", label="perfect")
+    ax.plot([0, 1], [0, 1], linestyle="--", color="gray", label="ideale")
     ax.plot(cf, acc, marker="o", color="#002FA7", markersize=5, label="ConvNeXt-Tiny Exp3")
     ax.bar((edges[:-1] + edges[1:]) / 2, acc, width=0.06, alpha=0.3, color="#002FA7", edgecolor="none")
-    ax.set_xlabel("Confidence (max prob)")
-    ax.set_ylabel("Accuracy")
+    ax.set_xlabel("Confidenza (prob. max)")
+    ax.set_ylabel("Accuratezza")
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
-    ax.set_title(f"Reliability diagram — ECE={ece:.3f} ({N_BINS} bins)", fontsize=12, fontweight="bold")
+    ax.set_title(f"Diagramma di affidabilità — ECE={ece:.3f} ({N_BINS} bin)", fontsize=12, fontweight="bold")
     ax.legend()
     fig.tight_layout()
     fig.savefig(FIG_OUT, dpi=200)
     print(f"saved {FIG_OUT}")
+    (BACKEND.parent / "documents" / "_data" / "ece_bins.json").write_text(
+        json.dumps({"acc": [round(float(a), 4) for a in acc],
+                    "conf": [round(float(c), 4) for c in cf],
+                    "counts": cnt, "n_bins": N_BINS,
+                    "model": "convnext_tiny", "exp": 3}, indent=1)
+    )
     (BACKEND.parent / "documents" / "_data" / "ece.json").write_text(
         json.dumps({"ece": round(float(ece), 4), "n_bins": N_BINS, "n": len(confs),
                     "model": "convnext_tiny", "exp": 3, "fold": best_fold}, indent=1)

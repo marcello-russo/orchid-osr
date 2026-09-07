@@ -60,10 +60,6 @@ def f51_offline_copy(out: Path) -> Path:
         for i in range(1, 40):
             pg.keyboard.press("ArrowRight")
             pg.wait_for_timeout(900)
-            num = pg.evaluate(
-                "() => (document.querySelector('section.active, section.current, "
-                "section.visible') || document.body).textContent.slice(0,60)"
-            )
             pg.screenshot(path=str(shots / f"s{i:02d}.png"))
             seen = i + 1
             if i >= 20:
@@ -78,7 +74,7 @@ def f51_offline_copy(out: Path) -> Path:
 def f52_pdf(shots: Path, out: Path) -> Path:
     step("F5.2 PDF deck dagli screenshot (1 slide = 1 pagina, identico al proiettato)")
     from PIL import Image
-    from pypdf import PdfReader, PdfWriter
+    from pypdf import PdfReader
 
     pngs = sorted(shots.glob("s*.png"))
     # s00 = cover, poi una per avanzamento: deduplica frame identici consecutivi
@@ -133,7 +129,7 @@ def main() -> int:
     args = ap.parse_args()
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
-    kit = f51_offline_copy(out)
+    f51_offline_copy(out)
     f52_pdf(out / "screenshots", out)
     f53_thesis(out)
     print(f"\nKIT PRONTO in {out}: deck/ thesis_defense.pdf thesis_consegna.pdf screenshots/")
