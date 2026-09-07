@@ -181,7 +181,7 @@ def main() -> int:
             fails += 1
     # --- ECE (real, from softmax confidences; versioned copy) ---
     try:
-        ece = float(load_json(BACKEND.parent / "documents" / "_data" / "ece.json")["ece"])
+        ece = float(load_json(BACKEND / "app" / "figures" / "_data" / "ece.json")["ece"])
         if abs(ece - 0.058) > 0.005:
             print(f"FAIL ece: {ece} != 0.058")
             fails += 1

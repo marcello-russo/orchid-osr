@@ -96,7 +96,7 @@ def main() -> int:
     fig.tight_layout()
     fig.savefig(FIG_OUT, dpi=200)
     print(f"saved {FIG_OUT}")
-    (BACKEND.parent / "documents" / "_data" / "ece_bins.json").write_text(
+    (BACKEND / "app" / "figures" / "_data" / "ece_bins.json").write_text(
         json.dumps(
             {
                 "acc": [round(float(a), 4) for a in acc],
@@ -109,7 +109,7 @@ def main() -> int:
             indent=1,
         )
     )
-    (BACKEND.parent / "documents" / "_data" / "ece.json").write_text(
+    (BACKEND / "app" / "figures" / "_data" / "ece.json").write_text(
         json.dumps(
             {
                 "ece": round(float(ece), 4),
