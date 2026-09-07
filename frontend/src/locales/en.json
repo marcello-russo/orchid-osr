@@ -104,8 +104,8 @@
     },
     "matrix": {
       "osr_title": "AUROC OSR — Open-Set Detection",
-      "f1_tooltip": "F1 CV",
-      "auroc_tooltip": "AUROC"
+      "f1_tooltip": "F1 test",
+      "auroc_tooltip": "AUROC Ensemble (test)"
     },
     "table": {
       "experiment": "Experiment",

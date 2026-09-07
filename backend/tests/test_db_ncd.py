@@ -43,7 +43,7 @@ def test_read_ncd_metrics_empty(tmp_path):
 
 
 def test_read_ncd_metrics_with_detectors(tmp_path):
-    """ncd_results.json con detectors popola ncd_auroc e ncd_detector."""
+    """Regola tesi: ncd_auroc = Ensemble anche se KNN è più alto."""
     ncd = {
         "detectors": {
             "Mahalanobis": {"auroc": 0.85},
@@ -60,8 +60,8 @@ def test_read_ncd_metrics_with_detectors(tmp_path):
     ncd_file.write_text(json.dumps(ncd))
 
     metrics = _read_ncd_metrics(tmp_path)
-    assert metrics["ncd_auroc"] == 0.92  # KNN is best
-    assert metrics["ncd_detector"] == "KNN"
+    assert metrics["ncd_auroc"] == 0.90  # Ensemble, non il max (KNN 0.92)
+    assert metrics["ncd_detector"] == "Ensemble"
     assert metrics["ncd_clustering_nmi"] == 0.51  # spectral is best
 
 

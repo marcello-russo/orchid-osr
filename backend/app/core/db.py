@@ -151,21 +151,28 @@ def _read_ncd_metrics(exp_dir: str) -> dict:
 
     detectors = ncd_data.get("detectors", {})
     if detectors and isinstance(detectors, dict):
-        best_auroc = -1.0
-        best_aupr = -1.0
-        best_detector = None
-        for name, det_data in detectors.items():
-            if not isinstance(det_data, dict):
-                continue
-            auroc = det_data.get("auroc")
-            if isinstance(auroc, (int, float)) and auroc > best_auroc:
-                best_auroc = auroc
-                best_aupr = det_data.get("aupr", best_aupr)
-                best_detector = name
-        if best_auroc >= 0:
-            metrics["ncd_auroc"] = best_auroc
-            metrics["ncd_aupr"] = best_aupr if best_aupr >= 0 else None
-            metrics["ncd_detector"] = best_detector
+        # Regola ufficiale (tesi): Ensemble, stesso rivelatore per tutti.
+        ens = detectors.get("Ensemble")
+        if isinstance(ens, dict) and isinstance(ens.get("auroc"), (int, float)):
+            metrics["ncd_auroc"] = ens["auroc"]
+            metrics["ncd_aupr"] = ens.get("aupr")
+            metrics["ncd_detector"] = "Ensemble"
+        else:
+            best_auroc = -1.0
+            best_aupr = -1.0
+            best_detector = None
+            for name, det_data in detectors.items():
+                if not isinstance(det_data, dict):
+                    continue
+                auroc = det_data.get("auroc")
+                if isinstance(auroc, (int, float)) and auroc > best_auroc:
+                    best_auroc = auroc
+                    best_aupr = det_data.get("aupr", best_aupr)
+                    best_detector = name
+            if best_auroc >= 0:
+                metrics["ncd_auroc"] = best_auroc
+                metrics["ncd_aupr"] = best_aupr if best_aupr >= 0 else None
+                metrics["ncd_detector"] = best_detector
 
     clustering = ncd_data.get("clustering", {})
     if clustering and isinstance(clustering, dict):
