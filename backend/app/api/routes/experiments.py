@@ -53,18 +53,25 @@ def _read_ncd_metrics(d: Path) -> dict:
     metrics: dict = {}
     detectors = ncd_data.get("detectors", {})
     if isinstance(detectors, dict):
-        best_auroc = -1.0
-        best_detector = None
-        for name, det_data in detectors.items():
-            if not isinstance(det_data, dict):
-                continue
-            auroc = det_data.get("auroc")
-            if isinstance(auroc, (int, float)) and auroc > best_auroc:
-                best_auroc = auroc
-                best_detector = name
-        if best_auroc >= 0:
-            metrics["ncd_auroc"] = best_auroc
-            metrics["ncd_detector"] = best_detector
+        # Regola ufficiale (tesi): Ensemble, stesso rivelatore per tutti.
+        # Solo se Ensemble manca si ripiega sul migliore, dichiarandolo.
+        ens = detectors.get("Ensemble")
+        if isinstance(ens, dict) and isinstance(ens.get("auroc"), (int, float)):
+            metrics["ncd_auroc"] = ens["auroc"]
+            metrics["ncd_detector"] = "Ensemble"
+        else:
+            best_auroc = -1.0
+            best_detector = None
+            for name, det_data in detectors.items():
+                if not isinstance(det_data, dict):
+                    continue
+                auroc = det_data.get("auroc")
+                if isinstance(auroc, (int, float)) and auroc > best_auroc:
+                    best_auroc = auroc
+                    best_detector = name
+            if best_auroc >= 0:
+                metrics["ncd_auroc"] = best_auroc
+                metrics["ncd_detector"] = best_detector
 
     clustering = ncd_data.get("clustering", {})
     if isinstance(clustering, dict):
@@ -143,9 +150,9 @@ async def list_experiments():
                 "folds_completed": folds_done,
                 "test_accuracy": test_accuracy,
                 "mean_f1": (
-                    results.get("mean_f1")
-                    if results.get("mean_f1") is not None
-                    else results.get("test_metrics", {}).get("f1_macro")
+                    (results.get("test_metrics") or {}).get("f1_macro")
+                    if (results.get("test_metrics") or {}).get("f1_macro") is not None
+                    else results.get("mean_f1")
                 )
                 if results
                 else None,
@@ -370,9 +377,9 @@ def _build_experiment_response(
             "mean_accuracy": (results or {}).get("mean_accuracy"),
             "std_accuracy": (results or {}).get("std_accuracy"),
             "mean_f1": (
-                (results or {}).get("mean_f1")
-                if (results or {}).get("mean_f1") is not None
-                else ((results or {}).get("test_metrics") or {}).get("f1_macro")
+                ((results or {}).get("test_metrics") or {}).get("f1_macro")
+                if ((results or {}).get("test_metrics") or {}).get("f1_macro") is not None
+                else (results or {}).get("mean_f1")
             ),
             "std_f1": (results or {}).get("std_f1"),
             "test_accuracy": ((results or {}).get("test_metrics") or {}).get("accuracy"),

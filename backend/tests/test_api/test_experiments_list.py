@@ -192,13 +192,21 @@ class TestExperimentsListNCD:
         pass
 
     def test_mean_f1_zero_not_overridden(self):
-        """mean_f1=0.0 non deve far cadere nel fallback test_metrics."""
+        """mean_f1 deve essere numerico per tutti gli esperimenti."""
         resp = client.get("/api/experiments")
         data = resp.json()
         # Tutti i mean_f1 devono essere numerici
         for e in data:
             assert e.get("mean_f1") is not None
             assert isinstance(e["mean_f1"], (int, float))
+
+    def test_mean_f1_prefers_test_over_cv(self):
+        """Regola tesi: mean_f1 = F1 test, non media CV (es. 0.85 CV vs 0.82 test)."""
+        resp = client.get("/api/experiments")
+        data = resp.json()
+        by_id = {e["id"]: e for e in data}
+        assert by_id["exp1_ce_resnet18"]["mean_f1"] == 0.82
+        assert by_id["exp1_ce_resnet18"]["test_f1"] == 0.82
 
 
 class TestExperimentsListStructure:
