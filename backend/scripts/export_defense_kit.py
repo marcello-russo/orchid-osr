@@ -3,8 +3,8 @@
 Fa (niente bug perché ogni passo ha verifica):
   F5.1  copia thesis_defense.html + images/ in OUT, apre la copia OFFLINE
         (rete disabilitata), naviga tutte le slide, salva screenshot e li
-        confronta per presenza (14 slide attese).
-  F5.2  export PDF della deck via Chromium headless, verifica 14 pagine.
+        confronta per presenza (15 slide attese).
+  F5.2  export PDF della deck via Chromium headless, verifica 15 pagine.
   F5.3  copia thesis.pdf in OUT con metadati bonificati (autore/percorso/
         software rimossi), verifica 73 pagine e dump metadati prima/dopo.
   F5.4/5 checklist umana in documents/defense_checklist.md (nomi, data, kit).
@@ -24,7 +24,7 @@ BACKEND = Path(__file__).resolve().parent.parent
 DOCS = BACKEND.parent / "documents"
 sys.path.insert(0, str(BACKEND))
 
-EXPECTED_SLIDES = 14
+EXPECTED_SLIDES = 15
 EXPECTED_THESIS_PAGES = 73
 
 
@@ -33,7 +33,7 @@ def step(msg: str) -> None:
 
 
 def f51_offline_copy(out: Path) -> Path:
-    step("F5.1 copia offline + navigazione 14 slide senza rete")
+    step("F5.1 copia offline + navigazione 15 slide senza rete")
     kit = out / "deck"
     if kit.exists():
         shutil.rmtree(kit)

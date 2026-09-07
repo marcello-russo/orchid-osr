@@ -97,14 +97,30 @@ def main() -> int:
     fig.savefig(FIG_OUT, dpi=200)
     print(f"saved {FIG_OUT}")
     (BACKEND.parent / "documents" / "_data" / "ece_bins.json").write_text(
-        json.dumps({"acc": [round(float(a), 4) for a in acc],
-                    "conf": [round(float(c), 4) for c in cf],
-                    "counts": cnt, "n_bins": N_BINS,
-                    "model": "convnext_tiny", "exp": 3}, indent=1)
+        json.dumps(
+            {
+                "acc": [round(float(a), 4) for a in acc],
+                "conf": [round(float(c), 4) for c in cf],
+                "counts": cnt,
+                "n_bins": N_BINS,
+                "model": "convnext_tiny",
+                "exp": 3,
+            },
+            indent=1,
+        )
     )
     (BACKEND.parent / "documents" / "_data" / "ece.json").write_text(
-        json.dumps({"ece": round(float(ece), 4), "n_bins": N_BINS, "n": len(confs),
-                    "model": "convnext_tiny", "exp": 3, "fold": best_fold}, indent=1)
+        json.dumps(
+            {
+                "ece": round(float(ece), 4),
+                "n_bins": N_BINS,
+                "n": len(confs),
+                "model": "convnext_tiny",
+                "exp": 3,
+                "fold": best_fold,
+            },
+            indent=1,
+        )
     )
     return 0
 

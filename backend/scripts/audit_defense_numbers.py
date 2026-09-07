@@ -109,7 +109,7 @@ BANNED = [
     "senza compromessi",
     "Exp 1–5 affetti",
     "Exp 1-5 affetti",
-    "/ 15",
+    "/ 14",
 ]
 
 TOL = 0.002
@@ -148,12 +148,9 @@ CROSS_DOMAIN = [
 
 # (tag, npz_a, det_a, npz_b, det_b, expected_p)
 DELONG_PAIRED = [
-    ("e4-knn-vs-energy", "exp4_sphor_ncd_dinov2_base", "KNN",
-     "exp4_sphor_ncd_dinov2_base", "Energy", 0.0015),
-    ("e4-knn-base-vs-tiny", "exp4_sphor_ncd_dinov2_base", "KNN",
-     "exp4_sphor_ncd_convnext_tiny", "KNN", 0.0390),
-    ("e5-knn-tiny-vs-base", "exp5_sphor_ncd_convnext_tiny", "KNN",
-     "exp5_sphor_ncd_dinov2_base", "KNN", 0.9766),
+    ("e4-knn-vs-energy", "exp4_sphor_ncd_dinov2_base", "KNN", "exp4_sphor_ncd_dinov2_base", "Energy", 0.0015),
+    ("e4-knn-base-vs-tiny", "exp4_sphor_ncd_dinov2_base", "KNN", "exp4_sphor_ncd_convnext_tiny", "KNN", 0.0390),
+    ("e5-knn-tiny-vs-base", "exp5_sphor_ncd_convnext_tiny", "KNN", "exp5_sphor_ncd_dinov2_base", "KNN", 0.9766),
 ]
 
 
@@ -220,9 +217,21 @@ def main() -> int:
         fails += 1
     # --- key numbers that MUST appear in the deck text ---
     REQUIRED = [
-        "0,875", "0,850", "0,839", "0,422", "0,688", "0,755",
-        "0,843", "0,805", "0,906", "0,110", "0,83 ± 0,04",
-        "0,835–0,916", "p=0,98", "0,058", "1.477",
+        "0,875",
+        "0,850",
+        "0,839",
+        "0,422",
+        "0,688",
+        "0,755",
+        "0,843",
+        "0,805",
+        "0,906",
+        "0,110",
+        "0,83 ± 0,04",
+        "0,835–0,916",
+        "p=0,98",
+        "0,058",
+        "1.477",
     ]
     if DECK.exists():
         html = DECK.read_text(encoding="utf-8")
