@@ -1,0 +1,8 @@
+{
+ "ece": 0.0576,
+ "n_bins": 15,
+ "n": 300,
+ "model": "convnext_tiny",
+ "exp": 3,
+ "fold": 4
+}
