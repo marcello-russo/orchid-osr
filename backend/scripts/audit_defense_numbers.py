@@ -109,6 +109,7 @@ BANNED = [
     "senza compromessi",
     "Exp 1–5 affetti",
     "Exp 1-5 affetti",
+    "/ 15",
 ]
 
 TOL = 0.002
