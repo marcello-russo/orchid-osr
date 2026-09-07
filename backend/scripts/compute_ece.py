@@ -96,7 +96,7 @@ def main() -> int:
     fig.tight_layout()
     fig.savefig(FIG_OUT, dpi=200)
     print(f"saved {FIG_OUT}")
-    (BACKEND / "experiments" / "exp3_sphor_convnext_tiny" / "ece.json").write_text(
+    (BACKEND.parent / "documents" / "_data" / "ece.json").write_text(
         json.dumps({"ece": round(float(ece), 4), "n_bins": N_BINS, "n": len(confs),
                     "model": "convnext_tiny", "exp": 3, "fold": best_fold}, indent=1)
     )

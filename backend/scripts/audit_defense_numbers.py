@@ -181,9 +181,9 @@ def main() -> int:
         if not ok:
             print(f"FAIL {cid} exp{exp}/{model}/{kind}/{key}: json={got:.4f} claimed={expected}")
             fails += 1
-    # --- ECE (real, from softmax confidences) ---
+    # --- ECE (real, from softmax confidences; versioned copy) ---
     try:
-        ece = float(load_json(EXP / "exp3_sphor_convnext_tiny" / "ece.json")["ece"])
+        ece = float(load_json(BACKEND.parent / "documents" / "_data" / "ece.json")["ece"])
         if abs(ece - 0.058) > 0.005:
             print(f"FAIL ece: {ece} != 0.058")
             fails += 1
@@ -217,11 +217,21 @@ def main() -> int:
     except Exception as e:
         print(f"FAIL delong paired: {e}")
         fails += 1
+    # --- key numbers that MUST appear in the deck text ---
+    REQUIRED = [
+        "0,875", "0,850", "0,839", "0,422", "0,688", "0,755",
+        "0,843", "0,805", "0,906", "0,110", "0,83 ± 0,04",
+        "0,835–0,916", "p=0,98", "0,058", "1.477",
+    ]
     if DECK.exists():
         html = DECK.read_text(encoding="utf-8")
         for b in BANNED:
             if b in html:
                 print(f"FAIL deck contains banned string: {b!r}")
+                fails += 1
+        for r in REQUIRED:
+            if r not in html:
+                print(f"FAIL deck missing required number: {r!r}")
                 fails += 1
     else:
         print("WARN deck html not found, skipping banned-string check")
