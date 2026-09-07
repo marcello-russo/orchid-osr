@@ -30,7 +30,7 @@ def build_reliability(fig_dir: Path, exps: dict[int, Path]) -> list[Path]:
 
     # --- reliability diagram: ONLY real data (see scripts/compute_ece.py) ---
     # Mai dati finti: se i bin reali mancano, fallire ad alta voce.
-    data_path = Path(__file__).resolve().parent.parent.parent.parent / "documents" / "_data" / "ece_bins.json"
+    data_path = Path(__file__).resolve().parent / "_data" / "ece_bins.json"
     if not data_path.exists():
         raise FileNotFoundError(f"{data_path} mancante: generare con `python scripts/compute_ece.py`")
     bins = json.loads(data_path.read_text(encoding="utf-8"))
