@@ -135,6 +135,39 @@ def actual_value(exp: int, model: str, kind: str, key: str) -> float:
     raise ValueError(kind)
 
 
+INET = ("O. exaltata", "O. garganica", "O. incubacea", "O. sphegodes")
+FLD = ("O. majellensis", "O. sphegodes_Palena")
+
+# (exp_dir, expected_cross_errors) — structured latent space kills domain shortcut
+CROSS_DOMAIN = [
+    ("exp3_sphor_convnext_tiny", 0),
+    ("exp3_sphor_convnext_small", 0),
+    ("exp2_supcon_dinov2_base", 0),
+]
+
+# (tag, npz_a, det_a, npz_b, det_b, expected_p)
+DELONG_PAIRED = [
+    ("e4-knn-vs-energy", "exp4_sphor_ncd_dinov2_base", "KNN",
+     "exp4_sphor_ncd_dinov2_base", "Energy", 0.0015),
+    ("e4-knn-base-vs-tiny", "exp4_sphor_ncd_dinov2_base", "KNN",
+     "exp4_sphor_ncd_convnext_tiny", "KNN", 0.0390),
+    ("e5-knn-tiny-vs-base", "exp5_sphor_ncd_convnext_tiny", "KNN",
+     "exp5_sphor_ncd_dinov2_base", "KNN", 0.9766),
+]
+
+
+def cross_errors(exp_dir: str) -> int:
+    import numpy as np
+
+    d = load_json(EXP / exp_dir / "results.json")
+    tm = d["test_metrics"]
+    lab = tm["confusion_matrix_labels"]
+    cm = np.array(tm["confusion_matrix"])
+    ii = [i for i, n in enumerate(lab) if n in INET]
+    fi = [i for i, n in enumerate(lab) if n in FLD]
+    return int(cm[np.ix_(ii, fi)].sum() + cm[np.ix_(fi, ii)].sum())
+
+
 def main() -> int:
     fails = 0
     for cid, exp, model, kind, key, expected in CLAIMS:
@@ -148,6 +181,42 @@ def main() -> int:
         if not ok:
             print(f"FAIL {cid} exp{exp}/{model}/{kind}/{key}: json={got:.4f} claimed={expected}")
             fails += 1
+    # --- ECE (real, from softmax confidences) ---
+    try:
+        ece = float(load_json(EXP / "exp3_sphor_convnext_tiny" / "ece.json")["ece"])
+        if abs(ece - 0.058) > 0.005:
+            print(f"FAIL ece: {ece} != 0.058")
+            fails += 1
+    except Exception as e:
+        print(f"FAIL ece.json: {e}")
+        fails += 1
+    # --- cross-domain confusion (structured space only) ---
+    for exp_dir, expected in CROSS_DOMAIN:
+        try:
+            got = cross_errors(exp_dir)
+            if got != expected:
+                print(f"FAIL cross-domain {exp_dir}: {got} != {expected}")
+                fails += 1
+        except Exception as e:
+            print(f"FAIL cross-domain {exp_dir}: {e}")
+            fails += 1
+    # --- DeLong paired p-values, recomputed live ---
+    try:
+        import numpy as np
+
+        from app.core.ncd.delong import delong_paired_test
+
+        for tag, da, fa, db, fb, ep in DELONG_PAIRED:
+            ya = np.load(EXP / da / "osr_scores.npz")
+            yb = np.load(EXP / db / "osr_scores.npz")
+            assert (ya["y_true"] == yb["y_true"]).all(), f"{tag}: y_true mismatch"
+            r = delong_paired_test(ya["y_true"], ya[fa], yb[fb])
+            if abs(r["p_value"] - ep) > 0.002:
+                print(f"FAIL delong {tag}: p={r['p_value']:.4f} != {ep}")
+                fails += 1
+    except Exception as e:
+        print(f"FAIL delong paired: {e}")
+        fails += 1
     if DECK.exists():
         html = DECK.read_text(encoding="utf-8")
         for b in BANNED:
