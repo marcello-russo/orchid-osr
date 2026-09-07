@@ -107,7 +107,7 @@ def _auroc_heatmap(fig_dir: Path) -> list[Path]:
     ax.set_xticklabels(DETECTORS, fontsize=9)
     ax.set_yticks(range(len(ARCHS)))
     ax.set_yticklabels(ARCH_LABELS, fontsize=8)
-    ax.set_title("OSR AUROC per detector — Exp4 1 Novel (250+50)", fontsize=12, fontweight="bold")
+    ax.set_title("AUROC OSR per rivelatore — Exp4, 1 novel (250+50)", fontsize=12, fontweight="bold")
     fig.colorbar(im, ax=ax, shrink=0.8, label="AUROC")
     fig.tight_layout()
     paths = _save_fig(fig, fig_dir / "osr_detection_heatmap")
@@ -129,8 +129,8 @@ def _dual_1vs2(fig_dir: Path) -> list[Path]:
     x = np.arange(len(ARCHS))
     w = 0.35
     fig, ax = plt.subplots(figsize=(8, 4))
-    b1 = ax.bar(x - w / 2, e4, w, label="Exp4 1 Novel (250+50)", color=PALETTE[0], edgecolor="black", linewidth=0.6)
-    b2 = ax.bar(x + w / 2, e5, w, label="Exp5 2 Novel (200+100)", color=PALETTE[2], edgecolor="black", linewidth=0.6)
+    b1 = ax.bar(x - w / 2, e4, w, label="Exp4, 1 novel (250+50)", color=PALETTE[0], edgecolor="black", linewidth=0.6)
+    b2 = ax.bar(x + w / 2, e5, w, label="Exp5, 2 novel (200+100)", color=PALETTE[2], edgecolor="black", linewidth=0.6)
     for bars in (b1, b2):
         for bar in bars:
             h = bar.get_height()
@@ -138,10 +138,10 @@ def _dual_1vs2(fig_dir: Path) -> list[Path]:
                 ax.text(bar.get_x() + bar.get_width() / 2, h + 0.015, f"{h:.2f}", ha="center", fontsize=7)
     ax.set_xticks(x)
     ax.set_xticklabels(ARCH_LABELS, fontsize=8)
-    ax.set_ylabel("AUROC Ensemble (supplement)")
+    ax.set_ylabel("AUROC Ensemble (supplemento)")
     ax.set_ylim(0.48, 1.0)
-    ax.axhline(0.5, color="gray", linestyle="--", linewidth=1, label="chance")
-    ax.set_title("OSR: 1 vs 2 Novel (AUROC Ensemble)", fontsize=12, fontweight="bold")
+    ax.axhline(0.5, color="gray", linestyle="--", linewidth=1, label="caso")
+    ax.set_title("OSR: 1 vs 2 novel (AUROC Ensemble)", fontsize=12, fontweight="bold")
     ax.legend(fontsize=8)
     ax.grid(axis="y", alpha=0.3)
     fig.tight_layout()
@@ -186,7 +186,7 @@ def _closed_vs_open(fig_dir: Path) -> list[Path]:
     # hero annotation: ConvNeXt-T holds both worlds
     if "convnext_tiny" in f1_4 and "convnext_tiny" in d4:
         ax.annotate(
-            "ConvNeXt-T holds\nboth worlds",
+            "ConvNeXt-T tiene\nin entrambi",
             xy=(f1_4["convnext_tiny"], d4["convnext_tiny"].get("Ensemble", 0.85)),
             xytext=(0.55, 0.92),
             fontsize=8,
@@ -200,15 +200,14 @@ def _closed_vs_open(fig_dir: Path) -> list[Path]:
             Line2D([0], [0], marker="^", color="w", markerfacecolor="black", markersize=9),
             Line2D([0], [0], marker="o", color="w", markerfacecolor="gray", markersize=8),
         ],
-        ["Exp4 1 Novel", "Exp5 2 Novel"],
+        ["Exp4, 1 novel", "Exp5, 2 novel"],
         fontsize=8,
     )
-    ax.set_xlabel("Closed-set Test F1")
-    ax.set_ylabel("OSR AUROC Ensemble (supplement)")
-    ax.set_xlim(0.0, 1.0)
+    ax.set_xlabel("F1 test closed-set")
+    ax.set_ylabel("AUROC OSR Ensemble (supplemento)")
     ax.set_ylim(0.4, 1.0)
-    ax.axhline(0.5, color="gray", linestyle="--", linewidth=1, label="chance")
-    ax.set_title("Closed vs OSR — Exp4 1 Novel (^) vs Exp5 2 Novel (o)", fontsize=12, fontweight="bold")
+    ax.axhline(0.5, color="gray", linestyle="--", linewidth=1, label="caso")
+    ax.set_title("Chiuso vs OSR — Exp4, 1 novel (^) vs Exp5, 2 novel (o)", fontsize=12, fontweight="bold")
     ax.grid(alpha=0.3)
     fig.tight_layout()
     paths = _save_fig(fig, fig_dir / "closed_vs_open_scatter")

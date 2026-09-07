@@ -124,11 +124,9 @@ def build_gcd(fig_dir: Path, exps: dict[int, Path]) -> list[Path]:
         ax.text(i + width, v + 0.02, f"{v:.2f}", ha="center", fontsize=8, fontweight="bold")
     ax.set_xticks(x)
     ax.set_xticklabels(labels)
-    ax.set_ylabel("GCD ACC$_{new}$")
+    ax.set_ylabel("ACC new GCD")
     ax.set_ylim(0, 1.05)
-    ax.set_title(
-        "GCD novel discovery: standard SS-KMeans fails, uninformed KMeans discovers", fontsize=11, fontweight="bold"
-    )
+    ax.set_title("GCD: SS-KMeans standard fallisce, K-means non informato scopre", fontsize=11, fontweight="bold")
     ax.legend(fontsize=8)
     ax.grid(axis="y", alpha=0.3)
     ax.text(

@@ -39,8 +39,8 @@ EXP_LABELS = [
     "Exp 1 (CE, 6 cls)",
     "Exp 2 (SupCon, 6 cls)",
     "Exp 3 (SpHOR, 6 cls)",
-    "Exp 4 (1 Novel, 5 cls)",
-    "Exp 5 (2 Novel, 4 cls)",
+    "Exp 4 (1 novel, 5 cls)",
+    "Exp 5 (2 novel, 4 cls)",
 ]
 
 
@@ -99,7 +99,7 @@ def build_closed(fig_dir: Path, exps: dict[int, Path]) -> list[Path]:
     ax.set_xticklabels(EXP_LABELS, fontsize=8)
     ax.set_ylabel("F1 macro")
     ax.set_ylim(0, 1.05)
-    ax.set_title("Benchmark: Test F1 per Experiment", fontsize=12, fontweight="bold")
+    ax.set_title("Benchmark: F1 test per esperimento", fontsize=12, fontweight="bold")
     ax.legend(frameon=True, fontsize=7, ncol=3)
     ax.grid(axis="y", alpha=0.3)
     fig.tight_layout()
@@ -125,8 +125,8 @@ def build_closed(fig_dir: Path, exps: dict[int, Path]) -> list[Path]:
     ax2.set_xticklabels(EXP_LABELS, fontsize=8)
     ax2.set_yticks(range(len(ARCHS)))
     ax2.set_yticklabels(ARCH_LABELS, fontsize=8)
-    ax2.set_title("Benchmark Heatmap: Test F1", fontsize=12, fontweight="bold")
-    fig2.colorbar(im, ax=ax2, shrink=0.8, label="F1 Score")
+    ax2.set_title("Heatmap benchmark: F1 test", fontsize=12, fontweight="bold")
+    fig2.colorbar(im, ax=ax2, shrink=0.8, label="F1")
     fig2.tight_layout()
     all_paths.extend(_save_fig(fig2, fig_dir / "benchmark_heatmap"))
     plt.close(fig2)
@@ -164,8 +164,8 @@ def build_heatmap_13(fig_dir: Path, exps: dict[int, Path]) -> list[Path]:
     ax.set_xticklabels(labels, fontsize=8)
     ax.set_yticks(range(len(ARCHS)))
     ax.set_yticklabels(ARCH_LABELS, fontsize=8)
-    ax.set_title("Benchmark Heatmap: Test F1 (Studio I Close World)", fontsize=12, fontweight="bold")
-    fig.colorbar(im, ax=ax, shrink=0.8, label="F1 Score")
+    ax.set_title("Heatmap benchmark: F1 test (Studio I, close world)", fontsize=12, fontweight="bold")
+    fig.colorbar(im, ax=ax, shrink=0.8, label="F1")
     fig.tight_layout()
     paths = _save_fig(fig, fig_dir / "heatmap_1_3")
     plt.close(fig)
