@@ -173,10 +173,12 @@ INET = ("O. exaltata", "O. garganica", "O. incubacea", "O. sphegodes")
 FLD = ("O. majellensis", "O. sphegodes_Palena")
 
 # (exp_dir, expected_cross_errors) — structured latent space kills domain shortcut
+# Errori incrociati web-field (INET<->FLD) sul best-fold del test ufficiale.
+# Solo ConvNeXt-Tiny azzera; gli altri restano a una cifra (vs 2-22 in CE).
 CROSS_DOMAIN = [
     ("exp3_sphor_convnext_tiny", 0),
-    ("exp3_sphor_convnext_small", 0),
-    ("exp2_supcon_dinov2_base", 0),
+    ("exp3_sphor_convnext_small", 9),
+    ("exp2_supcon_dinov2_base", 13),
 ]
 
 # (tag, npz_a, det_a, npz_b, det_b, expected_p)
@@ -190,6 +192,12 @@ DELONG_PAIRED = [
 def cross_errors(exp_dir: str) -> int:
     import numpy as np
 
+    from app.core.perfold import load_perfold
+
+    pf = load_perfold(EXP / exp_dir)
+    if pf and pf.get("cross_errors_new") is not None:
+        return int(pf["cross_errors_new"])
+    # fallback legacy (vecchio test)
     d = load_json(EXP / exp_dir / "results.json")
     tm = d["test_metrics"]
     lab = tm["confusion_matrix_labels"]
