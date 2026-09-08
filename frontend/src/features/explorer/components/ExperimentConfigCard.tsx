@@ -23,7 +23,9 @@ export function ExperimentConfigCard({ config }: ExperimentConfigCardProps) {
         <CardTitle className="text-base">{t("experiment_detail.config.training_recipe")}</CardTitle>
       </CardHeader>
       <CardContent className="pt-4">
-        {hasRecipe ? (
+        {config.description && (
+          <p className="mb-3 text-sm text-foreground leading-relaxed">{config.description}</p>
+        )}        {hasRecipe ? (
           <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3 md:grid-cols-4">
             {config.num_epochs && (
               <div>

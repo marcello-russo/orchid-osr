@@ -20,6 +20,7 @@ export interface ExperimentConfig {
   timestamp?: string;
   phases?: string[];
   recipe?: string;
+  description?: string;
   optimizer?: string;
   effective_learning_rate?: number;
   weight_decay?: number;

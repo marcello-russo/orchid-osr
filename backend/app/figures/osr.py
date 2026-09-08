@@ -151,9 +151,24 @@ def _dual_1vs2(fig_dir: Path) -> list[Path]:
 
 
 def _read_f1(exp: str) -> dict[str, float]:
-    """{model: test F1} from results.json test_metrics (fallback if missing)."""
-    proj = Path(__file__).resolve().parents[2]
+    """{model: test F1} — medie sui 5 fold da perfold_test.json (fallback results.json)."""
+    from app.core.perfold import perfold_means
+
+    _pfx = {
+        "exp1_ce": "exp1_ce",
+        "exp2_supcon": "exp2_supcon",
+        "exp3_sphor": "exp3_sphor",
+        "exp4_sphor_ncd": "exp4_sphor_ncd",
+        "exp5_sphor_ncd": "exp5_sphor_ncd",
+    }
     out: dict[str, float] = {}
+    if exp in _pfx:
+        for model, (mean, _std) in perfold_means(_pfx[exp]).items():
+            out[model] = mean
+        if out:
+            return out
+    proj = Path(__file__).resolve().parents[2]
+    out = {}
     for f in glob.glob(str(proj / "experiments" / f"{exp}_*" / "results.json")):
         if "old" in f:
             continue

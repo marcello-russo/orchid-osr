@@ -569,7 +569,13 @@ def train_fold_supcon(
         best_epoch = supcon_val_knn.index(supcon_best_knn) + 1 if supcon_val_knn else 0
         best_acc = 0.0
         ce_history = {"train_loss": [0.0], "val_loss": [0.0], "val_accuracy": [0.0], "val_f1": [0.0]}
-        model.save_weights(checkpoint_path)
+        # MAI sovrascrivere il checkpoint di training: in ncd_mode i pesi
+        # salvati conterrebbero solo il backbone fase-1 senza testa allenata
+        # (cfr. Exp5: 4/6 modelli con F1 crollato dopo rerun ncd). Salva a parte.
+        import os as _os
+
+        _ncd_ckpt = _os.path.splitext(checkpoint_path)[0] + "_ncd.pt"
+        model.save_weights(_ncd_ckpt)
 
     # --- SpHOR prototype probe (if using prototypes) ---
     sphor_probe_accuracy = None
