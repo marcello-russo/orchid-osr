@@ -139,6 +139,16 @@ async def list_experiments():
 
         test_accuracy = results.get("test_metrics", {}).get("accuracy") if results else None
 
+        # F1 test dal test ufficiale: medie ± std sui 5 fold (perfold_test.json).
+        # Fallback al vecchio comportamento solo se il file manca.
+        pf_mean, pf_std = _perfold_stats(d)
+        if pf_mean is None and results:
+            pf_mean = (results.get("test_metrics") or {}).get("f1_macro")
+            if pf_mean is None:
+                pf_mean = results.get("mean_f1")
+        if pf_std is None and results:
+            pf_std = results.get("std_f1")
+
         experiments.append(
             {
                 "id": d.name,
@@ -149,22 +159,75 @@ async def list_experiments():
                 "num_folds": num_folds,
                 "folds_completed": folds_done,
                 "test_accuracy": test_accuracy,
-                "mean_f1": (
-                    (results.get("test_metrics") or {}).get("f1_macro")
-                    if (results.get("test_metrics") or {}).get("f1_macro") is not None
-                    else results.get("mean_f1")
-                )
-                if results
-                else None,
+                "mean_f1": pf_mean if (results or pf_mean is not None) else None,
                 "test_f1": ((results.get("test_metrics") or {}).get("f1_macro") if results else None),
-                "std_f1": results.get("std_f1") if results else None,
+                "std_f1": pf_std if (results or pf_std is not None) else None,
                 "timestamp": config.get("timestamp"),
                 "is_ncd": is_ncd,
                 **ncd_metrics,
             }
         )
-
     return experiments
+
+
+def _perfold_stats(exp_dir) -> tuple[float | None, float | None]:
+    """(mean, std) F1 test da perfold_test.json, o (None, None) se manca."""
+    from app.core.perfold import load_perfold
+
+    pf = load_perfold(exp_dir)
+    if not pf:
+        return None, None
+    try:
+        return float(pf["f1_mean"]), float(pf["f1_std"])
+    except (ValueError, KeyError):
+        return None, None
+
+
+def _override_test_metrics(exp_dir, results: dict | None) -> None:
+    """Sostituisce test_metrics con la confusion del best fold sul test ufficiale."""
+    if not results:
+        return
+    from app.core.perfold import load_perfold
+
+    pf = load_perfold(exp_dir)
+    if not pf or not pf.get("best_confusion_matrix"):
+        return
+    try:
+        import numpy as np
+
+        cm = np.array(pf["best_confusion_matrix"], dtype=float)
+        labels = list(pf.get("best_confusion_matrix_labels") or [])
+        total = cm.sum()
+        if total <= 0 or cm.shape[0] != len(labels):
+            return
+        acc = float(np.trace(cm) / total)
+        per_class: dict[str, dict[str, float]] = {}
+        f1s = []
+        for i, name in enumerate(labels):
+            tp = cm[i, i]
+            pred_pos = cm[:, i].sum()
+            actual = cm[i, :].sum()
+            prec = float(tp / pred_pos) if pred_pos > 0 else 0.0
+            rec = float(tp / actual) if actual > 0 else 0.0
+            f1 = float(2 * prec * rec / (prec + rec)) if (prec + rec) > 0 else 0.0
+            f1s.append(f1)
+            per_class[name] = {
+                "precision": prec,
+                "recall": rec,
+                "f1": f1,
+                "support": int(actual),
+            }
+        results["test_metrics"] = {
+            "accuracy": acc,
+            "f1_macro": float(sum(f1s) / len(f1s)) if f1s else 0.0,
+            "precision_macro": None,
+            "recall_macro": None,
+            "confusion_matrix": cm.astype(int).tolist(),
+            "confusion_matrix_labels": labels,
+            "per_class_metrics": per_class,
+        }
+    except (ValueError, KeyError):
+        return
 
 
 @router.get("/{experiment_id}", response_model=ExperimentDetailResponse)
@@ -195,6 +258,43 @@ async def get_experiment(experiment_id: str):
     if exp_num_match:
         exp_num = int(exp_num_match.group(1))
         _recipes = {
+            1: {
+                "phases": ["Cross-Entropy (fase singola)"],
+                "description": "Baseline supervisionata: cross-entropia su 6 specie con backbone e testa allenati insieme sul clean split.",
+                "recipe": "Training monofase con loss Cross-Entropy standard su 6 classi. "
+                "L'intera rete (backbone + testa) è addestrata insieme. "
+                "150 epoche, early stopping (patience 15), Adam (lr=0.001), batch 8. "
+                "5-fold stratificata, seed 57, clean split 2.192/300. "
+                "Scopo: baseline per confronto con i paradigmi contrastivi.",
+            },
+            2: {
+                "phases": ["Fase 1: SupCon (pretraining contrastivo)", "Fase 2: CE fine-tuning (linear probe)"],
+                "description": "Pretraining contrastivo supervisionato + testa lineare su backbone congelato, su 6 classi.",
+                "recipe": "Training a due fasi per embedding strutturati. "
+                "Fase 1: SupConLoss (τ=0.07, proiezione a 128 dim), validazione KNN. "
+                "Fase 2: backbone congelato, sola testa lineare con CrossEntropy. "
+                "Stesso split, seed e protocollo di Exp 1.",
+            },
+            3: {
+                "phases": ["Fase 1: SupCon + SpHOR", "Fase 2: CE fine-tuning"],
+                "description": "Come Exp 2 con prototipi ortogonali sferici (SpHOR) in Fase 1, su 6 classi note.",
+                "recipe": "Come Exp 2 ma con Spherical Orthogonal Prototypes: prototipi L2-normalizzati "
+                "sull'ipersfera con loss di repulsione ortogonale (λ=0.01). "
+                "Fase 2 identica a Exp 2. Valutazione closed-set, nessuna novel class.",
+            },
+            4: {
+                "phases": ["Fase 1: SupCon + SpHOR", "Fase 2: CE fine-tuning"],
+                "description": "Come Exp 3 ma O. garganica esclusa dal training (5 note): novel nascosta per OSR e GCD.",
+                "recipe": "Strutturalmente identico a Exp 3 (stessa loss, stessi iperparametri). "
+                "L'unica differenza: O. garganica è esclusa dal training (5 classi note) "
+                "e riservata al test come novel class nascosta per OSR (4 rivelatori) e GCD.",
+            },
+            5: {
+                "phases": ["Fase 1: SupCon + SpHOR", "Fase 2: CE fine-tuning"],
+                "description": "Come Exp 4 con due novel nascoste, O. garganica e O. majellensis (4 note, 1.477 train).",
+                "recipe": "Identico a Exp 4 ma con due novel nascoste (garganica + majellensis). "
+                "Stessi 4 rivelatori OSR: il rilevamento scala con due novel?",
+            },
             6: {
                 "phases": ["Cross-Entropy (fase singola)"],
                 "recipe": "Training monofase con loss Cross-Entropy standard. "
@@ -266,6 +366,8 @@ async def get_experiment(experiment_id: str):
         if exp_num in _recipes:
             config["phases"] = _recipes[exp_num]["phases"]
             config["recipe"] = _recipes[exp_num]["recipe"]
+            if _recipes[exp_num].get("description"):
+                config["description"] = _recipes[exp_num]["description"]
 
     folds = []
     for fold_file in sorted(exp_dir.glob("fold_*.json")):
@@ -290,6 +392,10 @@ async def get_experiment(experiment_id: str):
     results_path = exp_dir / "results.json"
     if results_path.exists():
         results = _load_json(results_path)
+
+    # Test ufficiale: confusion/acc/F1 del best fold da perfold_test.json
+    # (i test_metrics in results.json si riferiscono al vecchio test pre-split).
+    _override_test_metrics(exp_dir, results)
 
     # NCD metrics from ncd_results.json (JSON fallback)
     ncd_full: dict | None = None
@@ -351,6 +457,17 @@ def _build_experiment_response(
 
     is_ncd = bool(config.get("ncd_mode")) or bool((exp_data or {}).get("is_ncd"))
 
+    # Come nella lista: F1 test ufficiale (medie ± std 5 fold) se disponibile.
+    pf_mean, pf_std = _perfold_stats(_get_experiments_dir() / exp_id)
+    if pf_mean is None:
+        pf_mean = (
+            ((results or {}).get("test_metrics") or {}).get("f1_macro")
+            if ((results or {}).get("test_metrics") or {}).get("f1_macro") is not None
+            else (results or {}).get("mean_f1")
+        )
+    if pf_std is None:
+        pf_std = (results or {}).get("std_f1")
+
     # Normalize all folds (handles SupCon two-phase → flat + phase_epochs)
     from app.api.routes.comparison import _normalize_fold
 
@@ -376,12 +493,8 @@ def _build_experiment_response(
             "num_folds": len(folds),
             "mean_accuracy": (results or {}).get("mean_accuracy"),
             "std_accuracy": (results or {}).get("std_accuracy"),
-            "mean_f1": (
-                ((results or {}).get("test_metrics") or {}).get("f1_macro")
-                if ((results or {}).get("test_metrics") or {}).get("f1_macro") is not None
-                else (results or {}).get("mean_f1")
-            ),
-            "std_f1": (results or {}).get("std_f1"),
+            "mean_f1": pf_mean,
+            "std_f1": pf_std,
             "test_accuracy": ((results or {}).get("test_metrics") or {}).get("accuracy"),
             "test_f1": ((results or {}).get("test_metrics") or {}).get("f1_macro"),
             "is_ncd": is_ncd,

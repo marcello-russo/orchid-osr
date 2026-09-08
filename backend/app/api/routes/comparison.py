@@ -13,6 +13,17 @@ from app.api.schemas import (
     SeriesModelEntry,
 )
 from app.config import settings
+from app.core.perfold import load_perfold
+
+
+def _test_stats(exp_dir: Path) -> tuple[float | None, float | None]:
+    pf = load_perfold(exp_dir)
+    if not pf:
+        return None, None
+    try:
+        return float(pf["f1_mean"]), float(pf["f1_std"])
+    except (ValueError, KeyError):
+        return None, None
 
 router = APIRouter(prefix="/api/comparison", tags=["comparison"])
 
@@ -117,16 +128,21 @@ async def get_comparison():
                     )
                 )
 
+        _tmean, _tstd = _test_stats(d)
         models.append(
             ModelComparisonEntry(
                 name=display_name,
                 model_variant=variant,
                 folds_completed=len(fold_snapshots),
                 num_folds=config.get("num_folds", 5),
-                mean_f1=results.get("mean_f1")
-                if results.get("mean_f1") is not None
-                else results.get("test_metrics", {}).get("f1_macro"),
-                std_f1=results.get("std_f1"),
+                mean_f1=_tmean
+                if _tmean is not None
+                else (
+                    results.get("mean_f1")
+                    if results.get("mean_f1") is not None
+                    else results.get("test_metrics", {}).get("f1_macro")
+                ),
+                std_f1=_tstd if _tstd is not None else results.get("std_f1"),
                 mean_accuracy=results.get("mean_accuracy"),
                 test_accuracy=results.get("test_metrics", {}).get("accuracy"),
                 test_f1=results.get("test_metrics", {}).get("f1_macro"),
@@ -160,16 +176,21 @@ def _build_exp_group(prefix: str) -> list[ModelComparisonEntry]:
         variant = config.get("model_variant", d.name.replace(prefix + "_", ""))
         display_name = _DISPLAY_NAMES.get(variant, variant)
 
+        _tmean2, _tstd2 = _test_stats(d)
         models.append(
             ModelComparisonEntry(
                 name=display_name,
                 model_variant=variant,
                 folds_completed=0,
                 num_folds=config.get("num_folds", 5),
-                mean_f1=results.get("mean_f1")
-                if results.get("mean_f1") is not None
-                else results.get("test_metrics", {}).get("f1_macro"),
-                std_f1=results.get("std_f1"),
+                mean_f1=_tmean2
+                if _tmean2 is not None
+                else (
+                    results.get("mean_f1")
+                    if results.get("mean_f1") is not None
+                    else results.get("test_metrics", {}).get("f1_macro")
+                ),
+                std_f1=_tstd2 if _tstd2 is not None else results.get("std_f1"),
                 mean_accuracy=results.get("mean_accuracy"),
                 test_accuracy=results.get("test_metrics", {}).get("accuracy"),
                 test_f1=results.get("test_metrics", {}).get("f1_macro"),

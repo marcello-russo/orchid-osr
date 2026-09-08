@@ -1,7 +1,9 @@
 """Defense numbers audit — single source of truth for thesis/speech/deck.
 
 Checks every number cited in defense materials against the experiment JSONs:
-- closed-set F1  -> experiments/exp{N}_*/results.json :: test_metrics.f1_macro
+- closed-set F1  -> experiments/exp{N}_*/perfold_test.json :: f1_mean ± f1_std
+  (test ufficiale da 300 immagini, medie sui 5 fold; i test_metrics in
+  results.json si riferiscono al vecchio test pre-split e non sono usati)
 - OSR AUROC      -> experiments/exp{N}_sphor_ncd_*/ncd_results.json :: detectors.*.auroc
 - GCD            -> experiments/exp4_sphor_ncd_*/gcd_results.json (test-pool metrics)
 - banned strings -> documents/thesis_defense.html (legacy Exp9, V100S, mixed numbers)
@@ -23,36 +25,60 @@ MODELS = ["resnet18", "resnet50", "convnext_tiny", "convnext_small", "dinov2_sma
 EXP_PREFIX = {1: "exp1_ce", 2: "exp2_supcon", 3: "exp3_sphor", 4: "exp4_sphor_ncd", 5: "exp5_sphor_ncd"}
 
 # (claim_id, exp, model, kind, key, expected)
-# kind: f1 | osr-<detector> | gcd-ss-<field> | gcd-kmx10-<field>
+# kind: f1 (perfold mean) | f1std (perfold std) | osr-<detector> | gcd-ss-<field> | gcd-kmx10-<field>
 CLAIMS: list[tuple[str, int, str, str, str, float]] = [
-    # --- Exp 1 CE test F1 ---
-    ("e1", 1, "resnet18", "f1", "", 0.978),
-    ("e1", 1, "resnet50", "f1", "", 0.980),
-    ("e1", 1, "convnext_tiny", "f1", "", 0.821),
-    ("e1", 1, "convnext_small", "f1", "", 0.793),
-    ("e1", 1, "dinov2_small", "f1", "", 0.970),
-    ("e1", 1, "dinov2_base", "f1", "", 0.975),
+    # --- Exp 1 CE test F1 (medie ± std 5 fold, test 300) ---
+    ("e1", 1, "resnet18", "f1", "", 0.8466),
+    ("e1", 1, "resnet18", "f1std", "", 0.0160),
+    ("e1", 1, "resnet50", "f1", "", 0.8840),
+    ("e1", 1, "resnet50", "f1std", "", 0.0085),
+    ("e1", 1, "convnext_tiny", "f1", "", 0.6865),
+    ("e1", 1, "convnext_tiny", "f1std", "", 0.0319),
+    ("e1", 1, "convnext_small", "f1", "", 0.5128),
+    ("e1", 1, "convnext_small", "f1std", "", 0.1641),
+    ("e1", 1, "dinov2_small", "f1", "", 0.6948),
+    ("e1", 1, "dinov2_small", "f1std", "", 0.0405),
+    ("e1", 1, "dinov2_base", "f1", "", 0.7638),
+    ("e1", 1, "dinov2_base", "f1std", "", 0.0576),
     # --- Exp 2 SupCon test F1 ---
-    ("e2", 2, "resnet18", "f1", "", 0.444),
-    ("e2", 2, "resnet50", "f1", "", 0.465),
-    ("e2", 2, "convnext_tiny", "f1", "", 0.837),
-    ("e2", 2, "convnext_small", "f1", "", 0.517),
-    ("e2", 2, "dinov2_small", "f1", "", 0.888),
-    ("e2", 2, "dinov2_base", "f1", "", 0.936),
+    ("e2", 2, "resnet18", "f1", "", 0.2869),
+    ("e2", 2, "resnet18", "f1std", "", 0.0570),
+    ("e2", 2, "resnet50", "f1", "", 0.3546),
+    ("e2", 2, "resnet50", "f1std", "", 0.0469),
+    ("e2", 2, "convnext_tiny", "f1", "", 0.5726),
+    ("e2", 2, "convnext_tiny", "f1std", "", 0.0265),
+    ("e2", 2, "convnext_small", "f1", "", 0.4502),
+    ("e2", 2, "convnext_small", "f1std", "", 0.1423),
+    ("e2", 2, "dinov2_small", "f1", "", 0.7095),
+    ("e2", 2, "dinov2_small", "f1std", "", 0.0286),
+    ("e2", 2, "dinov2_base", "f1", "", 0.8077),
+    ("e2", 2, "dinov2_base", "f1std", "", 0.0323),
     # --- Exp 3 SpHOR test F1 ---
-    ("e3", 3, "resnet18", "f1", "", 0.560),
-    ("e3", 3, "resnet50", "f1", "", 0.750),
-    ("e3", 3, "convnext_tiny", "f1", "", 0.911),
-    ("e3", 3, "convnext_small", "f1", "", 0.874),
-    ("e3", 3, "dinov2_small", "f1", "", 0.894),
-    ("e3", 3, "dinov2_base", "f1", "", 0.910),
+    ("e3", 3, "resnet18", "f1", "", 0.4419),
+    ("e3", 3, "resnet18", "f1std", "", 0.0596),
+    ("e3", 3, "resnet50", "f1", "", 0.7193),
+    ("e3", 3, "resnet50", "f1std", "", 0.0409),
+    ("e3", 3, "convnext_tiny", "f1", "", 0.7100),
+    ("e3", 3, "convnext_tiny", "f1std", "", 0.0404),
+    ("e3", 3, "convnext_small", "f1", "", 0.6767),
+    ("e3", 3, "convnext_small", "f1std", "", 0.0460),
+    ("e3", 3, "dinov2_small", "f1", "", 0.7718),
+    ("e3", 3, "dinov2_small", "f1std", "", 0.0385),
+    ("e3", 3, "dinov2_base", "f1", "", 0.8331),
+    ("e3", 3, "dinov2_base", "f1std", "", 0.0310),
     # --- Exp 4 closed F1 (5 classes) ---
-    ("e4", 4, "resnet18", "f1", "", 0.590),
-    ("e4", 4, "resnet50", "f1", "", 0.856),
-    ("e4", 4, "convnext_tiny", "f1", "", 0.920),
-    ("e4", 4, "convnext_small", "f1", "", 0.933),
-    ("e4", 4, "dinov2_small", "f1", "", 0.921),
-    ("e4", 4, "dinov2_base", "f1", "", 0.932),
+    ("e4", 4, "resnet18", "f1", "", 0.5254),
+    ("e4", 4, "resnet18", "f1std", "", 0.0720),
+    ("e4", 4, "resnet50", "f1", "", 0.7843),
+    ("e4", 4, "resnet50", "f1std", "", 0.0488),
+    ("e4", 4, "convnext_tiny", "f1", "", 0.9288),
+    ("e4", 4, "convnext_tiny", "f1std", "", 0.0068),
+    ("e4", 4, "convnext_small", "f1", "", 0.9303),
+    ("e4", 4, "convnext_small", "f1std", "", 0.0068),
+    ("e4", 4, "dinov2_small", "f1", "", 0.9237),
+    ("e4", 4, "dinov2_small", "f1std", "", 0.0121),
+    ("e4", 4, "dinov2_base", "f1", "", 0.9285),
+    ("e4", 4, "dinov2_base", "f1std", "", 0.0053),
     # --- Exp 4 OSR Ensemble AUROC ---
     ("e4osr", 4, "resnet18", "osr-Ensemble", "", 0.422),
     ("e4osr", 4, "resnet50", "osr-Ensemble", "", 0.688),
@@ -65,13 +91,19 @@ CLAIMS: list[tuple[str, int, str, str, str, float]] = [
     ("e4det", 4, "resnet50", "osr-KNN", "", 0.776),
     ("e4det", 4, "dinov2_base", "osr-KNN", "", 0.856),
     ("e4det", 4, "dinov2_base", "osr-Energy", "", 0.745),
-    # --- Exp 5 closed F1 (4 classes, test on 200) ---
-    ("e5", 5, "resnet18", "f1", "", 0.808),
-    ("e5", 5, "resnet50", "f1", "", 0.240),
-    ("e5", 5, "convnext_tiny", "f1", "", 0.906),
-    ("e5", 5, "convnext_small", "f1", "", 0.531),
-    ("e5", 5, "dinov2_small", "f1", "", 0.291),
-    ("e5", 5, "dinov2_base", "f1", "", 0.110),
+    # --- Exp 5 closed F1 (4 classes, test on 200; teste riparate fase 2) ---
+    ("e5", 5, "resnet18", "f1", "", 0.8104),
+    ("e5", 5, "resnet18", "f1std", "", 0.0122),
+    ("e5", 5, "resnet50", "f1", "", 0.8776),
+    ("e5", 5, "resnet50", "f1std", "", 0.0181),
+    ("e5", 5, "convnext_tiny", "f1", "", 0.9225),
+    ("e5", 5, "convnext_tiny", "f1std", "", 0.0092),
+    ("e5", 5, "convnext_small", "f1", "", 0.9164),
+    ("e5", 5, "convnext_small", "f1std", "", 0.0035),
+    ("e5", 5, "dinov2_small", "f1", "", 0.9229),
+    ("e5", 5, "dinov2_small", "f1std", "", 0.0070),
+    ("e5", 5, "dinov2_base", "f1", "", 0.9301),
+    ("e5", 5, "dinov2_base", "f1std", "", 0.0043),
     # --- Exp 5 OSR Ensemble AUROC ---
     ("e5osr", 5, "resnet18", "osr-Ensemble", "", 0.666),
     ("e5osr", 5, "resnet50", "osr-Ensemble", "", 0.634),
@@ -120,9 +152,10 @@ def load_json(path: Path) -> dict:
 
 
 def actual_value(exp: int, model: str, kind: str, key: str) -> float:
-    if kind == "f1":
-        d = load_json(EXP / f"{EXP_PREFIX[exp]}_{model}" / "results.json")
-        return float(d["test_metrics"]["f1_macro"])
+    if kind in ("f1", "f1std"):
+        pf = BACKEND / "experiments" / f"{EXP_PREFIX[exp]}_{model}" / "perfold_test.json"
+        d = load_json(pf)
+        return float(d["f1_std"] if kind == "f1std" else d["f1_mean"])
     if kind.startswith("osr-"):
         det = kind.split("-", 1)[1]
         d = load_json(EXP / f"{EXP_PREFIX[exp]}_{model}" / "ncd_results.json")
@@ -225,8 +258,9 @@ def main() -> int:
         "0,755",
         "0,843",
         "0,805",
-        "0,906",
-        "0,110",
+        "0,923",
+        "0,930 ± 0,004",
+        "0,884",
         "0,83 ± 0,04",
         "0,835–0,916",
         "p=0,98",

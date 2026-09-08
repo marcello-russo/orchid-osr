@@ -20,10 +20,19 @@ import numpy as np
 from sklearn.manifold import TSNE
 
 # ── Paths ──────────────────────────────────────────────────────────────
+import sys as _sys
 BACKEND = Path(__file__).resolve().parent.parent
+_sys.path.insert(0, str(BACKEND))
 EXPERIMENTS = BACKEND / "experiments"
 FIGURES = BACKEND.parent / "documents" / "_figures"
 FIGURES.mkdir(parents=True, exist_ok=True)
+
+from app.core.perfold import load_perfold as _load_perfold  # noqa: E402
+
+
+def _pf(exp, model):
+    pf = _load_perfold(EXPERIMENTS / f"{EXP_PREFIXES[exp]}_{model}")
+    return pf
 
 # ── Global constants ───────────────────────────────────────────────────
 PATIENCE = 15
@@ -144,7 +153,21 @@ def load_folds(exp, model):
     return folds
 
 
-def get_test_f1(res):
+def get_test_f1(res, exp=None, model=None):
+    """F1 test: media sui 5 fold da perfold_test.json (fallback test_metrics storico)."""
+    if exp is not None and model is not None:
+        pf = _pf(exp, model)
+        if pf:
+            return float(pf["f1_mean"])
+    return _get_test_f1_legacy(res)
+
+
+def get_test_f1_std(exp, model):
+    pf = _pf(exp, model)
+    return float(pf["f1_std"]) if pf else 0.0
+
+
+def _get_test_f1_legacy(res):
     """Extract test F1 from a results dict, regardless of key naming."""
     if not res:
         return 0.0
@@ -239,11 +262,13 @@ def load_embeddings(exp, model):
 
 
 def fig_benchmark_heatmap():
-    """Test F1 heatmap: models × experiments."""
+    """Test F1 heatmap: models × experiments (medie 5 fold ± std)."""
     data = np.full((len(MODELS), len(EXPS_ALL)), np.nan)
+    stds = np.full((len(MODELS), len(EXPS_ALL)), np.nan)
     for j, exp in enumerate(EXPS_ALL):
         for i, model in enumerate(MODELS):
-            data[i, j] = get_test_f1(load_results(exp, model))
+            data[i, j] = get_test_f1(load_results(exp, model), exp, model)
+            stds[i, j] = get_test_f1_std(exp, model)
 
     fig, ax = plt.subplots(figsize=(8, 5))
     cmap = plt.cm.Blues.copy()
@@ -255,13 +280,15 @@ def fig_benchmark_heatmap():
             v = data[i, j]
             if not np.isnan(v):
                 c = "white" if v > 0.75 else "black"
-                ax.text(j, i, f"{v:.3f}", ha="center", va="center", fontsize=10, color=c, fontweight="bold")
+                s = stds[i, j]
+                txt = f"{v:.3f}±{s:.3f}" if not np.isnan(s) else f"{v:.3f}"
+                ax.text(j, i, txt, ha="center", va="center", fontsize=8, color=c, fontweight="bold")
 
     ax.set_xticks(range(len(EXPS_ALL)))
     ax.set_xticklabels([EXP_LABELS[e] for e in EXPS_ALL], rotation=35, ha="right", fontsize=9)
     ax.set_yticks(range(len(MODELS)))
     ax.set_yticklabels([short_model(m) for m in MODELS], fontsize=9)
-    ax.set_title("F1 test — tutti i modelli × esperimenti", fontweight="bold", pad=12)
+    ax.set_title("F1 test — tutti i modelli × esperimenti (medie 5 fold)", fontweight="bold", pad=12)
     fig.colorbar(im, ax=ax, shrink=0.8, label="F1")
     fig.tight_layout()
     _save(fig, "benchmark_heatmap.png")
@@ -279,9 +306,10 @@ def fig_benchmark_bar():
     x = np.arange(len(EXPS_ALL))
 
     for i, model in enumerate(MODELS):
-        vals = [get_test_f1(load_results(exp, model)) for exp in EXPS_ALL]
+        vals = [get_test_f1(load_results(exp, model), exp, model) for exp in EXPS_ALL]
+        errs = [get_test_f1_std(exp, model) for exp in EXPS_ALL]
         off = (i - len(MODELS) / 2 + 0.5) * width
-        ax.bar(x + off, vals, width, label=short_model(model), color=MODEL_COLORS.get(model, CB[i]))
+        ax.bar(x + off, vals, width, label=short_model(model), color=MODEL_COLORS.get(model, CB[i]), yerr=errs, error_kw={"elinewidth": 0.8, "capsize": 1.5})
 
     ax.set_xticks(x)
     ax.set_xticklabels([EXP_LABELS[e] for e in EXPS_ALL])
@@ -294,25 +322,28 @@ def fig_benchmark_bar():
 
 
 def fig_confusion_matrices():
-    """Confusion matrices for best model in each experiment (exp7/8/10 only)."""
+    """Confusion matrices (best fold sul test ufficiale) per Exp 2 e Exp 3."""
     panels = [
-        ("exp2", "dinov2_small", "Exp 2 (SupCon)\nDINOv2-Small"),
-        ("exp3", "convnext_tiny", "Exp 3 (SpHOR)\nConvNeXt-Tiny"),
+        ("exp2", "dinov2_base", "Exp 2 (SupCon)\nDINOv2-Base"),
+        ("exp3", "dinov2_base", "Exp 3 (SpHOR)\nDINOv2-Base"),
     ]
     fig, axes = plt.subplots(1, 2, figsize=(11, 4.5))
 
     for j, (exp, model, title) in enumerate(panels):
         ax = axes[j]
-        res = load_results(exp, model)
-        if not res or "test_metrics" not in res:
-            ax.text(0.5, 0.5, "N/A", ha="center", va="center", transform=ax.transAxes)
-            ax.set_title(title, fontweight="bold", fontsize=10)
-            continue
-
-        cm = np.array(res["test_metrics"]["confusion_matrix"])
-        labels_raw = res["test_metrics"].get(
-            "confusion_matrix_labels", list(res.get("class_names", [f"C{i}" for i in range(len(cm))]))
-        )
+        pf = _pf(exp, model)
+        cm = np.array(pf["best_confusion_matrix"]) if pf and pf.get("best_confusion_matrix") else None
+        labels_raw = list(pf.get("best_confusion_matrix_labels", [])) if pf else []
+        if cm is None:
+            res = load_results(exp, model)
+            if not res or "test_metrics" not in res:
+                ax.text(0.5, 0.5, "N/A", ha="center", va="center", transform=ax.transAxes)
+                ax.set_title(title, fontweight="bold", fontsize=10)
+                continue
+            cm = np.array(res["test_metrics"]["confusion_matrix"])
+            labels_raw = res["test_metrics"].get(
+                "confusion_matrix_labels", list(res.get("class_names", [f"C{i}" for i in range(len(cm))]))
+            )
         # Full species names for thesis readability (10/10 audit)
         short = list(labels_raw)
 
@@ -355,6 +386,39 @@ def fig_confusion_matrices():
     fig.suptitle("Matrici di confusione sul test set", fontweight="bold", y=1.08)
     fig.tight_layout()
     _save(fig, "confusion_matrices.png")
+
+
+def fig_confusion_tiny():
+    """Deck: ConvNeXt-Tiny Exp2 vs Exp3, stessa architettura (da perfold)."""
+    import matplotlib.pyplot as plt
+
+    panels = [
+        ("exp2", "convnext_tiny", "ConvNeXt-Tiny SupCon (Exp2)"),
+        ("exp3", "convnext_tiny", "ConvNeXt-Tiny SpHOR (Exp3)"),
+    ]
+    fig, axes = plt.subplots(1, 2, figsize=(11, 4.5))
+    for j, (exp, model, title) in enumerate(panels):
+        ax = axes[j]
+        pf = _pf(exp, model)
+        cm = np.array(pf["best_confusion_matrix"])
+        labels_raw = list(pf["best_confusion_matrix_labels"])
+        short = [short_species(s) for s in labels_raw]
+        ax.imshow(cm, cmap="Blues", interpolation="nearest")
+        ax.set_title(title, fontweight="bold", fontsize=10)
+        for row in range(len(cm)):
+            for col in range(len(cm)):
+                v = int(cm[row, col])
+                c_cell = "white" if v > 25 else "black"
+                ax.text(col, row, str(v), ha="center", va="center", fontsize=8, color=c_cell)
+        ax.set_xticks(range(len(short)))
+        ax.set_yticks(range(len(short)))
+        ax.set_xticklabels(short, fontsize=7, rotation=45, ha="right")
+        ax.set_yticklabels(short, fontsize=7)
+        ax.set_xlabel("Predetta", fontsize=9)
+        ax.set_ylabel("Vera", fontsize=9)
+    fig.suptitle("Stessa architettura, cambia il paradigma", fontweight="bold", y=1.08)
+    fig.tight_layout()
+    _save(fig, "confusion_tiny_exp2_exp3.png")
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -405,8 +469,8 @@ def fig_tsne_comparison():
 
 
 def fig_per_species_f1():
-    """Grouped bar chart: F1 per species, best model per experiment."""
-    best = {"exp1": "resnet50", "exp2": "dinov2_small", "exp3": "convnext_tiny"}
+    """Grouped bar chart: F1 per species, best model per experiment (medie 5 fold)."""
+    best = {"exp1": "resnet50", "exp2": "dinov2_base", "exp3": "dinov2_base"}
     order = ["O. exaltata", "O. garganica", "O. incubacea", "O. majellensis", "O. sphegodes", "O. sphegodes_Palena"]
     short = [short_species(s) for s in order]
     fig, ax = plt.subplots(figsize=(10, 5))
@@ -415,19 +479,25 @@ def fig_per_species_f1():
     x = np.arange(n_sp)
 
     for j, (exp, model) in enumerate(best.items()):
-        res = load_results(exp, model)
-        f1pc = res["test_metrics"].get("f1_per_class", {}) if res and "test_metrics" in res else {}
-        vals = [f1pc.get(s, 0) for s in order]
+        pf = _pf(exp, model)
+        f1pc = (pf or {}).get("f1_per_class_mean", {})
+        f1sd = (pf or {}).get("f1_per_class_std", {})
+        if not f1pc:
+            res = load_results(exp, model)
+            f1pc = res["test_metrics"].get("f1_per_class", {}) if res and "test_metrics" in res else {}
+        vals = [float(f1pc.get(s, 0)) for s in order]
+        sds = [float(f1sd.get(s, 0)) for s in order]
         off = (j - n_exp / 2 + 0.5) * width
-        bars = ax.bar(x + off, vals, width, label=EXP_LABELS[exp], color=plt.cm.Set2(j / n_exp))
-        for bar, v in zip(bars, vals):
+        bars = ax.bar(x + off, vals, width, label=EXP_LABELS[exp], color=plt.cm.Set2(j / n_exp),
+                      yerr=sds, error_kw={"elinewidth": 0.8, "capsize": 1.5})
+        for bar, v, s in zip(bars, vals, sds):
             ax.text(
                 bar.get_x() + bar.get_width() / 2,
                 bar.get_height() + 0.01,
-                f"{v:.2f}",
+                f"{v:.2f}±{s:.2f}",
                 ha="center",
                 va="bottom",
-                fontsize=7,
+                fontsize=6,
                 rotation=90,
             )
 
@@ -463,7 +533,7 @@ def fig_cv_test_gap():
         for model in MODELS:
             res = load_results(exp, model)
             cv = res.get("mean_f1", 0) if res else 0
-            test = get_test_f1(res)
+            test = get_test_f1(res, exp, model)
             gaps.append(test - cv)
 
         c = CB[0] if exp == "exp1" else CB[1]
@@ -780,6 +850,7 @@ def main():
         ("1. Benchmark heatmap", fig_benchmark_heatmap),
         ("2. Benchmark bar chart", fig_benchmark_bar),
         ("3. Confusion matrices (exp7/8/10)", fig_confusion_matrices),
+        ("3b. Confusion tiny Exp2/Exp3 (deck)", fig_confusion_tiny),
         ("4. t-SNE comparison (CE vs SupCon vs SpHOR)", fig_tsne_comparison),
         ("5. Per-species F1 (best models)", fig_per_species_f1),
         ("6. CV-test gap (double descent)", fig_cv_test_gap),
