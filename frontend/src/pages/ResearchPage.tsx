@@ -310,12 +310,12 @@ export function ResearchPage() {
               { key: "gap", label: t("research.table_gap") },
             ]}
             rows={[
-              { model: "ResNet-18", cv: "0,860", test: "0,978", params: "11M", gap: "+0,117" },
-              { model: "ResNet-50", cv: "0,887", test: "0,980", params: "25M", gap: "+0,093" },
-              { model: "ConvNeXt-Tiny", cv: "0,702", test: "0,821", params: "28M", gap: "+0,119" },
-              { model: "ConvNeXt-Small", cv: "0,527", test: "0,793", params: "50M", gap: "+0,266" },
-              { model: "DINOv2-Small", cv: "0,884", test: "0,970", params: "21M", gap: "+0,086" },
-              { model: "DINOv2-Base", cv: "0,911", test: "0,975", params: "86M", gap: "+0,064" },
+              { model: "ResNet-18", cv: "0,860 ± 0,016", test: "0,847 ± 0,016", params: "11M", gap: "−0,013" },
+              { model: "ResNet-50", cv: "0,887 ± 0,009", test: "0,884 ± 0,009", params: "25M", gap: "−0,003" },
+              { model: "ConvNeXt-Tiny", cv: "0,702 ± 0,026", test: "0,687 ± 0,032", params: "28M", gap: "−0,016" },
+              { model: "ConvNeXt-Small", cv: "0,527 ± 0,171", test: "0,513 ± 0,164", params: "50M", gap: "−0,014" },
+              { model: "DINOv2-Small", cv: "0,884 ± 0,009", test: "0,695 ± 0,041", params: "21M", gap: "−0,189" },
+              { model: "DINOv2-Base", cv: "0,911 ± 0,003", test: "0,764 ± 0,058", params: "86M", gap: "−0,147" },
             ]}
             highlightRow="ResNet-50"
             caption={t("research.exp1_caption")}
@@ -369,12 +369,12 @@ export function ResearchPage() {
               { key: "gap", label: t("research.table_gap") },
             ]}
             rows={[
-              { model: "ResNet-18", cv: "0,364", test: "0,444", gap: "+0,080" },
-              { model: "ResNet-50", cv: "0,383", test: "0,465", gap: "+0,083" },
-              { model: "ConvNeXt-Tiny", cv: "0,844", test: "0,837", gap: "−0,007" },
-              { model: "ConvNeXt-Small", cv: "0,704", test: "0,517", gap: "−0,187" },
-              { model: "DINOv2-Small", cv: "0,913", test: "0,888", gap: "−0,026" },
-              { model: "DINOv2-Base", cv: "0,933", test: "0,936", gap: "+0,004" },
+              { model: "ResNet-18", cv: "0,364 ± 0,042", test: "0,287 ± 0,057", gap: "−0,077" },
+              { model: "ResNet-50", cv: "0,383 ± 0,037", test: "0,355 ± 0,047", gap: "−0,028" },
+              { model: "ConvNeXt-Tiny", cv: "0,844 ± 0,002", test: "0,573 ± 0,027", gap: "−0,271" },
+              { model: "ConvNeXt-Small", cv: "0,704 ± 0,198", test: "0,450 ± 0,142", gap: "−0,254" },
+              { model: "DINOv2-Small", cv: "0,913 ± 0,009", test: "0,710 ± 0,029", gap: "−0,204" },
+              { model: "DINOv2-Base", cv: "0,933 ± 0,006", test: "0,808 ± 0,032", gap: "−0,125" },
             ]}
             highlightRow="DINOv2-Base"
             caption={t("research.exp2_caption")}
@@ -429,12 +429,12 @@ export function ResearchPage() {
               { key: "knn", label: t("research.table_knn") },
             ]}
             rows={[
-              { model: "ResNet-18", f1t: "0,560", f1cv: "0,473", knn: "0,456" },
-              { model: "ResNet-50", f1t: "0,750", f1cv: "0,738", knn: "0,719" },
-              { model: "ConvNeXt-Tiny", f1t: "0,911", f1cv: "0,893", knn: "0,884" },
-              { model: "ConvNeXt-Small", f1t: "0,874", f1cv: "0,812", knn: "0,879" },
-              { model: "DINOv2-Small", f1t: "0,894", f1cv: "0,851", knn: "0,854" },
-              { model: "DINOv2-Base", f1t: "0,910", f1cv: "0,896", knn: "0,875" },
+              { model: "ResNet-18", f1t: "0,442 ± 0,060", f1cv: "0,473 ± 0,065", knn: "0,456" },
+              { model: "ResNet-50", f1t: "0,719 ± 0,041", f1cv: "0,738 ± 0,035", knn: "0,719" },
+              { model: "ConvNeXt-Tiny", f1t: "0,710 ± 0,040", f1cv: "0,893 ± 0,009", knn: "0,884" },
+              { model: "ConvNeXt-Small", f1t: "0,677 ± 0,046", f1cv: "0,812 ± 0,102", knn: "0,879" },
+              { model: "DINOv2-Small", f1t: "0,772 ± 0,039", f1cv: "0,851 ± 0,020", knn: "0,854" },
+              { model: "DINOv2-Base", f1t: "0,833 ± 0,031", f1cv: "0,896 ± 0,013", knn: "0,875" },
             ]}
             highlightRow="ConvNeXt-Tiny"
             caption={t("research.exp3_caption")}
@@ -614,14 +614,14 @@ export function ResearchPage() {
               { key: "nmi4", label: "NMI" },
             ]}
             rows={[
-              { model: "ResNet-18", e6: "0,978", e7: "0,444", e8: "0,560", e9: "0,590", osr9: "0,507", nmi4: "0,428" },
-              { model: "ResNet-50", e6: "0,980", e7: "0,465", e8: "0,750", e9: "0,856", osr9: "0,776", nmi4: "0,654" },
-              { model: "ConvNeXt-Tiny", e6: "0,821", e7: "0,837", e8: "0,911", e9: "0,920", osr9: "0,850", nmi4: "0,844" },
-              { model: "ConvNeXt-Small", e6: "0,793", e7: "0,517", e8: "0,874", e9: "0,933", osr9: "0,840", nmi4: "0,707" },
-              { model: "DINOv2-Small", e6: "0,970", e7: "0,888", e8: "0,894", e9: "0,921", osr9: "0,760", nmi4: "0,828" },
-              { model: "DINOv2-Base", e6: "0,975", e7: "0,936", e8: "0,910", e9: "0,932", osr9: "0,875", nmi4: "0,756" },
+              { model: "ResNet-18", e6: "0,847", e7: "0,287", e8: "0,442", e9: "0,525", osr9: "0,507", nmi4: "0,428" },
+              { model: "ResNet-50", e6: "0,884", e7: "0,355", e8: "0,719", e9: "0,784", osr9: "0,776", nmi4: "0,654" },
+              { model: "ConvNeXt-Tiny", e6: "0,687", e7: "0,573", e8: "0,710", e9: "0,929", osr9: "0,850", nmi4: "0,844" },
+              { model: "ConvNeXt-Small", e6: "0,513", e7: "0,450", e8: "0,677", e9: "0,930", osr9: "0,840", nmi4: "0,707" },
+              { model: "DINOv2-Small", e6: "0,695", e7: "0,710", e8: "0,772", e9: "0,924", osr9: "0,760", nmi4: "0,828" },
+              { model: "DINOv2-Base", e6: "0,764", e7: "0,808", e8: "0,833", e9: "0,929", osr9: "0,875", nmi4: "0,756" },
             ]}
-            bests={{ e6: "ResNet-50", e7: "DINOv2-Base", e8: "ConvNeXt-Tiny", e9: "ConvNeXt-Small", osr9: "DINOv2-Base", nmi4: "ConvNeXt-Tiny" }}
+            bests={{ e6: "ResNet-50", e7: "DINOv2-Base", e8: "DINOv2-Base", e9: "ConvNeXt-Small", osr9: "DINOv2-Base", nmi4: "ConvNeXt-Tiny" }}
             caption={t("research.benchmark_caption")}
           />
 
