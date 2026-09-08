@@ -24,7 +24,7 @@ BACKEND = Path(__file__).resolve().parent.parent
 DOCS = BACKEND.parent / "documents"
 sys.path.insert(0, str(BACKEND))
 
-EXPECTED_SLIDES = 15
+EXPECTED_SLIDES = 16
 EXPECTED_THESIS_PAGES = 73
 
 
