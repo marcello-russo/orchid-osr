@@ -487,7 +487,7 @@ export function ResearchPage() {
               { model: "ResNet-50", f1t: "0,784 ± 0,049", auroc: "0,776", det: "0,360", detector: "KNN" },
               { model: "ConvNeXt-Tiny", f1t: "0,929 ± 0,007", auroc: "0,850", det: "0,640", detector: "Ensemble" },
               { model: "ConvNeXt-Small", f1t: "0,930 ± 0,007", auroc: "0,839", det: "0,460", detector: "Ensemble" },
-              { model: "DINOv2-Small", f1t: "0,924 ± 0,012", auroc: "0,755", det: "0,280", detector: "KNN" },
+              { model: "DINOv2-Small", f1t: "0,924 ± 0,012", auroc: "0,758", det: "0,280", detector: "KNN" },
               { model: "DINOv2-Base", f1t: "0,929 ± 0,005", auroc: "0,875", det: "0,540", detector: "Ensemble" },
             ]}
             highlightRow="DINOv2-Base"
@@ -618,7 +618,7 @@ export function ResearchPage() {
               { model: "ResNet-50", e6: "0,884", e7: "0,355", e8: "0,719", e9: "0,784", osr9: "0,776", nmi4: "0,846" },
               { model: "ConvNeXt-Tiny", e6: "0,687", e7: "0,573", e8: "0,710", e9: "0,929", osr9: "0,850", nmi4: "0,921" },
               { model: "ConvNeXt-Small", e6: "0,513", e7: "0,450", e8: "0,677", e9: "0,930", osr9: "0,839", nmi4: "0,910" },
-              { model: "DINOv2-Small", e6: "0,695", e7: "0,710", e8: "0,772", e9: "0,924", osr9: "0,755", nmi4: "0,922" },
+              { model: "DINOv2-Small", e6: "0,695", e7: "0,710", e8: "0,772", e9: "0,924", osr9: "0,758", nmi4: "0,922" },
               { model: "DINOv2-Base", e6: "0,764", e7: "0,808", e8: "0,833", e9: "0,929", osr9: "0,875", nmi4: "0,928" },
             ]}
             bests={{ e6: "ResNet-50", e7: "DINOv2-Base", e8: "DINOv2-Base", e9: "ConvNeXt-Small", osr9: "DINOv2-Base", nmi4: "ConvNeXt-Tiny" }}
