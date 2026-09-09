@@ -1,21 +1,21 @@
 """Sync public/figures dai _figures freschi + rebuild orfani legacy."""
+import os
 import sys
 from pathlib import Path
 
 BACKEND = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BACKEND))
-import os
 
 os.chdir(BACKEND)
 
-import matplotlib
+import matplotlib  # noqa: E402
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-import numpy as np
-from PIL import Image
+import matplotlib.pyplot as plt  # noqa: E402
+import numpy as np  # noqa: E402
+from PIL import Image  # noqa: E402
 
-from app.core.perfold import perfold_means
+from app.core.perfold import perfold_means  # noqa: E402
 
 DOCS = BACKEND.parent / "documents"
 FIG = DOCS / "_figures"
