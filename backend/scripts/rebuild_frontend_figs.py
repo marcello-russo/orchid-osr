@@ -1,4 +1,5 @@
 """Sync public/figures dai _figures freschi + rebuild orfani legacy."""
+
 import os
 import sys
 from pathlib import Path
@@ -43,20 +44,24 @@ def build_summary_dual():
     e1, e2, e3, e4 = (means(e) for e in ["exp1", "exp2", "exp3", "exp4"])
     det = []
     for m in ARCHS:
-        n = json.load(open(BACKEND / "experiments" / f"exp4_sphor_ncd_{m}" / "ncd_results.json"))[
-            "detectors"
-        ]
+        n = json.load(open(BACKEND / "experiments" / f"exp4_sphor_ncd_{m}" / "ncd_results.json"))["detectors"]
         best = max(n.items(), key=lambda kv: kv[1]["auroc"])
         det.append(best[1]["detection_rate_at_10pct_fpr"])
     fig, (a1, a2) = plt.subplots(1, 2, figsize=(16, 6))
     left = np.array([e1, e2, e3, e4]).T
-    im = a1.imshow(left, cmap=plt.cm.Blues, vmin=0.2, vmax=1.0, aspect="auto")
+    a1.imshow(left, cmap=plt.cm.Blues, vmin=0.2, vmax=1.0, aspect="auto")
     for i in range(6):
         for j in range(4):
             v = left[i, j]
             a1.text(
-                j, i, f"{v:.3f}", ha="center", va="center", fontsize=10,
-                color="white" if v > 0.75 else "black", fontweight="bold",
+                j,
+                i,
+                f"{v:.3f}",
+                ha="center",
+                va="center",
+                fontsize=10,
+                color="white" if v > 0.75 else "black",
+                fontweight="bold",
             )
     a1.set_xticks(range(4))
     a1.set_xticklabels(["Exp 1 (CE)", "Exp 2 (SupCon)", "Exp 3 (SpHOR)", "Exp 4 (Novel)"])
@@ -67,8 +72,14 @@ def build_summary_dual():
     a2.imshow(d, cmap=plt.cm.Blues, vmin=0, vmax=1.0, aspect="auto")
     for i, v in enumerate(det):
         a2.text(
-            0, i, f"{v:.3f}", ha="center", va="center", fontsize=10,
-            color="white" if v > 0.5 else "black", fontweight="bold",
+            0,
+            i,
+            f"{v:.3f}",
+            ha="center",
+            va="center",
+            fontsize=10,
+            color="white" if v > 0.5 else "black",
+            fontweight="bold",
         )
     a2.set_xticks([0])
     a2.set_xticklabels(["Exp 4 detection@10%"])
@@ -94,9 +105,7 @@ def build_exp9_auroc():
     for j, det in enumerate(dets):
         vals = []
         for m in ARCHS:
-            n = json.load(open(BACKEND / "experiments" / f"exp4_sphor_ncd_{m}" / "ncd_results.json"))[
-                "detectors"
-            ]
+            n = json.load(open(BACKEND / "experiments" / f"exp4_sphor_ncd_{m}" / "ncd_results.json"))["detectors"]
             vals.append(n[det]["auroc"])
         ax.bar(x + (j - 1.5) * w, vals, w, label=det, color=cols[j])
     ax.axhline(0.5, color="gray", linestyle="--", label="chance (0.5)")
