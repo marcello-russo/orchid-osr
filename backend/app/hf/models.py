@@ -64,8 +64,13 @@ def upload_model(api, model, exp, exp_prefix, exp_base: str = DEFAULT_EXP_BASE):
     files_to_upload = [
         ("results.json", "results.json"),
         ("config.json", "config.json"),
+        ("perfold_test.json", "perfold_test.json"),
         (best_pt, best_pt),
     ]
+    for fi in range(5):
+        _fn = f"fold_{fi}.json"
+        if os.path.exists(os.path.join(local_dir, _fn)):
+            files_to_upload.append((_fn, _fn))
 
     adapter_dir = os.path.join(local_dir, f"best_fold_{best_fold}_adapter")
 
