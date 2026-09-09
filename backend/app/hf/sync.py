@@ -28,7 +28,9 @@ def _is_essential(path: str) -> bool:
         return True
     filename = parts[-1]
     # best-fold serving weights (classify) + LoRA adapters
-    if filename.startswith("best_fold_") and (filename.endswith(".pt") or any("_adapter" in p for p in parts)):
+    if filename.startswith("best_fold_") and filename.endswith(".pt"):
+        return True
+    if any("_adapter" in p for p in parts):
         return True
     if "embeddings" in parts:
         if filename.endswith((".npy", ".json")):
