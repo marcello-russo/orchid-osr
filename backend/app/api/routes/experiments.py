@@ -116,6 +116,8 @@ async def list_experiments():
 
         config = _load_json(config_path) if config_path.exists() else {}
         results = _load_json(results_path) if results_path.exists() else None
+        # stessi test_metrics del detail (best fold sul test ufficiale)
+        _override_test_metrics(d, results)
 
         fold_files = sorted(d.glob("fold_*.json"))
         has_folds = len(fold_files) > 0
