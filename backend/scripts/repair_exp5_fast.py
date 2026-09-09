@@ -4,6 +4,7 @@ Equivalente matematico alla Fase 2 originale (backbone congelato, CE,
 stessi iperparametri/seed) ma senza ripetere il forward del backbone a
 ogni epoca: le feature vengono estratte una volta sola.
 """
+
 import json
 import logging
 import os
@@ -15,15 +16,13 @@ BACKEND = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BACKEND))
 os.chdir(BACKEND)
 
-import numpy as np  # noqa: E402
 import torch  # noqa: E402
-from torch.utils.data import DataLoader, TensorDataset  # noqa: E402
 
 from app.cli.definitions import ALL_CLASSES, PROJECT_ROOT  # noqa: E402
 from app.core.kfold.training import copy_fold_images, prepare_fold_data, split_raw_images  # noqa: E402
 from app.core.models import create_model, get_registry_entry  # noqa: E402
-from app.preprocessing.reproducibility import set_seed  # noqa: E402
 from app.core.torch_metrics import MulticlassAccuracy, MulticlassF1Score  # noqa: E402
+from app.preprocessing.reproducibility import set_seed  # noqa: E402
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(message)s")
 log = logging.getLogger("repair_fast")
@@ -123,9 +122,7 @@ def main() -> None:
         opt_type = entry.optimizer if entry.optimizer else "adam"
         wd = entry.weight_decay if entry.weight_decay else 0.0
         log.info(f"=== {variant} lr={lr} opt={opt_type} wd={wd} ===")
-        all_paths, all_labels, folds = split_raw_images(
-            raw_dir, list(ALL_CLASSES), 5, SEED, exclude_classes=EXCLUDE
-        )
+        all_paths, all_labels, folds = split_raw_images(raw_dir, list(ALL_CLASSES), 5, SEED, exclude_classes=EXCLUDE)
         train_names = [c for c in ALL_CLASSES if c not in EXCLUDE]
         for fold_idx in range(5):
             fold_json = exp_dir / f"fold_{fold_idx}.json"
@@ -139,16 +136,9 @@ def main() -> None:
             work = Path(f"/tmp/repair_exp5/{variant}/fold_{fold_idx}")
             if work.exists():
                 shutil.rmtree(work)
-            _, val_dir = copy_fold_images(
-                all_paths, all_labels, train_names, train_idx, val_idx, str(work)
-            )
-            aug_dir = str(
-                PROJECT_ROOT / "dataset" / f"cropped_{w}x{h}"
-                / f"kfold_augmented_{tag}" / f"fold_{fold_idx}"
-            )
-            train_loader, val_loader = prepare_fold_data(
-                aug_dir, val_dir, BATCH, SEED, variant, stratified=True
-            )
+            _, val_dir = copy_fold_images(all_paths, all_labels, train_names, train_idx, val_idx, str(work))
+            aug_dir = str(PROJECT_ROOT / "dataset" / f"cropped_{w}x{h}" / f"kfold_augmented_{tag}" / f"fold_{fold_idx}")
+            train_loader, val_loader = prepare_fold_data(aug_dir, val_dir, BATCH, SEED, variant, stratified=True)
             model = create_model(variant, num_classes=4, pretrained=True, normalize_embeddings=True)
             ckpt = str(exp_dir / f"best_fold_{fold_idx}.pt")
             model.load_weights(ckpt)

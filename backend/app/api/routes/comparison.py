@@ -25,6 +25,7 @@ def _test_stats(exp_dir: Path) -> tuple[float | None, float | None]:
     except (ValueError, KeyError):
         return None, None
 
+
 router = APIRouter(prefix="/api/comparison", tags=["comparison"])
 
 _CACHE: dict[str, tuple[float, object]] = {}

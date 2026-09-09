@@ -15,12 +15,13 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
+# ── Paths ──────────────────────────────────────────────────────────────
+import sys as _sys
+
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.manifold import TSNE
 
-# ── Paths ──────────────────────────────────────────────────────────────
-import sys as _sys
 BACKEND = Path(__file__).resolve().parent.parent
 _sys.path.insert(0, str(BACKEND))
 EXPERIMENTS = BACKEND / "experiments"
@@ -33,6 +34,7 @@ from app.core.perfold import load_perfold as _load_perfold  # noqa: E402
 def _pf(exp, model):
     pf = _load_perfold(EXPERIMENTS / f"{EXP_PREFIXES[exp]}_{model}")
     return pf
+
 
 # ── Global constants ───────────────────────────────────────────────────
 PATIENCE = 15
@@ -309,7 +311,15 @@ def fig_benchmark_bar():
         vals = [get_test_f1(load_results(exp, model), exp, model) for exp in EXPS_ALL]
         errs = [get_test_f1_std(exp, model) for exp in EXPS_ALL]
         off = (i - len(MODELS) / 2 + 0.5) * width
-        ax.bar(x + off, vals, width, label=short_model(model), color=MODEL_COLORS.get(model, CB[i]), yerr=errs, error_kw={"elinewidth": 0.8, "capsize": 1.5})
+        ax.bar(
+            x + off,
+            vals,
+            width,
+            label=short_model(model),
+            color=MODEL_COLORS.get(model, CB[i]),
+            yerr=errs,
+            error_kw={"elinewidth": 0.8, "capsize": 1.5},
+        )
 
     ax.set_xticks(x)
     ax.set_xticklabels([EXP_LABELS[e] for e in EXPS_ALL])
@@ -488,8 +498,15 @@ def fig_per_species_f1():
         vals = [float(f1pc.get(s, 0)) for s in order]
         sds = [float(f1sd.get(s, 0)) for s in order]
         off = (j - n_exp / 2 + 0.5) * width
-        bars = ax.bar(x + off, vals, width, label=EXP_LABELS[exp], color=plt.cm.Set2(j / n_exp),
-                      yerr=sds, error_kw={"elinewidth": 0.8, "capsize": 1.5})
+        bars = ax.bar(
+            x + off,
+            vals,
+            width,
+            label=EXP_LABELS[exp],
+            color=plt.cm.Set2(j / n_exp),
+            yerr=sds,
+            error_kw={"elinewidth": 0.8, "capsize": 1.5},
+        )
         for bar, v, s in zip(bars, vals, sds):
             ax.text(
                 bar.get_x() + bar.get_width() / 2,

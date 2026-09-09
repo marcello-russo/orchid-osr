@@ -100,8 +100,12 @@ def build_closed(fig_dir: Path, exps: dict[int, Path]) -> list[Path]:
     for idx, label in enumerate(ARCH_LABELS):
         off = (idx - len(ARCHS) / 2 + 0.5) * width
         bars = ax.bar(
-            x + off, data[:, idx], width=width, label=label,
-            color=PALETTE[idx % len(PALETTE)], yerr=stds[:, idx],
+            x + off,
+            data[:, idx],
+            width=width,
+            label=label,
+            color=PALETTE[idx % len(PALETTE)],
+            yerr=stds[:, idx],
             error_kw={"elinewidth": 0.8, "capsize": 1.5},
         )
         for bar, v in zip(bars, data[:, idx]):

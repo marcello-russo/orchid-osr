@@ -4,6 +4,7 @@ Replica esattamente la logica di test del runner (stessi test_dir, class_names,
 num_classes) e salva perfold_test.json con F1/acc per fold + mean/std.
 Serve per riportare F1 test come media ± std sui 5 fold nel deck.
 """
+
 import json
 import logging
 import os
@@ -16,11 +17,11 @@ BACKEND = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BACKEND))
 os.chdir(BACKEND)
 
+import torch  # noqa: E402
+
 from app.cli.definitions import ALL_CLASSES, EXPERIMENTS, PROJECT_ROOT  # noqa: E402
 from app.core.kfold.testing import final_test  # noqa: E402
 from app.core.models import get_registry_entry  # noqa: E402
-
-import torch  # noqa: E402
 
 logging.basicConfig(level=logging.WARNING)
 
@@ -88,7 +89,9 @@ def main() -> None:
             f1s.append(float(tm["f1_macro"]))
             accs.append(float(tm["accuracy"]))
             for cls, vals in (tm.get("f1_per_class") or {}).items():
-                per_class_f1.setdefault(cls, []).append(float(vals) if isinstance(vals, (int, float)) else float(vals.get("f1", 0)))
+                per_class_f1.setdefault(cls, []).append(
+                    float(vals) if isinstance(vals, (int, float)) else float(vals.get("f1", 0))
+                )
             cms[i] = {
                 "confusion_matrix": tm.get("confusion_matrix"),
                 "confusion_matrix_labels": tm.get("confusion_matrix_labels"),
@@ -97,7 +100,10 @@ def main() -> None:
         best_fold = results.get("best_fold", 0)
         stored = (results.get("test_metrics") or {}).get("f1_macro")
         if stored is not None and abs(f1s[best_fold] - stored) > 0.005:
-            print(f"WARN {dirname}: fold{best_fold} F1={f1s[best_fold]:.4f} != stored {stored:.4f} (test set cambiato)", flush=True)
+            print(
+                f"WARN {dirname}: fold{best_fold} F1={f1s[best_fold]:.4f} != stored {stored:.4f} (test set cambiato)",
+                flush=True,
+            )
         new_best = int(np.argmax(f1s))
         best_cm = cms[new_best]
         # cross-domain errors: INET (exaltata/garganica/incubacea/sphegodes) vs FLD (majellensis/palena)
