@@ -43,14 +43,15 @@ def test_essential_embeddings_metadata():
     assert _is_essential("exp3_sphor_resnet18/embeddings/metadata.json") is True
 
 
-def test_skip_pt_weights():
-    """.pt weights must NOT be synced (handled on-demand by weights.py)."""
-    assert _is_essential("exp3_sphor_resnet18/best_fold_0.pt") is False
+def test_best_fold_pt_weights():
+    """Best-fold serving weights ARE synced (classify needs them on VPS)."""
+    assert _is_essential("exp3_sphor_resnet18/best_fold_0.pt") is True
+    assert _is_essential("exp3_sphor_resnet18/last_ckpt.pt") is False
 
 
-def test_skip_safetensors():
-    """.safetensors files (LoRA adapters) must NOT be synced."""
-    assert _is_essential("exp3_sphor_resnet18/best_fold_0_adapter/adapter_model.safetensors") is False
+def test_adapter_safetensors():
+    """LoRA adapter files ARE synced (needed to load DINOv2 serving weights)."""
+    assert _is_essential("exp3_sphor_resnet18/best_fold_0_adapter/adapter_model.safetensors") is True
 
 
 def test_skip_ncd_figures():
