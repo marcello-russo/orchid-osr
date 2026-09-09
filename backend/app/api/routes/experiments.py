@@ -260,7 +260,8 @@ async def get_experiment(experiment_id: str):
         _recipes = {
             1: {
                 "phases": ["Cross-Entropy (fase singola)"],
-                "description": "Baseline supervisionata: cross-entropia su 6 specie con backbone e testa allenati insieme sul clean split.",
+                "description": "Baseline supervisionata: cross-entropia su 6 specie, "
+                "backbone e testa allenati insieme sul clean split.",
                 "recipe": "Training monofase con loss Cross-Entropy standard su 6 classi. "
                 "L'intera rete (backbone + testa) è addestrata insieme. "
                 "150 epoche, early stopping (patience 15), Adam (lr=0.001), batch 8. "
@@ -269,7 +270,7 @@ async def get_experiment(experiment_id: str):
             },
             2: {
                 "phases": ["Fase 1: SupCon (pretraining contrastivo)", "Fase 2: CE fine-tuning (linear probe)"],
-                "description": "Pretraining contrastivo supervisionato + testa lineare su backbone congelato, su 6 classi.",
+                "description": "Pretraining contrastivo + testa lineare " "su backbone congelato, 6 classi.",
                 "recipe": "Training a due fasi per embedding strutturati. "
                 "Fase 1: SupConLoss (τ=0.07, proiezione a 128 dim), validazione KNN. "
                 "Fase 2: backbone congelato, sola testa lineare con CrossEntropy. "
@@ -284,14 +285,15 @@ async def get_experiment(experiment_id: str):
             },
             4: {
                 "phases": ["Fase 1: SupCon + SpHOR", "Fase 2: CE fine-tuning"],
-                "description": "Come Exp 3 ma O. garganica esclusa dal training (5 note): novel nascosta per OSR e GCD.",
+                "description": "Come Exp 3 ma O. garganica esclusa dal training "
+                "(5 note): novel nascosta per OSR e GCD.",
                 "recipe": "Strutturalmente identico a Exp 3 (stessa loss, stessi iperparametri). "
                 "L'unica differenza: O. garganica è esclusa dal training (5 classi note) "
                 "e riservata al test come novel class nascosta per OSR (4 rivelatori) e GCD.",
             },
             5: {
                 "phases": ["Fase 1: SupCon + SpHOR", "Fase 2: CE fine-tuning"],
-                "description": "Come Exp 4 con due novel nascoste, O. garganica e O. majellensis (4 note, 1.477 train).",
+                "description": "Come Exp 4 con due novel nascoste " "(garganica + majellensis, 4 note).",
                 "recipe": "Identico a Exp 4 ma con due novel nascoste (garganica + majellensis). "
                 "Stessi 4 rivelatori OSR: il rilevamento scala con due novel?",
             },
