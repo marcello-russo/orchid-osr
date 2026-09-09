@@ -22,7 +22,10 @@ def test_is_essential_filters():
     assert _is_essential("exp1_ce_resnet18/embeddings/labels.npy")
     assert not _is_essential("old/exp1/results.json")
     assert not _is_essential("exp1/ncd_figures/plot.png")
-    assert not _is_essential("exp1/best_fold_0.pt")
+    # best-fold serving weights + adapters ARE essential (classify + test means)
+    assert _is_essential("exp1/best_fold_0.pt")
+    assert _is_essential("exp1/best_fold_0_adapter/adapter_model.safetensors")
+    assert not _is_essential("exp1/last_ckpt.pt")
 
 
 def test_sync_experiments_downloads_essential(tmp_path, monkeypatch):
@@ -34,7 +37,7 @@ def test_sync_experiments_downloads_essential(tmp_path, monkeypatch):
     monkeypatch.setenv("HF_TOKEN", "hf_dummy_token_for_test")
     api = _StubApi(["exp1_ce/exp1_ce_resnet18/results.json", "exp1_ce/exp1_ce_resnet18/best_fold_0.pt"])
     out = sync_experiments(dst=str(tmp_path), repo="dummy/repo", api=api)
-    assert out["synced"] == 1
+    assert out["synced"] == 2
     assert out["errors"] == 0
     assert os.path.exists(os.path.join(str(tmp_path), "exp1_ce_resnet18", "results.json"))
     assert os.path.exists(os.path.join(str(tmp_path), "_index.json"))
