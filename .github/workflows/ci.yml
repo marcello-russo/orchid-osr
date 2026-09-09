@@ -125,5 +125,5 @@ jobs:
             cd ..
             sudo docker compose build backend 2>&1
             sudo docker compose up -d backend nginx 2>&1
-            sudo docker compose exec -T backend orchid hf sync 2>&1
+            sudo docker compose exec -T backend python3 scripts/sync_experiments.py 2>&1
             sudo docker compose restart backend 2>&1
