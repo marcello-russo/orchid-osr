@@ -179,7 +179,8 @@
       "confusion_title": "Confusion Matrix (Test Set — overall)",
       "confusion_true": "True:",
       "confusion_pred": "Pred:",
-      "no_loss_data": "Training data not available for this experiment"
+      "no_loss_data": "Training data not available for this experiment",
+      "confusion_aggregate_note": "Matrix on the aggregate test set (300 images) — not fold-filterable."
     },
     "ncd_tab": "OSR Evaluation",
     "ncd_clustering": "Clustering Results",
@@ -220,7 +221,10 @@
       "epochs": "Maximum training duration. Early stopping terminates earlier via patience.",
       "test_accuracy": "Overall fraction of correctly classified test images (300 total, 50 per class).",
       "f1_macro": "Harmonic mean of per-class F1 scores. Preferred over accuracy for imbalanced datasets."
-    }
+    },
+    "supcon_loss_title": "SupCon Training Loss",
+    "supcon_knn_title": "KNN Validation Accuracy",
+    "supcon_phases": "Phase 1: {p1} epochs | Phase 2 (CE): {p2} epochs | Total: {total}"
   },
   "classify": {
     "title": "Species Identification",
@@ -262,7 +266,10 @@
       "heatmap_btn": "Heatmap",
       "original": "Original",
       "predicted": "Predicted:",
-      "heatmap_explanation": "The heatmap highlights which regions of the image most influenced the model's prediction. Green = positive contribution, Red = negative."
+      "heatmap_explanation": "The heatmap highlights which regions of the image most influenced the model's prediction. Green = positive contribution, Red = negative.",
+      "novel_title": "Possible New Species",
+      "novel_body": "This flower does not match any known Ophrys species with sufficient confidence. It may represent an undocumented taxon or a variant not present in the training set.",
+      "novel_closest": "Closest match:"
     },
     "upload_hint": "PNG · JPG · WEBP · max 10MB",
     "heatmap": "Heatmap",
@@ -357,7 +364,9 @@
     "delete": "Delete",
     "delete_confirm_title": "Delete user",
     "delete_confirm_body": "Are you sure you want to delete {{username}}? This action cannot be undone.",
-    "cant_delete_self": "You cannot delete your own account"
+    "cant_delete_self": "You cannot delete your own account",
+    "role_user": "User",
+    "role_admin": "Admin"
   },
   "research": {
     "hero_badge": "Master's Thesis — 2024/2025",

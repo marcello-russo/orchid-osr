@@ -20,21 +20,27 @@ interface FoldSummaryChartProps {
   folds: FoldData[];
   meanF1?: number | null;
   stdF1?: number | null;
+  selectedFold?: number | null;
 }
 
-export function FoldSummaryChart({ folds, meanF1, stdF1 }: FoldSummaryChartProps) {
+export function FoldSummaryChart({ folds, meanF1, stdF1, selectedFold = null }: FoldSummaryChartProps) {
   const { t } = useTranslation();
   const ref = useRef<HTMLDivElement>(null);
   const { width, height } = useChartSize(ref);
   const CHART_COLORS = ["#3B82F6","#D97706","#10B981","#8B5CF6","#EF4444"];
 
+  const visibleFolds = useMemo(
+    () => selectedFold === null || selectedFold === undefined ? folds : folds.filter((f) => f.fold === selectedFold),
+    [folds, selectedFold]
+  );
+
   const data = useMemo(
-    () => folds.map((f) => ({
+    () => visibleFolds.map((f) => ({
       name: `${t("experiment_detail.fold_selector.fold")}${f.fold}`,
       F1: f.best_f1,
       Accuracy: f.best_accuracy,
     })),
-    [folds, t]
+    [visibleFolds, t]
   );
 
   const titleSuffix =

@@ -207,6 +207,19 @@ def cross_errors(exp_dir: str) -> int:
     return int(cm[np.ix_(ii, fi)].sum() + cm[np.ix_(fi, ii)].sum())
 
 
+# (exp_dir, expected mean_auroc) — diagnostico OSR leave-one-out a livello di
+# rivelatore sugli embedding SupCon a 6 classi (Exp2): backbone allenato sulle
+# sei specie (novel vista dal backbone, esclusa solo dal rivelatore).
+SUPCON_LOO = [
+    ("exp2_supcon_convnext_small", 0.5965),
+    ("exp2_supcon_convnext_tiny", 0.6428),
+    ("exp2_supcon_dinov2_base", 0.6241),
+    ("exp2_supcon_dinov2_small", 0.5841),
+    ("exp2_supcon_resnet18", 0.4846),
+    ("exp2_supcon_resnet50", 0.5185),
+]
+
+
 def main() -> int:
     fails = 0
     for cid, exp, model, kind, key, expected in CLAIMS:
@@ -219,6 +232,16 @@ def main() -> int:
         ok = abs(got - expected) <= TOL
         if not ok:
             print(f"FAIL {cid} exp{exp}/{model}/{kind}/{key}: json={got:.4f} claimed={expected}")
+            fails += 1
+    # --- SupCon LOO-OSR diagnostic (Exp2, osr_results.json) ---
+    for exp_dir, expected in SUPCON_LOO:
+        try:
+            got = float(load_json(EXP / exp_dir / "osr_results.json")["mean_auroc"])
+            if abs(got - expected) > TOL:
+                print(f"FAIL supcon-loo {exp_dir}: json={got:.4f} != {expected}")
+                fails += 1
+        except Exception as e:
+            print(f"FAIL supcon-loo {exp_dir}: {e}")
             fails += 1
     # --- ECE (real, from softmax confidences; versioned copy) ---
     try:
@@ -287,7 +310,7 @@ def main() -> int:
                 fails += 1
     else:
         print("WARN deck html not found, skipping banned-string check")
-    n = len(CLAIMS)
+    n = len(CLAIMS) + len(CROSS_DOMAIN) + len(DELONG_PAIRED) + len(SUPCON_LOO) + 1  # +1 ECE
     print(f"{n - fails}/{n} numeric claims OK" + (" + deck clean" if fails == 0 else ""))
     return 1 if fails else 0
 
