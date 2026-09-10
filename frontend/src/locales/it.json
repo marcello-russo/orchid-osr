@@ -179,7 +179,8 @@
       "confusion_title": "Matrice di Confusione (Test Set — complessiva)",
       "confusion_true": "Vero:",
       "confusion_pred": "Pred:",
-      "no_loss_data": "Dati di training non disponibili per questo esperimento"
+      "no_loss_data": "Dati di training non disponibili per questo esperimento",
+      "confusion_aggregate_note": "Matrice sul test set aggregato (300 immagini) — non filtrabile per fold."
     },
     "ncd_tab": "Valutazione OSR",
     "ncd_clustering": "Risultati Clustering",
@@ -220,7 +221,10 @@
       "epochs": "Durata massima del training. L'early stopping interrompe prima tramite patience.",
       "test_accuracy": "Frazione complessiva di immagini test classificate correttamente (300 totali, 50 per classe).",
       "f1_macro": "Media armonica degli F1 per classe. Preferita rispetto all'accuracy per dataset sbilanciati."
-    }
+    },
+    "supcon_loss_title": "Loss di Training SupCon",
+    "supcon_knn_title": "Accuratezza KNN di Validazione",
+    "supcon_phases": "Fase 1: {p1} epoche | Fase 2 (CE): {p2} epoche | Totale: {total}"
   },
   "classify": {
     "title": "Identificazione Specie",
@@ -262,7 +266,10 @@
       "heatmap_btn": "Heatmap",
       "original": "Originale",
       "predicted": "Predetta:",
-      "heatmap_explanation": "L'heatmap evidenzia le regioni dell'immagine che hanno più influenzato la predizione del modello. Verde = contributo positivo, Rosso = contributo negativo."
+      "heatmap_explanation": "L'heatmap evidenzia le regioni dell'immagine che hanno più influenzato la predizione del modello. Verde = contributo positivo, Rosso = contributo negativo.",
+      "novel_title": "Possibile Specie Nuova",
+      "novel_body": "Questo fiore non corrisponde a nessuna specie nota di Ophrys con sufficiente confidenza. Potrebbe rappresentare un taxon non documentato o una variante assente nel training set.",
+      "novel_closest": "Corrispondenza più vicina:"
     },
     "upload_hint": "PNG · JPG · WEBP · max 10MB",
     "heatmap": "Heatmap",
@@ -357,7 +364,9 @@
     "delete": "Elimina",
     "delete_confirm_title": "Elimina utente",
     "delete_confirm_body": "Sei sicuro di voler eliminare {{username}}? Questa azione non può essere annullata.",
-    "cant_delete_self": "Non puoi eliminare il tuo account"
+    "cant_delete_self": "Non puoi eliminare il tuo account",
+    "role_user": "Utente",
+    "role_admin": "Admin"
   },
   "research": {
     "hero_badge": "Tesi Magistrale — 2024/2025",

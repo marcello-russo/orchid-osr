@@ -283,7 +283,7 @@ function LossChart({ epochData, expColors }: { epochData: EpochRow[]; expColors:
     <Card>
       <CardHeader className="pb-2 border-b border-border/50">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base">Loss</CardTitle>
+          <CardTitle className="text-base">{t("research.cmp_loss")}</CardTitle>
           <div className="flex gap-1">
             {(["train", "val"] as const).map((m) => (
               <button key={m} onClick={() => setMode(m)}
@@ -332,7 +332,7 @@ function MetricsChart({ epochData, expColors }: { epochData: EpochRow[]; expColo
     <Card>
       <CardHeader className="pb-2 border-b border-border/50">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base">Metrics</CardTitle>
+          <CardTitle className="text-base">{t("research.cmp_metrics")}</CardTitle>
           <div className="flex gap-1">
             {(["f1", "accuracy"] as const).map((m) => (
               <button key={m} onClick={() => setMetric(m)}
@@ -372,10 +372,11 @@ function MetricsChart({ epochData, expColors }: { epochData: EpochRow[]; expColo
 }
 
 function FoldsChart({ foldData, expColors }: { foldData: Record<string, number | string>[]; expColors: { id: string; color: string }[] }) {
+  const { t } = useTranslation();
   return (
     <Card>
       <CardHeader className="pb-2 border-b border-border/50">
-        <CardTitle className="text-base">Fold Summary</CardTitle>
+        <CardTitle className="text-base">{t("research.cmp_fold_summary")}</CardTitle>
       </CardHeader>
       <CardContent className="pt-4">
         <ResponsiveContainer width="100%" height={300}>
@@ -397,10 +398,11 @@ function FoldsChart({ foldData, expColors }: { foldData: Record<string, number |
 }
 
 function OverfitChart({ overfitData, expColors }: { overfitData: EpochRow[]; expColors: { id: string; color: string }[] }) {
+  const { t } = useTranslation();
   return (
     <Card>
       <CardHeader className="pb-2 border-b border-border/50">
-        <CardTitle className="text-base">Overfitting Proxy</CardTitle>
+        <CardTitle className="text-base">{t("research.cmp_overfitting")}</CardTitle>
       </CardHeader>
       <CardContent className="pt-4">
         <ResponsiveContainer width="100%" height={300}>
