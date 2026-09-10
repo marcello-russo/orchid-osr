@@ -415,14 +415,13 @@ export function ClassifyPage() {
                       <span className="text-3xl">⚠️</span>
                       <div>
                         <p className="text-lg font-bold text-amber-800 dark:text-amber-200">
-                          Possible New Species
+                          {t("classify.results.novel_title")}
                         </p>
                         <p className="text-sm text-amber-700 dark:text-amber-300 mt-2">
-                          This flower does not match any known Ophrys species with sufficient confidence.
-                          It may represent an undocumented taxon or a variant not present in the training set.
+                          {t("classify.results.novel_body")}
                         </p>
                         <p className="text-xs text-amber-600 dark:text-amber-400 mt-3">
-                          Closest match: {classify.data.predicted_species} ({(classify.data.confidence * 100).toFixed(1)}%)
+                          {t("classify.results.novel_closest")} {classify.data.predicted_species} ({(classify.data.confidence * 100).toFixed(1)}%)
                         </p>
                       </div>
                     </div>

@@ -42,10 +42,10 @@ export function ExperimentSelectTable({ currentId, onCompare }: Props) {
           <TableHeader>
             <TableRow>
               <TableHead className="w-10"></TableHead>
-              <TableHead>Experiment</TableHead>
-              <TableHead>Model</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead className="text-right">F1</TableHead>
+              <TableHead>{t("experiments.table.experiment")}</TableHead>
+              <TableHead>{t("experiments.table.model")}</TableHead>
+              <TableHead>{t("experiments.table.type")}</TableHead>
+              <TableHead className="text-right">{t("experiments.table.f1")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
