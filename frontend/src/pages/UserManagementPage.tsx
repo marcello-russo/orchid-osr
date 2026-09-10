@@ -147,8 +147,8 @@ export function UserManagementPage() {
               </label>
               <Tabs value={role} onValueChange={setRole}>
                 <TabsList>
-                  <TabsTrigger value="user">User</TabsTrigger>
-                  <TabsTrigger value="admin">Admin</TabsTrigger>
+                  <TabsTrigger value="user">{t("admin_users.role_user")}</TabsTrigger>
+                  <TabsTrigger value="admin">{t("admin_users.role_admin")}</TabsTrigger>
                 </TabsList>
               </Tabs>
             </div>

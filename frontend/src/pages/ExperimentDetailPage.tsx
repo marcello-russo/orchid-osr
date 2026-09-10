@@ -130,7 +130,7 @@ export function ExperimentDetailPage() {
           {!isCompareMode ? (
             <Dialog>
               <DialogTrigger render={<Button variant="outline" size="sm" />}>
-                <GitCompare className="mr-1.5 size-4" /> Compare
+                <GitCompare className="mr-1.5 size-4" /> {t("experiment.compare")}
               </DialogTrigger>
               <DialogContent className="sm:max-w-2xl md:max-w-3xl lg:max-w-4xl">
                 <DialogHeader>
@@ -278,12 +278,13 @@ function ChartCarousel({ folds, selectedFold, meanF1, stdF1, confusionMatrix, ex
   const supconData = hasPhases ? folds[0]?.fold_phases?.[0] : null;
   const supconEpochs = supconData?.epochs ?? 0;
   const ceEpochs = folds.length > 0 ? folds[0].history.train_loss.length : 0;
+  const visibleFoldsSupcon = selectedFold === null ? folds : folds.filter((f) => f.fold === selectedFold);
 
   const supconChartData = React.useMemo(() => {
     if (!supconData) return [];
     return Array.from({ length: supconEpochs }, (_, ep) => {
       const row: Record<string, number | string> = { epoch: ep + 1 };
-      for (const f of folds) {
+      for (const f of visibleFoldsSupcon) {
         const m = f.fold_phases?.[0]?.metrics ?? {};
         const tl = m["train_loss"]?.[ep];
         const ka = m["val_knn_acc"]?.[ep];
@@ -292,7 +293,7 @@ function ChartCarousel({ folds, selectedFold, meanF1, stdF1, confusionMatrix, ex
       }
       return row;
     });
-  }, [folds, supconData, supconEpochs]);
+  }, [visibleFoldsSupcon, supconData, supconEpochs]);
 
   /* ---------- Titles ---------- */
   const chart_titles = [
@@ -319,8 +320,8 @@ function ChartCarousel({ folds, selectedFold, meanF1, stdF1, confusionMatrix, ex
               <div className="flex items-center gap-2">
                 <span className="flex size-5 items-center justify-center rounded bg-indigo-500/10 text-indigo-500 text-[10px] font-bold">P1</span>
                 <div>
-                  <CardTitle className="text-sm">SupCon Training Loss</CardTitle>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">Phase 1: {supconEpochs} epochs | Phase 2 (CE): {ceEpochs} epochs | Total: {supconEpochs + ceEpochs}</p>
+                  <CardTitle className="text-sm">{t("experiment_detail.supcon_loss_title")}</CardTitle>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">{t("experiment_detail.supcon_phases", { p1: supconEpochs, p2: ceEpochs, total: supconEpochs + ceEpochs })}</p>
                 </div>
               </div>
             </CardHeader>
@@ -332,7 +333,7 @@ function ChartCarousel({ folds, selectedFold, meanF1, stdF1, confusionMatrix, ex
                   <YAxis tick={{ fontSize: 12 }} domain={["auto", "auto"]} />
                   <Tooltip />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
-                  {folds.map((f, i) => (
+                  {visibleFoldsSupcon.map((f, i) => (
                     <Line key={`tl_${f.fold}`} type="monotone" dataKey={`tl_${f.fold}`}
                       name={`Fold ${f.fold}`} stroke={COLORS[i % COLORS.length]}
                       dot={false} strokeWidth={1.5} isAnimationActive={false} />
@@ -351,8 +352,8 @@ function ChartCarousel({ folds, selectedFold, meanF1, stdF1, confusionMatrix, ex
               <div className="flex items-center gap-2">
                 <span className="flex size-5 items-center justify-center rounded bg-indigo-500/10 text-indigo-500 text-[10px] font-bold">P1</span>
                 <div>
-                  <CardTitle className="text-sm">KNN Validation Accuracy</CardTitle>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">Phase 1: {supconEpochs} epochs | Phase 2 (CE): {ceEpochs} epochs | Total: {supconEpochs + ceEpochs}</p>
+                  <CardTitle className="text-sm">{t("experiment_detail.supcon_knn_title")}</CardTitle>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">{t("experiment_detail.supcon_phases", { p1: supconEpochs, p2: ceEpochs, total: supconEpochs + ceEpochs })}</p>
                 </div>
               </div>
             </CardHeader>
@@ -364,7 +365,7 @@ function ChartCarousel({ folds, selectedFold, meanF1, stdF1, confusionMatrix, ex
                   <YAxis tick={{ fontSize: 12 }} domain={[0, 1]} />
                   <Tooltip />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
-                  {folds.map((f, i) => (
+                  {visibleFoldsSupcon.map((f, i) => (
                     <Line key={`ka_${f.fold}`} type="monotone" dataKey={`ka_${f.fold}`}
                       name={`Fold ${f.fold}`} stroke={COLORS[i % COLORS.length]}
                       dot={false} strokeWidth={1.5} isAnimationActive={false} />
@@ -381,9 +382,18 @@ function ChartCarousel({ folds, selectedFold, meanF1, stdF1, confusionMatrix, ex
     switch (idx - offset) {
       case 0: return <LossCurvesChart folds={folds} selectedFold={selectedFold} />;
       case 1: return <MetricCurvesChart folds={folds} selectedFold={selectedFold} />;
-      case 2: return <FoldSummaryChart folds={folds} meanF1={meanF1} stdF1={stdF1} />;
+      case 2: return <FoldSummaryChart folds={folds} meanF1={meanF1} stdF1={stdF1} selectedFold={selectedFold} />;
       case 3: return hasOverfitting ? <OverfittingProxyChart folds={folds} selectedFold={selectedFold} /> : null;
-      case 4: return confusionMatrix ? <ConfusionMatrixChart matrix={confusionMatrix.matrix} labels={confusionMatrix.labels} /> : null;
+      case 4: return confusionMatrix ? (
+        <div className="space-y-2">
+          {selectedFold !== null && (
+            <p className="text-xs text-muted-foreground">
+              {t("experiment_detail.charts.confusion_aggregate_note")}
+            </p>
+          )}
+          <ConfusionMatrixChart matrix={confusionMatrix.matrix} labels={confusionMatrix.labels} />
+        </div>
+      ) : null;
       default: return null;
     }
   };
