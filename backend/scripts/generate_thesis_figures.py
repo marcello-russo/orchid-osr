@@ -447,8 +447,7 @@ def fig_tsne_comparison():
         _, _, tsne, cnames = load_embeddings(exp, model)
         if tsne is None:
             ax.text(0.5, 0.5, "Embeddings N/A", ha="center", va="center", transform=ax.transAxes)
-            ax.set_title(EXP_LABELS[exp], fontweight="bold")
-            ax.text(-0.15, -0.1, f"({chr(97 + j)})", transform=ax.transAxes, fontsize=11, fontweight="bold")
+            ax.set_title(f"({chr(97 + j)}) {EXP_LABELS[exp]}", fontweight="bold")
             continue
 
         labels = np.load(EXPERIMENTS / f"{EXP_PREFIXES[exp]}_{model}" / "embeddings" / "labels.npy")
@@ -462,10 +461,11 @@ def fig_tsne_comparison():
             c = SPECIES_COLORS.get(name, CB[int(cls) % len(CB)])
             ax.scatter(tsne[mask, 0], tsne[mask, 1], c=c, label=sn, s=12, alpha=0.6, edgecolors="none", rasterized=True)
 
-        ax.set_title(EXP_LABELS[exp], fontweight="bold")
+        ax.set_title(f"({chr(97 + j)}) {EXP_LABELS[exp]}", fontweight="bold")
         ax.set_xlabel("t-SNE 1")
         ax.set_ylabel("t-SNE 2")
-        ax.legend(loc="upper left", bbox_to_anchor=(1.01, 1), markerscale=2, framealpha=0.9)
+        ax.tick_params(labelsize=9)
+        ax.legend(loc="upper left", bbox_to_anchor=(1.01, 1), markerscale=2, framealpha=0.9, fontsize=9)
         ax.text(-0.15, -0.1, f"({chr(97 + j)})", transform=ax.transAxes, fontsize=11, fontweight="bold")
 
     fig.suptitle("Spazio degli embedding (t-SNE) — DINOv2-Small", fontweight="bold", y=1.02)
@@ -483,7 +483,7 @@ def fig_per_species_f1():
     best = {"exp1": "resnet50", "exp2": "dinov2_base", "exp3": "dinov2_base"}
     order = ["O. exaltata", "O. garganica", "O. incubacea", "O. majellensis", "O. sphegodes", "O. sphegodes_Palena"]
     short = [short_species(s) for s in order]
-    fig, ax = plt.subplots(figsize=(10, 5))
+    fig, ax = plt.subplots(figsize=(11, 5.5))
     n_exp, n_sp = len(best), len(order)
     width = 0.8 / n_exp
     x = np.arange(n_sp)
@@ -514,7 +514,7 @@ def fig_per_species_f1():
                 f"{v:.2f}±{s:.2f}",
                 ha="center",
                 va="bottom",
-                fontsize=6,
+                fontsize=8,
                 rotation=90,
             )
 
@@ -522,7 +522,7 @@ def fig_per_species_f1():
     ax.set_xticklabels(short)
     ax.set_ylabel("F1")
     ax.set_title("F1 per specie — miglior modello per esperimento", fontweight="bold")
-    ax.legend(loc="lower right", framealpha=0.9)
+    ax.legend(bbox_to_anchor=(1.01, 1), loc="upper left", framealpha=0.9)
     ax.set_ylim(0, 1.1)
     fig.tight_layout()
     _save(fig, "per_species_f1.png")
@@ -720,8 +720,8 @@ def fig_tsne_exp8_multimodel():
         ax.set_title(label, fontweight="bold")
         ax.set_xlabel("t-SNE 1")
         ax.set_ylabel("t-SNE 2")
-        ax.legend(loc="upper left", bbox_to_anchor=(1.01, 1), markerscale=2, framealpha=0.9)
-        ax.text(-0.15, -0.1, f"({chr(97 + j)})", transform=ax.transAxes, fontsize=11, fontweight="bold")
+        ax.tick_params(labelsize=9)
+        ax.legend(loc="upper left", bbox_to_anchor=(1.01, 1), markerscale=2, framealpha=0.9, fontsize=9)
 
     fig.suptitle("Exp 3 (SpHOR): t-SNE per Architecture", fontweight="bold", y=1.02)
     fig.tight_layout()
@@ -772,7 +772,7 @@ def fig_spotlight_convnext_osr():
     ax.annotate(
         "DINOv2-Base: 0.875\n(Ensemble detector)",
         xy=(3 + (MODELS.index("dinov2_base") - len(MODELS) / 2 + 0.5) * width, 0.875),
-        xytext=(4.5, 0.80),
+        xytext=(2.1, 0.97),
         fontsize=10,
         fontweight="bold",
         color="#D55E00",

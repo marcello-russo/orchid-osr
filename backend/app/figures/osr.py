@@ -139,8 +139,8 @@ def _dual_1vs2(fig_dir: Path) -> list[Path]:
     ax.set_xticks(x)
     ax.set_xticklabels(ARCH_LABELS, fontsize=8)
     ax.set_ylabel("AUROC Ensemble (supplemento)")
-    ax.set_ylim(0.48, 1.0)
-    ax.axhline(0.5, color="gray", linestyle="--", linewidth=1, label="caso")
+    ax.set_ylim(0, 1.0)
+    ax.axhline(0.5, color="gray", linestyle="--", linewidth=1)
     ax.set_title("OSR: 1 vs 2 novel (AUROC Ensemble)", fontsize=12, fontweight="bold")
     ax.legend(fontsize=8)
     ax.grid(axis="y", alpha=0.3)
@@ -203,7 +203,7 @@ def _closed_vs_open(fig_dir: Path) -> list[Path]:
         ax.annotate(
             "ConvNeXt-T tiene\nin entrambi",
             xy=(f1_4["convnext_tiny"], d4["convnext_tiny"].get("Ensemble", 0.85)),
-            xytext=(0.55, 0.92),
+            xytext=(0.78, 0.94),
             fontsize=8,
             arrowprops=dict(arrowstyle="->", color="black", lw=1),
             bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="gray", alpha=0.9),
