@@ -19,8 +19,6 @@ def test_exp10_archived():
         if pathlib.Path("backend/.gitignore").exists()
         else pathlib.Path(".gitignore").read_text()
     )
-    # README may be at backend/scripts/... or scripts/...
-    assert (
-        pathlib.Path("backend/scripts/archive/thesis-figures/README.md").exists()
-        or pathlib.Path("scripts/archive/thesis-figures/README.md").exists()
-    )
+    # Nessuna directory archive residua sotto scripts
+    assert not pathlib.Path("backend/scripts/archive").exists()
+    assert not pathlib.Path("scripts/archive").exists()
