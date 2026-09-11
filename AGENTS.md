@@ -152,7 +152,7 @@ No `ruff`, `mypy`, `black`, or `pre-commit` setup. Only `pytest` as a quality ga
 - Dataset: `marcellorusso/orchid-osr-dataset`
 - Models: `marcellorusso/orchid-osr-models`
 - Sync via CLI (logic in `app/hf/`, tested): `orchid hf download|sync|upload-models|upload-ncd` (requires `HF_TOKEN`)
-- Live demo: `marcellorusso-orchid-osr.hf.space`
+- Live demo (VPS OVH): `https://orchid-osr.klad.ml`
 
 ### Database / state
 No database. All state is filesystem-based: experiments JSON, model `.pt` files, dataset images. The backend API scans `experiments/` at runtime to discover available models (LRU cache, max 5 loaded at once).
