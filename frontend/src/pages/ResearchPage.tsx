@@ -621,7 +621,7 @@ export function ResearchPage() {
               { model: "DINOv2-Small", e6: "0,695", e7: "0,710", e8: "0,772", e9: "0,924", osr9: "0,758", nmi4: "0,922" },
               { model: "DINOv2-Base", e6: "0,764", e7: "0,808", e8: "0,833", e9: "0,929", osr9: "0,875", nmi4: "0,928" },
             ]}
-            bests={{ e6: "ResNet-50", e7: "DINOv2-Base", e8: "DINOv2-Base", e9: "ConvNeXt-Small", osr9: "DINOv2-Base", nmi4: "ConvNeXt-Tiny" }}
+            bests={{ e6: "ResNet-50", e7: "DINOv2-Base", e8: "DINOv2-Base", e9: "ConvNeXt-Small", osr9: "DINOv2-Base", nmi4: "DINOv2-Base" }}
             caption={t("research.benchmark_caption")}
           />
 
