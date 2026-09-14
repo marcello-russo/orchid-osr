@@ -214,9 +214,14 @@ def _closed_vs_open(fig_dir: Path) -> list[Path]:
         [
             Line2D([0], [0], marker="^", color="w", markerfacecolor="black", markersize=9),
             Line2D([0], [0], marker="o", color="w", markerfacecolor="gray", markersize=8),
+        ]
+        + [
+            Line2D([0], [0], marker="s", color="w", markerfacecolor=PALETTE[i % len(PALETTE)], markersize=8)
+            for i in range(len(ARCHS))
         ],
-        ["Exp4, 1 novel", "Exp5, 2 novel"],
-        fontsize=8,
+        ["Exp4, 1 novel", "Exp5, 2 novel"] + list(ARCH_LABELS),
+        fontsize=7,
+        ncol=2,
     )
     ax.set_xlabel("F1 test closed-set")
     ax.set_ylabel("AUROC OSR Ensemble (supplemento)")

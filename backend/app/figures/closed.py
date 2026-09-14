@@ -132,7 +132,7 @@ def build_closed(fig_dir: Path, exps: dict[int, Path]) -> list[Path]:
     plt.close(fig)
 
     # ── Benchmark heatmap: models × exps ──
-    fig2, ax2 = plt.subplots(figsize=(8, 4))
+    fig2, ax2 = plt.subplots(figsize=(9.5, 4.2))
     cmap = plt.cm.Blues.with_extremes(bad="#f0f0f0")
     # data_T for imshow: rows=models, cols=exps
     data_t = data.T  # (6,4)
@@ -148,7 +148,7 @@ def build_closed(fig_dir: Path, exps: dict[int, Path]) -> list[Path]:
                     txt += " ✕"
                 ax2.text(j, i, txt, ha="center", va="center", fontsize=7, color=c, fontweight="bold")
     ax2.set_xticks(range(len(EXP_LABELS)))
-    ax2.set_xticklabels(EXP_LABELS, fontsize=8)
+    ax2.set_xticklabels(EXP_LABELS, fontsize=7.5, rotation=30, ha="right")
     ax2.set_yticks(range(len(ARCHS)))
     ax2.set_yticklabels(ARCH_LABELS, fontsize=8)
     ax2.set_title("Heatmap benchmark: F1 test (medie 5 fold ± std)", fontsize=12, fontweight="bold")
