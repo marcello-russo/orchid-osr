@@ -63,6 +63,7 @@ def l2norm(x: np.ndarray) -> np.ndarray:
 def _eval_ss(pool_true: np.ndarray, pred: np.ndarray, n_train: int, test_known_mask: np.ndarray) -> dict:
     """ACC test (mapping pool) + NMI/ARI descrittive sul pool."""
     out = pool_hungarian_test_acc(pool_true, pred, n_train, test_known_mask)
+    out["mapping"] = "pool"  # mapping Hungarian fittato sul pool, slice test (spec §3)
     out["nmi_pool"] = compute_nmi(pool_true, pred)
     out["ari_pool"] = compute_ari(pool_true, pred)
     return out
@@ -103,12 +104,11 @@ def analyze_model(exp_dir: str, exp_id: int) -> dict | None:
     test_emb_raw = np.load(os.path.join(emb_dir, "embeddings.npy"))
     metadata = json.load(open(os.path.join(emb_dir, "metadata.json")))
     test_species = [p["species"] for p in metadata["points"]]
-    assert len(test_species) == len(test_emb_raw) == 300, (
-        len(test_species),
-        test_emb_raw.shape,
-    )
+    if not (len(test_species) == len(test_emb_raw) == 300):
+        raise ValueError(f"test inatteso: specie={len(test_species)} emb={test_emb_raw.shape}")
     test_emb = l2norm(test_emb_raw)
-    assert np.allclose(np.linalg.norm(test_emb, axis=1), 1.0, atol=1e-5)
+    if not np.allclose(np.linalg.norm(test_emb, axis=1), 1.0, atol=1e-5):
+        raise ValueError("normalizzazione L2 test fallita")
     test_true = np.array(
         [known_to_idx[s] if s in known_to_idx else n_known + novel_names.index(s) for s in test_species]
     )
@@ -118,13 +118,15 @@ def analyze_model(exp_dir: str, exp_id: int) -> dict | None:
     # ---- Train known labeled (1629): label da tabella nomi esplicita ----
     train_emb_raw = np.load(os.path.join(emb_dir, "train_embeddings_known.npy"))
     train_species = json.load(open(os.path.join(emb_dir, "train_embeddings_known_species.json")))
-    assert len(train_species) == len(train_emb_raw)
+    if len(train_species) != len(train_emb_raw):
+        raise ValueError(f"train inatteso: specie={len(train_species)} emb={train_emb_raw.shape}")
     train_emb = l2norm(train_emb_raw)
-    assert np.allclose(np.linalg.norm(train_emb, axis=1), 1.0, atol=1e-5)
+    if not np.allclose(np.linalg.norm(train_emb, axis=1), 1.0, atol=1e-5):
+        raise ValueError("normalizzazione L2 train fallita")
     train_labels = np.array([known_to_idx[s] for s in train_species])
 
-    if exp_id == 4:
-        assert len(test_species) == 300 and test_known_mask.sum() == 250
+    if exp_id == 4 and not (len(test_species) == 300 and test_known_mask.sum() == 250):
+        raise ValueError("protocollo Exp4 violato: attesi 300 test di cui 250 known")
 
     # ---- Pool GCD ----
     pool_emb = np.vstack([train_emb, test_emb])
@@ -144,13 +146,32 @@ def analyze_model(exp_dir: str, exp_id: int) -> dict | None:
         "l2_normalized": True,
     }
 
-    # ---- Baseline-rerun: 20 init best-inertia, seed 57 ----
-    pred_base, info_base = ss_kmeans_multirun(
-        pool_emb, labeled_mask, train_labels,
-        n_known=n_known, n_novel=n_novel,
-        random_state=57, n_init=N_INIT, criterion="inertia", return_candidates=True,
-    )
-    base_cands = info_base.pop("candidates")
+    # ---- Baseline-rerun: 20 init best-inertia, disegno appaiato su 10 seed globali ----
+    # Per ogni g gli init usano random_state g+i: stessi candidati e seed di A
+    # (A riseleziona best-silhouette sugli STESSI candidati). g=57 condivide
+    # i candidati con A per costruzione; gli altri g rigirano il proprio rerun.
+    base_seeds = []
+    base_cands = None
+    for g in GLOBAL_SEEDS:
+        pred_g, info_g = ss_kmeans_multirun(
+            pool_emb, labeled_mask, train_labels,
+            n_known=n_known, n_novel=n_novel,
+            random_state=g, n_init=N_INIT, criterion="inertia", return_candidates=True,
+        )
+        cands_g = info_g.pop("candidates")
+        if g == 57:
+            base_cands = cands_g
+            pred_base, info_base = pred_g, info_g
+        base_seeds.append({
+            **_eval_ss(pool_true, pred_g, n_train, test_known_mask),
+            "per_novel_test": _per_novel(pool_true, pred_g, n_train, test_species_arr, novel_names),
+            "seed": g,
+            "inertia": info_g["inertia"],
+            "best_init": info_g["best_init"],
+            "n_iter": info_g["n_iter"],
+            "inertias": [c["inertia"] for c in cands_g],
+        })
+    acc_new_base = np.array([s["acc_new_test"] for s in base_seeds])
     out["baseline_rerun"] = {
         **_eval_ss(pool_true, pred_base, n_train, test_known_mask),
         "per_novel_test": _per_novel(pool_true, pred_base, n_train, test_species_arr, novel_names),
@@ -159,6 +180,11 @@ def analyze_model(exp_dir: str, exp_id: int) -> dict | None:
         "best_init": info_base["best_init"],
         "n_iter": info_base["n_iter"],
         "inertias": [c["inertia"] for c in base_cands],
+    }
+    out["baseline_reruns"] = {
+        "seeds": base_seeds,
+        "acc_new_mean": float(acc_new_base.mean()),
+        "acc_new_std": float(acc_new_base.std()),
     }
 
     # ---- A: stessi candidati, best-silhouette; 10 seed globali ----
@@ -222,29 +248,43 @@ def analyze_model(exp_dir: str, exp_id: int) -> dict | None:
         "acc_new_std": float(acc_new_sel.std()),
     }
 
-    # ---- B: density seeding, 1 run deterministico ----
-    labeled_pool = pool_emb[labeled_mask]
-    known_centroids = np.zeros((n_known, pool_emb.shape[1]))
-    for c in range(n_known):
-        known_centroids[c] = labeled_pool[train_labels == c].mean(axis=0)
-    novel_centroid, dens_info = density_novel_init(pool_emb, unlabeled_idx, known_centroids, k=10, pct=90)
-    init_b = np.vstack([known_centroids, novel_centroid[None, :]])
-    pred_b, _, inertia_b, n_iter_b = _constrained_lloyd(
-        pool_emb, labeled_mask, train_labels, init_b
-    )
-    out["B_density"] = {
-        **_eval_ss(pool_true, pred_b, n_train, test_known_mask),
-        "per_novel_test": _per_novel(pool_true, pred_b, n_train, test_species_arr, novel_names),
-        "fallback_nosoglia": dens_info["fallback_nosoglia"],
-        "threshold": dens_info["threshold"],
-        "seed_unlabeled_pos": dens_info["seed_unlabeled_pos"],
-        "k": dens_info["k"],
-        "pct": dens_info["pct"],
-        "inertia": inertia_b,
-        "n_iter": n_iter_b,
-    }
+    # ---- B: density seeding, 1 run deterministico (solo 1 novel: Exp4) ----
+    if n_novel != 1:
+        out["B_density"] = {
+            "skipped": f"n_novel={n_novel} != 1: density seeding definito solo per 1 novel (Exp4)",
+            "mapping": "pool",
+        }
+    else:
+        labeled_pool = pool_emb[labeled_mask]
+        known_centroids = np.zeros((n_known, pool_emb.shape[1]))
+        for c in range(n_known):
+            known_centroids[c] = labeled_pool[train_labels == c].mean(axis=0)
+        novel_centroid, dens_info = density_novel_init(
+            pool_emb, unlabeled_idx, known_centroids, k=10, pct=90,
+            rng=np.random.default_rng(57),
+        )
+        init_b = np.vstack([known_centroids, novel_centroid[None, :]])
+        pred_b, _, inertia_b, n_iter_b = _constrained_lloyd(
+            pool_emb, labeled_mask, train_labels, init_b
+        )
+        out["B_density"] = {
+            **_eval_ss(pool_true, pred_b, n_train, test_known_mask),
+            "per_novel_test": _per_novel(pool_true, pred_b, n_train, test_species_arr, novel_names),
+            "fallback_nosoglia": dens_info["fallback_nosoglia"],
+            "threshold": dens_info["threshold"],
+            "seed_unlabeled_pos": dens_info["seed_unlabeled_pos"],
+            "k": dens_info["k"],
+            "pct": dens_info["pct"],
+            "inertia": inertia_b,
+            "n_iter": n_iter_b,
+        }
 
     # ---- C: KMeans test-only, 10 init SeedSequence, best-vs-best ----
+    # Vince impl §2: il clustering C vive SOLO sul test, quindi il mapping
+    # Hungarian è necessariamente fittato sul test (gcd_old_new_all_acc su
+    # test_true). Il divieto di gcd_old_new_all_acc-sul-test vale per A/B
+    # (pool 1929), dove si usa pool_hungarian_test_acc. Chiavi acc_* duplicate
+    # come acc_*_test per coerenza con le altre sezioni; mapping="test".
     from sklearn.cluster import KMeans
     from sklearn.metrics import silhouette_score
 
@@ -267,16 +307,19 @@ def analyze_model(exp_dir: str, exp_id: int) -> dict | None:
         for tag, idx in (("best_inertia", best_inertia_idx), ("best_silhouette", best_sil_idx)):
             m = gcd_old_new_all_acc(test_true, cands[idx]["labels"], test_known_mask)
             c_results.append({
-                "global_seed": g, "criterion": tag,
+                "global_seed": g, "criterion": tag, "mapping": "test",
                 "init_idx": idx, "init_seed": cands[idx]["seed"],
                 "inertia": cands[idx]["inertia"], "silhouette": cands[idx]["silhouette"],
                 **{f"{k}": float(v) for k, v in m.items() if k.startswith("acc_")},
+                "acc_all_test": float(m["acc_all"]),
+                "acc_old_test": float(m["acc_old"]),
+                "acc_new_test": float(m["acc_new"]),
                 "nmi": compute_nmi(test_true, cands[idx]["labels"]),
                 "ari": compute_ari(test_true, cands[idx]["labels"]),
             })
     out["C_kmeans_testonly"] = {"runs": c_results}
     for tag in ("best_inertia", "best_silhouette"):
-        vals = np.array([r["acc_new"] for r in c_results if r["criterion"] == tag])
+        vals = np.array([r["acc_new_test"] for r in c_results if r["criterion"] == tag])
         out["C_kmeans_testonly"][f"acc_new_mean_{tag}"] = float(vals.mean())
         out["C_kmeans_testonly"][f"acc_new_std_{tag}"] = float(vals.std())
 
@@ -284,12 +327,13 @@ def analyze_model(exp_dir: str, exp_id: int) -> dict | None:
     with open(out_path, "w") as f:
         json.dump(out, f, indent=2)
     logger.info(
-        "[%s] base-rerun New=%.3f | A New=%.3f±%.3f | B New=%.3f%s | C New sil=%.3f±%.3f inert=%.3f±%.3f",
+        "[%s] base-rerun New=%.3f (10-seed %.3f±%.3f) | A New=%.3f±%.3f | B New=%s%s | C New sil=%.3f±%.3f inert=%.3f±%.3f",
         model_variant,
         out["baseline_rerun"]["acc_new_test"],
+        out["baseline_reruns"]["acc_new_mean"], out["baseline_reruns"]["acc_new_std"],
         out["A_silhouette"]["acc_new_mean"], out["A_silhouette"]["acc_new_std"],
-        out["B_density"]["acc_new_test"],
-        " (fallback_nosoglia)" if out["B_density"]["fallback_nosoglia"] else "",
+        ("%.3f" % out["B_density"]["acc_new_test"]) if "acc_new_test" in out["B_density"] else "SKIP",
+        " (fallback_nosoglia)" if out["B_density"].get("fallback_nosoglia") else "",
         out["C_kmeans_testonly"]["acc_new_mean_best_silhouette"],
         out["C_kmeans_testonly"]["acc_new_std_best_silhouette"],
         out["C_kmeans_testonly"]["acc_new_mean_best_inertia"],
@@ -320,12 +364,13 @@ def main() -> None:
         logger.info("\n=== RIEPILOGO SEEDING (Exp %d · ACC new su test) ===", args.exp)
         logger.info("%-16s %8s %16s %8s %16s", "model", "base", "A mean±std", "B", "C sil/inert")
         for m, r in all_results.items():
+            b = ("%.3f" % r["B_density"]["acc_new_test"]) if "acc_new_test" in r["B_density"] else "SKIP"
             logger.info(
-                "%-16s %8.3f %7.3f±%.3f %8.3f %7.3f/%7.3f",
+                "%-16s %8.3f %7.3f±%.3f %8s %7.3f/%7.3f",
                 m,
                 r["baseline_rerun"]["acc_new_test"],
                 r["A_silhouette"]["acc_new_mean"], r["A_silhouette"]["acc_new_std"],
-                r["B_density"]["acc_new_test"],
+                b,
                 r["C_kmeans_testonly"]["acc_new_mean_best_silhouette"],
                 r["C_kmeans_testonly"]["acc_new_mean_best_inertia"],
             )

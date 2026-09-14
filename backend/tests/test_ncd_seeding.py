@@ -59,12 +59,64 @@ def test_a_regression_exact():
     assert info_w["inertia"] == info2["inertia"]
 
 
+# (a2) Regressione golden pre/post refactor -----------------------------------
+# Golden generati col codice pre-refactor (git show 60425c0:.../clustering.py
+# caricato come modulo temp) su array sintetico seedato:
+#   rng = default_rng(0); pool = rng.normal(size=(24, 4)); mask[:16]=True;
+#   labels = repeat([0,1], 8); ss_kmeans_clustering(..., n_known=2, n_novel=1,
+#   random_state=57)
+_GOLDEN_LABELS = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,
+                  1, 0, 2, 1, 0, 1, 1, 0]
+_GOLDEN_INERTIA = 67.63177432041103
+_GOLDEN_BEST_INIT = 0
+_GOLDEN_N_ITER = 2
+_GOLDEN_SIZES = [11, 12, 1]
+
+
+def _golden_pool():
+    rng = np.random.default_rng(0)
+    pool = rng.normal(size=(24, 4))
+    mask = np.zeros(24, dtype=bool)
+    mask[:16] = True
+    labels = np.repeat([0, 1], 8)
+    return pool, mask, labels
+
+
+def test_a2_golden_pre_post_refactor():
+    pool, mask, train_labels = _golden_pool()
+    for fn in (ss_kmeans_clustering, ss_kmeans_multirun):
+        lab, info = fn(pool, mask, train_labels, n_known=2, n_novel=1, random_state=57)
+        assert lab.tolist() == _GOLDEN_LABELS
+        assert info["inertia"] == _GOLDEN_INERTIA
+        assert info["best_init"] == _GOLDEN_BEST_INIT
+        assert info["n_iter"] == _GOLDEN_N_ITER
+        assert info["cluster_sizes"] == _GOLDEN_SIZES
+
+
 # (b) Non-leakage ------------------------------------------------------------
 def test_b_no_label_params_in_signatures():
     for fn in (_farthest_first_novel, density_novel_init, _best_by_silhouette):
         params = list(inspect.signature(fn).parameters)
         # "unlabeled" (indici/embedding non etichettati) è lecito; vietate le true-label
         assert not any("label" in p and "unlabeled" not in p for p in params), (fn.__name__, params)
+
+
+def test_b_label_kwargs_rejected():
+    """Rifiuto esplicito di kwarg label-like (non-leakage non vacuo)."""
+    pool, mask, train_labels, n_known, _ = _toy_pool()
+    kc = _known_centroids(pool, mask, train_labels, n_known)
+    unl = pool[~mask]
+    rng = np.random.default_rng(57)
+    with pytest.raises(TypeError):
+        _farthest_first_novel(unl, kc, 1, rng, test_labels=np.zeros(len(unl)))
+    with pytest.raises(TypeError):
+        density_novel_init(pool, np.where(~mask)[0], kc, y=np.zeros(len(pool)))
+    lab, info = ss_kmeans_multirun(
+        pool, mask, train_labels, n_known=n_known, n_novel=1,
+        random_state=57, criterion="inertia", return_candidates=True,
+    )
+    with pytest.raises(TypeError):
+        _best_by_silhouette(unl, info["candidates"], n_known + 1, true_labels=np.zeros(len(unl)))
 
 
 def test_b_mask_builder_pure():
@@ -79,22 +131,23 @@ def test_b_mask_builder_pure():
     _ = rng.permutation(species)  # le label non entrano nel builder
 
 
-def test_b_permuted_test_labels_same_init():
+def test_b_determinism_same_seed():
+    """Determinismo a parità di seed (ex test tautologico sulle label permutate:
+    le label permutate non entravano mai nell'init, quindi il test provava
+    solo determinismo — ora dichiarato esplicitamente)."""
     pool, mask, train_labels, n_known, _ = _toy_pool()
     kc = _known_centroids(pool, mask, train_labels, n_known)
     unl = pool[~mask]
-    rng = np.random.default_rng(57)
-    init1 = _farthest_first_novel(unl, kc, 1, rng)
-    # le label del test vengono permutate: l'init non le riceve mai
-    fake_test_labels = np.arange((~mask).sum())
-    rng2 = np.random.default_rng(99)
-    perm = rng2.permutation(fake_test_labels)
-    assert set(perm.tolist()) == set(fake_test_labels.tolist())
+    init1 = _farthest_first_novel(unl, kc, 1, np.random.default_rng(57))
     init2 = _farthest_first_novel(unl, kc, 1, np.random.default_rng(57))
     assert np.array_equal(init1, init2)
     c1, _ = density_novel_init(pool, np.where(~mask)[0], kc)
     c2, _ = density_novel_init(pool, np.where(~mask)[0], kc)
     assert np.array_equal(c1, c2)
+    # rng diverso -> tie-break potenzialmente diverso ma sempre deterministico
+    c3, _ = density_novel_init(pool, np.where(~mask)[0], kc, rng=np.random.default_rng(57))
+    c4, _ = density_novel_init(pool, np.where(~mask)[0], kc, rng=np.random.default_rng(57))
+    assert np.array_equal(c3, c4)
 
 
 # (c) Docstring n_init --------------------------------------------------------
@@ -150,3 +203,70 @@ def test_criterion_invalid():
             pool, mask, train_labels, n_known=n_known, n_novel=n_novel,
             criterion="bogus",
         )
+
+
+# (f) Fallback A: tutti scartati -> flag + best-inertia -------------------------
+def test_f_fallback_alldiscarded():
+    """Tutti i candidati scartati (singoletti a livello pool) -> fallback
+    best-inertia con flag True (spec §4A)."""
+    rng = np.random.default_rng(3)
+    unl = rng.normal(size=(8, 4))
+    n_init = 4
+    cands = []
+    for i in range(n_init):
+        lab = np.zeros(8, dtype=np.int64)
+        lab[i] = 1  # cluster 1 singoletto -> scarto pool
+        cands.append({
+            "labels": lab,
+            "inertia": 100.0 + i * 10.0,
+            "cluster_sizes_pool": [7, 1],
+            "cluster_sizes_test": [7, 1],
+            "unlabeled_idx": np.arange(8),
+        })
+    best_idx, sils, discarded, fallback = _best_by_silhouette(unl, cands, 2)
+    assert fallback is True
+    assert all(discarded)
+    assert all(np.isnan(s) for s in sils)
+    # fallback = best-inertia = init 0
+    assert best_idx == 0
+
+
+# (g) SeedSequence C: 10 distinti, range sklearn --------------------------------
+def test_g_seedsequence_c_seeds():
+    """Schema seed controllo C (spec §4C): 10 init distinti < 2**31 per ogni g."""
+    for g in range(57, 67):
+        seeds = [int(np.random.SeedSequence(g).spawn(10)[j].generate_state(1)[0]) % 2**31
+                 for j in range(10)]
+        assert len(set(seeds)) == 10
+        assert all(0 <= s < 2**31 for s in seeds)
+
+
+# (h) pool_hungarian_test_acc: slice posizionale, mapping pool ------------------
+def test_h_pool_hungarian_test_acc():
+    """Mapping Hungarian fittato sul pool, ACC valutate sulla slice test
+    posizionale dopo n_train (verbatim gcd_analysis.py:180-189)."""
+    from app.core.ncd.evaluation import pool_hungarian_test_acc
+
+    n_train = 20
+    pool_true = np.array([0] * 10 + [1] * 10 + [0] * 5 + [1] * 5)
+    # pred = true con cluster swappati (0<->1): mapping pool deve recuperarli
+    pred = np.array([1] * 10 + [0] * 10 + [1] * 5 + [0] * 5)
+    test_known_mask = np.array([True] * 5 + [False] * 5)
+    out = pool_hungarian_test_acc(pool_true, pred, n_train, test_known_mask)
+    assert out["acc_all_test"] == 1.0
+    assert out["acc_old_test"] == 1.0
+    assert out["acc_new_test"] == 1.0
+    assert out["n_old_test"] == 5 and out["n_new_test"] == 5
+    assert out["acc_all_pool"] == 1.0
+
+
+# (i) Tie inerzia: first-wins ----------------------------------------------------
+def test_i_inertia_tie_first_wins():
+    """A parità di inerzia vince il primo init: il path best-inertia usa
+    ``<`` stretto (verbatim) e ``np.argmin`` è first-wins."""
+    import inspect
+
+    from app.core.ncd import clustering as cl
+
+    assert "if inertia < best_inertia:" in inspect.getsource(cl.ss_kmeans_multirun)
+    assert int(np.argmin(np.array([5.0, 5.0, 7.0]))) == 0

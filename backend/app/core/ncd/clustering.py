@@ -24,12 +24,17 @@ def _farthest_first_novel(
     known_centroids: np.ndarray,
     n_novel: int,
     rng: np.random.Generator,
+    **kwargs,
 ) -> np.ndarray:
     """Init novel farthest-first (estratto verbatim da ss_kmeans, puro).
 
     Nessuna label in input (barriera anti-leakage strutturale).
+    Qualsiasi kwarg (in particolare label-like) è rifiutato con TypeError:
+    la firma accetta solo (embedding, centroidi, n_novel, rng).
     Ritorna (n_novel, D) centroidi novel.
     """
+    if kwargs:
+        raise TypeError(f"_farthest_first_novel rifiuta kwarg spuri {sorted(kwargs)} (anti-leakage: niente label)")
     pool_unlabeled = np.asarray(pool_unlabeled, dtype=np.float64)
     known_centroids = np.asarray(known_centroids, dtype=np.float64)
     n_known = known_centroids.shape[0]
@@ -101,6 +106,7 @@ def _best_by_silhouette(
     pool_unlabeled: np.ndarray,
     candidates: list[dict],
     total_k: int,
+    **kwargs,
 ) -> tuple[int, list[float], list[bool], bool]:
     """Selezione best-silhouette con regola di scarto (spec §4A, pura).
 
@@ -109,11 +115,17 @@ def _best_by_silhouette(
     singoletto o vuoto a livello pool, OPPURE con <total_k cluster non vuoti
     o singoletti sui 300 del test. Se tutti sono scartati, fallback
     pre-registrato = best-inertia (flag True).
+    Qualsiasi kwarg (in particolare label-like) è rifiutato con TypeError.
 
     Ritorna (best_idx, silhouettes, discarded, fallback_alldiscarded);
     silhouettes vale NaN per i candidati scartati/non calcolabili.
     """
     from sklearn.metrics import silhouette_score
+
+    if kwargs:
+        raise TypeError(f"_best_by_silhouette rifiuta kwarg spuri {sorted(kwargs)} (anti-leakage: niente label)")
+    if not candidates:
+        raise ValueError("_best_by_silhouette richiede almeno un candidato")
 
     pool_unlabeled = np.asarray(pool_unlabeled, dtype=np.float64)
     n_init = len(candidates)
@@ -149,7 +161,7 @@ def _best_by_silhouette(
             if silhouettes[i] > best_sil:
                 best_sil = silhouettes[i]
                 best_idx = i
-    assert best_idx >= 0
+    assert best_idx >= 0  # invariante: candidates non vuoto (validato sopra) => best sempre assegnato
     return best_idx, silhouettes, discarded, fallback_alldiscarded
 
 
@@ -159,7 +171,8 @@ def density_novel_init(
     known_centroids: np.ndarray,
     k: int = 10,
     pct: float = 90,
-    rng=None,
+    rng: np.random.Generator | None = None,
+    **kwargs,
 ) -> tuple[np.ndarray, dict]:
     """Seeding per densità (spec §4B, pura; solo 1 novel).
 
@@ -171,11 +184,18 @@ def density_novel_init(
     fallback pre-registrato = media del k-NN del punto più denso IGNORANDO
     la soglia, con flag ``fallback_nosoglia: true``.
 
+    Tie-break dell'argmin: a parità numerica (``np.isclose`` atol=1e-12) tra
+    più punti a densità minima, ``rng.choice`` sceglie in modo deterministico
+    a parità di seed; con ``rng=None`` vince il primo (``np.argmin``).
+    Qualsiasi kwarg (in particolare label-like) è rifiutato con TypeError.
+
     Nessuna label in input (barriera anti-leakage strutturale).
     Ritorna (novel_centroid (D,), info).
     """
     from sklearn.neighbors import NearestNeighbors
 
+    if kwargs:
+        raise TypeError(f"density_novel_init rifiuta kwarg spuri {sorted(kwargs)} (anti-leakage: niente label)")
     pool_norm = np.asarray(pool_norm, dtype=np.float64)
     unlabeled_idx = np.asarray(unlabeled_idx)
     known_centroids = np.asarray(known_centroids, dtype=np.float64)
@@ -191,10 +211,14 @@ def density_novel_init(
     density = dists[:, 1:].mean(axis=1)
     beyond = np.where(d_known > threshold)[0]
     fallback_nosoglia = len(beyond) == 0
-    if fallback_nosoglia:
-        seed_pos = int(np.argmin(density))
+    pool_positions = beyond if not fallback_nosoglia else np.arange(len(Xu))
+    pool_dens = density[pool_positions]
+    best_d = float(np.min(pool_dens))
+    tied = pool_positions[np.isclose(pool_dens, best_d, atol=1e-12)]
+    if len(tied) > 1 and rng is not None:
+        seed_pos = int(rng.choice(tied))
     else:
-        seed_pos = int(beyond[np.argmin(density[beyond])])
+        seed_pos = int(tied[0])  # rng=None o unico minimo: first-wins deterministico
     centroid = Xu[neigh[seed_pos, 1 : k + 1]].mean(axis=0)
     info = {
         "fallback_nosoglia": bool(fallback_nosoglia),
@@ -220,9 +244,6 @@ def ss_kmeans_multirun(
     **kwargs,
 ) -> tuple[np.ndarray, dict]:
     """Semi-supervised K-means vincolato, multi-restart (Vaze et al., CVPR 2022 — GCD).
-
-    Per 2 novel Exp5 usa 20 init (Vaze repo: increasing inits can help).
-
 
     Protocollo GCD fedele: il pool contiene sia campioni etichettati (classi note,
     train) sia non etichettati (classi note + novel, test).
@@ -387,7 +408,7 @@ def ss_kmeans_multirun(
         discarded = [False] * len(candidates)
         fallback_alldiscarded = False
 
-    assert best_labels is not None and best_centroids is not None
+    assert best_labels is not None and best_centroids is not None  # invariante: n_init>=1 validato => candidates non vuoto => best sempre assegnato
     info = {
         "n_iter": best_n_iter,
         "method": "ss_kmeans_constrained_vaze2022",
@@ -422,9 +443,6 @@ def ss_kmeans_clustering(
 ) -> tuple[np.ndarray, dict]:
     """Semi-supervised K-means vincolato (Vaze et al., CVPR 2022 — GCD).
 
-    Per 2 novel Exp5 usa 20 init (Vaze repo: increasing inits can help).
-
-
     Protocollo GCD fedele: il pool contiene sia campioni etichettati (classi note,
     train) sia non etichettati (classi note + novel, test).
 
@@ -441,7 +459,8 @@ def ss_kmeans_clustering(
     number of inits can help."
 
     Wrapper di :func:`ss_kmeans_multirun` con ``criterion="inertia"``
-    (best-inertia, nessuno scarto): stessi risultati bit-identici.
+    (best-inertia, nessuno scarto): risultati equivalenti (verificato
+    pre/post su dati reali).
 
     Ritorna (labels, info); labels ha lunghezza = pool e vale 0..K-1 (cluster),
     con i labeled fissati alla propria classe (0..n_known-1).

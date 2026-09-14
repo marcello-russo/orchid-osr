@@ -155,7 +155,8 @@ def hungarian_accuracy(true_labels: np.ndarray, pred_labels: np.ndarray) -> floa
     Maps each cluster to the best ground-truth class via linear assignment,
     then computes accuracy = correct / total.
     """
-    assert true_labels.shape == pred_labels.shape
+    if true_labels.shape != pred_labels.shape:
+        raise ValueError(f"shape mismatch: true {true_labels.shape} vs pred {pred_labels.shape}")
     true = true_labels.astype(np.int64)
     pred = pred_labels.astype(np.int64)
     n_classes = max(true.max(), pred.max()) + 1
@@ -190,7 +191,8 @@ def gcd_old_new_all_acc(
     - new: campioni delle classi novel (known_mask False)
     - all: intero pool
     """
-    assert true_labels.shape == pred_labels.shape
+    if true_labels.shape != pred_labels.shape:
+        raise ValueError(f"shape mismatch: true {true_labels.shape} vs pred {pred_labels.shape}")
     true = true_labels.astype(np.int64)
     pred = pred_labels.astype(np.int64)
     n_classes = max(true.max(), pred.max()) + 1
