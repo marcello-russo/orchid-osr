@@ -245,6 +245,40 @@ def per_novel_acc(
     return out
 
 
+def pool_hungarian_test_acc(
+    pool_true: np.ndarray,
+    pred: np.ndarray,
+    n_train: int,
+    test_known_mask: np.ndarray,
+) -> dict:
+    """ACC test da mapping Hungarian fittato sul pool (verbatim gcd_analysis.py:180-189).
+
+    Il mapping cluster->classe è risolto UNA volta sul pool completo
+    (labeled + unlabeled), poi le accuratezze old/new/all sono valutate
+    sulle sole ``n_test`` del test (slice posizionale dopo ``n_train``).
+    NON usare ``gcd_old_new_all_acc`` sul solo test: mapping diverso,
+    non confrontabile (piano impl §2).
+    """
+    mapping = hungarian_mapping(np.asarray(pool_true), np.asarray(pred))
+    idx_test = np.arange(n_train, n_train + len(np.asarray(test_known_mask)))
+    mapped_test = np.array([mapping.get(int(p), -1) for p in np.asarray(pred)[idx_test]])
+    correct_test = mapped_test == np.asarray(pool_true)[idx_test]
+    mask_new_test = ~np.asarray(test_known_mask, dtype=bool)
+    mapped_pool = np.array([mapping.get(int(p), -1) for p in np.asarray(pred)])
+    return {
+        "acc_all_test": float(correct_test.mean()),
+        "acc_old_test": (
+            float(correct_test[np.asarray(test_known_mask, dtype=bool)].mean())
+            if np.asarray(test_known_mask).sum()
+            else float("nan")
+        ),
+        "acc_new_test": float(correct_test[mask_new_test].mean()) if mask_new_test.sum() else float("nan"),
+        "acc_all_pool": float((mapped_pool == np.asarray(pool_true)).mean()),
+        "n_old_test": int(np.asarray(test_known_mask).sum()),
+        "n_new_test": int(mask_new_test.sum()),
+    }
+
+
 def compute_ari(true_labels: np.ndarray, pred_labels: np.ndarray) -> float:
     """Adjusted Rand Index."""
     return float(adjusted_rand_score(true_labels, pred_labels))
