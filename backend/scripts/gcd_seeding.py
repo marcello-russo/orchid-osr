@@ -1,4 +1,4 @@
-"""GCD novel-centroid seeding — strategie A/B/C + baseline-rerun (spec 2026-09-14).
+"""GCD novel-centroid seeding — strategie A/B/C/D + baseline-rerun (spec 2026-09-14 §9).
 
 Protocollo pre-registrato (spec §3): K=6, pool 1929 (1629 train labeled +
 300 test unlabeled), clustering sul pool, mapping Hungarian sul pool,
@@ -34,6 +34,7 @@ from app.core.ncd.clustering import (
     _constrained_lloyd,
     build_labeled_mask,
     density_novel_init,
+    osr_guided_novel_init,
     ss_kmeans_multirun,
 )
 from app.core.ncd.evaluation import (
@@ -89,6 +90,19 @@ def _per_novel(
         else float("nan")
         for sp in novel_names
     }
+
+
+def load_osr_novelty_scores(exp_dir: str, key: str = "KNN") -> np.ndarray:
+    """Carica SOLO l'array score OSR ``key`` da ``osr_scores.npz`` (spec §9).
+
+    Barriera anti-leakage strutturale: la funzione accetta solo il nome
+    dello score e non espone alcun parametro label; ``y_true`` non viene
+    mai letto nel path di selezione (un solo accesso ``z[key]``).
+    """
+    path = os.path.join(exp_dir, "osr_scores.npz")
+    with np.load(path) as z:
+        scores = np.asarray(z[key], dtype=np.float64).ravel()
+    return scores
 
 
 def analyze_model(exp_dir: str, exp_id: int) -> dict | None:
@@ -279,6 +293,40 @@ def analyze_model(exp_dir: str, exp_id: int) -> dict | None:
             "n_iter": n_iter_b,
         }
 
+    # ---- D: init guidato OSR (spec §9), 1 run deterministico (solo 1 novel: Exp4) ----
+    if n_novel != 1:
+        out["D_osr_guided"] = {
+            "skipped": f"n_novel={n_novel} != 1: OSR-guided seeding definito solo per 1 novel (Exp4)",
+            "mapping": "pool",
+        }
+    else:
+        labeled_pool = pool_emb[labeled_mask]
+        known_centroids_d = np.zeros((n_known, pool_emb.shape[1]))
+        for c in range(n_known):
+            known_centroids_d[c] = labeled_pool[train_labels == c].mean(axis=0)
+        novelty_scores = load_osr_novelty_scores(exp_dir, key="KNN")
+        if novelty_scores.shape[0] != len(unlabeled_idx):
+            raise ValueError(
+                f"KNN OSR scores inattesi: {novelty_scores.shape[0]} != {len(unlabeled_idx)} unlabeled"
+            )
+        novel_centroid_d, osr_info = osr_guided_novel_init(
+            pool_emb, unlabeled_idx, known_centroids_d, novelty_scores, top_k=50,
+        )
+        init_d = np.vstack([known_centroids_d, novel_centroid_d[None, :]])
+        pred_d, _, inertia_d, n_iter_d = _constrained_lloyd(
+            pool_emb, labeled_mask, train_labels, init_d
+        )
+        out["D_osr_guided"] = {
+            **_eval_ss(pool_true, pred_d, n_train, test_known_mask),
+            "per_novel_test": _per_novel(pool_true, pred_d, n_train, test_species_arr, novel_names),
+            "detector": "KNN",
+            "top_k": osr_info["top_k"],
+            "top50_idx": osr_info["top50_idx"],
+            "top50_pos": osr_info["top50_pos"],
+            "inertia": inertia_d,
+            "n_iter": n_iter_d,
+        }
+
     # ---- C: KMeans test-only, 10 init SeedSequence, best-vs-best ----
     # Vince impl §2: il clustering C vive SOLO sul test, quindi il mapping
     # Hungarian è necessariamente fittato sul test (gcd_old_new_all_acc su
@@ -327,13 +375,14 @@ def analyze_model(exp_dir: str, exp_id: int) -> dict | None:
     with open(out_path, "w") as f:
         json.dump(out, f, indent=2)
     logger.info(
-        "[%s] base-rerun New=%.3f (10-seed %.3f±%.3f) | A New=%.3f±%.3f | B New=%s%s | C New sil=%.3f±%.3f inert=%.3f±%.3f",
+        "[%s] base-rerun New=%.3f (10-seed %.3f±%.3f) | A New=%.3f±%.3f | B New=%s%s | D New=%s | C New sil=%.3f±%.3f inert=%.3f±%.3f",
         model_variant,
         out["baseline_rerun"]["acc_new_test"],
         out["baseline_reruns"]["acc_new_mean"], out["baseline_reruns"]["acc_new_std"],
         out["A_silhouette"]["acc_new_mean"], out["A_silhouette"]["acc_new_std"],
         ("%.3f" % out["B_density"]["acc_new_test"]) if "acc_new_test" in out["B_density"] else "SKIP",
         " (fallback_nosoglia)" if out["B_density"].get("fallback_nosoglia") else "",
+        ("%.3f" % out["D_osr_guided"]["acc_new_test"]) if "acc_new_test" in out["D_osr_guided"] else "SKIP",
         out["C_kmeans_testonly"]["acc_new_mean_best_silhouette"],
         out["C_kmeans_testonly"]["acc_new_std_best_silhouette"],
         out["C_kmeans_testonly"]["acc_new_mean_best_inertia"],
@@ -362,15 +411,17 @@ def main() -> None:
 
     if len(all_results) > 1:
         logger.info("\n=== RIEPILOGO SEEDING (Exp %d · ACC new su test) ===", args.exp)
-        logger.info("%-16s %8s %16s %8s %16s", "model", "base", "A mean±std", "B", "C sil/inert")
+        logger.info("%-16s %8s %16s %8s %8s %16s", "model", "base", "A mean±std", "B", "D", "C sil/inert")
         for m, r in all_results.items():
             b = ("%.3f" % r["B_density"]["acc_new_test"]) if "acc_new_test" in r["B_density"] else "SKIP"
+            d = ("%.3f" % r["D_osr_guided"]["acc_new_test"]) if "acc_new_test" in r.get("D_osr_guided", {}) else "SKIP"
             logger.info(
-                "%-16s %8.3f %7.3f±%.3f %8s %7.3f/%7.3f",
+                "%-16s %8.3f %7.3f±%.3f %8s %8s %7.3f/%7.3f",
                 m,
                 r["baseline_rerun"]["acc_new_test"],
                 r["A_silhouette"]["acc_new_mean"], r["A_silhouette"]["acc_new_std"],
                 b,
+                d,
                 r["C_kmeans_testonly"]["acc_new_mean_best_silhouette"],
                 r["C_kmeans_testonly"]["acc_new_mean_best_inertia"],
             )

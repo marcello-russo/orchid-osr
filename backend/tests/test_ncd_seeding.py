@@ -10,6 +10,7 @@ from app.core.ncd.clustering import (
     _farthest_first_novel,
     build_labeled_mask,
     density_novel_init,
+    osr_guided_novel_init,
     ss_kmeans_clustering,
     ss_kmeans_multirun,
 )
@@ -258,6 +259,102 @@ def test_h_pool_hungarian_test_acc():
     assert out["acc_new_test"] == 1.0
     assert out["n_old_test"] == 5 and out["n_new_test"] == 5
     assert out["acc_all_pool"] == 1.0
+
+
+# (j) Strategia D — osr_guided_novel_init (spec §9) -----------------------------
+def _osr_toy(n_unlabeled=300, dim=8, seed=0):
+    rng = np.random.default_rng(seed)
+    pool = rng.normal(size=(60 + n_unlabeled, dim))
+    pool = pool / np.linalg.norm(pool, axis=1, keepdims=True)
+    mask = build_labeled_mask(60, n_unlabeled)
+    unl_idx = np.where(~mask)[0]
+    kc = np.zeros((3, dim))
+    for c in range(3):
+        kc[c] = pool[mask][:20].mean(axis=0) if c == 0 else pool[mask][20 * c:20 * (c + 1)].mean(axis=0)
+    return pool, unl_idx, kc
+
+
+def test_j_osr_top50_effective():
+    """Scores sintetici decrescenti -> top-50 = posizioni 0..49, centroide =
+    media L2-normalizzata dei 50."""
+    pool, unl_idx, kc = _osr_toy()
+    scores = -np.arange(len(unl_idx), dtype=float)  # pos 0 = più novel
+    centroid, info = osr_guided_novel_init(pool, unl_idx, kc, scores, top_k=50)
+    assert info["top_k"] == 50
+    assert info["top50_pos"] == list(range(50))
+    assert info["top50_idx"] == [int(i) for i in unl_idx[:50]]
+    expected = pool[unl_idx[:50]].mean(axis=0)
+    expected = expected / np.linalg.norm(expected)
+    assert np.allclose(centroid, expected)
+    assert np.isclose(np.linalg.norm(centroid), 1.0)
+
+
+def test_j_osr_determinism():
+    pool, unl_idx, kc = _osr_toy()
+    rng = np.random.default_rng(7)
+    scores = rng.normal(size=len(unl_idx))
+    c1, i1 = osr_guided_novel_init(pool, unl_idx, kc, scores)
+    c2, i2 = osr_guided_novel_init(pool, unl_idx, kc, scores)
+    assert np.array_equal(c1, c2)
+    assert i1 == i2
+
+
+def test_j_osr_no_label_params_and_kwargs_rejected():
+    params = list(inspect.signature(osr_guided_novel_init).parameters)
+    assert not any("label" in p and "unlabeled" not in p for p in params), params
+    pool, unl_idx, kc = _osr_toy(n_unlabeled=60)
+    scores = np.arange(len(unl_idx), dtype=float)
+    with pytest.raises(TypeError):
+        osr_guided_novel_init(pool, unl_idx, kc, scores, y_true=np.zeros(len(unl_idx)))
+    with pytest.raises(TypeError):
+        osr_guided_novel_init(pool, unl_idx, kc, scores, test_labels=np.zeros(len(unl_idx)))
+
+
+def test_j_osr_scores_length_mismatch():
+    pool, unl_idx, kc = _osr_toy(n_unlabeled=60)
+    with pytest.raises(ValueError, match="allineato"):
+        osr_guided_novel_init(pool, unl_idx, kc, np.zeros(10))
+
+
+def _load_gcd_seeding():
+    import importlib.util
+    import os
+
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "scripts", "gcd_seeding.py")
+    spec = importlib.util.spec_from_file_location("gcd_seeding", path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def test_j_loader_reads_only_knn(monkeypatch):
+    """Il loader nel path di selezione non tocca mai y_true: np.load mockato
+    solleva se si chiede qualsiasi chiave diversa da KNN."""
+    import numpy as np
+
+    mod = _load_gcd_seeding()
+    accessed = []
+
+    class _FakeNpz:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def __getitem__(self, key):
+            accessed.append(key)
+            if key != "KNN":
+                raise AssertionError(f"chiave vietata nel path selezione: {key!r}")
+            return np.arange(300, dtype=float)
+
+    monkeypatch.setattr(np, "load", lambda *a, **k: _FakeNpz())
+    # firma strutturale: nessun parametro label
+    params = list(inspect.signature(mod.load_osr_novelty_scores).parameters)
+    assert not any("label" in p for p in params), params
+    scores = mod.load_osr_novelty_scores("/fake/exp_dir", key="KNN")
+    assert accessed == ["KNN"]
+    assert scores.shape == (300,)
 
 
 # (i) Tie inerzia: first-wins ----------------------------------------------------

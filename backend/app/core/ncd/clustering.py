@@ -230,6 +230,56 @@ def density_novel_init(
     return centroid, info
 
 
+def osr_guided_novel_init(
+    pool_norm: np.ndarray,
+    unlabeled_idx: np.ndarray,
+    known_centroids: np.ndarray,
+    novelty_scores: np.ndarray,
+    top_k: int = 50,
+    **kwargs,
+) -> tuple[np.ndarray, dict]:
+    """Seeding guidato OSR (spec §9 strategia D, pura; solo 1 novel).
+
+    Classifica di novità KNN open-set (array di score, MAI label): i
+    ``top_k`` punti unlabeled con score più alto definiscono il seme novel;
+    centroide novel = media L2-normalizzata dei ``top_k`` (spazio
+    L2-normalizzato). ``novelty_scores`` è allineato a ``unlabeled_idx``
+    (un punteggio per unlabeled). Deterministico, un run.
+
+    Nessuna label in input (barriera anti-leakage strutturale).
+    Qualsiasi kwarg (in particolare label-like) è rifiutato con TypeError.
+
+    Ritorna (novel_centroid (D,), info con top50_idx pool + top50_pos).
+    """
+    if kwargs:
+        raise TypeError(f"osr_guided_novel_init rifiuta kwarg spuri {sorted(kwargs)} (anti-leakage: niente label)")
+    pool_norm = np.asarray(pool_norm, dtype=np.float64)
+    unlabeled_idx = np.asarray(unlabeled_idx)
+    known_centroids = np.asarray(known_centroids, dtype=np.float64)  # interfaccia simmetrica a density_novel_init; non usato per la selezione
+    novelty_scores = np.asarray(novelty_scores, dtype=np.float64).ravel()
+    if novelty_scores.shape[0] != unlabeled_idx.shape[0]:
+        raise ValueError(
+            f"novelty_scores allineato a unlabeled_idx: {novelty_scores.shape[0]} != {unlabeled_idx.shape[0]}"
+        )
+    n_u = unlabeled_idx.shape[0]
+    k = int(min(top_k, n_u))
+    if k < 1:
+        raise ValueError("top_k deve essere >=1 e servono unlabeled")
+    order = np.argsort(-novelty_scores, kind="stable")
+    top_pos = np.sort(order[:k])
+    top_pool_idx = unlabeled_idx[top_pos]
+    centroid = pool_norm[top_pool_idx].mean(axis=0)
+    norm = float(np.linalg.norm(centroid))
+    if norm > 0:
+        centroid = centroid / norm
+    info = {
+        "top_k": k,
+        "top50_pos": [int(p) for p in top_pos],
+        "top50_idx": [int(i) for i in top_pool_idx],
+    }
+    return centroid, info
+
+
 def ss_kmeans_multirun(
     pool_embeddings: np.ndarray,
     labeled_mask: np.ndarray,
