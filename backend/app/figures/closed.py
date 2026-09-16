@@ -188,7 +188,16 @@ def build_heatmap_13(fig_dir: Path, exps: dict[int, Path]) -> list[Path]:
             s = stds.T[i, j]
             if not np.isnan(v):
                 c = "white" if v > 0.80 else "black"
-                ax.text(j, i, f"{v:.3f}±{s:.3f}".replace(".", ","), ha="center", va="center", fontsize=7, color=c, fontweight="bold")
+                ax.text(
+                    j,
+                    i,
+                    f"{v:.3f}±{s:.3f}".replace(".", ","),
+                    ha="center",
+                    va="center",
+                    fontsize=7,
+                    color=c,
+                    fontweight="bold",
+                )
     ax.set_xticks(range(3))
     ax.set_xticklabels(labels, fontsize=8)
     ax.set_yticks(range(len(ARCHS)))
