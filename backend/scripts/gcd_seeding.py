@@ -85,9 +85,7 @@ def _per_novel(
     mapped_test = np.array([mapping.get(int(p), -1) for p in pred[idx_test]])
     correct_test = mapped_test == pool_true[idx_test]
     return {
-        sp: float(correct_test[test_species_arr == sp].mean())
-        if (test_species_arr == sp).sum()
-        else float("nan")
+        sp: float(correct_test[test_species_arr == sp].mean()) if (test_species_arr == sp).sum() else float("nan")
         for sp in novel_names
     }
 
@@ -168,23 +166,31 @@ def analyze_model(exp_dir: str, exp_id: int) -> dict | None:
     base_cands = None
     for g in GLOBAL_SEEDS:
         pred_g, info_g = ss_kmeans_multirun(
-            pool_emb, labeled_mask, train_labels,
-            n_known=n_known, n_novel=n_novel,
-            random_state=g, n_init=N_INIT, criterion="inertia", return_candidates=True,
+            pool_emb,
+            labeled_mask,
+            train_labels,
+            n_known=n_known,
+            n_novel=n_novel,
+            random_state=g,
+            n_init=N_INIT,
+            criterion="inertia",
+            return_candidates=True,
         )
         cands_g = info_g.pop("candidates")
         if g == 57:
             base_cands = cands_g
             pred_base, info_base = pred_g, info_g
-        base_seeds.append({
-            **_eval_ss(pool_true, pred_g, n_train, test_known_mask),
-            "per_novel_test": _per_novel(pool_true, pred_g, n_train, test_species_arr, novel_names),
-            "seed": g,
-            "inertia": info_g["inertia"],
-            "best_init": info_g["best_init"],
-            "n_iter": info_g["n_iter"],
-            "inertias": [c["inertia"] for c in cands_g],
-        })
+        base_seeds.append(
+            {
+                **_eval_ss(pool_true, pred_g, n_train, test_known_mask),
+                "per_novel_test": _per_novel(pool_true, pred_g, n_train, test_species_arr, novel_names),
+                "seed": g,
+                "inertia": info_g["inertia"],
+                "best_init": info_g["best_init"],
+                "n_iter": info_g["n_iter"],
+                "inertias": [c["inertia"] for c in cands_g],
+            }
+        )
     acc_new_base = np.array([s["acc_new_test"] for s in base_seeds])
     out["baseline_rerun"] = {
         **_eval_ss(pool_true, pred_base, n_train, test_known_mask),
@@ -210,9 +216,7 @@ def analyze_model(exp_dir: str, exp_id: int) -> dict | None:
             # riselezione silhouette sugli stessi candidati
             from app.core.ncd.clustering import _best_by_silhouette
 
-            best_idx, sils, discarded, fallback = _best_by_silhouette(
-                pool_emb[unlabeled_idx], cands, n_known + n_novel
-            )
+            best_idx, sils, discarded, fallback = _best_by_silhouette(pool_emb[unlabeled_idx], cands, n_known + n_novel)
             pred_a = cands[best_idx]["labels"]
             info_a = {
                 "silhouette": float(sils[best_idx]),
@@ -224,9 +228,15 @@ def analyze_model(exp_dir: str, exp_id: int) -> dict | None:
             }
         else:
             pred_a, info_a = ss_kmeans_multirun(
-                pool_emb, labeled_mask, train_labels,
-                n_known=n_known, n_novel=n_novel,
-                random_state=g, n_init=N_INIT, criterion="silhouette", return_candidates=True,
+                pool_emb,
+                labeled_mask,
+                train_labels,
+                n_known=n_known,
+                n_novel=n_novel,
+                random_state=g,
+                n_init=N_INIT,
+                criterion="silhouette",
+                return_candidates=True,
             )
             cands = info_a.pop("candidates")
         # distribuzione ACC new sui candidati non scartati
@@ -274,13 +284,15 @@ def analyze_model(exp_dir: str, exp_id: int) -> dict | None:
         for c in range(n_known):
             known_centroids[c] = labeled_pool[train_labels == c].mean(axis=0)
         novel_centroid, dens_info = density_novel_init(
-            pool_emb, unlabeled_idx, known_centroids, k=10, pct=90,
+            pool_emb,
+            unlabeled_idx,
+            known_centroids,
+            k=10,
+            pct=90,
             rng=np.random.default_rng(57),
         )
         init_b = np.vstack([known_centroids, novel_centroid[None, :]])
-        pred_b, _, inertia_b, n_iter_b = _constrained_lloyd(
-            pool_emb, labeled_mask, train_labels, init_b
-        )
+        pred_b, _, inertia_b, n_iter_b = _constrained_lloyd(pool_emb, labeled_mask, train_labels, init_b)
         out["B_density"] = {
             **_eval_ss(pool_true, pred_b, n_train, test_known_mask),
             "per_novel_test": _per_novel(pool_true, pred_b, n_train, test_species_arr, novel_names),
@@ -306,16 +318,16 @@ def analyze_model(exp_dir: str, exp_id: int) -> dict | None:
             known_centroids_d[c] = labeled_pool[train_labels == c].mean(axis=0)
         novelty_scores = load_osr_novelty_scores(exp_dir, key="KNN")
         if novelty_scores.shape[0] != len(unlabeled_idx):
-            raise ValueError(
-                f"KNN OSR scores inattesi: {novelty_scores.shape[0]} != {len(unlabeled_idx)} unlabeled"
-            )
+            raise ValueError(f"KNN OSR scores inattesi: {novelty_scores.shape[0]} != {len(unlabeled_idx)} unlabeled")
         novel_centroid_d, osr_info = osr_guided_novel_init(
-            pool_emb, unlabeled_idx, known_centroids_d, novelty_scores, top_k=50,
+            pool_emb,
+            unlabeled_idx,
+            known_centroids_d,
+            novelty_scores,
+            top_k=50,
         )
         init_d = np.vstack([known_centroids_d, novel_centroid_d[None, :]])
-        pred_d, _, inertia_d, n_iter_d = _constrained_lloyd(
-            pool_emb, labeled_mask, train_labels, init_d
-        )
+        pred_d, _, inertia_d, n_iter_d = _constrained_lloyd(pool_emb, labeled_mask, train_labels, init_d)
         out["D_osr_guided"] = {
             **_eval_ss(pool_true, pred_d, n_train, test_known_mask),
             "per_novel_test": _per_novel(pool_true, pred_d, n_train, test_species_arr, novel_names),
@@ -354,17 +366,23 @@ def analyze_model(exp_dir: str, exp_id: int) -> dict | None:
         best_sil_idx = int(np.nanargmax(sils)) if np.isfinite(sils).any() else best_inertia_idx
         for tag, idx in (("best_inertia", best_inertia_idx), ("best_silhouette", best_sil_idx)):
             m = gcd_old_new_all_acc(test_true, cands[idx]["labels"], test_known_mask)
-            c_results.append({
-                "global_seed": g, "criterion": tag, "mapping": "test",
-                "init_idx": idx, "init_seed": cands[idx]["seed"],
-                "inertia": cands[idx]["inertia"], "silhouette": cands[idx]["silhouette"],
-                **{f"{k}": float(v) for k, v in m.items() if k.startswith("acc_")},
-                "acc_all_test": float(m["acc_all"]),
-                "acc_old_test": float(m["acc_old"]),
-                "acc_new_test": float(m["acc_new"]),
-                "nmi": compute_nmi(test_true, cands[idx]["labels"]),
-                "ari": compute_ari(test_true, cands[idx]["labels"]),
-            })
+            c_results.append(
+                {
+                    "global_seed": g,
+                    "criterion": tag,
+                    "mapping": "test",
+                    "init_idx": idx,
+                    "init_seed": cands[idx]["seed"],
+                    "inertia": cands[idx]["inertia"],
+                    "silhouette": cands[idx]["silhouette"],
+                    **{f"{k}": float(v) for k, v in m.items() if k.startswith("acc_")},
+                    "acc_all_test": float(m["acc_all"]),
+                    "acc_old_test": float(m["acc_old"]),
+                    "acc_new_test": float(m["acc_new"]),
+                    "nmi": compute_nmi(test_true, cands[idx]["labels"]),
+                    "ari": compute_ari(test_true, cands[idx]["labels"]),
+                }
+            )
     out["C_kmeans_testonly"] = {"runs": c_results}
     for tag in ("best_inertia", "best_silhouette"):
         vals = np.array([r["acc_new_test"] for r in c_results if r["criterion"] == tag])
@@ -375,11 +393,14 @@ def analyze_model(exp_dir: str, exp_id: int) -> dict | None:
     with open(out_path, "w") as f:
         json.dump(out, f, indent=2)
     logger.info(
-        "[%s] base-rerun New=%.3f (10-seed %.3f±%.3f) | A New=%.3f±%.3f | B New=%s%s | D New=%s | C New sil=%.3f±%.3f inert=%.3f±%.3f",
+        "[%s] base-rerun New=%.3f (10-seed %.3f±%.3f) | A New=%.3f±%.3f | "
+        "B New=%s%s | D New=%s | C New sil=%.3f±%.3f inert=%.3f±%.3f",
         model_variant,
         out["baseline_rerun"]["acc_new_test"],
-        out["baseline_reruns"]["acc_new_mean"], out["baseline_reruns"]["acc_new_std"],
-        out["A_silhouette"]["acc_new_mean"], out["A_silhouette"]["acc_new_std"],
+        out["baseline_reruns"]["acc_new_mean"],
+        out["baseline_reruns"]["acc_new_std"],
+        out["A_silhouette"]["acc_new_mean"],
+        out["A_silhouette"]["acc_new_std"],
         ("%.3f" % out["B_density"]["acc_new_test"]) if "acc_new_test" in out["B_density"] else "SKIP",
         " (fallback_nosoglia)" if out["B_density"].get("fallback_nosoglia") else "",
         ("%.3f" % out["D_osr_guided"]["acc_new_test"]) if "acc_new_test" in out["D_osr_guided"] else "SKIP",
@@ -419,7 +440,8 @@ def main() -> None:
                 "%-16s %8.3f %7.3f±%.3f %8s %8s %7.3f/%7.3f",
                 m,
                 r["baseline_rerun"]["acc_new_test"],
-                r["A_silhouette"]["acc_new_mean"], r["A_silhouette"]["acc_new_std"],
+                r["A_silhouette"]["acc_new_mean"],
+                r["A_silhouette"]["acc_new_std"],
                 b,
                 d,
                 r["C_kmeans_testonly"]["acc_new_mean_best_silhouette"],
