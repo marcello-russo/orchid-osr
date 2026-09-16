@@ -102,7 +102,9 @@ def _auroc_heatmap(fig_dir: Path) -> list[Path]:
             v = mat[i, j]
             if not np.isnan(v):
                 c = "white" if v > 0.72 else "black"
-                ax.text(j, i, f"{v:.3f}".replace(".", ","), ha="center", va="center", fontsize=8, color=c, fontweight="bold")
+                ax.text(
+                    j, i, f"{v:.3f}".replace(".", ","), ha="center", va="center", fontsize=8, color=c, fontweight="bold"
+                )
     ax.set_xticks(range(len(DETECTORS)))
     ax.set_xticklabels(DETECTORS, fontsize=9)
     ax.set_yticks(range(len(ARCHS)))
@@ -135,7 +137,9 @@ def _dual_1vs2(fig_dir: Path) -> list[Path]:
         for bar in bars:
             h = bar.get_height()
             if not np.isnan(h):
-                ax.text(bar.get_x() + bar.get_width() / 2, h + 0.015, f"{h:.2f}".replace(".", ","), ha="center", fontsize=7)
+                ax.text(
+                    bar.get_x() + bar.get_width() / 2, h + 0.015, f"{h:.2f}".replace(".", ","), ha="center", fontsize=7
+                )
     ax.set_xticks(x)
     ax.set_xticklabels(ARCH_LABELS, fontsize=8)
     ax.set_ylabel("AUROC Ensemble (supplemento)")
