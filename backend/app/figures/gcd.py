@@ -2,9 +2,9 @@
 """GCD figure builder — novel discovery ACC_new (SS-KMeans vs KMeansx10) + NMI.
 
 Honest design: only metrics read from real result files, no invented proxies.
-- Exp4 (1 novel, garganica): SS-KMeans ACC_new ~0.02 (standard method fails),
+- II-A (1 novel, garganica): SS-KMeans ACC_new ~0.02 (standard method fails),
   uninformed KMeansx10 ACC_new 0.83 (DINOv2-B discovers).
-- Exp5 (2 novel): SS-KMeans ACC_new 0.13-0.38, NMI ~0.93 stable.
+- II-B (2 novel): SS-KMeans ACC_new 0.13-0.38, NMI ~0.93 stable.
 ACC_old is by construction (labeled fixed) and lives in the table, not here.
 """
 
@@ -103,25 +103,25 @@ def build_gcd(fig_dir: Path, exps: dict[int, Path]) -> list[Path]:
     x = np.arange(len(heroes))
     width = 0.22
     fig, ax = plt.subplots(figsize=(8, 4))
-    ax.bar(x - width, ss4, width, label="Exp4 SS-KMeans new", color=PALETTE[0], edgecolor="black", linewidth=0.8)
+    ax.bar(x - width, ss4, width, label="II-A SS-KMeans new", color=PALETTE[0], edgecolor="black", linewidth=0.8)
     ax.bar(
         x,
         km4,
         width,
         yerr=km4_std,
-        label="Exp4 KMeans×10 new",
+        label="II-A KMeans×10 new",
         color=PALETTE[2],
         edgecolor="black",
         linewidth=0.8,
         capsize=4,
     )
-    ax.bar(x + width, ss5, width, label="Exp5 SS-KMeans new", color=PALETTE[1], edgecolor="black", linewidth=0.8)
+    ax.bar(x + width, ss5, width, label="II-B SS-KMeans new", color=PALETTE[1], edgecolor="black", linewidth=0.8)
     for i, v in enumerate(ss4):
-        ax.text(i - width, v + 0.02, f"{v:.2f}", ha="center", fontsize=8, fontweight="bold")
+        ax.text(i - width, v + 0.02, f"{v:.2f}".replace(".", ","), ha="center", fontsize=8, fontweight="bold")
     for i, v in enumerate(km4):
-        ax.text(i, v + km4_std[i] + 0.02, f"{v:.2f}", ha="center", fontsize=8, fontweight="bold")
+        ax.text(i, v + km4_std[i] + 0.02, f"{v:.2f}".replace(".", ","), ha="center", fontsize=8, fontweight="bold")
     for i, v in enumerate(ss5):
-        ax.text(i + width, v + 0.02, f"{v:.2f}", ha="center", fontsize=8, fontweight="bold")
+        ax.text(i + width, v + 0.02, f"{v:.2f}".replace(".", ","), ha="center", fontsize=8, fontweight="bold")
     ax.set_xticks(x)
     ax.set_xticklabels(labels)
     ax.set_ylabel("ACC new GCD")
@@ -132,7 +132,7 @@ def build_gcd(fig_dir: Path, exps: dict[int, Path]) -> list[Path]:
     ax.text(
         0.02,
         0.95,
-        f"NMI Exp4 ≈ {nmi4:.2f} / Exp5 ≈ {nmi5:.2f} (stable)",
+        f"NMI II-A \u2248 {str(round(nmi4, 2)).replace(chr(46), chr(44))} / II-B \u2248 {str(round(nmi5, 2)).replace(chr(46), chr(44))} (stabile)",
         ha="left",
         va="center",
         fontsize=8,
