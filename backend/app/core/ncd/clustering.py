@@ -255,7 +255,9 @@ def osr_guided_novel_init(
         raise TypeError(f"osr_guided_novel_init rifiuta kwarg spuri {sorted(kwargs)} (anti-leakage: niente label)")
     pool_norm = np.asarray(pool_norm, dtype=np.float64)
     unlabeled_idx = np.asarray(unlabeled_idx)
-    known_centroids = np.asarray(known_centroids, dtype=np.float64)  # interfaccia simmetrica a density_novel_init; non usato per la selezione
+    known_centroids = np.asarray(
+        known_centroids, dtype=np.float64
+    )  # interfaccia simmetrica a density_novel_init; non usato per la selezione
     novelty_scores = np.asarray(novelty_scores, dtype=np.float64).ravel()
     if novelty_scores.shape[0] != unlabeled_idx.shape[0]:
         raise ValueError(
@@ -401,9 +403,7 @@ def ss_kmeans_multirun(
         # ---- Init centroidi novel (farthest-first con tie-break casuale) ----
         centroids_init = np.zeros((total_k, dim))
         centroids_init[:n_known] = known_centroids
-        centroids_init[n_known:] = _farthest_first_novel(
-            pool_embeddings[unlabeled_idx], known_centroids, n_novel, rng
-        )
+        centroids_init[n_known:] = _farthest_first_novel(pool_embeddings[unlabeled_idx], known_centroids, n_novel, rng)
 
         # ---- Lloyd vincolato ----
         labels, centroids, inertia, n_iter = _constrained_lloyd(
@@ -458,7 +458,9 @@ def ss_kmeans_multirun(
         discarded = [False] * len(candidates)
         fallback_alldiscarded = False
 
-    assert best_labels is not None and best_centroids is not None  # invariante: n_init>=1 validato => candidates non vuoto => best sempre assegnato
+    assert (
+        best_labels is not None and best_centroids is not None
+    )  # invariante: n_init>=1 validato => candidates non vuoto => best sempre assegnato
     info = {
         "n_iter": best_n_iter,
         "method": "ss_kmeans_constrained_vaze2022",

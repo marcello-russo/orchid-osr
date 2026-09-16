@@ -41,21 +41,22 @@ def _known_centroids(pool, mask, train_labels, n_known):
 # (a) Regressione esatta wrapper vs multirun-inertia (stesso RNG path) ------
 def test_a_regression_exact():
     pool, mask, train_labels, n_known, n_novel = _toy_pool()
-    lab_w, info_w = ss_kmeans_clustering(
-        pool, mask, train_labels, n_known=n_known, n_novel=n_novel, random_state=57
-    )
+    lab_w, info_w = ss_kmeans_clustering(pool, mask, train_labels, n_known=n_known, n_novel=n_novel, random_state=57)
     lab_m, info_m = ss_kmeans_multirun(
-        pool, mask, train_labels, n_known=n_known, n_novel=n_novel,
-        random_state=57, criterion="inertia",
+        pool,
+        mask,
+        train_labels,
+        n_known=n_known,
+        n_novel=n_novel,
+        random_state=57,
+        criterion="inertia",
     )
     assert np.array_equal(lab_w, lab_m)
     assert info_w["inertia"] == info_m["inertia"]
     for key in ("n_iter", "best_init", "cluster_sizes", "n_init", "method"):
         assert info_w[key] == info_m[key]
     # determinismo a parità di seed
-    lab2, info2 = ss_kmeans_clustering(
-        pool, mask, train_labels, n_known=n_known, n_novel=n_novel, random_state=57
-    )
+    lab2, info2 = ss_kmeans_clustering(pool, mask, train_labels, n_known=n_known, n_novel=n_novel, random_state=57)
     assert np.array_equal(lab_w, lab2)
     assert info_w["inertia"] == info2["inertia"]
 
@@ -66,8 +67,7 @@ def test_a_regression_exact():
 #   rng = default_rng(0); pool = rng.normal(size=(24, 4)); mask[:16]=True;
 #   labels = repeat([0,1], 8); ss_kmeans_clustering(..., n_known=2, n_novel=1,
 #   random_state=57)
-_GOLDEN_LABELS = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1,
-                  1, 0, 2, 1, 0, 1, 1, 0]
+_GOLDEN_LABELS = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 2, 1, 0, 1, 1, 0]
 _GOLDEN_INERTIA = 67.63177432041103
 _GOLDEN_BEST_INIT = 0
 _GOLDEN_N_ITER = 2
@@ -113,8 +113,14 @@ def test_b_label_kwargs_rejected():
     with pytest.raises(TypeError):
         density_novel_init(pool, np.where(~mask)[0], kc, y=np.zeros(len(pool)))
     lab, info = ss_kmeans_multirun(
-        pool, mask, train_labels, n_known=n_known, n_novel=1,
-        random_state=57, criterion="inertia", return_candidates=True,
+        pool,
+        mask,
+        train_labels,
+        n_known=n_known,
+        n_novel=1,
+        random_state=57,
+        criterion="inertia",
+        return_candidates=True,
     )
     with pytest.raises(TypeError):
         _best_by_silhouette(unl, info["candidates"], n_known + 1, true_labels=np.zeros(len(unl)))
@@ -163,8 +169,14 @@ def test_d_candidates_first_wins():
     pool, mask, train_labels, n_known, n_novel = _toy_pool()
     n_init = 20
     labels, info = ss_kmeans_multirun(
-        pool, mask, train_labels, n_known=n_known, n_novel=n_novel,
-        random_state=57, criterion="inertia", return_candidates=True,
+        pool,
+        mask,
+        train_labels,
+        n_known=n_known,
+        n_novel=n_novel,
+        random_state=57,
+        criterion="inertia",
+        return_candidates=True,
     )
     cands = info["candidates"]
     assert len(cands) == n_init
@@ -201,7 +213,11 @@ def test_criterion_invalid():
     pool, mask, train_labels, n_known, n_novel = _toy_pool()
     with pytest.raises(ValueError, match="criterion"):
         ss_kmeans_multirun(
-            pool, mask, train_labels, n_known=n_known, n_novel=n_novel,
+            pool,
+            mask,
+            train_labels,
+            n_known=n_known,
+            n_novel=n_novel,
             criterion="bogus",
         )
 
@@ -217,13 +233,15 @@ def test_f_fallback_alldiscarded():
     for i in range(n_init):
         lab = np.zeros(8, dtype=np.int64)
         lab[i] = 1  # cluster 1 singoletto -> scarto pool
-        cands.append({
-            "labels": lab,
-            "inertia": 100.0 + i * 10.0,
-            "cluster_sizes_pool": [7, 1],
-            "cluster_sizes_test": [7, 1],
-            "unlabeled_idx": np.arange(8),
-        })
+        cands.append(
+            {
+                "labels": lab,
+                "inertia": 100.0 + i * 10.0,
+                "cluster_sizes_pool": [7, 1],
+                "cluster_sizes_test": [7, 1],
+                "unlabeled_idx": np.arange(8),
+            }
+        )
     best_idx, sils, discarded, fallback = _best_by_silhouette(unl, cands, 2)
     assert fallback is True
     assert all(discarded)
@@ -236,8 +254,7 @@ def test_f_fallback_alldiscarded():
 def test_g_seedsequence_c_seeds():
     """Schema seed controllo C (spec §4C): 10 init distinti < 2**31 per ogni g."""
     for g in range(57, 67):
-        seeds = [int(np.random.SeedSequence(g).spawn(10)[j].generate_state(1)[0]) % 2**31
-                 for j in range(10)]
+        seeds = [int(np.random.SeedSequence(g).spawn(10)[j].generate_state(1)[0]) % 2**31 for j in range(10)]
         assert len(set(seeds)) == 10
         assert all(0 <= s < 2**31 for s in seeds)
 
@@ -270,7 +287,7 @@ def _osr_toy(n_unlabeled=300, dim=8, seed=0):
     unl_idx = np.where(~mask)[0]
     kc = np.zeros((3, dim))
     for c in range(3):
-        kc[c] = pool[mask][:20].mean(axis=0) if c == 0 else pool[mask][20 * c:20 * (c + 1)].mean(axis=0)
+        kc[c] = pool[mask][:20].mean(axis=0) if c == 0 else pool[mask][20 * c : 20 * (c + 1)].mean(axis=0)
     return pool, unl_idx, kc
 
 
