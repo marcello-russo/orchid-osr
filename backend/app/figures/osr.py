@@ -1,5 +1,5 @@
 # ruff: noqa: D100,D103,D104,D105,D107,D401,PLR0912,PLR0915,PLR2004,E501
-"""OSR figure builders — AUROC heatmap (Exp4) + 1-vs-2-novel dual bars.
+"""OSR figure builders — AUROC heatmap (II-A) + 1-vs-2-novel dual bars.
 
 All values read from backend/experiments/*/ncd_results.json detectors.
 Official metric: AUROC (Mahalanobis / KNN / Energy). Ensemble shown as
@@ -91,7 +91,7 @@ FALLBACK_F1 = {
 def _auroc_heatmap(fig_dir: Path) -> list[Path]:
     data4 = _read_detectors("exp4_sphor_ncd")
     if not data4:
-        _log.warning("Exp4 ncd_results.json missing — using verified fallback")
+        _log.warning("II-A ncd_results.json missing — using verified fallback")
         data4 = FALLBACK_DET4
     mat = np.array([[data4.get(a, {}).get(d, np.nan) for d in DETECTORS] for a in ARCHS])
     fig, ax = plt.subplots(figsize=(8, 4))
@@ -102,12 +102,12 @@ def _auroc_heatmap(fig_dir: Path) -> list[Path]:
             v = mat[i, j]
             if not np.isnan(v):
                 c = "white" if v > 0.72 else "black"
-                ax.text(j, i, f"{v:.3f}", ha="center", va="center", fontsize=8, color=c, fontweight="bold")
+                ax.text(j, i, f"{v:.3f}".replace(".", ","), ha="center", va="center", fontsize=8, color=c, fontweight="bold")
     ax.set_xticks(range(len(DETECTORS)))
     ax.set_xticklabels(DETECTORS, fontsize=9)
     ax.set_yticks(range(len(ARCHS)))
     ax.set_yticklabels(ARCH_LABELS, fontsize=8)
-    ax.set_title("AUROC OSR per rivelatore — Exp4, 1 novel (250+50)", fontsize=12, fontweight="bold")
+    ax.set_title("AUROC OSR per rivelatore — II-A, 1 novel (250+50)", fontsize=12, fontweight="bold")
     fig.colorbar(im, ax=ax, shrink=0.8, label="AUROC")
     fig.tight_layout()
     paths = _save_fig(fig, fig_dir / "osr_detection_heatmap")
@@ -119,23 +119,23 @@ def _dual_1vs2(fig_dir: Path) -> list[Path]:
     data4 = _read_detectors("exp4_sphor_ncd")
     data5 = _read_detectors("exp5_sphor_ncd")
     if not data4:
-        _log.warning("Exp4 ncd_results.json missing — using verified fallback")
+        _log.warning("II-A ncd_results.json missing — using verified fallback")
         data4 = FALLBACK_DET4
     if not data5:
-        _log.warning("Exp5 ncd_results.json missing — using verified fallback")
+        _log.warning("II-B ncd_results.json missing — using verified fallback")
         data5 = FALLBACK_DET5
     e4 = [data4.get(a, {}).get("Ensemble", np.nan) for a in ARCHS]
     e5 = [data5.get(a, {}).get("Ensemble", np.nan) for a in ARCHS]
     x = np.arange(len(ARCHS))
     w = 0.35
     fig, ax = plt.subplots(figsize=(8, 4))
-    b1 = ax.bar(x - w / 2, e4, w, label="Exp4, 1 novel (250+50)", color=PALETTE[0], edgecolor="black", linewidth=0.6)
-    b2 = ax.bar(x + w / 2, e5, w, label="Exp5, 2 novel (200+100)", color=PALETTE[2], edgecolor="black", linewidth=0.6)
+    b1 = ax.bar(x - w / 2, e4, w, label="II-A, 1 novel (250+50)", color=PALETTE[0], edgecolor="black", linewidth=0.6)
+    b2 = ax.bar(x + w / 2, e5, w, label="II-B, 2 novel (200+100)", color=PALETTE[2], edgecolor="black", linewidth=0.6)
     for bars in (b1, b2):
         for bar in bars:
             h = bar.get_height()
             if not np.isnan(h):
-                ax.text(bar.get_x() + bar.get_width() / 2, h + 0.015, f"{h:.2f}", ha="center", fontsize=7)
+                ax.text(bar.get_x() + bar.get_width() / 2, h + 0.015, f"{h:.2f}".replace(".", ","), ha="center", fontsize=7)
     ax.set_xticks(x)
     ax.set_xticklabels(ARCH_LABELS, fontsize=8)
     ax.set_ylabel("AUROC Ensemble (supplemento)")
@@ -219,7 +219,7 @@ def _closed_vs_open(fig_dir: Path) -> list[Path]:
             Line2D([0], [0], marker="s", color="w", markerfacecolor=PALETTE[i % len(PALETTE)], markersize=8)
             for i in range(len(ARCHS))
         ],
-        ["Exp4, 1 novel", "Exp5, 2 novel"] + list(ARCH_LABELS),
+        ["II-A, 1 novel", "II-B, 2 novel"] + list(ARCH_LABELS),
         fontsize=7,
         ncol=2,
     )
@@ -227,7 +227,7 @@ def _closed_vs_open(fig_dir: Path) -> list[Path]:
     ax.set_ylabel("AUROC OSR Ensemble (supplemento)")
     ax.set_ylim(0.4, 1.0)
     ax.axhline(0.5, color="gray", linestyle="--", linewidth=1, label="caso")
-    ax.set_title("Chiuso vs OSR — Exp4, 1 novel (^) vs Exp5, 2 novel (o)", fontsize=12, fontweight="bold")
+    ax.set_title("Chiuso vs OSR — II-A, 1 novel (^) vs II-B, 2 novel (o)", fontsize=12, fontweight="bold")
     ax.grid(alpha=0.3)
     fig.tight_layout()
     paths = _save_fig(fig, fig_dir / "closed_vs_open_scatter")

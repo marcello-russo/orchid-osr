@@ -1,5 +1,5 @@
 # ruff: noqa: D100,D103,D104,D105,D107,D401,PLR0912,PLR0915,PLR2004,E501
-"""Closed-set figure builder — benchmark bar + heatmap Exp 1-4."""
+"""Closed-set figure builder — benchmark bar + heatmap I-A-4."""
 
 from __future__ import annotations
 
@@ -24,26 +24,26 @@ def _save_fig(fig: plt.Figure, base: Path) -> list[Path]:
     return out
 
 
-# Fallback F1 values — super researcher 1-5 con Exp5 2 novel reali 12:37 GPU
+# Fallback F1 values — super researcher 1-5 con II-B 2 novel reali 12:37 GPU
 # Order: [resnet18, resnet50, convnext_tiny, convnext_small, dinov2_small, dinov2_base]
 FALLBACK_F1 = np.array(
     [
-        [0.978, 0.980, 0.821, 0.793, 0.970, 0.975],  # Exp 1 (CE) 6 cls
-        [0.444, 0.465, 0.837, 0.517, 0.888, 0.936],  # Exp 2 (SupCon) 6 cls
-        [0.560, 0.750, 0.911, 0.874, 0.894, 0.910],  # Exp 3 (SpHOR) 6 cls
-        [0.590, 0.856, 0.920, 0.933, 0.921, 0.932],  # Exp 4 (1 Novel) 5 cls
-        [0.808, 0.240, 0.906, 0.531, 0.291, 0.110],  # Exp 5 (2 Novel) 4 cls — 12:37 GPU
+        [0.978, 0.980, 0.821, 0.793, 0.970, 0.975],  # I-A (CE) 6 cls
+        [0.444, 0.465, 0.837, 0.517, 0.888, 0.936],  # I-B (SupCon) 6 cls
+        [0.560, 0.750, 0.911, 0.874, 0.894, 0.910],  # I-C (SpHOR) 6 cls
+        [0.590, 0.856, 0.920, 0.933, 0.921, 0.932],  # II-A (1 Novel) 5 cls
+        [0.808, 0.240, 0.906, 0.531, 0.291, 0.110],  # II-B (2 Novel) 4 cls — 12:37 GPU
     ]
 )
 
 ARCHS = ["resnet18", "resnet50", "convnext_tiny", "convnext_small", "dinov2_small", "dinov2_base"]
 ARCH_LABELS = ["ResNet-18", "ResNet-50", "ConvNeXt-T", "ConvNeXt-S", "DINOv2-S", "DINOv2-B"]
 EXP_LABELS = [
-    "Exp 1 (CE, 6 cls)",
-    "Exp 2 (SupCon, 6 cls)",
-    "Exp 3 (SpHOR, 6 cls)",
-    "Exp 4 (1 novel, 5 cls)",
-    "Exp 5 (2 novel, 4 cls)",
+    "I-A (CE, 6 cls)",
+    "I-B (SupCon, 6 cls)",
+    "I-C (SpHOR, 6 cls)",
+    "II-A (1 novel, 5 cls)",
+    "II-B (2 novel, 4 cls)",
 ]
 
 
@@ -85,7 +85,7 @@ def _load_data(exps: dict[int, Path]) -> tuple[np.ndarray, np.ndarray]:
 
 
 def build_closed(fig_dir: Path, exps: dict[int, Path]) -> list[Path]:
-    """Grouped bar + heatmap F1 per Exp 1-4 (CE, SupCon, SpHOR, Novel)."""
+    """Grouped bar + heatmap F1 per I-A-4 (CE, SupCon, SpHOR, Novel)."""
     plt.rcParams.update(MATPLOTLIB_RC)
     fig_dir = Path(fig_dir)
     fig_dir.mkdir(parents=True, exist_ok=True)
@@ -113,7 +113,7 @@ def build_closed(fig_dir: Path, exps: dict[int, Path]) -> list[Path]:
                 ax.text(
                     bar.get_x() + bar.get_width() / 2,
                     bar.get_height() + 0.02,
-                    f"{v:.2f}",
+                    f"{v:.2f}".replace(".", ","),
                     ha="center",
                     va="bottom",
                     fontsize=6,
@@ -143,7 +143,7 @@ def build_closed(fig_dir: Path, exps: dict[int, Path]) -> list[Path]:
             s = stds.T[i, j]
             if not np.isnan(v):
                 c = "white" if v > 0.80 else "black"
-                txt = f"{v:.3f}±{s:.3f}"
+                txt = f"{v:.3f}±{s:.3f}".replace(".", ",")
                 if v < 0.30:
                     txt += " ✕"
                 ax2.text(j, i, txt, ha="center", va="center", fontsize=7, color=c, fontweight="bold")
@@ -166,7 +166,7 @@ def build(*a, **kw):
 
 
 def build_heatmap_13(fig_dir: Path, exps: dict[int, Path]) -> list[Path]:
-    """Heatmap F1 Exp 1-3 only (Studio I Close World, 6 classes)."""
+    """Heatmap F1 I-A-3 only (Studio I Close World, 6 classes)."""
     import matplotlib.pyplot as plt
 
     from app.figures.style import MATPLOTLIB_RC
@@ -177,7 +177,7 @@ def build_heatmap_13(fig_dir: Path, exps: dict[int, Path]) -> list[Path]:
     data, stds = _load_data(exps)[:2]
     data = data[:3]
     stds = stds[:3]
-    labels = ["Exp 1 (CE, 6 cls)", "Exp 2 (SupCon, 6 cls)", "Exp 3 (SpHOR, 6 cls)"]
+    labels = ["I-A (CE, 6 cls)", "I-B (SupCon, 6 cls)", "I-C (SpHOR, 6 cls)"]
     fig, ax = plt.subplots(figsize=(8, 4))
     cmap = plt.cm.Blues.with_extremes(bad="#f0f0f0")
     data_t = data.T
@@ -188,7 +188,7 @@ def build_heatmap_13(fig_dir: Path, exps: dict[int, Path]) -> list[Path]:
             s = stds.T[i, j]
             if not np.isnan(v):
                 c = "white" if v > 0.80 else "black"
-                ax.text(j, i, f"{v:.3f}±{s:.3f}", ha="center", va="center", fontsize=7, color=c, fontweight="bold")
+                ax.text(j, i, f"{v:.3f}±{s:.3f}".replace(".", ","), ha="center", va="center", fontsize=7, color=c, fontweight="bold")
     ax.set_xticks(range(3))
     ax.set_xticklabels(labels, fontsize=8)
     ax.set_yticks(range(len(ARCHS)))
