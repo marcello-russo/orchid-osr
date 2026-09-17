@@ -145,11 +145,25 @@ def build_gcd(fig_dir: Path, exps: dict[int, Path]) -> list[Path]:
     for i, v in enumerate(ss4):
         ax.text(i - 1.5 * width, v + 0.02, f"{v:.2f}".replace(".", ","), ha="center", fontsize=8, fontweight="bold")
     for i, v in enumerate(km4):
-        ax.text(i - 0.5 * width, v + km4_std[i] + 0.02, f"{v:.2f}".replace(".", ","), ha="center", fontsize=8, fontweight="bold")
+        ax.text(
+            i - 0.5 * width,
+            v + km4_std[i] + 0.02,
+            f"{v:.2f}".replace(".", ","),
+            ha="center",
+            fontsize=8,
+            fontweight="bold",
+        )
     for i, v in enumerate(ss5):
         ax.text(i + 0.5 * width, v + 0.02, f"{v:.2f}".replace(".", ","), ha="center", fontsize=8, fontweight="bold")
     for i, v in enumerate(km5):
-        ax.text(i + 1.5 * width, v + km5_std[i] + 0.02, f"{v:.2f}".replace(".", ","), ha="center", fontsize=8, fontweight="bold")
+        ax.text(
+            i + 1.5 * width,
+            v + km5_std[i] + 0.02,
+            f"{v:.2f}".replace(".", ","),
+            ha="center",
+            fontsize=8,
+            fontweight="bold",
+        )
     ax.set_xticks(x)
     ax.set_xticklabels(labels)
     ax.set_ylabel("ACC new GCD")
