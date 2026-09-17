@@ -256,11 +256,11 @@ export function ResearchPage() {
               {t("research.metodo_disegno_intro")}
             </P>
             <ul className="list-disc list-inside text-muted-foreground space-y-2 text-sm mb-4">
-              <li><strong>Exp 1 — Cross-Entropy Baseline:</strong>{t("research.metodo_exp1")}</li>
-              <li><strong>Exp 2 — Supervised Contrastive Learning:</strong>{t("research.metodo_exp2")}<Cite id="khosla2020supervised" /></li>
-              <li><strong>Exp 3 — SpHOR:</strong>{t("research.metodo_exp3")}<Cite id="bahavan2026sphor" /><Cite id="lee2018simple" /><Cite id="liu2020energy" /></li>
-              <li><strong>Exp 4 — OSR con Novel Nascosta:</strong>{t("research.metodo_exp4")}</li>
-              <li><strong>Exp 5 — OSR con 2 Novel Nascoste:</strong>{t("research.metodo_exp5")}</li>
+              <li><strong>Studio I-A — Cross-Entropy Baseline:</strong>{t("research.metodo_exp1")}</li>
+              <li><strong>Studio I-B — Supervised Contrastive Learning:</strong>{t("research.metodo_exp2")}<Cite id="khosla2020supervised" /></li>
+              <li><strong>Studio I-C — SpHOR:</strong>{t("research.metodo_exp3")}<Cite id="bahavan2026sphor" /><Cite id="lee2018simple" /><Cite id="liu2020energy" /></li>
+              <li><strong>Studio II-A — OSR con Novel Nascosta:</strong>{t("research.metodo_exp4")}</li>
+              <li><strong>Studio II-B — OSR con 2 Novel Nascoste:</strong>{t("research.metodo_exp5")}</li>
             </ul>
           </SubSection>
 
@@ -336,7 +336,7 @@ export function ResearchPage() {
 
           <Figure
             src="/figures/loss_curves_exp6_dinov2b_v2.webp"
-            alt="Loss curves DINOv2-B Exp 1"
+            alt="Loss curves DINOv2-B Studio I-A"
             caption={t("research.exp1_fig_caption")}
           />
 
@@ -449,12 +449,12 @@ export function ResearchPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Figure
               src="/figures/exp8_per_species.webp"
-              alt="F1 per specie Exp 3"
+              alt="F1 per specie Studio I-C"
               caption={t("research.exp3_per_species_caption")}
             />
             <Figure
               src="/figures/tsne_exp8_multimodel.webp"
-              alt="t-SNE multi-modello Exp 3"
+              alt="t-SNE multi-modello Studio I-C"
               caption={t("research.exp3_tsne_caption")}
             />
           </div>
@@ -508,7 +508,7 @@ export function ResearchPage() {
             </P>
             <Figure
               src="/figures/exp9_osr_auroc.webp"
-              alt="AUROC OSR Exp 4"
+              alt="AUROC OSR Studio II-A"
               caption={t("research.exp4_osr_auroc_caption")}
             />
           </SubSection>
@@ -519,7 +519,7 @@ export function ResearchPage() {
             </P>
             <Figure
               src="/figures/exp9_tsne_novel.webp"
-              alt="t-SNE known vs novel Exp 4"
+              alt="t-SNE known vs novel Studio II-A"
               caption={t("research.exp4_tsne_novel_caption")}
             />
           </SubSection>
