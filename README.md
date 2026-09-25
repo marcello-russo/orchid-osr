@@ -33,7 +33,7 @@ Six morphologically similar *Ophrys* species, one held-out novel class (*O. garg
 
 ## Results (from thesis)
 
-### Exp 1 (Studio I-A) — Cross-Entropy Baseline
+### Studio I-A (Exp 1) — Cross-Entropy Baseline
 
 | Model | F1 Test |
 |-------|:-------:|
@@ -44,7 +44,7 @@ Six morphologically similar *Ophrys* species, one held-out novel class (*O. garg
 | ConvNeXt‑Tiny | 0.686 |
 | ConvNeXt‑Small | 0.513 |
 
-### Exp 2 (Studio I-B) — Supervised Contrastive Learning
+### Studio I-B (Exp 2) — Supervised Contrastive Learning
 
 | Model | F1 Test |
 |-------|:-------:|
@@ -55,7 +55,7 @@ Six morphologically similar *Ophrys* species, one held-out novel class (*O. garg
 | ResNet‑50 | 0.355 |
 | ResNet‑18 | 0.287 |
 
-### Exp 3 (Studio I-C) — SpHOR (Open-World)
+### Studio I-C (Exp 3) — SpHOR (Open-World)
 
 | Model | F1 Test |
 |-------|:-------:|
@@ -66,7 +66,7 @@ Six morphologically similar *Ophrys* species, one held-out novel class (*O. garg
 | ConvNeXt‑Small | 0.677 |
 | ResNet‑18 | 0.442 |
 
-### Exp 4 (Studio II-A) — NCD (Open-Set Recognition)
+### Studio II-A (Exp 4) — NCD (Open-Set Recognition)
 
 | Model | F1 Test | AUROC (best detector) |
 |-------|:-------:|:---------------------:|
@@ -77,9 +77,9 @@ Six morphologically similar *Ophrys* species, one held-out novel class (*O. garg
 | ResNet‑50 | 0.784 | 0.776 (KNN) |
 | ResNet‑18 | 0.525 | 0.507 (Mahalanobis) |
 
-*Exp 4 (Studio II-A) excludes O. garganica from training, leaving it as the hidden novel class for open-set evaluation.*
+*Studio II-A (Exp 4) excludes O. garganica from training, leaving it as the hidden novel class for open-set evaluation.*
 
-### Exp 5 (Studio II-B) — NCD with 2 Hidden Novel Classes
+### Studio II-B (Exp 5) — NCD with 2 Hidden Novel Classes
 
 | Model | F1 Test (4 cls) | AUROC (Ensemble) |
 |-------|:---------------:|:----------------:|
@@ -90,7 +90,7 @@ Six morphologically similar *Ophrys* species, one held-out novel class (*O. garg
 | ResNet‑50 | 0.878 | 0.634 |
 | ResNet‑18 | 0.810 | 0.666 |
 
-*Exp 5 (Studio II-B) excludes O. garganica + O. majellensis (4 known classes). OSR scales (ConvNeXt-Tiny 0.843); GCD discovery collapses (SS-KMeans ACC new 0.12–0.38, NMI 0.92–0.95 stable). See thesis Sec. 4.5.*
+*Studio II-B (Exp 5) excludes O. garganica + O. majellensis (4 known classes). OSR scales (ConvNeXt-Tiny 0.843); GCD discovery collapses (SS-KMeans ACC new 0.12–0.38, NMI 0.92–0.95 stable). See thesis Sec. 4.5.*
 
 ---
 
@@ -149,13 +149,13 @@ See [AGENTS.md](AGENTS.md) for the full command reference.
 
 ## Experiments
 
-| Exp | Studio | Method | Phases | Description |
+| Studio | Exp | Method | Phases | Description |
 |-----|--------|--------|--------|-------------|
-| 1 | I-A | CE baseline | 1 (CE) | Standard cross-entropy, backbone + head trained jointly |
-| 2 | I-B | SupCon | 2 (SupCon → CE) | Supervised contrastive pretraining → linear probe |
-| 3 | I-C | SpHOR | 2 (SupCon+SpHOR → CE) | Orthogonal spherical prototypes for open-set regularisation |
-| 4 | II-A | NCD | 2 (SupCon+SpHOR → CE) | O. garganica excluded as hidden novel class; OSR + clustering evaluation |
-| 5 | II-B | NCD (2 novel) | 2 (SupCon+SpHOR → CE) | O. garganica + O. majellensis excluded as hidden novel classes; OSR + clustering evaluation |
+| I-A | 1 | CE baseline | 1 (CE) | Standard cross-entropy, backbone + head trained jointly |
+| I-B | 2 | SupCon | 2 (SupCon → CE) | Supervised contrastive pretraining → linear probe |
+| I-C | 3 | SpHOR | 2 (SupCon+SpHOR → CE) | Orthogonal spherical prototypes for open-set regularisation |
+| II-A | 4 | NCD | 2 (SupCon+SpHOR → CE) | O. garganica excluded as hidden novel class; OSR + clustering evaluation |
+| II-B | 5 | NCD (2 novel) | 2 (SupCon+SpHOR → CE) | O. garganica + O. majellensis excluded as hidden novel classes; OSR + clustering evaluation |
 
 All experiments use 5-fold stratified CV with seed 57 over 6 backbones.
 

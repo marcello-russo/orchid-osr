@@ -33,7 +33,7 @@ Sei specie di *Ophrys* morfologicamente simili, una classe novel nascosta (*O. g
 
 ## Risultati (dalla tesi)
 
-### Exp 1 (Studio I-A) — Baseline Cross-Entropy
+### Studio I-A (Exp 1) — Baseline Cross-Entropy
 
 | Modello | F1 Test |
 |---------|:-------:|
@@ -44,7 +44,7 @@ Sei specie di *Ophrys* morfologicamente simili, una classe novel nascosta (*O. g
 | ConvNeXt‑Tiny | 0,686 |
 | ConvNeXt‑Small | 0,513 |
 
-### Exp 2 (Studio I-B) — Supervised Contrastive Learning
+### Studio I-B (Exp 2) — Supervised Contrastive Learning
 
 | Modello | F1 Test |
 |---------|:-------:|
@@ -55,7 +55,7 @@ Sei specie di *Ophrys* morfologicamente simili, una classe novel nascosta (*O. g
 | ResNet‑50 | 0,355 |
 | ResNet‑18 | 0,287 |
 
-### Exp 3 (Studio I-C) — SpHOR (Open-World)
+### Studio I-C (Exp 3) — SpHOR (Open-World)
 
 | Modello | F1 Test |
 |---------|:-------:|
@@ -66,7 +66,7 @@ Sei specie di *Ophrys* morfologicamente simili, una classe novel nascosta (*O. g
 | ConvNeXt‑Small | 0,677 |
 | ResNet‑18 | 0,442 |
 
-### Exp 4 (Studio II-A) — NCD (Open-Set Recognition)
+### Studio II-A (Exp 4) — NCD (Open-Set Recognition)
 
 | Modello | F1 Test | AUROC (miglior rivelatore) |
 |---------|:-------:|:--------------------------:|
@@ -77,9 +77,9 @@ Sei specie di *Ophrys* morfologicamente simili, una classe novel nascosta (*O. g
 | ResNet‑50 | 0,784 | 0,776 (KNN) |
 | ResNet‑18 | 0,525 | 0,507 (Mahalanobis) |
 
-*Exp 4 (Studio II-A) esclude O. garganica dal training, lasciandola come novel class nascosta per la valutazione open-set.*
+*Studio II-A (Exp 4) esclude O. garganica dal training, lasciandola come novel class nascosta per la valutazione open-set.*
 
-### Exp 5 (Studio II-B) — NCD con 2 Novel Nascoste
+### Studio II-B (Exp 5) — NCD con 2 Novel Nascoste
 
 | Modello | F1 Test (4 cls) | AUROC (Ensemble) |
 |---------|:---------------:|:----------------:|
@@ -90,7 +90,7 @@ Sei specie di *Ophrys* morfologicamente simili, una classe novel nascosta (*O. g
 | ResNet‑50 | 0,878 | 0,634 |
 | ResNet‑18 | 0,810 | 0,666 |
 
-*Exp 5 (Studio II-B) esclude O. garganica + O. majellensis (4 classi note). OSR scala (ConvNeXt-Tiny 0,843); la GCD discovery crolla (SS-KMeans ACC new 0,12–0,38, NMI 0,92–0,95 stabile). Vedi tesi Sec. 4.5.*
+*Studio II-B (Exp 5) esclude O. garganica + O. majellensis (4 classi note). OSR scala (ConvNeXt-Tiny 0,843); la GCD discovery crolla (SS-KMeans ACC new 0,12–0,38, NMI 0,92–0,95 stabile). Vedi tesi Sec. 4.5.*
 
 ---
 
