@@ -27,10 +27,10 @@ VARIANT_DISPLAY = {
 }
 
 EXPERIMENTS = [
-    {"prefix": "exp1_ce", "exp": "exp6_ce", "label": "Exp 1 (CE)"},
-    {"prefix": "exp2_supcon", "exp": "exp7_supcon", "label": "Exp 2 (SupCon)"},
-    {"prefix": "exp3_sphor", "exp": "exp8_sphor", "label": "Exp 3 (SpHOR)"},
-    {"prefix": "exp4_sphor_ncd", "exp": "exp9_ncd", "label": "Exp 4 (SpHOR-NCD)"},
+    {"prefix": "exp1_ce", "exp": "exp6_ce", "label": "Studio I-A (CE)"},
+    {"prefix": "exp2_supcon", "exp": "exp7_supcon", "label": "Studio I-B (SupCon)"},
+    {"prefix": "exp3_sphor", "exp": "exp8_sphor", "label": "Studio I-C (SpHOR)"},
+    {"prefix": "exp4_sphor_ncd", "exp": "exp9_ncd", "label": "Studio II-A (SpHOR-NCD)"},
     {"prefix": "exp5_sphor_ncd", "exp": "exp5_sphor_ncd", "label": "Exp 5 (SpHOR-NCD 2 novel)"},
     {"prefix": "exp10_mgh_ncd", "exp": "exp10_mgh_ncd", "label": "Exp 10 (MGH-NCD)"},
 ]

@@ -27,80 +27,80 @@
 
 ## Abstract
 
-Six morphologically similar *Ophrys* species, one held-out novel class (*O. garganica*), 2,192 training + 300 test images. We benchmark 6 architectures (ResNet‑18/50, ConvNeXt‑T/S, DINOv2‑S/B) × 3 learning paradigms (CE, SupCon, SpHOR). **Closed-set champion:** DINOv2‑Base + SupCon (0.936 F1 test). **Open-set champion:** DINOv2‑Base + SpHOR (AUROC 0.875 on the held-out novel class). Open-set recognition remains architecture-dependent and far from solved in this ultra-fine-grained domain.
+Six morphologically similar *Ophrys* species, one held-out novel class (*O. garganica*), 2,192 training + 300 test images. We benchmark 6 architectures (ResNet‑18/50, ConvNeXt‑T/S, DINOv2‑S/B) × 3 learning paradigms (CE, SupCon, SpHOR). **Closed-set champion:** ResNet‑50 + CE (0.884 F1 test). **Open-set champion:** DINOv2‑Base + SpHOR (AUROC 0.875 on the held-out novel class). Open-set recognition remains architecture-dependent and far from solved in this ultra-fine-grained domain.
 
 ---
 
 ## Results (from thesis)
 
-### Exp 1 — Cross-Entropy Baseline
+### Exp 1 (Studio I-A) — Cross-Entropy Baseline
 
 | Model | F1 Test |
 |-------|:-------:|
-| **ResNet‑50** | **0.980** |
-| ResNet‑18 | 0.978 |
-| DINOv2‑Base | 0.975 |
-| DINOv2‑Small | 0.970 |
-| ConvNeXt‑Tiny | 0.821 |
-| ConvNeXt‑Small | 0.793 |
+| **ResNet‑50** | **0.884** |
+| ResNet‑18 | 0.847 |
+| DINOv2‑Base | 0.764 |
+| DINOv2‑Small | 0.695 |
+| ConvNeXt‑Tiny | 0.686 |
+| ConvNeXt‑Small | 0.513 |
 
-### Exp 2 — Supervised Contrastive Learning
-
-| Model | F1 Test |
-|-------|:-------:|
-| **DINOv2‑Base** | **0.936** |
-| DINOv2‑Small | 0.888 |
-| ConvNeXt‑Tiny | 0.837 |
-| ConvNeXt‑Small | 0.517 |
-| ResNet‑50 | 0.465 |
-| ResNet‑18 | 0.444 |
-
-### Exp 3 — SpHOR (Open-World)
+### Exp 2 (Studio I-B) — Supervised Contrastive Learning
 
 | Model | F1 Test |
 |-------|:-------:|
-| **ConvNeXt‑Tiny** | **0.911** |
-| DINOv2‑Base | 0.910 |
-| DINOv2‑Small | 0.894 |
-| ConvNeXt‑Small | 0.874 |
-| ResNet‑50 | 0.750 |
-| ResNet‑18 | 0.560 |
+| **DINOv2‑Base** | **0.808** |
+| DINOv2‑Small | 0.710 |
+| ConvNeXt‑Tiny | 0.573 |
+| ConvNeXt‑Small | 0.450 |
+| ResNet‑50 | 0.355 |
+| ResNet‑18 | 0.287 |
 
-### Exp 4 — NCD (Open-Set Recognition)
+### Exp 3 (Studio I-C) — SpHOR (Open-World)
+
+| Model | F1 Test |
+|-------|:-------:|
+| **DINOv2‑Base** | **0.833** |
+| DINOv2‑Small | 0.772 |
+| ResNet‑50 | 0.719 |
+| ConvNeXt‑Tiny | 0.710 |
+| ConvNeXt‑Small | 0.677 |
+| ResNet‑18 | 0.442 |
+
+### Exp 4 (Studio II-A) — NCD (Open-Set Recognition)
 
 | Model | F1 Test | AUROC (best detector) |
 |-------|:-------:|:---------------------:|
-| **DINOv2‑Base** | **0.932** | **0.875** (Ensemble) |
-| ConvNeXt‑Small | 0.933 | 0.840 (Ensemble) |
-| DINOv2‑Small | 0.921 | 0.760 (KNN) |
-| ConvNeXt‑Tiny | 0.920 | 0.850 (Ensemble) |
-| ResNet‑50 | 0.856 | 0.776 (KNN) |
-| ResNet‑18 | 0.590 | 0.507 (Mahalanobis) |
+| DINOv2‑Base | 0.928 | **0.875** (Ensemble) |
+| **ConvNeXt‑Small** | **0.930** | 0.839 (Ensemble) |
+| DINOv2‑Small | 0.924 | 0.758 (KNN) |
+| ConvNeXt‑Tiny | 0.929 | 0.850 (Ensemble) |
+| ResNet‑50 | 0.784 | 0.776 (KNN) |
+| ResNet‑18 | 0.525 | 0.507 (Mahalanobis) |
 
-*Exp 4 excludes O. garganica from training, leaving it as the hidden novel class for open-set evaluation.*
+*Exp 4 (Studio II-A) excludes O. garganica from training, leaving it as the hidden novel class for open-set evaluation.*
 
-### Exp 5 — NCD with 2 Hidden Novel Classes
+### Exp 5 (Studio II-B) — NCD with 2 Hidden Novel Classes
 
 | Model | F1 Test (4 cls) | AUROC (Ensemble) |
 |-------|:---------------:|:----------------:|
-| **ConvNeXt‑Tiny** | **0.906** | **0.843** |
-| ResNet‑18 | 0.808 | 0.666 |
-| ConvNeXt‑Small | 0.531 | 0.718 |
-| DINOv2‑Small | 0.291 | 0.734 |
-| ResNet‑50 | 0.240 | 0.634 |
-| DINOv2‑Base | 0.110 | 0.805 |
+| **DINOv2‑Base** | **0.930** | 0.805 |
+| ConvNeXt‑Tiny | 0.922 | **0.843** |
+| DINOv2‑Small | 0.923 | 0.734 |
+| ConvNeXt‑Small | 0.916 | 0.718 |
+| ResNet‑50 | 0.878 | 0.634 |
+| ResNet‑18 | 0.810 | 0.666 |
 
-*Exp 5 excludes O. garganica + O. majellensis (4 known classes). OSR scales (ConvNeXt-Tiny 0.843); GCD discovery collapses (SS-KMeans ACC new 0.12–0.38, NMI 0.92–0.95 stable). See thesis Sec. 4.5.*
+*Exp 5 (Studio II-B) excludes O. garganica + O. majellensis (4 known classes). OSR scales (ConvNeXt-Tiny 0.843); GCD discovery collapses (SS-KMeans ACC new 0.12–0.38, NMI 0.92–0.95 stable). See thesis Sec. 4.5.*
 
 ---
 
 ## Key Findings
 
-1. **Closed-set champion:** DINOv2‑Base + SupCon (0.936 F1 test) — best accuracy among contrastive paradigms
+1. **Closed-set champion:** ResNet‑50 + CE (0.884 F1 test) — best accuracy overall; best contrastive DINOv2‑Base + SupCon (0.808)
 2. **Open-set champion:** DINOv2‑Base + SpHOR (AUROC 0.875 on the held-out novel class) — best OSR in ultra-FGVC
-3. **OSR is architecture-dependent:** best AUROC ranges from 0.507 (ResNet‑18) to 0.875 (DINOv2‑Base); SpHOR does not consistently beat chance
-4. **SupCon OSR failure:** the SupCon detector alone fails on known classes (AUROC 0.485) — spherical prototypes are required for open-set regularisation
-5. **NCD partially solved:** clustering recovers species when the metric space is stable (NMI up to 0.84) — a promising but not fully solved result
+3. **OSR is architecture-dependent:** best-detector AUROC ranges from 0.507 (ResNet‑18) to 0.875 (DINOv2‑Base); ResNet collapses under SupCon (F1 0.287/0.355) — BatchNorm × batch-8 hypothesis, unablated
+4. **GCD splits in two:** SS-KMeans recovers known classes (ACC old up to 0.93) but novel discovery fails (ACC new ≈ 0, ResNet‑50 0.44 exception); uninformed K-means isolates the novel only on DINOv2‑Base (0.83 ± 0.03)
+5. **Significant where it matters:** DeLong KNN vs Energy on DINOv2-Base +0.110, p = 0.0015
 
 ---
 
@@ -149,13 +149,13 @@ See [AGENTS.md](AGENTS.md) for the full command reference.
 
 ## Experiments
 
-| Exp | Method | Phases | Description |
-|-----|--------|--------|-------------|
-| 1 | CE baseline | 1 (CE) | Standard cross-entropy, backbone + head trained jointly |
-| 2 | SupCon | 2 (SupCon → CE) | Supervised contrastive pretraining → linear probe |
-| 3 | SpHOR | 2 (SupCon+SpHOR → CE) | Orthogonal spherical prototypes for open-set regularisation |
-| 4 | NCD | 2 (SupCon+SpHOR → CE) | O. garganica excluded as hidden novel class; OSR + clustering evaluation |
-| 5 | NCD (2 novel) | 2 (SupCon+SpHOR → CE) | O. garganica + O. majellensis excluded as hidden novel classes; OSR + clustering evaluation |
+| Exp | Studio | Method | Phases | Description |
+|-----|--------|--------|--------|-------------|
+| 1 | I-A | CE baseline | 1 (CE) | Standard cross-entropy, backbone + head trained jointly |
+| 2 | I-B | SupCon | 2 (SupCon → CE) | Supervised contrastive pretraining → linear probe |
+| 3 | I-C | SpHOR | 2 (SupCon+SpHOR → CE) | Orthogonal spherical prototypes for open-set regularisation |
+| 4 | II-A | NCD | 2 (SupCon+SpHOR → CE) | O. garganica excluded as hidden novel class; OSR + clustering evaluation |
+| 5 | II-B | NCD (2 novel) | 2 (SupCon+SpHOR → CE) | O. garganica + O. majellensis excluded as hidden novel classes; OSR + clustering evaluation |
 
 All experiments use 5-fold stratified CV with seed 57 over 6 backbones.
 
@@ -165,14 +165,14 @@ All experiments use 5-fold stratified CV with seed 57 over 6 backbones.
 
 | Species | Train | Test | Novel |
 |---------|:-----:|:----:|:-----:|
-| O. exaltata | 501 | 50 | |
-| O. garganica | 570 | 50 | |
-| O. incubacea | 366 | 50 | |
+| O. exaltata | 490 | 50 | |
+| O. garganica | 563 | 50 | |
+| O. incubacea | 352 | 50 | |
 | O. majellensis | 152 | 50 | |
-| O. sphegodes | 433 | 50 | |
+| O. sphegodes | 425 | 50 | |
 | O. sphegodes Palena | 210 | 50 | |
 
-*O. garganica (row above) is used as the hidden novel class in Exp 4: excluded from training, reserved for test only.*
+*Train counts post MD5-dedup (2,192 total). O. garganica (row above) is used as the hidden novel class in Exp 4 (Studio II-A): excluded from training, reserved for test only.*
 
 Download from HuggingFace: `snapshot_download("marcellorusso/orchid-osr-dataset", repo_type="dataset")`
 
