@@ -40,8 +40,8 @@ function colAlign(col: Col): "left" | "right" | undefined {
 }
 
 const ALL_FAMILIES = ["ResNet", "ConvNeXt", "DINOv2"] as const;
-// Dinamico: mostra solo le serie effettivamente presenti nei dati (supporta Exp 5+ senza hardcode)
-const KNOWN_SERIES = ["Exp 1", "Exp 2", "Exp 3", "Exp 4", "Exp 5"] as const;
+// Dinamico: mostra solo le serie effettivamente presenti nei dati (supporta nuove serie senza hardcode)
+const KNOWN_SERIES = ["Studio I-A", "Studio I-B", "Studio I-C", "Studio II-A", "Studio II-B"] as const;
 
 export function ExperimentsPage() {
   const { t } = useTranslation();
@@ -54,8 +54,8 @@ export function ExperimentsPage() {
 
   const allSeries = useMemo(() => {
     if (!experiments) return [...KNOWN_SERIES] as string[];
-    const seen = new Set(experiments.map((e) => getExperimentSeries(e.id)).filter(Boolean) as string[]);
-    // Mantieni ordine KNOWN_SERIES + eventuali nuove Exp N in coda ordinata
+    const seen = new Set(experiments.filter((e) => !e.id.includes("exp10")).map((e) => getExperimentSeries(e.id)).filter(Boolean) as string[]);
+    // Mantieni ordine KNOWN_SERIES + eventuali nuove serie in coda ordinata
     const extra = [...seen].filter((s) => !(KNOWN_SERIES as readonly string[]).includes(s)).sort();
     return [...KNOWN_SERIES.filter((s) => seen.has(s)), ...extra] as string[];
   }, [experiments]);

@@ -14,7 +14,7 @@ const PALETTE = [
 const API_BASE = import.meta.env.VITE_API_URL ?? "";
 
 const EXP_OPTIONS = [
-  { group: "Exp 2 (SupCon)", prefix: "Exp 2", options: [
+  { group: "Studio I-B (SupCon)", prefix: "Studio I-B", options: [
     { value: "exp2_supcon_resnet18", label: "ResNet-18" },
     { value: "exp2_supcon_resnet50", label: "ResNet-50" },
     { value: "exp2_supcon_convnext_tiny", label: "ConvNeXt-Tiny" },
@@ -22,7 +22,7 @@ const EXP_OPTIONS = [
     { value: "exp2_supcon_dinov2_small", label: "DINOv2-Small" },
     { value: "exp2_supcon_dinov2_base", label: "DINOv2-Base" },
   ]},
-  { group: "Exp 3 (SpHOR)", prefix: "Exp 3", options: [
+  { group: "Studio I-C (SpHOR)", prefix: "Studio I-C", options: [
     { value: "exp3_sphor_resnet18", label: "ResNet-18" },
     { value: "exp3_sphor_resnet50", label: "ResNet-50" },
     { value: "exp3_sphor_convnext_tiny", label: "ConvNeXt-Tiny" },
@@ -31,7 +31,7 @@ const EXP_OPTIONS = [
     { value: "exp3_sphor_dinov2_base", label: "DINOv2-Base" },
   ]},
 
-  { group: "Exp 4 (NCD, novel O. garganica)", prefix: "Exp 4", options: [
+  { group: "Studio II-A (NCD, novel O. garganica)", prefix: "Studio II-A", options: [
     { value: "exp4_sphor_ncd_resnet18", label: "ResNet-18" },
     { value: "exp4_sphor_ncd_resnet50", label: "ResNet-50" },
     { value: "exp4_sphor_ncd_convnext_tiny", label: "ConvNeXt-Tiny" },
