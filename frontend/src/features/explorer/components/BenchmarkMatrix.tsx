@@ -14,9 +14,9 @@ interface BenchmarkMatrixProps {
   seriesFilter: string | null;
 }
 
-const MATRIX_SERIES: readonly string[] = ["Exp 1", "Exp 2", "Exp 3", "Exp 4", "Exp 5"];
-// OSR è dinamico: qualsiasi Exp con ncd_auroc verrà mostrato — mantieni Exp 4 per retrocompatibilità
-const OSR_SERIES_HINT = ["Exp 4", "Exp 5"] as const;
+const MATRIX_SERIES: readonly string[] = ["Studio I-A", "Studio I-B", "Studio I-C", "Studio II-A", "Studio II-B"];
+// OSR è dinamico: qualsiasi serie con ncd_auroc verrà mostrata — mantieni II-A per retrocompatibilità
+const OSR_SERIES_HINT = ["Studio II-A", "Studio II-B"] as const;
 
 export function BenchmarkMatrix({ experiments, familyFilter, seriesFilter }: BenchmarkMatrixProps) {
   const { t } = useTranslation();
@@ -24,6 +24,7 @@ export function BenchmarkMatrix({ experiments, familyFilter, seriesFilter }: Ben
   const lookup = useMemo(() => {
     const map: Record<string, Record<string, ExperimentSummary>> = {};
     for (const exp of experiments) {
+      if (exp.id.includes("exp10")) continue;
       const v = exp.model_variant;
       const s = getExperimentSeries(exp.id);
       if (!v || !s) continue;
@@ -42,9 +43,10 @@ export function BenchmarkMatrix({ experiments, familyFilter, seriesFilter }: Ben
 
   const visibleSeries = useMemo(() => {
     if (seriesFilter) return [seriesFilter];
-    // Mostra solo le serie effettivamente presenti nei dati (supporta Exp 5+ senza ricompilare)
+    // Mostra solo le serie effettivamente presenti nei dati (supporta nuove serie senza ricompilare)
     const present = new Set<string>();
     for (const e of experiments) {
+      if (e.id.includes("exp10")) continue;
       const s = getExperimentSeries(e.id);
       if (s) present.add(s);
     }
@@ -61,6 +63,7 @@ export function BenchmarkMatrix({ experiments, familyFilter, seriesFilter }: Ben
     }
     const presentOSR = new Set<string>();
     for (const e of experiments) {
+      if (e.id.includes("exp10")) continue;
       const s = getExperimentSeries(e.id);
       if (s && e.ncd_auroc != null) presentOSR.add(s);
     }

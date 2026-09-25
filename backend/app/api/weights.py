@@ -20,11 +20,11 @@ CLASS_NAMES = settings.class_names  # 6 training classes
 NOVEL_CLASS_NAME = settings.novel_class_name
 # Mapping from experiment directory prefix → human label + number
 _EXP_META: dict[str, tuple[str, int]] = {
-    "exp1_ce": ("Exp 1 (CE)", 1),
-    "exp2_supcon": ("Exp 2 (SupCon)", 2),
-    "exp3_sphor": ("Exp 3 (SpHOR)", 3),
-    "exp4_sphor_ncd": ("Exp 4 (SpHOR-NCD)", 4),
-    "exp5_sphor_ncd": ("Exp 5 (SpHOR-NCD 2 novel)", 5),
+    "exp1_ce": ("Studio I-A (CE)", 1),
+    "exp2_supcon": ("Studio I-B (SupCon)", 2),
+    "exp3_sphor": ("Studio I-C (SpHOR)", 3),
+    "exp4_sphor_ncd": ("Studio II-A (SpHOR-NCD)", 4),
+    "exp5_sphor_ncd": ("Studio II-B (SpHOR-NCD 2 novel)", 5),
 }
 
 _HF_PREFIX_MAP: dict[str, str] = {

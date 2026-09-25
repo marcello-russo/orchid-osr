@@ -38,23 +38,23 @@ describe("getArchitectureFamily", () => {
 });
 
 describe("getExperimentSeries", () => {
-  it("returns Exp 1 for exp1 prefix", () => {
-    expect(getExperimentSeries("exp1")).toBe("Exp 1");
+  it("returns Studio I-A for exp1 prefix", () => {
+    expect(getExperimentSeries("exp1")).toBe("Studio I-A");
   });
-  it("returns Exp 1 for exp1_ce_resnet18", () => {
-    expect(getExperimentSeries("exp1_ce_resnet18")).toBe("Exp 1");
+  it("returns Studio I-A for exp1_ce_resnet18", () => {
+    expect(getExperimentSeries("exp1_ce_resnet18")).toBe("Studio I-A");
   });
-  it("returns Exp 2 for exp2_supcon_ prefix", () => {
-    expect(getExperimentSeries("exp2_supcon_convnext_tiny")).toBe("Exp 2");
+  it("returns Studio I-B for exp2_supcon_ prefix", () => {
+    expect(getExperimentSeries("exp2_supcon_convnext_tiny")).toBe("Studio I-B");
   });
-  it("returns Exp 3 for exp3_sphor_ prefix", () => {
-    expect(getExperimentSeries("exp3_sphor_dinov2_small")).toBe("Exp 3");
+  it("returns Studio I-C for exp3_sphor_ prefix", () => {
+    expect(getExperimentSeries("exp3_sphor_dinov2_small")).toBe("Studio I-C");
   });
-  it("returns Exp 4 for exp4_sphor_ncd_ prefix", () => {
-    expect(getExperimentSeries("exp4_sphor_ncd_dinov2_base")).toBe("Exp 4");
+  it("returns Studio II-A for exp4_sphor_ncd_ prefix", () => {
+    expect(getExperimentSeries("exp4_sphor_ncd_dinov2_base")).toBe("Studio II-A");
   });
-  it("returns null for exp10_ prefix", () => {
-    expect(getExperimentSeries("exp10_resnet50")).toBeNull();
+  it("returns Exp 10 (MGH-NCD) for exp10_ prefix", () => {
+    expect(getExperimentSeries("exp10_resnet50")).toBe("Exp 10 (MGH-NCD)");
   });
   it("returns null for unrelated string", () => {
     expect(getExperimentSeries("test")).toBeNull();

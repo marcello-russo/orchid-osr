@@ -304,7 +304,7 @@
     "title": "Latent Space",
     "description": "Explore species relationships in the embedding space.",
     "no_data": "No embedding data available yet.",
-    "hint": "Embeddings are computed after training (Exp 2 / SupCon) and uploaded to HuggingFace. The visualization will appear automatically once data is available.",
+    "hint": "Embeddings are computed after training (Studio I-B / SupCon) and uploaded to HuggingFace. The visualization will appear automatically once data is available.",
     "drag_rotate": "Drag to rotate",
     "drag_pan": "Drag to pan",
     "ctrl_pan": "Ctrl + drag to pan",

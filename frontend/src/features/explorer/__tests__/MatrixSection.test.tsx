@@ -36,15 +36,15 @@ const mockExperiment: ExperimentSummary = {
   ncd_clustering_nmi: null,
 };
 
-const mockLookup = { resnet18: { "Exp 1": mockExperiment } };
+const mockLookup = { resnet18: { "Studio I-A": mockExperiment } };
 
 const defaultProps = {
   lookup: mockLookup,
   architectureRows: ["ResNet-18"],
-  columns: ["Exp 1"],
+  columns: ["Studio I-A"],
   accessor: (e: ExperimentSummary) => e.mean_f1,
   colorFn: (v: number) => `oklch(${0.15 + v * 0.6} 0.15 145)`,
-  bestPerColumn: { "Exp 1": 0.85 },
+  bestPerColumn: { "Studio I-A": 0.85 },
   tooltipLabel: "F1 CV",
 };
 
