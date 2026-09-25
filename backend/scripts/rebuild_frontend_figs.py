@@ -64,7 +64,7 @@ def build_summary_dual():
                 fontweight="bold",
             )
     a1.set_xticks(range(4))
-    a1.set_xticklabels(["Exp 1 (CE)", "Exp 2 (SupCon)", "Exp 3 (SpHOR)", "Exp 4 (Novel)"])
+    a1.set_xticklabels(["Studio I-A (CE)", "Studio I-B (SupCon)", "Studio I-C (SpHOR)", "Studio II-A (Novel)"])
     a1.set_yticks(range(6))
     a1.set_yticklabels(LABELS)
     a1.set_title("Closed-Set Test F1 (medie 5 fold)")
@@ -112,7 +112,7 @@ def build_exp9_auroc():
     ax.set_xticks(x)
     ax.set_xticklabels(LABELS, rotation=30, ha="right")
     ax.set_ylabel("AUROC")
-    ax.set_title("Exp 4 (SpHOR, novel O. garganica): OSR AUROC", fontweight="bold")
+    ax.set_title("Studio II-A (SpHOR, novel O. garganica): OSR AUROC", fontweight="bold")
     ax.legend()
     ax.set_ylim(0, 1.05)
     fig.tight_layout()

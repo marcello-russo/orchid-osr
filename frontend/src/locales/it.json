@@ -304,7 +304,7 @@
     "title": "Spazio Latente",
     "description": "Esplora le relazioni tra le specie nello spazio di embedding.",
     "no_data": "Nessun dato di embedding disponibile.",
-    "hint": "Gli embedding vengono calcolati dopo il training (Exp 2 / SupCon) e caricati su HuggingFace. La visualizzazione apparirà automaticamente quando i dati saranno disponibili.",
+    "hint": "Gli embedding vengono calcolati dopo il training (Studio I-B / SupCon) e caricati su HuggingFace. La visualizzazione apparirà automaticamente quando i dati saranno disponibili.",
     "drag_rotate": "Trascina per ruotare",
     "drag_pan": "Trascina per spostare",
     "ctrl_pan": "Ctrl + trascina per spostare",

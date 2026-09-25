@@ -62,8 +62,12 @@ function ModelSelect({
   const sel = models.find((m) => m.id === selected);
 
   const grouped: Record<string, ModelOption[]> = {};
+  // Etichette Studio per coerenza con tesi/deck; gli id restano expN_*
+  const STUDIO_BY_NUM: Record<number, string> = {
+    1: "Studio I-A", 2: "Studio I-B", 3: "Studio I-C", 4: "Studio II-A", 5: "Studio II-B",
+  };
   models.forEach((m) => {
-    const key = m.exp_label || `Exp ${m.exp_num ?? "?"}`;
+    const key = m.exp_label || (m.exp_num != null && STUDIO_BY_NUM[m.exp_num]) || `Exp ${m.exp_num ?? "?"}`;
     if (!grouped[key]) grouped[key] = [];
     grouped[key].push(m);
   });
