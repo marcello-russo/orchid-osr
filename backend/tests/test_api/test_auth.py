@@ -164,3 +164,49 @@ class TestMe:
     def test_me_unauthenticated(self, client, auth_db):
         response = client.get("/auth/me")
         assert response.status_code == 401
+
+
+class TestDefensePass:
+    """POST /auth/invites/defense-pass + revoke (solo admin)."""
+
+    def test_create_and_reuse_and_revoke(self, client, auth_db, superadmin_token):
+        h = {"Authorization": f"Bearer {superadmin_token}"}
+        resp = client.post(
+            "/auth/invites/defense-pass",
+            json={"role": "user", "max_uses": 3, "expires_in_hours": 24, "label": "difesa"},
+            headers=h,
+        )
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["max_uses"] == 3 and body["expires_at"] and body["label"] == "difesa"
+        code = body["code"]
+        for n in range(3):
+            r = client.post(
+                "/auth/register",
+                json={"username": f"dif{n}", "password": "Password1", "invite_code": code},
+            )
+            assert r.status_code == 200, r.text
+        r = client.post(
+            "/auth/register",
+            json={"username": "dif3", "password": "Password1", "invite_code": code},
+        )
+        assert r.status_code == 400
+
+    def test_revoke_kills_pass(self, client, auth_db, superadmin_token):
+        h = {"Authorization": f"Bearer {superadmin_token}"}
+        code = client.post("/auth/invites/defense-pass", json={}, headers=h).json()["code"]
+        r = client.post(f"/auth/invites/{code}/revoke", headers=h)
+        assert r.status_code == 200
+        r = client.post(
+            "/auth/register",
+            json={"username": "revoked1", "password": "Password1", "invite_code": code},
+        )
+        assert r.status_code == 400
+        assert "revoked" in r.text.lower()
+        r = client.post("/auth/invites/NOPE-CODE/revoke", headers=h)
+        assert r.status_code == 404
+
+    def test_non_admin_cannot_create(self, client, auth_db, user_token):
+        h = {"Authorization": f"Bearer {user_token}"}
+        r = client.post("/auth/invites/defense-pass", json={}, headers=h)
+        assert r.status_code == 403

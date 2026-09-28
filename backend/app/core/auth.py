@@ -5,7 +5,7 @@ import secrets
 import threading
 import time
 from collections import OrderedDict
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import bcrypt
@@ -137,6 +137,27 @@ def decode_jwt(token: str) -> dict:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid or expired token")
 
 
+def _invite_error(invite: dict) -> str | None:
+    """Ritorna il motivo di rifiuto di un invito, o None se utilizzabile.
+
+    Gestisce sia il formato legacy (solo used/role) che quello esteso
+    (expires_at, max_uses/uses, revoked, label)."""
+    if invite.get("revoked"):
+        return "Invite code revoked"
+    exp = invite.get("expires_at")
+    if exp:
+        try:
+            if datetime.fromisoformat(exp) <= datetime.now(UTC):
+                return "Invite code expired"
+        except ValueError:
+            pass
+    uses = int(invite.get("uses", 0))
+    max_uses = int(invite.get("max_uses", 1))
+    if invite.get("used") or uses >= max_uses:
+        return "Invite code already used"
+    return None
+
+
 def register_user(invite_code: str, username: str, password: str) -> dict:
     result = {"username": username, "role": "user"}
 
@@ -144,12 +165,15 @@ def register_user(invite_code: str, username: str, password: str) -> dict:
         invite = next((i for i in data["invites"] if i["code"] == invite_code), None)
         if not invite:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid invite code")
-        if invite["used"]:
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invite code already used")
+        err = _invite_error(invite)
+        if err:
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, err)
         if any(u["username"] == username for u in data["users"]):
             raise HTTPException(status.HTTP_409_CONFLICT, "Username already taken")
 
-        invite["used"] = True
+        invite["uses"] = int(invite.get("uses", 0)) + 1
+        if invite["uses"] >= int(invite.get("max_uses", 1)):
+            invite["used"] = True
         invite["used_by"] = username
         role = invite["role"]
         data["users"].append(
@@ -217,24 +241,64 @@ def ensure_superadmin_exists() -> None:
     _atomic_modify(_modify)
 
 
-def generate_invite(role: str = "user", count: int = 1) -> list[str]:
+def generate_invite(
+    role: str = "user",
+    count: int = 1,
+    *,
+    expires_in_hours: int = 0,
+    max_uses: int = 1,
+    label: str = "",
+    code: str | None = None,
+) -> list[str]:
+    """Crea inviti. expires_in_hours=0 → senza scadenza; max_uses=1 → monouso.
+
+    Il formato legacy (solo used/role) resta valido: i controlli usano
+    default compatibili quando i nuovi campi mancano."""
+    if max_uses < 1:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "max_uses must be >= 1")
+    if expires_in_hours < 0:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "expires_in_hours must be >= 0")
+    expires_at = (datetime.now(UTC) + timedelta(hours=expires_in_hours)).isoformat() if expires_in_hours > 0 else None
     codes: list[str] = []
 
     def _modify(data):
+        existing = {i["code"] for i in data["invites"]}
         for _ in range(count):
-            code = f"INV-{secrets.token_urlsafe(9).upper()}"
+            new_code = code if code else f"INV-{secrets.token_urlsafe(9).upper()}"
+            if code and count > 1:
+                raise HTTPException(status.HTTP_400_BAD_REQUEST, "Custom code requires count=1")
+            if new_code in existing:
+                raise HTTPException(status.HTTP_409_CONFLICT, "Invite code already exists")
+            existing.add(new_code)
             data["invites"].append(
                 {
-                    "code": code,
+                    "code": new_code,
                     "used": False,
                     "role": role,
                     "created_at": datetime.now(UTC).isoformat(),
+                    "expires_at": expires_at,
+                    "max_uses": max_uses,
+                    "uses": 0,
+                    "label": label,
+                    "revoked": False,
                 }
             )
-            codes.append(code)
+            codes.append(new_code)
 
     _atomic_modify(_modify)
     return codes
+
+
+def revoke_invite(code: str) -> None:
+    """Revoca un invito (kill-switch manuale). Idempotente."""
+
+    def _modify(data):
+        invite = next((i for i in data["invites"] if i["code"] == code), None)
+        if not invite:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Invite code not found")
+        invite["revoked"] = True
+
+    _atomic_modify(_modify)
 
 
 def list_users_and_invites() -> dict:
@@ -248,6 +312,11 @@ def list_users_and_invites() -> dict:
                 "used": i["used"],
                 "used_by": i.get("used_by"),
                 "created_at": i.get("created_at"),
+                "expires_at": i.get("expires_at"),
+                "max_uses": i.get("max_uses", 1),
+                "uses": i.get("uses", 0),
+                "label": i.get("label", ""),
+                "revoked": i.get("revoked", False),
             }
             for i in data["invites"]
         ],

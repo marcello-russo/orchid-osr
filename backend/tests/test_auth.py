@@ -69,3 +69,91 @@ class TestLoginLockout:
             # Now should be able to fail again
             with pytest.raises(HTTPException, match="Credenziali non valide"):
                 login_user("valid_user", "wrong")
+
+
+class TestTimedInvites:
+    """Inviti multiuso con scadenza e revoca (defense pass)."""
+
+    def _store(self, invites):
+        store = {"users": [], "invites": invites}
+        return store
+
+    def _patched(self, store):
+        import app.core.auth as auth_mod
+
+        return (
+            patch.object(auth_mod, "_load_data", return_value=store),
+            patch.object(auth_mod, "_save_data"),
+        )
+
+    def test_multiuse_until_exhausted(self):
+        import app.core.auth as auth_mod
+
+        store = self._store([])
+        pl, ps = self._patched(store)
+        with pl, ps:
+            codes = auth_mod.generate_invite(role="user", count=1, max_uses=3, label="difesa")
+            code = codes[0]
+            for n in range(3):
+                r = auth_mod.register_user(code, f"u{n}", "Password1")
+                assert r["role"] == "user"
+            with pytest.raises(HTTPException, match="already used"):
+                auth_mod.register_user(code, "u3", "Password1")
+
+    def test_expired_rejected(self):
+        from datetime import UTC, datetime, timedelta
+
+        import app.core.auth as auth_mod
+
+        past = (datetime.now(UTC) - timedelta(hours=1)).isoformat()
+        store = self._store(
+            [
+                {
+                    "code": "OLD-1",
+                    "used": False,
+                    "role": "user",
+                    "expires_at": past,
+                    "max_uses": 5,
+                    "uses": 0,
+                    "label": "",
+                    "revoked": False,
+                }
+            ]
+        )
+        pl, ps = self._patched(store)
+        with pl, ps:
+            with pytest.raises(HTTPException, match="expired"):
+                auth_mod.register_user("OLD-1", "late", "Password1")
+
+    def test_revoked_rejected_and_revoke_endpoint(self):
+        import app.core.auth as auth_mod
+
+        store = self._store([])
+        pl, ps = self._patched(store)
+        with pl, ps:
+            code = auth_mod.generate_invite(role="user", count=1, max_uses=10)[0]
+            auth_mod.revoke_invite(code)
+            with pytest.raises(HTTPException, match="revoked"):
+                auth_mod.register_user(code, "nope", "Password1")
+            with pytest.raises(HTTPException, match="not found"):
+                auth_mod.revoke_invite("MISSING-CODE")
+
+    def test_legacy_invite_still_single_use(self):
+        import app.core.auth as auth_mod
+
+        store = self._store([{"code": "LEG-1", "used": False, "role": "user"}])
+        pl, ps = self._patched(store)
+        with pl, ps:
+            auth_mod.register_user("LEG-1", "first", "Password1")
+            with pytest.raises(HTTPException, match="already used"):
+                auth_mod.register_user("LEG-1", "second", "Password1")
+
+    def test_custom_code_duplicate_rejected(self):
+        import app.core.auth as auth_mod
+
+        store = self._store([])
+        pl, ps = self._patched(store)
+        with pl, ps:
+            auth_mod.generate_invite(count=1, code="DIFESA-1")
+            with pytest.raises(HTTPException, match="already exists"):
+                auth_mod.generate_invite(count=1, code="DIFESA-1")
