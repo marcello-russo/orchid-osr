@@ -1,5 +1,5 @@
-import { useState, useRef, useCallback, useMemo } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useState, useRef, useCallback, useMemo, useEffect } from "react";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useAppStore } from "@/stores/useAppStore";
@@ -78,6 +78,16 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const isSubmitting = useRef(false);
+  const [searchParams] = useSearchParams();
+
+  // Link di invito (es. QR difesa): ?invite=CODICE precompila e apre la registrazione
+  useEffect(() => {
+    const inv = searchParams.get("invite");
+    if (inv) {
+      setInviteCode(inv.toUpperCase());
+      setMode("register");
+    }
+  }, [searchParams]);
   const errorTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const firstErrorRef = useRef<HTMLInputElement>(null);
   const { setAuth } = useAppStore();
