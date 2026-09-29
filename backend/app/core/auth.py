@@ -302,6 +302,96 @@ def revoke_invite(code: str) -> None:
     _atomic_modify(_modify)
 
 
+GUEST_USERNAME = "ospite"
+
+
+def ensure_guest_user() -> None:
+    """Crea l'utente ospite condiviso (ruolo user) se manca."""
+
+    def _modify(data):
+        if not any(u["username"] == GUEST_USERNAME for u in data["users"]):
+            data["users"].append(
+                {
+                    "username": GUEST_USERNAME,
+                    "password_hash": hash_password(secrets.token_urlsafe(32)),
+                    "role": "user",
+                }
+            )
+
+    _atomic_modify(_modify)
+
+
+def create_guest_pass(*, expires_in_hours: int = 24, label: str = "") -> dict:
+    """Crea un passo ospite: token firmato a tempo che logga come ospite.
+
+    Il token vale solo se il suo jti è nell'allowlist non revocata:
+    kill-switch istantaneo via revoke_guest_pass. Ritorna token + metadati."""
+    if expires_in_hours < 1 or expires_in_hours > 1440:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "expires_in_hours must be 1..1440")
+    now = int(time.time())
+    jti = secrets.token_urlsafe(16)
+    payload = {
+        "sub": GUEST_USERNAME,
+        "role": "user",
+        "purpose": "guest-pass",
+        "jti": jti,
+        "aud": "orchid-osr",
+        "iss": "orchid-osr-api",
+        "iat": now,
+        "exp": now + expires_in_hours * 3600,
+    }
+    token = jwt.encode(payload, settings.jwt_secret, algorithm=JWT_ALGORITHM)
+    record = {
+        "jti": jti,
+        "label": label,
+        "created_at": datetime.now(UTC).isoformat(),
+        "expires_at": (datetime.now(UTC) + timedelta(hours=expires_in_hours)).isoformat(),
+        "revoked": False,
+    }
+
+    def _modify(data):
+        data.setdefault("guest_passes", []).append(record)
+
+    ensure_guest_user()
+    _atomic_modify(_modify)
+    return {"pass": token, **record}
+
+
+def redeem_guest_pass(token: str) -> dict:
+    """Valida un passo ospite e restituisce le credenziali di sessione.
+
+    Controlli: firma, scadenza, purpose e jti in allowlist non revocata."""
+    try:
+        payload = jwt.decode(
+            token,
+            settings.jwt_secret,
+            algorithms=[JWT_ALGORITHM],
+            audience="orchid-osr",
+            issuer="orchid-osr-api",
+        )
+    except jwt.PyJWTError:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid or expired pass")
+    if payload.get("purpose") != "guest-pass" or payload.get("sub") != GUEST_USERNAME:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid pass")
+    data = _load_data()
+    record = next((g for g in data.get("guest_passes", []) if g.get("jti") == payload.get("jti")), None)
+    if not record or record.get("revoked"):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Pass revoked")
+    return {"username": GUEST_USERNAME, "role": "user"}
+
+
+def revoke_guest_pass(jti: str) -> None:
+    """Revoca un passo ospite (kill-switch manuale). Idempotente."""
+
+    def _modify(data):
+        record = next((g for g in data.get("guest_passes", []) if g.get("jti") == jti), None)
+        if not record:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "Pass not found")
+        record["revoked"] = True
+
+    _atomic_modify(_modify)
+
+
 def list_users_and_invites() -> dict:
     data = _load_data()
     return {

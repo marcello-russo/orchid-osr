@@ -3,7 +3,7 @@ import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useAppStore } from "@/stores/useAppStore";
-import { login, register } from "@/lib/api";
+import { login, register, guestEnter } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -80,15 +80,32 @@ export default function AuthPage() {
   const isSubmitting = useRef(false);
   const [searchParams] = useSearchParams();
 
-  // Link di invito (es. QR difesa): ?invite=CODICE precompila e apre la registrazione.
-  // Poi pulisce l'URL: il codice non deve restare in cronologia/referer/log.
+  // Link magico ospite (?pass=TOKEN): entra subito senza registrarsi.
+  // Link di invito (?invite=CODICE): precompila e apre la registrazione.
+  // In entrambi i casi pulisce l'URL: i segreti non restano in cronologia/referer/log.
   useEffect(() => {
+    const pass = searchParams.get("pass");
+    if (pass) {
+      window.history.replaceState(null, "", window.location.pathname);
+      setLoading(true);
+      guestEnter(pass)
+        .then(({ token, user }) => {
+          setAuth(token, user);
+          navigate(from, { replace: true });
+        })
+        .catch(() => {
+          setError(t("auth.errors.invalidPass"));
+          setLoading(false);
+        });
+      return;
+    }
     const inv = searchParams.get("invite");
     if (inv) {
       setInviteCode(inv.toUpperCase());
       setMode("register");
       window.history.replaceState(null, "", window.location.pathname);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount una tantum: i setter/router sono stabili
   }, [searchParams]);
   const errorTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const firstErrorRef = useRef<HTMLInputElement>(null);

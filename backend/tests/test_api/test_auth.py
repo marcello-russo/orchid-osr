@@ -215,3 +215,29 @@ class TestDefensePass:
         h = {"Authorization": f"Bearer {superadmin_token}"}
         r = client.post("/auth/invites/defense-pass", json={"role": "admin"}, headers=h)
         assert r.status_code == 422
+
+
+class TestGuestEnter:
+    """POST /auth/guest-pass + /auth/guest/enter + revoke (solo admin per creare)."""
+
+    def test_full_flow(self, client, auth_db, superadmin_token):
+        h = {"Authorization": f"Bearer {superadmin_token}"}
+        resp = client.post(
+            "/auth/guest-pass", json={"expires_in_hours": 24, "label": "difesa"}, headers=h
+        )
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["pass"] and body["expires_at"]
+        r = client.post("/auth/guest/enter", json={"token": body["pass"]})
+        assert r.status_code == 200
+        assert r.json()["user"] == {"username": "ospite", "role": "user"}
+        assert "token" in r.json()
+        r = client.post(f"/auth/guest/revoke/{body['jti']}", headers=h)
+        assert r.status_code == 200
+        r = client.post("/auth/guest/enter", json={"token": body["pass"]})
+        assert r.status_code == 401
+
+    def test_non_admin_cannot_create(self, client, auth_db, user_token):
+        h = {"Authorization": f"Bearer {user_token}"}
+        r = client.post("/auth/guest-pass", json={}, headers=h)
+        assert r.status_code == 403

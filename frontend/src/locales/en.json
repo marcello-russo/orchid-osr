@@ -19,6 +19,7 @@
     "errors": {
       "passwordsDontMatch": "Passwords do not match",
       "invalidInvite": "Invalid or expired invite code",
+      "invalidPass": "Invalid or expired access link",
       "usernameTaken": "Username already taken",
       "invalidCredentials": "Invalid username or password",
       "usernameRequired": "Username is required",
