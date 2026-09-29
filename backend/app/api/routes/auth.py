@@ -8,13 +8,16 @@ from slowapi.util import get_remote_address
 
 from app.api.deps import require_role
 from app.core.auth import (
+    create_guest_pass,
     create_jwt,
     decode_jwt,
     delete_user,
     generate_invite,
     list_users_and_invites,
     login_user,
+    redeem_guest_pass,
     register_user,
+    revoke_guest_pass,
     revoke_invite,
 )
 
@@ -37,6 +40,17 @@ class DefensePassRequest(BaseModel):
     max_uses: int = Field(default=25, ge=1, le=200)
     expires_in_hours: int = Field(default=24, ge=1, le=1440)
     label: str = Field(default="difesa", max_length=40)
+
+
+class GuestPassRequest(BaseModel):
+    """Crea un magic link ospite: chi lo apre entra subito, senza registrarsi."""
+
+    expires_in_hours: int = Field(default=24, ge=1, le=1440)
+    label: str = Field(default="difesa", max_length=40)
+
+
+class GuestEnterRequest(BaseModel):
+    token: str = Field(min_length=10, max_length=500)
 
 
 class RegisterRequest(BaseModel):
@@ -121,6 +135,26 @@ def create_defense_pass(request: Request, body: DefensePassRequest, admin=Depend
 def revoke_invite_endpoint(code: str, request: Request, admin=Depends(require_role("admin"))):
     revoke_invite(code)
     return {"revoked": code}
+
+
+@router.post("/guest-pass")
+def create_guest_pass_endpoint(request: Request, body: GuestPassRequest, admin=Depends(require_role("admin"))):
+    record = create_guest_pass(expires_in_hours=body.expires_in_hours, label=body.label)
+    return record
+
+
+@router.post("/guest/revoke/{jti}")
+def revoke_guest_pass_endpoint(jti: str, request: Request, admin=Depends(require_role("admin"))):
+    revoke_guest_pass(jti)
+    return {"revoked": jti}
+
+
+@router.post("/guest/enter")
+@limiter.limit("120/minute")
+def guest_enter(request: Request, body: GuestEnterRequest):  # noqa: ARG001 — required by slowapi
+    user = redeem_guest_pass(body.token)
+    token = create_jwt(user["username"], user["role"])
+    return {"token": token, "user": user}
 
 
 @router.delete("/users/{username}")

@@ -10,12 +10,15 @@ vi.mock("react-i18next", () => ({
 vi.mock("@/lib/api", () => ({
   login: vi.fn(),
   register: vi.fn(),
+  guestEnter: vi.fn(),
 }));
 
+const mockSetAuth = vi.fn();
 vi.mock("@/stores/useAppStore", () => ({
-  useAppStore: () => ({ setAuth: vi.fn() }),
+  useAppStore: () => ({ setAuth: mockSetAuth }),
 }));
 
+import { guestEnter } from "@/lib/api";
 import AuthPage from "../AuthPage";
 
 function renderAt(entry: string) {
@@ -37,5 +40,17 @@ describe("AuthPage ?invite= prefill", () => {
     renderAt("/auth");
     // niente campo invito = modalità login
     expect(screen.queryByPlaceholderText("auth.inviteCode")).not.toBeInTheDocument();
+  });
+
+  it("?pass= entra subito come ospite senza registrazione", async () => {
+    const { waitFor } = await import("@testing-library/react");
+    vi.mocked(guestEnter).mockResolvedValueOnce({
+      token: "tok", user: { username: "ospite", role: "user" },
+    });
+    renderAt("/auth?pass=TOKEN123");
+    await waitFor(() => {
+      expect(guestEnter).toHaveBeenCalledWith("TOKEN123");
+      expect(mockSetAuth).toHaveBeenCalledWith("tok", { username: "ospite", role: "user" });
+    });
   });
 });

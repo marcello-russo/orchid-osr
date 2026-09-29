@@ -19,6 +19,7 @@
     "errors": {
       "passwordsDontMatch": "Le password non coincidono",
       "invalidInvite": "Codice invito non valido o scaduto",
+      "invalidPass": "Link di accesso non valido o scaduto",
       "usernameTaken": "Username già in uso",
       "invalidCredentials": "Username o password non validi",
       "usernameRequired": "Username obbligatorio",

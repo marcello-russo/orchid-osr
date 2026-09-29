@@ -157,3 +157,63 @@ class TestTimedInvites:
             auth_mod.generate_invite(count=1, code="DIFESA-1")
             with pytest.raises(HTTPException, match="already exists"):
                 auth_mod.generate_invite(count=1, code="DIFESA-1")
+
+
+class TestGuestPass:
+    """Magic link ospite: ingresso senza registrazione, revocabile."""
+
+    def test_create_redeem_revoke(self):
+        import app.core.auth as auth_mod
+
+        store = {"users": [], "invites": []}
+        pl = patch.object(auth_mod, "_load_data", return_value=store)
+        ps = patch.object(auth_mod, "_save_data")
+        with pl, ps:
+            rec = auth_mod.create_guest_pass(expires_in_hours=24, label="difesa")
+            assert rec["pass"] and rec["expires_at"] and not rec["revoked"]
+            assert any(u["username"] == "ospite" and u["role"] == "user" for u in store["users"])
+            creds = auth_mod.redeem_guest_pass(rec["pass"])
+            assert creds == {"username": "ospite", "role": "user"}
+            auth_mod.revoke_guest_pass(rec["jti"])
+            with pytest.raises(HTTPException, match="revoked"):
+                auth_mod.redeem_guest_pass(rec["pass"])
+            with pytest.raises(HTTPException, match="not found"):
+                auth_mod.revoke_guest_pass("nope")
+
+    def test_tampered_or_wrong_purpose_rejected(self):
+        import app.core.auth as auth_mod
+
+        store = {"users": [], "invites": []}
+        pl = patch.object(auth_mod, "_load_data", return_value=store)
+        ps = patch.object(auth_mod, "_save_data")
+        with pl, ps:
+            rec = auth_mod.create_guest_pass(expires_in_hours=24)
+            with pytest.raises(HTTPException, match="Invalid"):
+                auth_mod.redeem_guest_pass(rec["pass"] + "x")
+            with pytest.raises(HTTPException, match="Invalid"):
+                auth_mod.redeem_guest_pass(auth_mod.create_jwt("ospite", "user"))
+
+    def test_expired_pass_rejected(self):
+        import time
+
+        import jwt as _jwt
+
+        import app.core.auth as auth_mod
+        from app.config import settings
+
+        store = {"users": [], "invites": []}
+        pl = patch.object(auth_mod, "_load_data", return_value=store)
+        ps = patch.object(auth_mod, "_save_data")
+        with pl, ps:
+            now = int(time.time())
+            payload = {
+                "sub": "ospite", "role": "user", "purpose": "guest-pass",
+                "jti": "vecchio", "aud": "orchid-osr", "iss": "orchid-osr-api",
+                "iat": now - 7200, "exp": now - 3600,
+            }
+            token = _jwt.encode(payload, settings.jwt_secret, algorithm="HS256")
+            store.setdefault("guest_passes", []).append(
+                {"jti": "vecchio", "label": "", "revoked": False}
+            )
+            with pytest.raises(HTTPException, match="Invalid or expired"):
+                auth_mod.redeem_guest_pass(token)

@@ -220,6 +220,13 @@ export async function register(inviteCode: string, username: string, password: s
   });
 }
 
+export async function guestEnter(pass: string): Promise<{ token: string; user: AuthUser }> {
+  return fetchApi("/auth/guest/enter", {
+    method: "POST",
+    body: JSON.stringify({ token: pass }),
+  });
+}
+
 export async function fetchInvites(): Promise<{
   invites: Array<{
     code: string;
