@@ -210,3 +210,8 @@ class TestDefensePass:
         h = {"Authorization": f"Bearer {user_token}"}
         r = client.post("/auth/invites/defense-pass", json={}, headers=h)
         assert r.status_code == 403
+
+    def test_admin_role_rejected(self, client, auth_db, superadmin_token):
+        h = {"Authorization": f"Bearer {superadmin_token}"}
+        r = client.post("/auth/invites/defense-pass", json={"role": "admin"}, headers=h)
+        assert r.status_code == 422

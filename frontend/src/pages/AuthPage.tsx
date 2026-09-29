@@ -80,12 +80,14 @@ export default function AuthPage() {
   const isSubmitting = useRef(false);
   const [searchParams] = useSearchParams();
 
-  // Link di invito (es. QR difesa): ?invite=CODICE precompila e apre la registrazione
+  // Link di invito (es. QR difesa): ?invite=CODICE precompila e apre la registrazione.
+  // Poi pulisce l'URL: il codice non deve restare in cronologia/referer/log.
   useEffect(() => {
     const inv = searchParams.get("invite");
     if (inv) {
       setInviteCode(inv.toUpperCase());
       setMode("register");
+      window.history.replaceState(null, "", window.location.pathname);
     }
   }, [searchParams]);
   const errorTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
