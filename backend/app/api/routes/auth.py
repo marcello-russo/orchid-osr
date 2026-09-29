@@ -35,7 +35,7 @@ class DefensePassRequest(BaseModel):
 
     role: Literal["user"] = "user"
     max_uses: int = Field(default=25, ge=1, le=200)
-    expires_in_hours: int = Field(default=24, ge=1, le=720)
+    expires_in_hours: int = Field(default=24, ge=1, le=1440)
     label: str = Field(default="difesa", max_length=40)
 
 
