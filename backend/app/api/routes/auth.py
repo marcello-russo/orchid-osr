@@ -1,4 +1,5 @@
 import re
+from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field, field_validator
@@ -27,9 +28,12 @@ class GenerateInviteRequest(BaseModel):
 
 
 class DefensePassRequest(BaseModel):
-    """Passo multiuso a tempo (es. discussione): scade da solo, revocabile a mano."""
+    """Passo multiuso a tempo (es. discussione): scade da solo, revocabile a mano.
 
-    role: str = Field(default="user", pattern=r"^(user|admin)$")
+    Solo ruolo user: un passo condiviso non deve mai conferire poteri admin.
+    """
+
+    role: Literal["user"] = "user"
     max_uses: int = Field(default=25, ge=1, le=200)
     expires_in_hours: int = Field(default=24, ge=1, le=720)
     label: str = Field(default="difesa", max_length=40)

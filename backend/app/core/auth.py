@@ -147,10 +147,11 @@ def _invite_error(invite: dict) -> str | None:
     exp = invite.get("expires_at")
     if exp:
         try:
-            if datetime.fromisoformat(exp) <= datetime.now(UTC):
-                return "Invite code expired"
-        except ValueError:
-            pass
+            expired = datetime.fromisoformat(exp) <= datetime.now(UTC)
+        except Exception:
+            expired = False
+        if expired:
+            return "Invite code expired"
     uses = int(invite.get("uses", 0))
     max_uses = int(invite.get("max_uses", 1))
     if invite.get("used") or uses >= max_uses:
