@@ -114,6 +114,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ubuntu
           key: ${{ secrets.VPS_SSH_KEY }}
+          command_timeout: 28m
           script: |
             set -e
             cd ~/OrchID
@@ -125,5 +126,5 @@ jobs:
             cd ..
             sudo docker compose build backend 2>&1
             sudo docker compose up -d backend nginx 2>&1
-            sudo docker compose exec -T backend python3 scripts/sync_experiments.py 2>&1
+            sudo timeout 600 docker compose exec -T backend env PYTHONUNBUFFERED=1 python3 scripts/sync_experiments.py 2>&1 || echo "WARN: sync non completata, prosegue deploy (l'entrypoint la riprova in background)"
             sudo docker compose restart backend 2>&1
