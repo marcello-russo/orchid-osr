@@ -222,9 +222,7 @@ class TestGuestEnter:
 
     def test_full_flow(self, client, auth_db, superadmin_token):
         h = {"Authorization": f"Bearer {superadmin_token}"}
-        resp = client.post(
-            "/auth/guest-pass", json={"expires_in_hours": 24, "label": "difesa"}, headers=h
-        )
+        resp = client.post("/auth/guest-pass", json={"expires_in_hours": 24, "label": "difesa"}, headers=h)
         assert resp.status_code == 200
         body = resp.json()
         assert body["pass"] and body["expires_at"]

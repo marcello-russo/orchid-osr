@@ -207,13 +207,16 @@ class TestGuestPass:
         with pl, ps:
             now = int(time.time())
             payload = {
-                "sub": "ospite", "role": "user", "purpose": "guest-pass",
-                "jti": "vecchio", "aud": "orchid-osr", "iss": "orchid-osr-api",
-                "iat": now - 7200, "exp": now - 3600,
+                "sub": "ospite",
+                "role": "user",
+                "purpose": "guest-pass",
+                "jti": "vecchio",
+                "aud": "orchid-osr",
+                "iss": "orchid-osr-api",
+                "iat": now - 7200,
+                "exp": now - 3600,
             }
             token = _jwt.encode(payload, settings.jwt_secret, algorithm="HS256")
-            store.setdefault("guest_passes", []).append(
-                {"jti": "vecchio", "label": "", "revoked": False}
-            )
+            store.setdefault("guest_passes", []).append({"jti": "vecchio", "label": "", "revoked": False})
             with pytest.raises(HTTPException, match="Invalid or expired"):
                 auth_mod.redeem_guest_pass(token)
