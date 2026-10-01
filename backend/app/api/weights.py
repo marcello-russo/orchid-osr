@@ -8,7 +8,7 @@ import shutil
 import threading
 from pathlib import Path
 
-from huggingface_hub import hf_hub_download
+from huggingface_hub import hf_hub_download, snapshot_download
 
 from app.api.schemas import CacheStatus, ModelOption
 from app.cli.definitions import EXPERIMENTS as _EXPERIMENTS
@@ -262,10 +262,46 @@ def _resolve_weights(model_id: str) -> tuple[Path, str] | None:
         if not cache_pt.exists():
             shutil.copy2(downloaded, cache_pt)
         logger.info(f"Downloaded weights from HF: {hf_path} ({downloaded})")
+        _download_adapter_dir(model_id, variant, pt_name)
         return cache_pt, variant
     except Exception as e:
         logger.error(f"Failed to download weights from HF: {e}")
         return None
+
+
+def _download_adapter_dir(model_id: str, variant: str, pt_name: str) -> None:
+    """Scarica la cartella adapter LoRA (DINOv2) accanto al .pt in cache.
+
+    load_weights cerca `{pt_senza_estensione}_adapter/`; senza di essa i
+    modelli DINOv2 caricherebbero la testa senza backbone adattato.
+    Best-effort: se l'adapter non esiste su HF si prosegue senza.
+    """
+    if "dinov2" not in variant:
+        return
+    cache_pt = _get_cache_dir() / f"{model_id}_{pt_name}"
+    adapter_dir = cache_pt.with_name(cache_pt.stem + "_adapter")
+    if adapter_dir.exists():
+        return
+    prefix = _get_exp_prefix(model_id)
+    if prefix is None:
+        return
+    hf_prefix = _HF_PREFIX_MAP.get(prefix, prefix)
+    fold = pt_name.replace("best_fold_", "").replace(".pt", "")
+    pattern = f"{hf_prefix}/{model_id}/best_fold_{fold}_adapter/*"
+    try:
+        tmp = Path(
+            snapshot_download(
+                repo_id=settings.hf_models_repo,
+                allow_patterns=[pattern],
+                token=settings.hf_token or None,
+            )
+        )
+        src = tmp / hf_prefix / model_id / f"best_fold_{fold}_adapter"
+        if src.is_dir():
+            shutil.copytree(src, adapter_dir)
+            logger.info(f"Downloaded adapter from HF: {pattern}")
+    except Exception as e:
+        logger.warning(f"Adapter not available for {model_id}: {e}")
 
 
 def _find_weights(model_type: str) -> Path | None:
