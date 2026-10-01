@@ -67,13 +67,13 @@ function App() {
               path="/research"
               element={<ErrorBoundary><Suspense fallback={<PageFallback />}><ResearchPage /></Suspense></ErrorBoundary>}
             />
-          </Route>
-
-          <Route element={<ProtectedRoute role="admin" />}>
             <Route
               path="/dataset"
               element={<ErrorBoundary><Suspense fallback={<PageFallback />}><DatasetPage /></Suspense></ErrorBoundary>}
             />
+          </Route>
+
+          <Route element={<ProtectedRoute role="admin" />}>
             <Route
               path="/admin/users"
               element={<ErrorBoundary><Suspense fallback={<PageFallback />}><UserManagementPage /></Suspense></ErrorBoundary>}
