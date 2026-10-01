@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useClassify } from "@/features/classify/hooks/useClassify";
 import { useModels } from "@/features/classify/hooks/useModels";
+import { useAppStore } from "@/stores/useAppStore";
 import {
   fetchCacheStatus, downloadAllModels, downloadModel,
 } from "@/lib/api";
@@ -220,6 +221,8 @@ export function ClassifyPage() {
   const cacheQuery = useQuery({
     queryKey: ["cache-status"],
     queryFn: fetchCacheStatus,
+    // /api/admin/cache è solo admin: gli ospiti non devono chiamarlo (403 + toast)
+    enabled: useAppStore((s) => s.user)?.role === "admin",
     refetchInterval: (q) => q.state.data?.is_downloading ? 2000 : false,
   });
 
