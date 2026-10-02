@@ -197,8 +197,8 @@ export function DashboardPage() {
             {t("dashboard.species_distribution")}
           </button>
           {datasetOpen && (
-            <div className="rounded-lg border border-border">
-              <table className="w-full text-sm">
+            <div className="rounded-lg border border-border overflow-x-auto">
+              <table className="w-full min-w-[520px] text-sm">
                 <thead>
                   <tr className="border-b border-border">
                     <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("dashboard.table.species")}</th>
