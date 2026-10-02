@@ -221,6 +221,11 @@ async def serve_image(
     split = _validate_segment(split)
     class_name = _validate_segment(class_name)
     filename = _validate_segment(filename)
+    # Gli embedding usano nomi split NCD (es. test_ncd_exp9): normalizza
+    if split.startswith("test"):
+        split = "test"
+    elif split.startswith("train"):
+        split = "train"
     if split not in _VALID_SPLITS:
         raise HTTPException(status_code=400, detail="Invalid split")
 
