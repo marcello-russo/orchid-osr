@@ -71,6 +71,11 @@ async def list_classes(user=Depends(require_role("user"))):
     total_train = 0
     total_test = 0
     for class_name, counts in sorted(listing.get("classes", {}).items()):
+        # Solo le 6 specie dello studio: altre entità in listing (es. popolazioni
+        # rimosse come O. sphegodes_Napoli) non hanno file servibili e darebbero
+        # 548 miniature rotte in galleria.
+        if class_name not in settings.class_names:
+            continue
         classes.append(
             DatasetClassInfo(
                 name=class_name,
@@ -94,6 +99,8 @@ async def list_classes(user=Depends(require_role("user"))):
                     if not class_dir.is_dir():
                         continue
                     cn = class_dir.name
+                    if cn not in settings.class_names:
+                        continue
                     if any(c.name == cn for c in classes):
                         continue
                     train_count = len(list((train_dir / cn).iterdir())) if (train_dir / cn).is_dir() else 0
@@ -121,6 +128,8 @@ async def list_class_images(
     user=Depends(require_role("user")),
 ):
     class_name = _validate_segment(class_name)
+    if class_name not in settings.class_names:
+        raise HTTPException(status_code=404, detail="Classe non presente nel dataset dello studio")
     if split not in _VALID_SPLITS:
         raise HTTPException(status_code=400, detail="Invalid split. Use: train or test")
 
