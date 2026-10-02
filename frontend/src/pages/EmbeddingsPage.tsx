@@ -221,6 +221,41 @@ export function EmbeddingsPage() {
           </div>
         </div>
       )}
+
+      {/* Mobile bottom sheet: la foto selezionata appare subito, senza scroll */}
+      {selectedPoint && (
+        <div className="lg:hidden fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-label={selectedPoint.species}>
+          <button aria-label={t("embeddings.deselect")} onClick={() => setSelectedIdx(null)}
+            className="absolute inset-0 bg-black/50 cursor-default" />
+          <div className="relative w-full max-h-[72vh] overflow-y-auto rounded-t-2xl border-t border-x border-border bg-card p-4 pb-6 shadow-2xl animate-in slide-in-from-bottom duration-300">
+            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-muted-foreground/30" />
+            <div className="aspect-[4/3] bg-muted/30 rounded-xl overflow-hidden flex items-center justify-center">
+              {imgError ? (
+                <div className="flex flex-col items-center gap-2 p-4 text-center">
+                  <ImageIcon className="size-8 text-muted-foreground/30" />
+                  <p className="text-xs text-muted-foreground/60">{t("research.img_not_available")}</p>
+                </div>
+              ) : (
+                <img src={`${API_BASE}${selectedPoint.image_url}`} alt={selectedPoint.species}
+                  className="w-full h-full object-contain"
+                  onError={() => setImgError(true)}
+                  onLoad={() => setImgError(false)} />
+              )}
+            </div>
+            <div className="pt-3 space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="size-2.5 rounded-full shrink-0" style={{ backgroundColor: speciesColors[selectedPoint.species] || PALETTE[0] }} />
+                <span className="font-bold">{selectedPoint.species}</span>
+              </div>
+              <p className="text-xs text-muted-foreground truncate">{selectedPoint.filename}</p>
+              <button onClick={() => setSelectedIdx(null)}
+                className="mt-2 w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground">
+                {t("embeddings.deselect")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
