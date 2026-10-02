@@ -201,7 +201,7 @@ export function EmbeddingsPage() {
                       <p className="text-[10px] text-muted-foreground/40">{t("research.img_download_hint")}</p>
                     </div>
                   ) : (
-                    <img src={`${API_BASE}${selectedPoint.image_url}`} alt={selectedPoint.species}
+                    <img src={encodeURI(`${API_BASE}${selectedPoint.image_url}`)} alt={selectedPoint.species}
                       className="w-full h-full object-contain"
                       onError={() => setImgError(true)}
                       onLoad={() => setImgError(false)}
@@ -236,7 +236,7 @@ export function EmbeddingsPage() {
                   <p className="text-xs text-muted-foreground/60">{t("research.img_not_available")}</p>
                 </div>
               ) : (
-                <img src={`${API_BASE}${selectedPoint.image_url}`} alt={selectedPoint.species}
+                <img src={encodeURI(`${API_BASE}${selectedPoint.image_url}`)} alt={selectedPoint.species}
                   className="w-full h-full object-contain"
                   onError={() => setImgError(true)}
                   onLoad={() => setImgError(false)} />
