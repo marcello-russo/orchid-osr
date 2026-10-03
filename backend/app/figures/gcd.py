@@ -143,33 +143,33 @@ def build_gcd(fig_dir: Path, exps: dict[int, Path]) -> list[Path]:
         capsize=4,
     )
     for i, v in enumerate(ss4):
-        ax.text(i - 1.5 * width, v + 0.02, f"{v:.2f}".replace(".", ","), ha="center", fontsize=8, fontweight="bold")
+        ax.text(i - 1.5 * width, v + 0.02, f"{v:.2f}".replace(".", ","), ha="center", fontsize=13, fontweight="bold")
     for i, v in enumerate(km4):
         ax.text(
             i - 0.5 * width,
             v + km4_std[i] + 0.02,
             f"{v:.2f}".replace(".", ","),
             ha="center",
-            fontsize=8,
+            fontsize=13,
             fontweight="bold",
         )
     for i, v in enumerate(ss5):
-        ax.text(i + 0.5 * width, v + 0.02, f"{v:.2f}".replace(".", ","), ha="center", fontsize=8, fontweight="bold")
+        ax.text(i + 0.5 * width, v + 0.02, f"{v:.2f}".replace(".", ","), ha="center", fontsize=13, fontweight="bold")
     for i, v in enumerate(km5):
         ax.text(
             i + 1.5 * width,
             v + km5_std[i] + 0.02,
             f"{v:.2f}".replace(".", ","),
             ha="center",
-            fontsize=8,
+            fontsize=13,
             fontweight="bold",
         )
     ax.set_xticks(x)
     ax.set_xticklabels(labels)
     ax.set_ylabel("ACC new GCD")
     ax.set_ylim(0, 1.05)
-    ax.set_title("GCD: SS-KMeans standard fallisce, K-means non informato scopre", fontsize=11, fontweight="bold")
-    ax.legend(fontsize=8)
+    ax.set_title("GCD: SS-KMeans standard fallisce, K-means non informato scopre", fontsize=17, fontweight="bold")
+    ax.legend(fontsize=13)
     ax.grid(axis="y", alpha=0.3)
     ax.text(
         0.02,
@@ -177,9 +177,9 @@ def build_gcd(fig_dir: Path, exps: dict[int, Path]) -> list[Path]:
         f"NMI II-A \u2248 {str(round(nmi4, 2)).replace(chr(46), chr(44))} / II-B \u2248 {str(round(nmi5, 2)).replace(chr(46), chr(44))} (stabile)",
         ha="left",
         va="center",
-        fontsize=8,
+        fontsize=13,
         style="italic",
-        bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="gray", alpha=0.9),
+        bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="black", alpha=0.9),
         transform=ax.transAxes,
     )
     base = fig_dir / "gcd_old_new"
