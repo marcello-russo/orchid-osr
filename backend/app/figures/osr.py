@@ -103,13 +103,13 @@ def _auroc_heatmap(fig_dir: Path) -> list[Path]:
             if not np.isnan(v):
                 c = "white" if v > 0.72 else "black"
                 ax.text(
-                    j, i, f"{v:.3f}".replace(".", ","), ha="center", va="center", fontsize=8, color=c, fontweight="bold"
+                    j, i, f"{v:.3f}".replace(".", ","), ha="center", va="center", fontsize=13, color=c, fontweight="bold"
                 )
     ax.set_xticks(range(len(DETECTORS)))
-    ax.set_xticklabels(DETECTORS, fontsize=9)
+    ax.set_xticklabels(DETECTORS, fontsize=14)
     ax.set_yticks(range(len(ARCHS)))
-    ax.set_yticklabels(ARCH_LABELS, fontsize=8)
-    ax.set_title("AUROC OSR per rivelatore — II-A, 1 novel (250+50)", fontsize=12, fontweight="bold")
+    ax.set_yticklabels(ARCH_LABELS, fontsize=13)
+    ax.set_title("AUROC OSR per rivelatore — II-A, 1 novel (250+50)", fontsize=18, fontweight="bold")
     fig.colorbar(im, ax=ax, shrink=0.8, label="AUROC")
     fig.tight_layout()
     paths = _save_fig(fig, fig_dir / "osr_detection_heatmap")
@@ -130,25 +130,35 @@ def _dual_1vs2(fig_dir: Path) -> list[Path]:
     e5 = [data5.get(a, {}).get("Ensemble", np.nan) for a in ARCHS]
     x = np.arange(len(ARCHS))
     w = 0.35
-    fig, ax = plt.subplots(figsize=(8, 4))
+    fig, ax = plt.subplots(figsize=(11, 5))
     b1 = ax.bar(x - w / 2, e4, w, label="II-A, 1 novel (250+50)", color=PALETTE[0], edgecolor="black", linewidth=0.6)
     b2 = ax.bar(x + w / 2, e5, w, label="II-B, 2 novel (200+100)", color=PALETTE[2], edgecolor="black", linewidth=0.6)
-    for bars in (b1, b2):
-        for bar in bars:
+    for bi, bars in enumerate((b1, b2)):
+        for k, bar in enumerate(bars):
             h = bar.get_height()
             if not np.isnan(h):
+                # sfalsa a turno per non sovrapporre 0,85/0,84 e simili
                 ax.text(
-                    bar.get_x() + bar.get_width() / 2, h + 0.015, f"{h:.2f}".replace(".", ","), ha="center", fontsize=7
+                    bar.get_x() + bar.get_width() / 2, h + 0.015 + (k % 2) * 0.07, f"{h:.2f}".replace(".", ","), ha="center", fontsize=13, fontweight="bold", color="black"
                 )
     ax.set_xticks(x)
-    ax.set_xticklabels(ARCH_LABELS, fontsize=8)
-    ax.set_ylabel("AUROC Ensemble (supplemento)")
-    ax.set_ylim(0, 1.0)
-    ax.axhline(0.5, color="gray", linestyle="--", linewidth=1)
-    ax.set_title("OSR: 1 vs 2 novel (AUROC Ensemble)", fontsize=12, fontweight="bold")
-    ax.legend(fontsize=8)
-    ax.grid(axis="y", alpha=0.3)
-    fig.tight_layout()
+    ax.set_xticklabels(ARCH_LABELS, fontsize=13)
+    ax.set_ylabel("AUROC Ensemble", fontsize=15)
+    ax.set_ylim(0, 1.1)
+    ax.axhline(0.5, color="black", linestyle="--", linewidth=1.4)
+    from matplotlib.lines import Line2D as _LL
+    ax.set_title("OSR: 1 vs 2 novel (AUROC Ensemble)", fontsize=18, fontweight="bold")
+    h1, l1 = ax.get_legend_handles_labels()
+    leg = ax.legend(h1 + [_LL([0], [0], color="black", linestyle="--", linewidth=1.4)],
+                    ["II-A, 1 novel (250+50)", "II-B, 2 novel (200+100)", "caso (0,50)"],
+                    fontsize=13, loc="upper center", bbox_to_anchor=(0.5, -0.16), ncols=3,
+                    frameon=True, facecolor="white", edgecolor="black")
+    for t in leg.get_texts():
+        t.set_color("black")
+    ax.grid(False)
+    for spine in ax.spines.values():
+        spine.set_color("black")
+    ax.tick_params(colors="black")
     paths = _save_fig(fig, fig_dir / "osr_1vs2_novel")
     plt.close(fig)
     return paths
@@ -193,46 +203,61 @@ def _closed_vs_open(fig_dir: Path) -> list[Path]:
     f1_5 = _read_f1("exp5_sphor_ncd")
     d4 = _read_detectors("exp4_sphor_ncd") or FALLBACK_DET4
     d5 = _read_detectors("exp5_sphor_ncd") or FALLBACK_DET5
-    fig, ax = plt.subplots(figsize=(8, 5))
+    fig, ax = plt.subplots(figsize=(11, 6.5))
     for i, a in enumerate(ARCHS):
         c = PALETTE[i % len(PALETTE)]
         if a in f1_4 and a in d4 and not np.isnan(f1_4[a]):
             au = d4[a].get("Ensemble", np.nan)
-            ax.scatter([f1_4[a]], [au], s=130, color=c, marker="^", edgecolors="black", linewidths=0.6, zorder=3)
+            ax.scatter([f1_4[a]], [au], s=110, color=c, marker="^", edgecolors="black", linewidths=0.6, zorder=3)
         if a in f1_5 and a in d5 and not np.isnan(f1_5.get(a, np.nan)):
             au = d5[a].get("Ensemble", np.nan)
-            ax.scatter([f1_5[a]], [au], s=80, color=c, marker="o", alpha=0.65, zorder=3)
+            ax.scatter([f1_5[a]], [au], s=65, color=c, marker="o", alpha=0.7, zorder=3)
+    import matplotlib.patheffects as _pe
+    _close_labels = {"convnext_tiny": ("CNT", (8, 8)), "convnext_small": ("CNS", (-48, -22)),
+                     "dinov2_base": ("DB", (-32, 6))}
+    for a, (lab, off) in _close_labels.items():
+        if a in f1_4 and a in d4:
+            au = d4[a].get("Ensemble", np.nan)
+            if not np.isnan(f1_4[a]) and not np.isnan(au):
+                ax.annotate(lab, xy=(f1_4[a], au), xytext=off, textcoords="offset points",
+                            fontsize=12, fontweight="bold", color="black",
+                            path_effects=[_pe.withStroke(linewidth=3, foreground="white")])
     # hero annotation: ConvNeXt-T holds both worlds
     if "convnext_tiny" in f1_4 and "convnext_tiny" in d4:
         ax.annotate(
             "ConvNeXt-T tiene\nin entrambi",
             xy=(f1_4["convnext_tiny"], d4["convnext_tiny"].get("Ensemble", 0.85)),
-            xytext=(0.78, 0.94),
-            fontsize=8,
-            arrowprops=dict(arrowstyle="->", color="black", lw=1),
-            bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="gray", alpha=0.9),
+            xytext=(0.76, 0.95),
+            fontsize=15,
+            arrowprops=dict(arrowstyle="->", color="black", lw=1.4),
+            bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="black", alpha=1.0),
         )
     from matplotlib.lines import Line2D
 
     ax.legend(
         [
             Line2D([0], [0], marker="^", color="w", markerfacecolor="black", markersize=9),
-            Line2D([0], [0], marker="o", color="w", markerfacecolor="gray", markersize=8),
+            Line2D([0], [0], marker="o", color="w", markerfacecolor="black", markersize=8),
         ]
         + [
             Line2D([0], [0], marker="s", color="w", markerfacecolor=PALETTE[i % len(PALETTE)], markersize=8)
             for i in range(len(ARCHS))
         ],
         ["II-A, 1 novel", "II-B, 2 novel"] + list(ARCH_LABELS),
-        fontsize=7,
+        fontsize=13,
         ncol=2,
     )
-    ax.set_xlabel("F1 test closed-set")
-    ax.set_ylabel("AUROC OSR Ensemble (supplemento)")
+    ax.set_xlabel("F1 test closed-set", fontsize=15)
+    ax.set_ylabel("AUROC OSR Ensemble", fontsize=15)
     ax.set_ylim(0.4, 1.0)
-    ax.axhline(0.5, color="gray", linestyle="--", linewidth=1, label="caso")
-    ax.set_title("Chiuso vs OSR — II-A, 1 novel (^) vs II-B, 2 novel (o)", fontsize=12, fontweight="bold")
-    ax.grid(alpha=0.3)
+    ax.axhline(0.5, color="black", linestyle="--", linewidth=1.4)
+    ax.text(0.04, 0.2, "caso", transform=ax.transAxes, fontsize=13, fontweight="bold", color="black", ha="left", va="bottom",
+            bbox=dict(facecolor="white", edgecolor="none", pad=2))
+    ax.set_title("Chiuso vs OSR — II-A, 1 novel (^) vs II-B, 2 novel (o)", fontsize=18, fontweight="bold")
+    ax.grid(False)
+    for spine in ax.spines.values():
+        spine.set_color("black")
+    ax.tick_params(colors="black", labelsize=13)
     fig.tight_layout()
     paths = _save_fig(fig, fig_dir / "closed_vs_open_scatter")
     plt.close(fig)

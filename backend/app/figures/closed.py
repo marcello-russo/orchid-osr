@@ -116,16 +116,16 @@ def build_closed(fig_dir: Path, exps: dict[int, Path]) -> list[Path]:
                     f"{v:.2f}".replace(".", ","),
                     ha="center",
                     va="bottom",
-                    fontsize=6,
+                    fontsize=18,
                     color="black",
                     rotation=90,
                 )
     ax.set_xticks(x)
-    ax.set_xticklabels(EXP_LABELS, fontsize=8)
+    ax.set_xticklabels(EXP_LABELS, fontsize=13)
     ax.set_ylabel("F1 macro (media 5 fold ± std)")
     ax.set_ylim(0, 1.05)
-    ax.set_title("Benchmark: F1 test per esperimento (medie 5 fold)", fontsize=12, fontweight="bold")
-    ax.legend(frameon=True, fontsize=7, ncol=3)
+    ax.set_title("Benchmark: F1 test per esperimento (medie 5 fold)", fontsize=18, fontweight="bold")
+    ax.legend(frameon=True, fontsize=13, ncol=3)
     ax.grid(axis="y", alpha=0.3)
     fig.tight_layout()
     all_paths.extend(_save_fig(fig, fig_dir / "benchmark_bar"))
@@ -146,12 +146,12 @@ def build_closed(fig_dir: Path, exps: dict[int, Path]) -> list[Path]:
                 txt = f"{v:.3f}±{s:.3f}".replace(".", ",")
                 if v < 0.30:
                     txt += " ✕"
-                ax2.text(j, i, txt, ha="center", va="center", fontsize=7, color=c, fontweight="bold")
+                ax2.text(j, i, txt, ha="center", va="center", fontsize=13, color=c, fontweight="bold")
     ax2.set_xticks(range(len(EXP_LABELS)))
-    ax2.set_xticklabels(EXP_LABELS, fontsize=7.5, rotation=30, ha="right")
+    ax2.set_xticklabels(EXP_LABELS, fontsize=13, rotation=30, ha="right")
     ax2.set_yticks(range(len(ARCHS)))
-    ax2.set_yticklabels(ARCH_LABELS, fontsize=8)
-    ax2.set_title("Heatmap benchmark: F1 test (medie 5 fold ± std)", fontsize=12, fontweight="bold")
+    ax2.set_yticklabels(ARCH_LABELS, fontsize=13)
+    ax2.set_title("Heatmap benchmark: F1 test (medie 5 fold ± std)", fontsize=18, fontweight="bold")
     fig2.colorbar(im, ax=ax2, shrink=0.8, label="F1")
     fig2.tight_layout()
     all_paths.extend(_save_fig(fig2, fig_dir / "benchmark_heatmap"))
@@ -194,15 +194,15 @@ def build_heatmap_13(fig_dir: Path, exps: dict[int, Path]) -> list[Path]:
                     f"{v:.3f}±{s:.3f}".replace(".", ","),
                     ha="center",
                     va="center",
-                    fontsize=7,
+                    fontsize=13,
                     color=c,
                     fontweight="bold",
                 )
     ax.set_xticks(range(3))
-    ax.set_xticklabels(labels, fontsize=8)
+    ax.set_xticklabels(labels, fontsize=13)
     ax.set_yticks(range(len(ARCHS)))
-    ax.set_yticklabels(ARCH_LABELS, fontsize=8)
-    ax.set_title("Heatmap benchmark: F1 test (Studio I, medie 5 fold ± std)", fontsize=12, fontweight="bold")
+    ax.set_yticklabels(ARCH_LABELS, fontsize=13)
+    ax.set_title("Heatmap benchmark: F1 test (Studio I, medie 5 fold ± std)", fontsize=18, fontweight="bold")
     fig.colorbar(im, ax=ax, shrink=0.8, label="F1")
     fig.tight_layout()
     paths = _save_fig(fig, fig_dir / "heatmap_1_3")

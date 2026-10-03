@@ -43,7 +43,7 @@ def build_reliability(fig_dir: Path, exps: dict[int, Path]) -> list[Path]:
     bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
 
     fig, ax = plt.subplots(figsize=(6, 6))
-    ax.plot([0, 1], [0, 1], linestyle="--", color="gray", label="ideale")
+    ax.plot([0, 1], [0, 1], linestyle="--", color="black", label="ideale")
     ax.plot(conf, acc, marker="o", color=PALETTE[0], markersize=4, label="ConvNeXt-Tiny I-C")
     # bars
     ax.bar(bin_centers, acc, width=0.06, alpha=0.3, color=PALETTE[0], edgecolor="none")
@@ -51,8 +51,8 @@ def build_reliability(fig_dir: Path, exps: dict[int, Path]) -> list[Path]:
     ax.set_ylabel("Accuratezza")
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
-    ax.set_title(f"Diagramma di affidabilità — ECE={ece:.3f} ({n_bins} bin)", fontsize=12, fontweight="bold")
-    ax.legend(fontsize=8)
+    ax.set_title(f"Diagramma di affidabilità — ECE={ece:.3f} ({n_bins} bin)", fontsize=18, fontweight="bold")
+    ax.legend(fontsize=13)
     ax.grid(alpha=0.3)
     paths.extend(_save_fig(fig, fig_dir / "reliability_diagram"))
     plt.close(fig)
