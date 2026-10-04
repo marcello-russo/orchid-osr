@@ -91,7 +91,7 @@ export default function AuthPage() {
       guestEnter(pass)
         .then(({ token, user }) => {
           setAuth(token, user);
-          navigate(from, { replace: true });
+          navigate(searchParams.get("next") || from, { replace: true });
         })
         .catch(() => {
           setError(t("auth.errors.invalidPass"));
