@@ -134,8 +134,8 @@ export function ResearchPage() {
             </p>
             <div className="mt-6 text-sm text-muted-foreground space-y-1">
               <p><span className="font-medium text-foreground">{t("research.hero_author_label")}</span> Marcello Russo</p>
-              <p><span className="font-medium text-foreground">{t("research.hero_advisor_label")}</span> Luigi Libero Lucio Starace</p>
-              <p><span className="font-medium text-foreground">{t("research.hero_coadvisor_label")}</span> Mara Sangiovanni, Alessandro De Luca</p>
+              <p><span className="font-medium text-foreground">{t("research.hero_advisor_label")}</span> Prof. Sergio Di Martino, Prof.ssa Mara Sangiovanni, Prof. Luigi Libero Lucio Starace</p>
+              <p><span className="font-medium text-foreground">{t("research.hero_coadvisor_label")}</span> Prof. Alessandro De Luca</p>
               <p className="mt-3 italic max-w-2xl text-xs">
                 {t("research.hero_university")}
               </p>
