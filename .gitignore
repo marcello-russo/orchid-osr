@@ -71,3 +71,5 @@ backend/data/osr_stats/
 keys/
 .mypy_cache/
 frontend/coverage/
+node_modules/
+frontend/node_modules/
