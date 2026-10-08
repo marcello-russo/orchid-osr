@@ -132,7 +132,7 @@ def build_closed(fig_dir: Path, exps: dict[int, Path]) -> list[Path]:
     plt.close(fig)
 
     # ── Benchmark heatmap: models × exps ──
-    fig2, ax2 = plt.subplots(figsize=(9.5, 4.2))
+    fig2, ax2 = plt.subplots(figsize=(12, 5))
     cmap = plt.cm.Blues.with_extremes(bad="#f0f0f0")
     # data_T for imshow: rows=models, cols=exps
     data_t = data.T  # (6,4)
@@ -142,15 +142,22 @@ def build_closed(fig_dir: Path, exps: dict[int, Path]) -> list[Path]:
             v = data_t[i, j]
             s = stds.T[i, j]
             if not np.isnan(v):
-                c = "white" if v > 0.80 else "black"
                 txt = f"{v:.3f}±{s:.3f}".replace(".", ",")
                 if v < 0.30:
-                    txt += " ✕"
-                ax2.text(j, i, txt, ha="center", va="center", fontsize=13, color=c, fontweight="bold")
+                    # cella collassata: tratteggio sobrio + valore in rosso scuro
+                    ax2.add_patch(
+                        plt.Rectangle(
+                            (j - 0.5, i - 0.5), 1, 1, facecolor="none", edgecolor="#8a8a8a", hatch="///", linewidth=0
+                        )
+                    )
+                    ax2.text(j, i, txt, ha="center", va="center", fontsize=13, color="#a00000", fontweight="bold")
+                else:
+                    c = "white" if v > 0.80 else "black"
+                    ax2.text(j, i, txt, ha="center", va="center", fontsize=15, color=c, fontweight="bold")
     ax2.set_xticks(range(len(EXP_LABELS)))
-    ax2.set_xticklabels(EXP_LABELS, fontsize=13, rotation=30, ha="right")
+    ax2.set_xticklabels(EXP_LABELS, fontsize=14, rotation=30, ha="right")
     ax2.set_yticks(range(len(ARCHS)))
-    ax2.set_yticklabels(ARCH_LABELS, fontsize=13)
+    ax2.set_yticklabels(ARCH_LABELS, fontsize=14)
     ax2.set_title("Heatmap benchmark: F1 test (medie 5 fold ± std)", fontsize=18, fontweight="bold")
     fig2.colorbar(im, ax=ax2, shrink=0.8, label="F1")
     fig2.tight_layout()
