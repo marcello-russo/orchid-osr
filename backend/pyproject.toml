@@ -33,6 +33,7 @@ dependencies = [
     "torch",
     "torchvision",
     "transformers>=4.40.0,<5.0.0",
+    "typer",
     "uvicorn",
 ]
 
