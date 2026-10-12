@@ -168,7 +168,9 @@ def build_gcd(fig_dir: Path, exps: dict[int, Path]) -> list[Path]:
     ax.set_xticklabels(labels)
     ax.set_ylabel("ACC new GCD")
     ax.set_ylim(0, 1.05)
-    ax.set_title("Confronto fra K-means semi-supervisionato e K-means non informato (ACC novel)", fontsize=17, fontweight="bold")
+    ax.set_title(
+        "Confronto fra K-means semi-supervisionato e K-means non informato (ACC novel)", fontsize=17, fontweight="bold"
+    )
     ax.legend(fontsize=13)
     ax.grid(axis="y", alpha=0.3)
     ax.text(
