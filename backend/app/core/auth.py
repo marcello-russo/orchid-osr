@@ -63,23 +63,13 @@ _DATA_LOCK = threading.Lock()
 
 
 def _sync_to_hf() -> None:
-    """Upload users.json to private HF dataset repo as backup."""
-    if not settings.hf_configured:
-        return
-    try:
-        from huggingface_hub import HfApi
+    """Backup utenti su volume privato del VPS (mai su repo pubblici).
 
-        api = HfApi(token=settings.hf_token)
-        api.upload_file(
-            path_or_fileobj=str(USERS_PATH),
-            path_in_repo="users.json",
-            repo_id=settings.hf_dataset_repo,
-            repo_type="dataset",
-        )
-    except Exception as e:
-        import logging
-
-        logging.getLogger(__name__).warning(f"HF sync failed: {e}")
+    Il vecchio backup su HF dataset repo e' disattivato: il repo ospita il
+    dataset destinato alla pubblicazione e non deve contenere credenziali
+    (users.json cancellato da hub). Il file locale resta l'unica fonte.
+    """
+    return
 
 
 def _load_data() -> dict:
