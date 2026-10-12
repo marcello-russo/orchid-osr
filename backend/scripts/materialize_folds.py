@@ -52,7 +52,10 @@ def main() -> None:
         assert train_dir.is_dir(), f"manca {train_dir}"
         for exclude in EXCLUDE_SETS:
             paths, labels, folds = split_raw_images(
-                str(train_dir), CLASSES, N_SPLITS, SEED,
+                str(train_dir),
+                CLASSES,
+                N_SPLITS,
+                SEED,
                 exclude_classes=exclude or None,
             )
             rel = [str(Path(p).relative_to(train_dir)) for p in paths]
@@ -63,10 +66,7 @@ def main() -> None:
                 "classes": active,
                 "n_images": len(rel),
                 "files": rel,
-                "folds": [
-                    {"train_idx": [int(i) for i in tr], "val_idx": [int(i) for i in va]}
-                    for tr, va in folds
-                ],
+                "folds": [{"train_idx": [int(i) for i in tr], "val_idx": [int(i) for i in va]} for tr, va in folds],
                 "per_fold_counts": [
                     {
                         "train": dict(Counter(active[int(labels[i])] for i in tr)),
@@ -77,14 +77,20 @@ def main() -> None:
             }
             configs[key(size, exclude)] = entry
             print(f"{key(size, exclude)}: {len(rel)} img, {len(folds)} fold")
-    OUT.write_text(json.dumps({
-        "seed": SEED,
-        "n_splits": N_SPLITS,
-        "method": "sklearn StratifiedKFold(shuffle=True, random_state=57) su listing ordinato",
-        "created": datetime.now(timezone.utc).isoformat(),
-        "split_manifest_md5": manifest_md5,
-        "configs": configs,
-    }, indent=1), encoding="utf-8")
+    OUT.write_text(
+        json.dumps(
+            {
+                "seed": SEED,
+                "n_splits": N_SPLITS,
+                "method": "sklearn StratifiedKFold(shuffle=True, random_state=57) su listing ordinato",
+                "created": datetime.now(timezone.utc).isoformat(),
+                "split_manifest_md5": manifest_md5,
+                "configs": configs,
+            },
+            indent=1,
+        ),
+        encoding="utf-8",
+    )
     print(f"scritto {OUT} ({OUT.stat().st_size // 1024} KB)")
 
 

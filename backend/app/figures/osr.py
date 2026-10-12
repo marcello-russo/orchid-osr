@@ -103,7 +103,14 @@ def _auroc_heatmap(fig_dir: Path) -> list[Path]:
             if not np.isnan(v):
                 c = "white" if v > 0.72 else "black"
                 ax.text(
-                    j, i, f"{v:.3f}".replace(".", ","), ha="center", va="center", fontsize=13, color=c, fontweight="bold"
+                    j,
+                    i,
+                    f"{v:.3f}".replace(".", ","),
+                    ha="center",
+                    va="center",
+                    fontsize=13,
+                    color=c,
+                    fontweight="bold",
                 )
     ax.set_xticks(range(len(DETECTORS)))
     ax.set_xticklabels(DETECTORS, fontsize=14)
@@ -139,7 +146,13 @@ def _dual_1vs2(fig_dir: Path) -> list[Path]:
             if not np.isnan(h):
                 # sfalsa a turno per non sovrapporre 0,85/0,84 e simili
                 ax.text(
-                    bar.get_x() + bar.get_width() / 2, h + 0.015 + (k % 2) * 0.07, f"{h:.2f}".replace(".", ","), ha="center", fontsize=13, fontweight="bold", color="black"
+                    bar.get_x() + bar.get_width() / 2,
+                    h + 0.015 + (k % 2) * 0.07,
+                    f"{h:.2f}".replace(".", ","),
+                    ha="center",
+                    fontsize=13,
+                    fontweight="bold",
+                    color="black",
                 )
     ax.set_xticks(x)
     ax.set_xticklabels(ARCH_LABELS, fontsize=13)
@@ -147,12 +160,20 @@ def _dual_1vs2(fig_dir: Path) -> list[Path]:
     ax.set_ylim(0, 1.1)
     ax.axhline(0.5, color="black", linestyle="--", linewidth=1.4)
     from matplotlib.lines import Line2D as _LL
+
     ax.set_title("OSR: 1 vs 2 novel (AUROC Ensemble)", fontsize=18, fontweight="bold")
     h1, l1 = ax.get_legend_handles_labels()
-    leg = ax.legend(h1 + [_LL([0], [0], color="black", linestyle="--", linewidth=1.4)],
-                    ["II-A, 1 novel (250+50)", "II-B, 2 novel (200+100)", "caso (0,50)"],
-                    fontsize=13, loc="upper center", bbox_to_anchor=(0.5, -0.16), ncols=3,
-                    frameon=True, facecolor="white", edgecolor="black")
+    leg = ax.legend(
+        h1 + [_LL([0], [0], color="black", linestyle="--", linewidth=1.4)],
+        ["II-A, 1 novel (250+50)", "II-B, 2 novel (200+100)", "caso (0,50)"],
+        fontsize=13,
+        loc="upper center",
+        bbox_to_anchor=(0.5, -0.16),
+        ncols=3,
+        frameon=True,
+        facecolor="white",
+        edgecolor="black",
+    )
     for t in leg.get_texts():
         t.set_color("black")
     ax.grid(False)
@@ -213,15 +234,26 @@ def _closed_vs_open(fig_dir: Path) -> list[Path]:
             au = d5[a].get("Ensemble", np.nan)
             ax.scatter([f1_5[a]], [au], s=65, color=c, marker="o", alpha=0.7, zorder=3)
     import matplotlib.patheffects as _pe
-    _close_labels = {"convnext_tiny": ("CNT", (8, 8)), "convnext_small": ("CNS", (-48, -22)),
-                     "dinov2_base": ("DB", (-32, 6))}
+
+    _close_labels = {
+        "convnext_tiny": ("CNT", (8, 8)),
+        "convnext_small": ("CNS", (-48, -22)),
+        "dinov2_base": ("DB", (-32, 6)),
+    }
     for a, (lab, off) in _close_labels.items():
         if a in f1_4 and a in d4:
             au = d4[a].get("Ensemble", np.nan)
             if not np.isnan(f1_4[a]) and not np.isnan(au):
-                ax.annotate(lab, xy=(f1_4[a], au), xytext=off, textcoords="offset points",
-                            fontsize=12, fontweight="bold", color="black",
-                            path_effects=[_pe.withStroke(linewidth=3, foreground="white")])
+                ax.annotate(
+                    lab,
+                    xy=(f1_4[a], au),
+                    xytext=off,
+                    textcoords="offset points",
+                    fontsize=12,
+                    fontweight="bold",
+                    color="black",
+                    path_effects=[_pe.withStroke(linewidth=3, foreground="white")],
+                )
     # hero annotation: ConvNeXt-T holds both worlds
     if "convnext_tiny" in f1_4 and "convnext_tiny" in d4:
         ax.annotate(
@@ -251,8 +283,18 @@ def _closed_vs_open(fig_dir: Path) -> list[Path]:
     ax.set_ylabel("AUROC OSR Ensemble", fontsize=15)
     ax.set_ylim(0.4, 1.0)
     ax.axhline(0.5, color="black", linestyle="--", linewidth=1.4)
-    ax.text(0.04, 0.2, "caso", transform=ax.transAxes, fontsize=13, fontweight="bold", color="black", ha="left", va="bottom",
-            bbox=dict(facecolor="white", edgecolor="none", pad=2))
+    ax.text(
+        0.04,
+        0.2,
+        "caso",
+        transform=ax.transAxes,
+        fontsize=13,
+        fontweight="bold",
+        color="black",
+        ha="left",
+        va="bottom",
+        bbox=dict(facecolor="white", edgecolor="none", pad=2),
+    )
     ax.set_title("Chiuso vs OSR — II-A, 1 novel (^) vs II-B, 2 novel (o)", fontsize=18, fontweight="bold")
     ax.grid(False)
     for spine in ax.spines.values():

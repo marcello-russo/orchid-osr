@@ -21,17 +21,17 @@ from pathlib import Path
 import numpy as np
 import torch
 import torch.nn as nn
-from sklearn.metrics import normalized_mutual_info_score, adjusted_rand_score, roc_auc_score, roc_curve
 from sklearn.cluster import KMeans
+from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score, roc_auc_score, roc_curve
 
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
 OUT = REPO / "experiments" / "exp6_clinc_osr"
 
-from app.core.losses import SupConLoss, SphericalPrototypes  # noqa: E402
-from app.core.ncd.detector import MahalanobisDetector, KNNDetector, EnergyDetector, EnsembleDetector  # noqa: E402
+from app.core.losses import SphericalPrototypes, SupConLoss  # noqa: E402
 from app.core.ncd.clustering import ss_kmeans_multirun  # noqa: E402
 from app.core.ncd.delong import delong_auc_ci, delong_paired_test  # noqa: E402
+from app.core.ncd.detector import EnergyDetector, EnsembleDetector, KNNDetector, MahalanobisDetector  # noqa: E402
 from app.core.ncd.evaluation import hungarian_accuracy  # noqa: E402
 
 SEED = 57
@@ -62,7 +62,9 @@ def train_head(X: np.ndarray, y: np.ndarray, sphor: bool = False):
     Xt = torch.from_numpy(X)
     loader = torch.utils.data.DataLoader(
         torch.utils.data.TensorDataset(Xt, torch.from_numpy(y)),
-        batch_size=BATCH, shuffle=True, generator=torch.Generator().manual_seed(SEED),
+        batch_size=BATCH,
+        shuffle=True,
+        generator=torch.Generator().manual_seed(SEED),
     )
     for _ in range(EPOCHS_P1):
         for xb, yb in loader:
@@ -89,7 +91,9 @@ def train_probe(Z: np.ndarray, y: np.ndarray):
     crit = nn.CrossEntropyLoss()
     loader = torch.utils.data.DataLoader(
         torch.utils.data.TensorDataset(torch.from_numpy(Z), torch.from_numpy(y)),
-        batch_size=BATCH, shuffle=True, generator=torch.Generator().manual_seed(SEED),
+        batch_size=BATCH,
+        shuffle=True,
+        generator=torch.Generator().manual_seed(SEED),
     )
     for _ in range(EPOCHS_P2):
         for zb, yb in loader:
@@ -136,7 +140,11 @@ def main() -> int:
         idx = rng.choice(len(Xtr_txt), args.limit_train, replace=False)
         Xtr_txt = [Xtr_txt[i] for i in idx]
         ytr = ytr[idx]
-    print(f"train {len(Xtr_txt)} (150 intenti, oos assente) | test {len(Xte_txt)} (oos={int((yte == N_NOVEL_CLS).sum())})", flush=True)
+    print(
+        f"train {len(Xtr_txt)} (150 intenti, oos assente) | "
+        f"test {len(Xte_txt)} (oos={int((yte == N_NOVEL_CLS).sum())})",
+        flush=True,
+    )
 
     print("encoding MiniLM…", flush=True)
     Etr = encode(Xtr_txt)
@@ -151,8 +159,12 @@ def main() -> int:
         logits_te = probe(torch.from_numpy(Zte)).numpy()
 
     y_true = (yte == N_NOVEL_CLS).astype(int)
-    dets = {"Mahalanobis": MahalanobisDetector(), "KNN": KNNDetector(k=5),
-            "Energy": EnergyDetector(), "Ensemble": EnsembleDetector()}
+    dets = {
+        "Mahalanobis": MahalanobisDetector(),
+        "KNN": KNNDetector(k=5),
+        "Energy": EnergyDetector(),
+        "Ensemble": EnsembleDetector(),
+    }
     res_det, scores = {}, {}
     for name, det in dets.items():
         det.fit(Ztr, ytr)
@@ -175,8 +187,7 @@ def main() -> int:
     pool = np.concatenate([Ztr, Zte])
     mask = np.concatenate([np.ones(len(Ztr), bool), np.zeros(len(Zte), bool)])
     lab = np.concatenate([ytr, np.full(len(Zte), -1)])
-    ss_labels, _ = ss_kmeans_multirun(pool, mask, lab, n_known=150, n_novel=1,
-                                      n_init=5, max_iter=50, random_state=SEED)
+    ss_labels, _ = ss_kmeans_multirun(pool, mask, lab, n_known=150, n_novel=1, n_init=5, max_iter=50, random_state=SEED)
     ss_test = ss_labels[~mask]
     yte_151 = yte  # gia rimappato: note 0..149, novel 150
     acc_old = hungarian_accuracy(yte_151[yte_151 != 150], ss_test[yte_151 != 150])
@@ -186,14 +197,22 @@ def main() -> int:
     km_new = hungarian_accuracy(yte_151[yte_151 == 150], km[yte_151 == 150])
     km_old = hungarian_accuracy(yte_151[yte_151 != 150], km[yte_151 != 150])
     res_gcd = {
-        "ss_km": {"acc_old": round(float(acc_old), 4), "acc_new": round(float(acc_new), 4),
-                  "nmi_pool_test": round(float(normalized_mutual_info_score(yte_151, ss_test)), 4),
-                  "ari_pool_test": round(float(adjusted_rand_score(yte_151, ss_test)), 4)},
+        "ss_km": {
+            "acc_old": round(float(acc_old), 4),
+            "acc_new": round(float(acc_new), 4),
+            "nmi_pool_test": round(float(normalized_mutual_info_score(yte_151, ss_test)), 4),
+            "ari_pool_test": round(float(adjusted_rand_score(yte_151, ss_test)), 4),
+        },
         "kmeans_x10": {"acc_old": round(float(km_old), 4), "acc_new": round(float(km_new), 4)},
     }
 
-    out = {"sphor": args.sphor, "seed": SEED, "minutes": round((time.time() - t0) / 60, 1),
-           "detectors": res_det, "gcd": res_gcd}
+    out = {
+        "sphor": args.sphor,
+        "seed": SEED,
+        "minutes": round((time.time() - t0) / 60, 1),
+        "detectors": res_det,
+        "gcd": res_gcd,
+    }
     (OUT / ("results_sphor.json" if args.sphor else "results.json")).write_text(json.dumps(out, indent=2))
     print(json.dumps(out, indent=2))
     return 0
