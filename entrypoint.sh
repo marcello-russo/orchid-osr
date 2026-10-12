@@ -10,28 +10,9 @@ if [ -d "$DATA_DIR" ]; then
     fi
     [ ! -L dataset ] && ln -sfn "$DATA_DIR/dataset" dataset 2>/dev/null || true
 
-    # Persistent users.json (auth) — scarica SOLO se non esiste già
-    if [ ! -f "$DATA_DIR/users.json" ]; then
-        echo "Scarico users.json da dataset privato (primo avvio)..."
-        python3 -c "
-from huggingface_hub import hf_hub_download
-import os
-try:
-    path = hf_hub_download(
-        repo_id='marcellorusso/orchid-osr-dataset',
-        filename='users.json',
-        repo_type='dataset',
-        token=os.environ.get('HF_TOKEN')
-    )
-    import shutil
-    shutil.copy2(path, \"$DATA_DIR/users.json\")
-    print('users.json scaricato')
-except Exception as e:
-    print(f'users.json non disponibile: {e}')
-" 2>&1
-    else
-        echo "users.json già presente su /data, uso locale"
-    fi
+    # Utenti sul volume persistente (il backup su hub e' disattivato: vedi auth.py).
+    # Al primo avvio il file viene creato vuoto al primo salvataggio;
+    # il superadmin e' bootstrappato dalle env SUPERADMIN_*.
     export USERS_PATH="$DATA_DIR/users.json"
     # JWT secret path: persist in /data per sopravvivere ai restart
     export JWT_SECRET_PATH="$DATA_DIR/.jwt_secret"

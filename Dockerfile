@@ -72,7 +72,8 @@ RUN     pip install --no-cache-dir --default-timeout=1000 . --constraint constra
 
 COPY backend/data/ data/
 COPY --from=scripts-stage /scripts/ scripts/
-COPY backend/dataset/ dataset/
+# NOTA: backend/dataset/ e' escluso dal contesto (.dockerignore): il dataset
+# entra via volume montato o sync da hub, mai baked nell'immagine.
 RUN mkdir -p models dataset
 COPY backend/app/ app/
 COPY backend/server.py .
