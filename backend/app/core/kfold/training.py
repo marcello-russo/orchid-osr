@@ -5,6 +5,7 @@ import json
 import logging
 import os
 import shutil
+from pathlib import Path
 
 import numpy as np
 import torch
@@ -15,6 +16,37 @@ from torch import nn
 from torch.utils.data import DataLoader, Subset
 
 logger = logging.getLogger(__name__)
+
+FOLDS_FILE = Path(__file__).resolve().parents[3] / "data" / "kfold_indices_seed57.json"
+
+
+def _materialized_folds(raw_dataset_dir, all_paths, exclude, num_folds, seed, runtime_folds):
+    """Usa gli indici materializzati se coincidono col listing corrente.
+
+    Il file `data/kfold_indices_seed57.json` fissa gli split della tesi
+    (seed 57, 5 fold). Se manca o il contenuto del train dir e' cambiato,
+    si torna al calcolo a runtime (stesso seed: comunque deterministico).
+    """
+    try:
+        size = Path(raw_dataset_dir).name.replace("cropped_", "")
+        if size not in ("256x512", "224x224"):
+            return runtime_folds
+        data = json.loads(FOLDS_FILE.read_text())
+        if data.get("seed") != seed or data.get("n_splits") != num_folds:
+            return runtime_folds
+        k = f"{size}|{'full' if not exclude else '+'.join(sorted(exclude))}"
+        entry = data.get("configs", {}).get(k)
+        if not entry:
+            return runtime_folds
+        current = [str(Path(p).relative_to(raw_dataset_dir)) for p in all_paths]
+        if entry.get("files") != current or entry.get("n_images") != len(current):
+            logger.warning("Fold materializzati non coincidenti col train dir: ricalcolo a runtime (seed %s)", seed)
+            return runtime_folds
+        logger.info("Fold materializzati da %s (config %s)", FOLDS_FILE.name, k)
+        return [(np.array(f["train_idx"]), np.array(f["val_idx"])) for f in entry["folds"]]
+    except Exception as e:
+        logger.warning("Fold materializzati non leggibili (%s): ricalcolo a runtime", e)
+        return runtime_folds
 
 
 def split_raw_images(raw_dataset_dir, class_names, num_folds, seed, exclude_classes=None):
@@ -47,6 +79,7 @@ def split_raw_images(raw_dataset_dir, class_names, num_folds, seed, exclude_clas
 
     skf = StratifiedKFold(n_splits=num_folds, shuffle=True, random_state=seed)
     folds = list(skf.split(all_paths, all_labels))
+    folds = _materialized_folds(raw_dataset_dir, all_paths, exclude, num_folds, seed, folds)
 
     logger.info(f"Dataset: {len(all_paths)} immagini, {len(active_names)} classi")
     for cls_idx, cls_name in enumerate(active_names):
