@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import errno
+import fcntl
 import json
 import logging
 import os
 import shutil
+from contextlib import contextmanager
 from pathlib import Path
 
 from huggingface_hub import HfApi, snapshot_download
@@ -38,6 +41,49 @@ def _is_essential(path: str) -> bool:
     return False
 
 
+LOCK_FILENAME = ".sync.lock"
+
+
+@contextmanager
+def _sync_lock(dst_dir: str):
+    """Lock esclusivo non bloccante sulla directory di sync.
+
+    Entrypoint e job di deploy lanciano il sync insieme: senza lock due
+    processi scrivono gli stessi file ``.tmp`` e i rename falliscono.
+    """
+    fh = open(os.path.join(dst_dir, LOCK_FILENAME), "w")
+    try:
+        try:
+            fcntl.flock(fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError as exc:
+            fh.close()
+            if exc.errno in (errno.EACCES, errno.EAGAIN):
+                yield False
+                return
+            raise
+        yield True
+    finally:
+        if not fh.closed:
+            fcntl.flock(fh, fcntl.LOCK_UN)
+            fh.close()
+
+
+def _remote_sizes(client: HfApi, repo_id: str, paths: list[str]) -> dict[str, int]:
+    """Dimensioni remote in una sola chiamata: {path: size}."""
+    try:
+        infos = client.get_paths_info(repo_id, paths)
+    except Exception as exc:
+        print(f"  WARN: remote file sizes unavailable: {exc}")
+        return {}
+    sizes: dict[str, int] = {}
+    for info in infos or []:
+        path = getattr(info, "path", None)
+        size = getattr(info, "size", None)
+        if path and size is not None:
+            sizes[path] = size
+    return sizes
+
+
 def sync_experiments(
     dst: str | None = None,
     repo: str | None = None,
@@ -48,10 +94,19 @@ def sync_experiments(
     if not token:
         print("No HF_TOKEN, skipping experiment sync")
         return {"synced": 0, "skipped": 0, "errors": 0}
-    client = api or HfApi(token=token)
-    repo_id = repo or settings.hf_models_repo
+
     dst_dir = dst or os.environ.get("EXPERIMENTS_DIR", "/data/experiments")
     os.makedirs(dst_dir, exist_ok=True)
+    with _sync_lock(dst_dir) as acquired:
+        if not acquired:
+            print("Experiment sync already running, skipping this run")
+            return {"synced": 0, "skipped": 0, "errors": 0}
+        return _sync_experiments(dst_dir, repo, api, token)
+
+
+def _sync_experiments(dst_dir: str, repo: str | None, api: HfApi | None, token: str) -> dict[str, int]:
+    client = api or HfApi(token=token)
+    repo_id = repo or settings.hf_models_repo
 
     all_paths = list_repo_files(client, repo_id)
     if not all_paths:
@@ -61,6 +116,10 @@ def sync_experiments(
     essential = [p for p in all_paths if _is_essential(p)]
     print(f"Found {len(all_paths)} files total, syncing {len(essential)} essential files (JSONs + embeddings)...")
 
+    # Una sola chiamata per le dimensioni: il confronto per path singolo
+    # (434 richieste) rendeva lo skip inaffidabile e il sync sempre completo.
+    sizes = _remote_sizes(client, repo_id, essential)
+
     count, skipped, errors = 0, 0, 0
     for src in essential:
         parts = src.split("/")
@@ -68,20 +127,18 @@ def sync_experiments(
         target = os.path.join(dst_dir, flat)
         os.makedirs(os.path.dirname(target), exist_ok=True)
 
-        src_mtime = None
-        try:
-            repo_info = client.get_paths_info(repo_id, src)
-            if repo_info:
-                src_mtime = repo_info[0].last_commit_date.timestamp() if repo_info[0].last_commit_date else None
-        except Exception:
-            pass
-        dst_mtime = os.path.getmtime(target) if os.path.exists(target) else None
-        if src_mtime and dst_mtime and dst_mtime >= src_mtime:
+        remote_size = sizes.get(src)
+        dst_size = os.path.getsize(target) if os.path.exists(target) else None
+        if remote_size is not None and dst_size == remote_size:
             skipped += 1
             continue
 
         try:
             download_file(client, repo_id, src, target, token)
+            if remote_size is not None:
+                written = os.path.getsize(target)
+                if written != remote_size:
+                    raise ValueError(f"size mismatch: {written} != {remote_size}")
             count += 1
         except Exception as e:
             errors += 1
