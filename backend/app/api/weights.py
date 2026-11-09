@@ -13,6 +13,7 @@ from huggingface_hub import hf_hub_download, snapshot_download
 from app.api.schemas import CacheStatus, ModelOption
 from app.cli.definitions import EXPERIMENTS as _EXPERIMENTS
 from app.config import settings
+from app.core.experiment_paths import hf_exp_dir, hf_file
 
 logger = logging.getLogger(__name__)
 
@@ -25,14 +26,6 @@ _EXP_META: dict[str, tuple[str, int]] = {
     "exp3_sphor": ("Studio I-C (SpHOR)", 3),
     "exp4_sphor_ncd": ("Studio II-A (SpHOR-NCD)", 4),
     "exp5_sphor_ncd": ("Studio II-B (SpHOR-NCD 2 novel)", 5),
-}
-
-_HF_PREFIX_MAP: dict[str, str] = {
-    "exp1_ce": "exp6_ce",
-    "exp2_supcon": "exp7_supcon",
-    "exp3_sphor": "exp8_sphor",
-    "exp4_sphor_ncd": "exp9_ncd",
-    "exp5_sphor_ncd": "exp5_sphor_ncd",
 }
 
 
@@ -99,11 +92,7 @@ def _get_cache_dir() -> Path:
 
 
 def _hf_path_for(dir_name: str, filename: str) -> str | None:
-    prefix = _get_exp_prefix(dir_name)
-    if prefix is None:
-        return None
-    hf_prefix = _HF_PREFIX_MAP.get(prefix, prefix)
-    return f"{hf_prefix}/{dir_name}/{filename}"
+    return hf_file(dir_name, filename)
 
 
 def _estimate_pt_size(dir_name: str) -> float:
@@ -282,12 +271,11 @@ def _download_adapter_dir(model_id: str, variant: str, pt_name: str) -> None:
     adapter_dir = cache_pt.with_name(cache_pt.stem + "_adapter")
     if adapter_dir.exists():
         return
-    prefix = _get_exp_prefix(model_id)
-    if prefix is None:
+    base = hf_exp_dir(model_id)
+    if base is None:
         return
-    hf_prefix = _HF_PREFIX_MAP.get(prefix, prefix)
     fold = pt_name.replace("best_fold_", "").replace(".pt", "")
-    pattern = f"{hf_prefix}/{model_id}/best_fold_{fold}_adapter/*"
+    pattern = f"{base}/best_fold_{fold}_adapter/*"
     try:
         tmp = Path(
             snapshot_download(
@@ -296,7 +284,7 @@ def _download_adapter_dir(model_id: str, variant: str, pt_name: str) -> None:
                 token=settings.hf_token or None,
             )
         )
-        src = tmp / hf_prefix / model_id / f"best_fold_{fold}_adapter"
+        src = tmp / base / f"best_fold_{fold}_adapter"
         if src.is_dir():
             shutil.copytree(src, adapter_dir)
             logger.info(f"Downloaded adapter from HF: {pattern}")
