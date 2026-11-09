@@ -8,6 +8,7 @@ import json
 import logging
 import os
 import shutil
+import time
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -45,22 +46,30 @@ LOCK_FILENAME = ".sync.lock"
 
 
 @contextmanager
-def _sync_lock(dst_dir: str):
-    """Lock esclusivo non bloccante sulla directory di sync.
+def _sync_lock(dst_dir: str, wait_seconds: float = 0):
+    """Lock esclusivo sulla directory di sync, con attesa opzionale.
 
     Entrypoint e job di deploy lanciano il sync insieme: senza lock due
     processi scrivono gli stessi file ``.tmp`` e i rename falliscono.
+    Con ``wait_seconds`` > 0 il secondo processo aspetta che il primo
+    finisca (e poi salta i file gia' allineati) invece di uscire subito.
     """
     fh = open(os.path.join(dst_dir, LOCK_FILENAME), "w")
+    deadline = time.monotonic() + max(0.0, wait_seconds)
     try:
-        try:
-            fcntl.flock(fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except OSError as exc:
-            fh.close()
-            if exc.errno in (errno.EACCES, errno.EAGAIN):
-                yield False
-                return
-            raise
+        while True:
+            try:
+                fcntl.flock(fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break
+            except OSError as exc:
+                if exc.errno not in (errno.EACCES, errno.EAGAIN):
+                    fh.close()
+                    raise
+                if time.monotonic() >= deadline:
+                    fh.close()
+                    yield False
+                    return
+                time.sleep(0.5)
         yield True
     finally:
         if not fh.closed:
@@ -88,6 +97,7 @@ def sync_experiments(
     dst: str | None = None,
     repo: str | None = None,
     api: HfApi | None = None,
+    wait_seconds: float = 0,
 ) -> dict[str, int]:
     """Download essential experiment JSONs + embeddings. Returns counters."""
     token = os.environ.get("HF_TOKEN") or settings.hf_token or None
@@ -97,9 +107,9 @@ def sync_experiments(
 
     dst_dir = dst or os.environ.get("EXPERIMENTS_DIR", "/data/experiments")
     os.makedirs(dst_dir, exist_ok=True)
-    with _sync_lock(dst_dir) as acquired:
+    with _sync_lock(dst_dir, wait_seconds) as acquired:
         if not acquired:
-            print("Experiment sync already running, skipping this run")
+            print(f"Experiment sync still running after {wait_seconds:g}s, skipping")
             return {"synced": 0, "skipped": 0, "errors": 0}
         return _sync_experiments(dst_dir, repo, api, token)
 
@@ -232,7 +242,10 @@ def download_dataset(
 
 
 def main() -> None:
-    sync_experiments()
+    # Il job di deploy lancia il sync mentre l'entrypoint lo sta gia' facendo:
+    # aspetta che finisca, poi passa a vuoto sui file gia' allineati.
+    wait = float(os.environ.get("SYNC_LOCK_WAIT", "240"))
+    sync_experiments(wait_seconds=wait)
 
 
 if __name__ == "__main__":
