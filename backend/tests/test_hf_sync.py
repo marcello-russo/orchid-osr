@@ -125,3 +125,26 @@ def test_sync_lock_blocks_concurrent_run(tmp_path, monkeypatch):
         lock.close()
 
     assert out == {"synced": 0, "skipped": 0, "errors": 0}
+
+
+def test_sync_lock_waits_for_running_sync(tmp_path, monkeypatch):
+    import fcntl
+    import time
+
+    from app.hf import sync as sync_mod
+
+    monkeypatch.setenv("HF_TOKEN", "hf_dummy_token_for_test")
+    monkeypatch.setattr(sync_mod, "list_repo_files", lambda api, repo, *a, **k: [])
+
+    lock = open(tmp_path / sync_mod.LOCK_FILENAME, "w")
+    fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    try:
+        started = time.monotonic()
+        out = sync_mod.sync_experiments(dst=str(tmp_path), repo="dummy/repo", api=_StubApi([]), wait_seconds=0.3)
+        elapsed = time.monotonic() - started
+    finally:
+        fcntl.flock(lock, fcntl.LOCK_UN)
+        lock.close()
+
+    assert elapsed >= 0.3
+    assert out == {"synced": 0, "skipped": 0, "errors": 0}
