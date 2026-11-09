@@ -13,8 +13,9 @@ import numpy as np
 from huggingface_hub import hf_hub_download
 from sklearn.neighbors import NearestNeighbors
 
-from app.api.weights import _find_weights, _get_exp_prefix, _resolve_weights, get_device
+from app.api.weights import _find_weights, _resolve_weights, get_device
 from app.config import settings
+from app.core.experiment_paths import hf_exp_dir
 
 if TYPE_CHECKING:
     from app.core.models import ClassifierModel
@@ -92,11 +93,10 @@ def get_osr_stats(model_id: str) -> dict | None:
         if model_id in _osr_stats_cache:
             return _osr_stats_cache[model_id]
 
-    prefix = _get_exp_prefix(model_id)
-    if prefix is None:
+    base = hf_exp_dir(model_id)
+    if base is None:
         return None
-    hf_prefix = _HF_PREFIX_MAP.get(prefix, prefix)
-    stats_path_in_repo = f"{hf_prefix}/{model_id}/osr_stats.npz"
+    stats_path_in_repo = f"{base}/osr_stats.npz"
 
     _STATS_CACHE_DIR.mkdir(parents=True, exist_ok=True)
     local_path = _STATS_CACHE_DIR / f"{model_id}.npz"
