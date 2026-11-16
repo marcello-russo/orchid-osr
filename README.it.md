@@ -164,13 +164,15 @@ Download: `snapshot_download("marcellorusso/orchid-osr-dataset", repo_type="data
 
 ## Deploy
 
-Una sola immagine (`app`) pubblicata su GHCR dal dispatcher di
-[`marcello-russo/actions`](https://github.com/marcello-russo/actions):
+Una sola immagine (`app`) su GHCR, costruita in CI e deployata con uno script:
 
-- **Tag `v*`** → build su runner centrale → `ghcr.io/squidslab/orchid-app:<tag>`
-- **Release pubblicata** → `pull` + `up -d` in `/srv/orchid` → healthcheck su `/health`
+- **Tag `v*`** → workflow GitHub → `ghcr.io/squidslab/orchid-app:<tag>` (con il `GITHUB_TOKEN` del repo)
+- **`scripts/deploy-vps.sh [tag]`** → `pull` + `up -d` in `/srv/orchid` → healthcheck su `/health` (rollback al tag precedente se fallisce)
 - **Nessun database:** tutto su filesystem (JSON, .pt, .npy); dataset e pesi su HuggingFace
 - **Live demo:** https://osr.marrusso.dev
+
+Il deploy parte dalla macchina di sviluppo perché l'SSH della VPS è aperto solo
+sulla tailnet; l'host non ha il sorgente, prende solo l'immagine pinnata.
 
 ---
 
