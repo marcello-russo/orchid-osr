@@ -147,12 +147,21 @@ class Settings(BaseSettings):
         return bool(self.hf_token) and self.hf_token.startswith("hf_")
 
     def _check_env_exists(self):
-        """Warn if the .env file is missing."""
-        env_path = Path(__file__).resolve().parent.parent.parent / ".env"
-        if not env_path.exists():
-            import warnings
+        """Avvisa se manca il .env e la configurazione non arriva dall'ambiente.
 
-            warnings.warn(f".env not found at {env_path}. Create it from .env.example with your HF_TOKEN.")
+        In produzione i segreti sono env vars (docker `env_file: secrets/app.env`),
+        quindi l'assenza del file non è un errore: senza questo controllo il
+        warning comparirebbe a ogni avvio del container.
+        """
+        env_path = Path(__file__).resolve().parent.parent.parent / ".env"
+        if env_path.exists():
+            return
+        from_env = any(os.environ.get(key) for key in ("HF_TOKEN", "JWT_SECRET", "SUPERADMIN_USERNAME", "DATA_DIR"))
+        if from_env:
+            return
+        import warnings
+
+        warnings.warn(f".env not found at {env_path}. Create it from .env.example with your HF_TOKEN.")
 
     def model_post_init(self, __context):
         self._check_env_exists()
