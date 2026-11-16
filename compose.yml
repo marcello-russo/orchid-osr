@@ -37,6 +37,8 @@ services:
     image: cloudflare/cloudflared:2026.7.1
     container_name: orchid-tunnel
     restart: unless-stopped
+    # uid/gid di `ubuntu`: secrets/cloudflared è 700/600, il container deve poterlo leggere
+    user: "1000:1000"
     command: tunnel --config /etc/cloudflared/config.yml run
     volumes:
       - ./secrets/cloudflared:/etc/cloudflared:ro
