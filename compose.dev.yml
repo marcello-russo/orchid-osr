@@ -1,0 +1,28 @@
+# Sviluppo con Docker — non va in produzione.
+# Uso: npm --prefix frontend run build && docker compose -f compose.dev.yml up --build
+# (per il dev "nativo" vedi AGENTS.md: python server.py + npm run dev)
+name: orchid-dev
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    image: orchid-app:dev
+    restart: "no"
+    env_file:
+      - .env
+    environment:
+      API_PORT: "7860"
+      API_RELOAD: "true"
+      DATA_DIR: /data
+    volumes:
+      - ./backend/app:/workspace/backend/app:ro
+      - ./frontend/dist:/workspace/frontend/dist:ro
+      - dev-data:/data
+    ports:
+      - "127.0.0.1:5000:7860"
+
+volumes:
+  dev-data:

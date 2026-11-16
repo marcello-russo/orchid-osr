@@ -55,7 +55,7 @@ jobs:
       - name: Build and cache
         uses: docker/build-push-action@v6
         with:
-          target: cpu
+          target: runtime
           tags: orchid-osr
           load: true
           cache-from: type=gha
@@ -99,32 +99,3 @@ jobs:
       - run: npm run lint
       - run: npm run build
 
-  deploy:
-    needs: [backend, docker, frontend]
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - name: Skip deploy on non-main
-        if: github.ref != 'refs/heads/main' || github.event_name != 'push'
-        run: echo "Deploy skipped (non-main branch > exit 0)"
-      - name: Deploy to VPS
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: appleboy/ssh-action@v1.2.5
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ubuntu
-          key: ${{ secrets.VPS_SSH_KEY }}
-          command_timeout: 28m
-          script: |
-            set -e
-            cd ~/OrchID
-            git fetch origin main
-            git reset --hard origin/main
-            cd frontend
-            npm ci 2>&1
-            npm run build 2>&1
-            cd ..
-            sudo docker compose build backend 2>&1
-            sudo docker compose up -d backend nginx 2>&1
-            sudo timeout 600 docker compose exec -T backend env PYTHONUNBUFFERED=1 python3 scripts/sync_experiments.py 2>&1 || echo "WARN: sync non completata, prosegue deploy (l'entrypoint la riprova in background)"
-            sudo docker compose restart backend 2>&1

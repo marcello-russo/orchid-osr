@@ -1,6 +1,6 @@
 # AGENTS.md — OrchID OSR (orchid)
 
-Master's thesis project: ultra-fine-grained classification of *Ophrys* orchids via deep learning. Python backend (FastAPI + PyTorch) + React frontend (Vite + TypeScript).
+Master's thesis project (discussa il 29/10/2026): ultra-fine-grained classification of *Ophrys* orchids via deep learning. Python backend (FastAPI + PyTorch) + React frontend (Vite + TypeScript).
 
 ## Working directory
 
@@ -8,13 +8,14 @@ All code lives under `orchid-osr/`. Commands must be relative to that subtree:
 
 - Backend: `orchid-osr/backend/`
 - Frontend: `orchid-osr/frontend/`
-- Docker/Podman root: `orchid-osr/`
+- Docker root: `orchid-osr/`
 
 ## Prerequisites
 
-- Python 3.10+ (conda env `orchid-mps` or `pip install ".[dev]"`)
+- Python 3.11+ (`cd backend && pip install -e ".[dev]"`)
 - NVIDIA GPU + CUDA for training (CPU-only inference is supported)
-- Podman/Docker + NVIDIA Container Toolkit for containerized runs
+- Docker + NVIDIA Container Toolkit for containerized runs
+- Dataset e pesi **non sono nel repo** (rimossi l'8/11/2026, vedi `BACKUP-HF-MANIFEST.txt`): servono `HF_TOKEN` e `orchid hf download`
 
 ## Commands
 
@@ -23,12 +24,12 @@ All code lives under `orchid-osr/`. Commands must be relative to that subtree:
 ```bash
 cd backend
 
-# Training
-python cli.py --cross-validate --exp 1 --model resnet18   # CE baseline
-python cli.py --cross-validate --exp 2 --model resnet18   # SupCon
-python cli.py --cross-validate --exp 3 --model resnet18 --sphor  # SpHOR (open-world)
-python cli.py --cross-validate --exp 4 --model dinov2_small --sphor  # GCD (hidden O. garganica)
-python cli.py --cross-validate --exp 3 --model resnet18 --novel garganica,majellensis  # generic 2-novel override
+# Training (Studio I-A/B/C, II-A/B; --exp prende il numero dell'esperimento)
+python cli.py --cross-validate --exp 1 --model resnet18   # Studio I-A: CE baseline
+python cli.py --cross-validate --exp 2 --model resnet18   # Studio I-B: SupCon
+python cli.py --cross-validate --exp 3 --model resnet18 --sphor  # Studio I-C: SpHOR
+python cli.py --cross-validate --exp 4 --model dinov2_small --sphor  # Studio II-A: GCD (hidden O. garganica)
+python cli.py --cross-validate --exp 5 --model dinov2_small --sphor  # Studio II-B: 2 novel
 
 # Single fold / aggregation
 python cli.py --cross-validate --exp 1 --model resnet50 --fold 0
@@ -36,8 +37,8 @@ python cli.py --cross-validate --exp 1 --model resnet50 --aggregate-only
 
 # NCD pipeline (Novel Class Discovery)
 orchid ncd --exp 4 --model dinov2_small         # OSR + clustering (GPU)
-orchid ncd --stats                                    # calibration stats
-orchid ncd --delong                                   # DeLong report
+orchid ncd --stats                              # calibration stats
+orchid ncd --delong                             # DeLong report
 orchid ncd-comparison                           # cross-model comparison table
 
 # Embedding extraction for latent space viewer
@@ -52,11 +53,10 @@ python cli.py --pipeline       # All three in sequence
 # API server (default :5000)
 python server.py               # Use `&` for background, avoid --reload for stability
 
-# Tests
-pytest                          # all tests
-pytest -m "not slow"            # skip slow explain endpoint tests
-pytest tests/test_core/         # core tests only
-pytest --cov=app                # with coverage
+# Quality gate (tutti e tre enforced da CI)
+pytest -m "not slow"                                         # test
+ruff check app/ tests/ scripts/ && ruff format --check app/ tests/ scripts/
+mypy app/cli --ignore-missing-imports
 
 # Orchid CLI (Typer) — preferred; python cli.py is deprecated alias
 orchid --help
@@ -70,22 +70,38 @@ orchid figures --all  # rigenera le figure in documents/_figures/ (§3.5 riprodu
 ```bash
 cd frontend
 npm install
-npm run dev        # Vite dev server on :5173, proxies /api /classify /health → :5000
-npm run build      # tsc -b && vite build
+npm run dev        # Vite dev server on :5175, proxies /api /classify /health /auth → :5000
+npm run build      # tsc -b && vite build → dist/
 npm run lint       # eslint .
+npm run test       # vitest
 ```
 
 ### Containerized
 
 ```bash
 cd orchid-osr
-docker compose up -d                       # Dev server (CPU, --reload, volume-mounts)
-docker compose --profile gpu up -d         # GPU container (training/serve)
-docker compose --profile gpu run gpu bash  # Esegui comandi nel container GPU
-./backend/scripts/smart-train.sh --exp 2       # SupCon experiments
-./backend/scripts/smart-train.sh --exp 3       # SpHOR experiments
-./backend/scripts/smart-train.sh --exp 4       # GCD experiments (hidden O. garganica)
+docker compose -f compose.dev.yml up --build        # dev: API + SPA su :5000
+docker compose -f compose.training.yml run --rm training \
+  python cli.py --cross-validate --exp 1 --model resnet18   # training GPU
 ```
+
+`compose.yml` è il compose **di produzione** (immagine GHCR pinnata, nessun build):
+non si usa in locale.
+
+## Deploy
+
+Percorso unico, lo stesso di `personale/actions`:
+
+1. tag `v*` → `Publish Docker images` (dispatcher centrale) → `ghcr.io/squidslab/orchid-app:<tag>`
+2. Release pubblicata → `Deploy VPS` → `pull` + `up -d` in `/srv/orchid`, healthcheck su `https://osr.marrusso.dev/health`
+
+Sull'host non esiste il sorgente: `compose.yml` ed `edge.yml` arrivano dal repo
+(assets del dispatcher). Unica immagine: il backend FastAPI serve anche la SPA
+da `frontend/dist`. Layout e regole: `actions/docs/host-layout.md`.
+
+- Live demo: `https://osr.marrusso.dev`
+- Tunnel: `orchid-ncd` (Cloudflare), ingress da `edge.yml`
+- Backup: `backup@orchid.timer` salva `users.json`; dataset e esperimenti stanno su HuggingFace
 
 ## Architecture
 
@@ -94,21 +110,24 @@ docker compose --profile gpu run gpu bash  # Esegui comandi nel container GPU
 ```
 orchid-osr/
 ├── backend/
-│   ├── cli.py                        # CLI entry point
+│   ├── cli.py                        # CLI entry point (shim deprecato)
 │   ├── server.py                     # FastAPI entry point
 │   ├── app/
 │   │   ├── config.py                 # pydantic-settings (reads .env)
 │   │   ├── core/models/registry.py   # 6 registered models with per-architecture recipes
 │   │   ├── core/models/base.py       # ClassifierModel ABC
-│   │   ├── core/training.py          # train(), cross_validate(), checkpoint save/resume
 │   │   ├── core/kfold/               # Stratified fold splitting, SupCon two-phase, aggregation
 │   │   ├── core/losses.py            # SupConLoss
+│   │   ├── core/ncd/                 # OSR detectors, GCD clustering, evaluation, DeLong
+│   │   ├── core/perfold.py           # per-fold test metrics (source of truth for F1)
 │   │   ├── preprocessing/            # Cropper (Faster R-CNN), split, resize
 │   │   ├── cli/                      # Arg parsing, experiment runner, definitions
 │   │   ├── api/                      # FastAPI routes + deps + schemas
-│   │   └── explainability/           # Captum occlusion heatmaps
-│   ├── scripts/hf_tools/             # HuggingFace upload/download
-│   └── experiments/                  # Training outputs (gitignored)
+│   │   ├── explainability/           # Captum occlusion heatmaps
+│   │   ├── figures/                  # Figure della tesi (300 dpi, phash check)
+│   │   └── hf/                       # Sync dataset/modelli su HuggingFace
+│   ├── scripts/                      # gcd_*, compute_*, one-shot di tesi, hf_tools/
+│   └── experiments/                  # Training outputs (gitignored, su HF)
 ├── frontend/
 │   └── src/
 │       ├── features/explorer/        # Experiment charts & KPIs
@@ -122,8 +141,8 @@ orchid-osr/
 ### Config sources
 
 - **Backend config**: `app/config.py` (`pydantic-settings`, reads `.env`). Model-specific params (input_size, lr, optimizer, weight_decay) are in the model registry at `app/core/models/registry.py`, not in config.
-- **Frontend env**: `frontend/.env` → `VITE_API_URL` (empty = relative paths proxied by Vite)
-- **Root .env**: `orchid-osr/.env` contains `NORM_MEAN`, `NORM_STD`, and `HF_TOKEN` (do not commit)
+- **Frontend env**: `frontend/.env` → `VITE_API_URL` (empty = relative paths, proxied in dev e same-origin in prod)
+- **Root env**: in locale `.env` (segreti + config); in produzione `.env` non segreto in `/srv/orchid` e segreti in `/srv/orchid/secrets/app.env`
 
 ### Image size convention
 
@@ -134,41 +153,42 @@ orchid-osr/
 ## Critical gotchas
 
 ### Data leakage
-The preliminary experiments (pre-renumbering) had undetected train/test overlap (images from same source with different crops). **Current Exp 1–4 all use the clean MD5-deduplicated split (2.192 train / 300 test, split_manifest.json, seed 57).** `dataset/train_clean` is an intermediate dir — training reads `dataset/cropped_224x224/` and `dataset/cropped_256x512/`.
+The preliminary experiments (pre-renumbering) had undetected train/test overlap (images from same source with different crops). **All current experiments use the clean MD5-deduplicated split (2.192 train / 300 test, split_manifest.json, seed 57).** `dataset/train_clean` is an intermediate dir — training reads `dataset/cropped_224x224/` and `dataset/cropped_256x512/`.
 
 ### GPU vs CPU
-- Training requires CUDA (or MPS on macOS). The `smart-train.sh` script expects `/sys/class/power_supply/BAT0` for battery monitoring — it won't work on desktops/servers.
-- The Dockerfile builds for **CPU-only inference** (PyTorch CPU wheels). For GPU training, use `podman-start.sh`.
+- Training requires CUDA. Lo stage Docker `runtime` è **CPU-only** (wheel PyTorch CPU) ed è quello di produzione; per addestrare si usa lo stage `training` via `compose.training.yml`.
+- Su questa macchina (Quadro T2000, 4 GB) il batch è fissato a 8: batch 4 fa collassare la loss contrastiva su DINOv2.
 
-### Backend has no lint/format config
-No `ruff`, `mypy`, `black`, or `pre-commit` setup. Only `pytest` as a quality gate. The frontend has ESLint v9 (`npm run lint`).
+### Quality gate
+`pytest`, `ruff check` + `ruff format --check` (max line 120) e `mypy app/cli` sono enforced dalla CI; `pre-commit` li anticipa in locale. Il frontend ha ESLint v9.
 
 ### Server vs CLI
 - `python server.py` starts the FastAPI API on `0.0.0.0:5000`
 - `python cli.py` runs training/preprocessing offline
-- The frontend dev server proxies `/api`, `/classify`, `/health` to port 5000 — both must be running for full-stack dev
+- Dev: Vite su `:5175` fa proxy di `/api`, `/classify`, `/health`, `/auth` verso `:5000`
+- Prod: una sola immagine, FastAPI serve la SPA da `frontend/dist` (fallback su `index.html`)
 
 ### HuggingFace integration
 - Dataset: `marcellorusso/orchid-osr-dataset`
 - Models: `marcellorusso/orchid-osr-models`
 - Sync via CLI (logic in `app/hf/`, tested): `orchid hf download|sync|upload-models|upload-ncd` (requires `HF_TOKEN`)
-- Live demo (VPS OVH): `https://orchid-osr.klad.ml`
+- All'avvio l'entrypoint sincronizza in background esperimenti e pesi nel volume `/data` (con lock, skip per dimensione)
 
 ### Database / state
-No database. All state is filesystem-based: experiments JSON, model `.pt` files, dataset images. The backend API scans `experiments/` at runtime to discover available models (LRU cache, max 5 loaded at once).
+No database. All state is filesystem-based: experiments JSON, model `.pt` files, users in `users.json`, dataset images (proxy HF CDN). The backend API scans `experiments/` at runtime to discover available models (LRU cache, max 5 loaded at once).
 
-### Exp 3 (SpHOR) and Exp 4 (SpHOR-NCD)
-- Exp 3 adds Spherical Orthogonal Prototypes (SpHOR) on top of SupCon. Prototypes are L2-normalized hypersphere embeddings with repulsion loss.
-- Exp 4 is identical to Exp 3 but excludes *O. garganica* from training (1.629 known images) — hidden novel class for OSR + GCD evaluation.
-- Use `--sphor` flag for both Exp 3 and Exp 4.
+### Studio I-C (SpHOR) and Studio II-A (SpHOR-NCD)
+- Studio I-C adds Spherical Orthogonal Prototypes (SpHOR) on top of SupCon. Prototypes are L2-normalized hypersphere embeddings with repulsion loss.
+- Studio II-A is identical but excludes *O. garganica* from training (1.629 known images) — hidden novel class for OSR + GCD evaluation.
+- `--sphor` per entrambi.
 
-### Exp 4 results (OSR + GCD)
-- **OSR**: best AUROC 0.875 (DINOv2-Base + SpHOR + Ensemble), ConvNeXt-Tiny 0.850. Open-set recognition at ultra-fine granularity is achievable.
-- **GCD** (Vaze et al. 2022 protocol; `orchid ncd`, SS-KM in `app/core/ncd/`): known-class recovery works (SS-KM ACC old up to 0.93), but novel-class discovery fails with the standard semi-supervised method (ACC new ~0). Only DINOv2-Base discovers the hidden species uninformed (K-means ACC new 0.83±0.04), consistent with its best OSR AUROC. Figure: `orchid figures --all` → `documents/_figures/gcd_old_new.png`. One-shots frozen in `scripts/archive/thesis-figures/`.
+### Studio II-A results (OSR + GCD)
+- **OSR**: best AUROC 0.875 (DINOv2-Base + SpHOR + Ensemble), ConvNeXt-Tiny 0.850.
+- **GCD** (Vaze et al. 2022; `orchid ncd`): known-class recovery works (SS-KM ACC old up to 0.93), novel discovery fails with the standard semi-supervised method (ACC new ~0). Only DINOv2-Base discovers the hidden species uninformed (K-means ACC new 0.83±0.04).
 - GCD protocol: labeled = train embeddings of 5 known classes (1.629); pool = test (300 = 250 old + 50 garganica), L2-normalized. Metrics: ACC old/new/all (global Hungarian), NMI, ARI.
 
-### Exp 5 (in progress, branch feat/exp5-2novel-generic-cli)
-Two hidden novel classes (num_classes=4). Batch runner: `/tmp/run_exp5_all.sh` (6 models sequential, log `logs/exp5_all.log`).
+### Studio II-B (due novel nascoste)
+*O. garganica* + *O. majellensis* escluse (4 classi note). L'OSR regge (ConvNeXt-Tiny 0.843) mentre la discovery collassa (SS-KM ACC new 0.12–0.38): rilevamento e scoperta sono problemi distinti.
 
-### SupCon mode (exp 2)
-Two-phase training: (1) contrastive pretraining with KNN validation using `SupConLoss`, (2) MLP head fine-tuning with cross-entropy on frozen backbone. Uses `app/core/kfold/` with phase-specific logic.
+### SupCon mode (Studio I-B)
+Two-phase training: (1) contrastive pretraining with KNN validation using `SupConLoss`, (2) MLP head fine-tuning with cross-entropy on frozen backbone.

@@ -53,7 +53,8 @@ env/
 # Docker
 .docker/
 Dockerfile
-docker-compose.yml
+compose*.yml
+edge.yml
 
 # Frontend dev (built separately in Docker multi-stage)
 node_modules/

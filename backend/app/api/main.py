@@ -1,5 +1,6 @@
 # backend/app/api/main.py
 import logging
+import os
 import threading
 import uuid
 from collections.abc import AsyncGenerator
@@ -193,8 +194,10 @@ app.include_router(comparison.router, tags=["comparison"])
 app.include_router(embeddings.router, tags=["embeddings"])
 app.include_router(ncd_router.router, tags=["ncd"])
 
-# Serve frontend static files in production (when frontend/dist exists)
-_static_dir = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
+# Serve frontend static files in production (when frontend/dist exists).
+# Layout: <repo>/frontend/dist in locale, /workspace/frontend/dist nell'immagine.
+# FRONTEND_DIST permette di puntare altrove senza cambiare il codice.
+_static_dir = Path(os.environ.get("FRONTEND_DIST") or Path(__file__).resolve().parents[3] / "frontend" / "dist")
 if _static_dir.is_dir():
     app.mount("/assets", StaticFiles(directory=_static_dir / "assets"), name="assets")
 

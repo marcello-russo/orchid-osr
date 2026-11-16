@@ -1,0 +1,37 @@
+# Publish delegata al dispatcher centrale (marcello-russo/actions).
+# Su tag v*: build dell'immagine e push su GHCR, poi il deploy parte dalla Release.
+# Qui non esistono segreti VPS: solo DISPATCH_TOKEN.
+name: Publish Docker images
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag da (ri)costruire (es. v0.2.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          GH_TOKEN: ${{ secrets.DISPATCH_TOKEN }}
+        # repo=slug in minuscolo: GHCR rifiuta i repository name con maiuscole,
+        # e `github.repository` restituisce "squidslab/OrchID".
+        run: |
+          TAG="${{ inputs.tag || '' }}"
+          [ -n "$TAG" ] || TAG="${GITHUB_REF#refs/tags/}"
+          gh api repos/marcello-russo/actions/dispatches \
+            -f event_type=docker-publish \
+            -f "client_payload[repo]=squidslab/orchid" \
+            -f "client_payload[sha]=${{ github.sha }}" \
+            -f "client_payload[tag]=$TAG" \
+            -f 'client_payload[services]=[{"service":"app","context":".","dockerfile":"Dockerfile","paths":["backend/**","frontend/**","entrypoint.sh","Dockerfile",".dockerignore"]}]' \
+            -f "client_payload[keep_versions]=1" \
+            && echo "dispatch publish $TAG inviato"

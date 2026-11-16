@@ -4,11 +4,13 @@ repos:
     hooks:
       - id: ruff
         args: [--fix]
+        files: ^backend/(app|tests|scripts)/
       - id: ruff-format
+        files: ^backend/(app|tests|scripts)/
   - repo: local
     hooks:
       - id: mypy
-        name: mypy strict
-        entry: mypy --strict backend/app/cli backend/app/core --ignore-missing-imports
+        name: mypy (app/cli, come in CI)
+        entry: bash -c 'cd backend && mypy app/cli --ignore-missing-imports'
         language: system
         pass_filenames: false

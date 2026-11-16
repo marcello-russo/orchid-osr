@@ -1,0 +1,63 @@
+# PRODUZIONE (/srv/orchid) — solo pull, mai build.
+# Uso: ORCHID_VERSION=v0.2.0 docker compose pull && docker compose up -d
+# La versione è obbligatoria: fail-fast invece di `latest` silenzioso.
+name: orchid
+
+services:
+  app:
+    image: "ghcr.io/squidslab/orchid-app:${ORCHID_VERSION:?ORCHID_VERSION mancante (es. v0.2.0)}"
+    container_name: orchid-app
+    restart: unless-stopped
+    env_file:
+      - secrets/app.env
+    environment:
+      API_PORT: "7860"
+      DATA_DIR: /data
+    volumes:
+      - data:/data
+    ports:
+      # Loopback: l'unico ingresso è il tunnel (default deny, vedi edge.yml).
+      - "127.0.0.1:${ORCHID_PORT:?ORCHID_PORT mancante: prenota una porta (blocco 8000-8099)}:7860"
+    networks:
+      - orchid_net
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    stop_grace_period: 30s
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:7860/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+
+  tunnel:
+    image: cloudflare/cloudflared:2026.7.1
+    container_name: orchid-tunnel
+    restart: unless-stopped
+    command: tunnel --config /etc/cloudflared/config.yml run
+    volumes:
+      - ./secrets/cloudflared:/etc/cloudflared:ro
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - orchid_net
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  data:
+    # Nome storico: dentro ci sono ~8 GB di esperimenti e pesi sincronizzati da HF.
+    # Rinominarlo significherebbe riscaricare tutto al primo avvio.
+    name: orchid-osr_orchid-data
+
+networks:
+  orchid_net:
+    name: orchid_net
+    driver: bridge

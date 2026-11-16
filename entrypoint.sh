@@ -19,8 +19,9 @@ if [ -d "$DATA_DIR" ]; then
 fi
 
 # Check frontend dist (prima di operazioni lente)
-if [ ! -d "frontend/dist" ]; then
-    echo "⚠️  frontend/dist non trovata. La SPA non sarà servita."
+FRONTEND_DIST="${FRONTEND_DIST:-../frontend/dist}"
+if [ ! -d "$FRONTEND_DIST" ]; then
+    echo "⚠️  $FRONTEND_DIST non trovata. La SPA non sarà servita."
     echo "   Esegui 'cd frontend && npm run build' prima di avviare."
 fi
 

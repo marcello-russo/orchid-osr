@@ -1,0 +1,43 @@
+# Deploy delegato al dispatcher centrale (marcello-russo/actions).
+# Solo promozione esplicita: pubblicare la Release deploya quel tag.
+# Manuale per re-deploy / rollback allo stesso modo.
+name: Deploy VPS
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag da deployare (es. v0.2.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          GH_TOKEN: ${{ secrets.DISPATCH_TOKEN }}
+        # compose.yml ed edge.yml viaggiano dal repo all'host (assets): l'host è
+        # cache, il repo è la fonte di verità. prune_images=false per poter
+        # tornare al tag precedente senza "manifest unknown".
+        run: |
+          TAG="${{ inputs.tag || github.event.release.tag_name }}"
+          gh api repos/marcello-russo/actions/dispatches \
+            -f event_type=vps-deploy \
+            -f "client_payload[repo]=squidslab/orchid" \
+            -f "client_payload[sha]=${{ github.sha }}" \
+            -f "client_payload[tag]=$TAG" \
+            -f "client_payload[target]=vps" \
+            -f "client_payload[compose_dir]=/srv/orchid" \
+            -f "client_payload[compose_file]=compose.yml" \
+            -f "client_payload[version_var]=ORCHID_VERSION" \
+            -f "client_payload[health_url]=https://osr.marrusso.dev/health" \
+            -f "client_payload[assets]=compose.yml:compose.yml edge.yml:edge.yml" \
+            -f "client_payload[enforce_layout]=true" \
+            -f "client_payload[prune_images]=false" \
+            && echo "dispatch deploy $TAG inviato"

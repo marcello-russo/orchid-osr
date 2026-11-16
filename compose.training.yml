@@ -1,0 +1,32 @@
+# Addestramento su GPU (locale o cloud) — non va in produzione.
+# Uso:
+#   docker compose -f compose.training.yml run --rm training \
+#     python cli.py --cross-validate --exp 1 --model resnet18
+#
+# Il dataset NON è nell'immagine: entra via bind mount (o `orchid hf download`).
+# I risultati restano su ./backend/experiments dell'host.
+name: orchid-training
+
+services:
+  training:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: training
+    image: orchid-training:dev
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    env_file:
+      - .env
+    environment:
+      EXPERIMENTS_DIR: /workspace/backend/experiments
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - ./backend/dataset:/workspace/backend/dataset:ro
+      - ./backend/experiments:/workspace/backend/experiments
+    working_dir: /workspace/backend
