@@ -56,7 +56,9 @@ services:
 volumes:
   data:
     # Nome storico: dentro ci sono ~8 GB di esperimenti e pesi sincronizzati da HF.
-    # Rinominarlo significherebbe riscaricare tutto al primo avvio.
+    # Rinominarlo significherebbe riscaricare tutto al primo avvio, quindi è
+    # external (su un host nuovo: `docker volume create orchid-osr_orchid-data`).
+    external: true
     name: orchid-osr_orchid-data
 
 networks:

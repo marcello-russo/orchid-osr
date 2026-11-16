@@ -35,10 +35,14 @@ HEALTH_URL="${ORCHID_HEALTH_URL:-https://osr.marrusso.dev/health}"
 echo "==> deploy $TAG su $HOST:$REMOTE_DIR"
 scp -q compose.yml edge.yml "$HOST:$REMOTE_DIR/"
 
-ssh "$HOST" "TAG='$TAG' HEALTH_URL='$HEALTH_URL' bash -s" <<'REMOTE'
+# L'healthcheck autorevole è in loopback sull'host: la VPS ha IP datacenter e
+# Cloudflare (WAF della zona) risponde con una challenge agli IP non residenziali,
+# quindi `curl https://osr.marrusso.dev` da lì non è affidabile.
+ssh "$HOST" "TAG='$TAG' bash -s" <<'REMOTE'
 set -eu
 cd /srv/orchid
 
+PORT=$(sed -n 's/^ORCHID_PORT=//p' .env | tail -n1)
 PREV=$(sed -n 's/^ORCHID_VERSION=//p' .env | tail -n1)
 echo "versione precedente: ${PREV:-nessuna}"
 sed -i "s|^ORCHID_VERSION=.*|ORCHID_VERSION=$TAG|" .env
@@ -47,15 +51,15 @@ docker compose pull
 docker compose up -d
 
 for i in $(seq 1 36); do
-    if curl -fsS -o /dev/null "$HEALTH_URL"; then
-        echo "health OK dopo ~$((i * 5))s"
+    if curl -fsS -o /dev/null "http://127.0.0.1:${PORT}/health"; then
+        echo "health locale OK dopo ~$((i * 5))s"
         docker compose ps
         exit 0
     fi
     sleep 5
 done
 
-echo "healthcheck fallito su $HEALTH_URL" >&2
+echo "healthcheck fallito su http://127.0.0.1:${PORT}/health" >&2
 docker compose logs --tail 80 app || true
 if [ -n "${PREV:-}" ]; then
     echo "rollback a $PREV" >&2
@@ -64,3 +68,18 @@ if [ -n "${PREV:-}" ]; then
 fi
 exit 1
 REMOTE
+
+# Verifica end-to-end dal punto di vista di un utente (da qui: IP residenziale).
+# È un avviso, non un errore: la challenge Cloudflare sugli IP datacenter non
+# dice nulla sullo stato del deploy.
+for i in 1 2 3; do
+    code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "$HEALTH_URL" || echo 000)
+    if [ "$code" = "200" ]; then
+        echo "==> esterno OK: $HEALTH_URL"
+        exit 0
+    fi
+    [ "$i" = "3" ] && echo "!! $HEALTH_URL ha risposto $code (challenge Cloudflare o propagazione DNS?)"
+    sleep 5
+done
+exit 0
+
