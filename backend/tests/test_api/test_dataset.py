@@ -174,3 +174,58 @@ class TestListClassImages:
             data = client.get("/api/dataset/classes/O. exaltata/images", headers=AUTH_HEADER).json()
             assert data["total"] == 2
             assert len(data["images"]) == 2
+
+
+class TestThumbnailAtomicWrite:
+    """La miniatura non deve essere servita mentre è in scrittura.
+
+    Scrivendo in place, una `FileResponse` concorrente dichiarava un
+    `Content-Length` su un file incompleto e poi ne leggeva più byte
+    ("Too much data for declared Content-Length") -> 520 a valle.
+    """
+
+    def test_write_bytes_atomic_replaces_without_temp_files(self, tmp_path):
+        from app.api.routes.dataset import _write_bytes_atomic
+
+        target = tmp_path / "img.webp"
+        target.write_bytes(b"vecchio")
+        _write_bytes_atomic(target, b"contenuto-nuovo")
+        assert target.read_bytes() == b"contenuto-nuovo"
+        assert sorted(p.name for p in tmp_path.iterdir()) == ["img.webp"]
+
+    def test_thumbnail_is_webp_and_leaves_no_temp(self, tmp_path):
+        from PIL import Image
+
+        base = tmp_path / "cropped_256x512"
+        class_dir = base / "train" / "O. exaltata"
+        class_dir.mkdir(parents=True)
+        Image.new("RGB", (80, 40), (120, 40, 90)).save(class_dir / "a.jpg", "JPEG")
+
+        with patch("app.api.routes.dataset._get_dataset_base", return_value=base):
+            resp = client.get(
+                "/api/dataset/images/train/O. exaltata/a.jpg",
+                headers=AUTH_HEADER,
+                params={"size": 300},
+            )
+            assert resp.status_code == 200
+            assert resp.headers["content-type"] == "image/webp"
+            assert resp.content[:4] == b"RIFF"
+
+        thumbs = list((tmp_path / ".thumbnails" / "300").rglob("*"))
+        assert not [p for p in thumbs if p.name.endswith(".tmp")]
+        assert [p.name for p in thumbs if p.suffix == ".webp"] == ["a.webp"]
+
+    def test_repeated_requests_are_identical(self, tmp_path):
+        from PIL import Image
+
+        base = tmp_path / "cropped_256x512"
+        class_dir = base / "train" / "O. exaltata"
+        class_dir.mkdir(parents=True)
+        Image.new("RGB", (60, 60), (10, 10, 10)).save(class_dir / "b.jpg", "JPEG")
+
+        with patch("app.api.routes.dataset._get_dataset_base", return_value=base):
+            url = "/api/dataset/images/train/O. exaltata/b.jpg"
+            first = client.get(url, headers=AUTH_HEADER, params={"size": 300})
+            second = client.get(url, headers=AUTH_HEADER, params={"size": 300})
+        assert first.status_code == second.status_code == 200
+        assert first.content == second.content
