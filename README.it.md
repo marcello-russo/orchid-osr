@@ -164,9 +164,13 @@ Download: `snapshot_download("marcellorusso/orchid-osr-dataset", repo_type="data
 
 ## Deploy
 
-- **Backend:** Docker (VPS / Dokploy) con Cloudflare Quick Tunnel
-- **Frontend:** Cloudflare Pages (`orchid-osr.pages.dev`)
-- **Nessun database:** tutto su filesystem (JSON, .pt, .npy)
+Una sola immagine (`app`) pubblicata su GHCR dal dispatcher di
+[`marcello-russo/actions`](https://github.com/marcello-russo/actions):
+
+- **Tag `v*`** → build su runner centrale → `ghcr.io/squidslab/orchid-app:<tag>`
+- **Release pubblicata** → `pull` + `up -d` in `/srv/orchid` → healthcheck su `/health`
+- **Nessun database:** tutto su filesystem (JSON, .pt, .npy); dataset e pesi su HuggingFace
+- **Live demo:** https://osr.marrusso.dev
 
 ---
 

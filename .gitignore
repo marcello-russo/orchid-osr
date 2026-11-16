@@ -73,3 +73,6 @@ keys/
 frontend/coverage/
 node_modules/
 frontend/node_modules/
+
+# Build output del frontend
+frontend/dist/

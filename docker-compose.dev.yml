@@ -1,8 +1,0 @@
-# Locale — non si auto-avvia al boot, `prod` resta `unless-stopped` in docker-compose.yml
-services:
-  backend:
-    restart: "no"
-  nginx:
-    restart: "no"
-  tunnel:
-    restart: "no"
