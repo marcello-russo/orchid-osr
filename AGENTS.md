@@ -90,14 +90,21 @@ non si usa in locale.
 
 ## Deploy
 
-Percorso unico, lo stesso di `personale/actions`:
+Percorso unico in stile `personale/actions`, con due workflow nel repo:
 
-1. tag `v*` → `Publish Docker images` (dispatcher centrale) → `ghcr.io/squidslab/orchid-app:<tag>`
-2. Release pubblicata → `Deploy VPS` → `pull` + `up -d` in `/srv/orchid`, healthcheck su `https://osr.marrusso.dev/health`
+1. tag `v*` → `Publish Docker images` → build con il `GITHUB_TOKEN` del repo e push
+   di `ghcr.io/squidslab/orchid-app:<tag>` (nessun secret aggiuntivo)
+2. Release pubblicata → `Deploy VPS` → scp di `compose.yml` + `edge.yml` in
+   `/srv/orchid`, poi `pull` + `up -d` via SSH, healthcheck su
+   `https://osr.marrusso.dev/health`, rollback automatico al tag precedente
 
-Sull'host non esiste il sorgente: `compose.yml` ed `edge.yml` arrivano dal repo
-(assets del dispatcher). Unica immagine: il backend FastAPI serve anche la SPA
-da `frontend/dist`. Layout e regole: `actions/docs/host-layout.md`.
+Sull'host non esiste il sorgente: `compose.yml` ed `edge.yml` arrivano dal repo.
+Unica immagine: il backend FastAPI serve anche la SPA da `frontend/dist`.
+Layout e regole: `actions/docs/host-layout.md`.
+
+Se l'owner dell'org aggiunge il secret `DISPATCH_TOKEN`, si può tornare al
+dispatcher centrale di `personale/actions`; finché non c'è, il deploy resta
+diretto (l'account che ha scritto il codice è member, non owner).
 
 - Live demo: `https://osr.marrusso.dev`
 - Tunnel: `orchid-ncd` (Cloudflare), ingress da `edge.yml`
