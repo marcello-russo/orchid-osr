@@ -1,3 +1,4 @@
+import asyncio
 import json
 import mimetypes
 import os
@@ -169,9 +170,15 @@ def _write_bytes_atomic(path: Path, data: bytes) -> None:
 
 
 async def _hf_proxy(class_name: str, filename: str, cache_dir: Path | None = None) -> Response:
-    """Proxy image from HuggingFace dataset CDN, optionally caching to disk."""
+    """Proxy image from HuggingFace dataset CDN, optionally caching to disk.
+
+    Un'immagine che non esiste in nessun crop è un 404; un errore transitorio
+    del CDN (429/5xx) no: quello è un 502, altrimenti la galleria mostra foto
+    "mancanti" che invece ci sono.
+    """
     token = _hf_token()
     headers = {"Authorization": f"Bearer {token}"} if token else {}
+    statuses: list[int] = []
     for crop in [
         "cropped/224x224/train",
         "cropped/224x224/test",
@@ -180,7 +187,14 @@ async def _hf_proxy(class_name: str, filename: str, cache_dir: Path | None = Non
     ]:
         hf_url = f"https://huggingface.co/datasets/{settings.hf_dataset_repo}/resolve/{_HF_BRANCH}/{crop}/{class_name}/{filename}"
         client = await _get_http_client()
-        resp = await client.get(hf_url, headers=headers, follow_redirects=True)
+        for attempt in range(2):
+            resp = await client.get(hf_url, headers=headers, follow_redirects=True)
+            if resp.status_code < 500 and resp.status_code != 429:
+                break
+            statuses.append(resp.status_code)
+            if attempt == 0:
+                await asyncio.sleep(0.4)
+        statuses.append(resp.status_code)
         if resp.status_code == 200:
             # Cache to disk if requested
             if cache_dir:
@@ -188,12 +202,27 @@ async def _hf_proxy(class_name: str, filename: str, cache_dir: Path | None = Non
                 _write_bytes_atomic(cache_dir / filename, resp.content)
             content_type = resp.headers.get("content-type", "image/jpeg")
             return Response(content=resp.content, media_type=content_type)
+    if any(status == 429 or status >= 500 for status in statuses):
+        raise HTTPException(status_code=502, detail="HuggingFace CDN non raggiungibile, riprova")
     raise HTTPException(status_code=404, detail="Image not found locally or on HuggingFace")
+
+
+def _thumbnails_root() -> Path:
+    """Radice delle miniature: `THUMBNAILS_DIR` se impostata, altrimenti accanto al dataset.
+
+    In produzione `THUMBNAILS_DIR` punta al volume (`/data/.thumbnails`), così
+    le miniature sopravvivono ai redeploy: senza, ogni riavvio del container
+    ripartiva con la cache fredda e rifaceva 24 fetch dal CDN per ogni galleria.
+    """
+    override = os.environ.get("THUMBNAILS_DIR")
+    if override:
+        return Path(override)
+    return _get_dataset_base().parent / ".thumbnails"
 
 
 async def _serve_resized(file_path: Path, size: int, split: str, class_name: str, filename: str):
     """Generate and serve a resized WebP thumbnail, fetching from HF if needed."""
-    cache_base = _get_dataset_base().parent / ".thumbnails" / str(size)
+    cache_base = _thumbnails_root() / str(size)
     cache_dir = cache_base / split / class_name
     cache_path = cache_dir / f"{file_path.stem}.webp"
     if cache_path.is_file():
@@ -233,10 +262,11 @@ async def _serve_resized(file_path: Path, size: int, split: str, class_name: str
     if success and cache_path.is_file():
         return FileResponse(cache_path, media_type="image/webp")
 
-    # Fallback: serve original without resize
-    if file_path.is_file():
-        media_type = mimetypes.guess_type(str(file_path))[0] or "image/jpeg"
-        return FileResponse(file_path, media_type=media_type)
+    # Fallback: serve the original (locale o appena scaricata) senza resize
+    for candidate in (file_path, img_path):
+        if candidate.is_file():
+            media_type = mimetypes.guess_type(str(candidate))[0] or "image/jpeg"
+            return FileResponse(candidate, media_type=media_type)
     raise HTTPException(status_code=404, detail="Image not found")
 
 

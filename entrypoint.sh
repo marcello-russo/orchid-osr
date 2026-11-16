@@ -5,6 +5,8 @@ set -e
 DATA_DIR="${DATA_DIR:-/data}"
 if [ -d "$DATA_DIR" ]; then
     export HF_HOME="$DATA_DIR/.hf_cache"
+    # Miniature della galleria dataset: sul volume, così sopravvivono ai redeploy
+    export THUMBNAILS_DIR="$DATA_DIR/.thumbnails"
     if [ ! -d "$DATA_DIR/dataset" ]; then
         mkdir -p "$DATA_DIR/dataset"
     fi
