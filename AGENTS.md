@@ -90,21 +90,24 @@ non si usa in locale.
 
 ## Deploy
 
-Percorso unico in stile `personale/actions`, con due workflow nel repo:
+Build in CI, deploy da questa macchina (la VPS è raggiungibile solo via tailnet):
 
-1. tag `v*` → `Publish Docker images` → build con il `GITHUB_TOKEN` del repo e push
-   di `ghcr.io/squidslab/orchid-app:<tag>` (nessun secret aggiuntivo)
-2. Release pubblicata → `Deploy VPS` → scp di `compose.yml` + `edge.yml` in
-   `/srv/orchid`, poi `pull` + `up -d` via SSH, healthcheck su
+1. tag `v*` → workflow `Publish Docker images` → build con il `GITHUB_TOKEN` del
+   repo (nessun secret aggiuntivo) e push di `ghcr.io/squidslab/orchid-app:<tag>`
+2. `scripts/deploy-vps.sh [tag]` → scp di `compose.yml` + `edge.yml` in
+   `/srv/orchid`, `pull` + `up -d` via SSH, healthcheck su
    `https://osr.marrusso.dev/health`, rollback automatico al tag precedente
 
-Sull'host non esiste il sorgente: `compose.yml` ed `edge.yml` arrivano dal repo.
-Unica immagine: il backend FastAPI serve anche la SPA da `frontend/dist`.
-Layout e regole: `actions/docs/host-layout.md`.
+Perché non un workflow di deploy: l'SSH della VPS è aperto solo su `tailscale0`
+e il runner self-hosted `central` è registrato solo su `marcello-russo/actions`.
+Dall'account member di `squidslab/OrchID` non si possono creare secret né runner,
+quindi il passo di deploy è locale. Se l'owner dell'org aggiunge
+`DISPATCH_TOKEN` (o un runner), si torna al dispatcher centrale di
+`personale/actions` senza cambiare altro.
 
-Se l'owner dell'org aggiunge il secret `DISPATCH_TOKEN`, si può tornare al
-dispatcher centrale di `personale/actions`; finché non c'è, il deploy resta
-diretto (l'account che ha scritto il codice è member, non owner).
+Sull'host non esiste il sorgente: `compose.yml` ed `edge.yml` arrivano dal repo
+nella stessa transazione del deploy. Unica immagine: il backend FastAPI serve
+anche la SPA da `frontend/dist`. Layout e regole: `actions/docs/host-layout.md`.
 
 - Live demo: `https://osr.marrusso.dev`
 - Tunnel: `orchid-ncd` (Cloudflare), ingress da `edge.yml`
