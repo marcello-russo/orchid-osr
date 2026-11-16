@@ -229,3 +229,13 @@ class TestThumbnailAtomicWrite:
             second = client.get(url, headers=AUTH_HEADER, params={"size": 300})
         assert first.status_code == second.status_code == 200
         assert first.content == second.content
+
+    def test_thumbnails_dir_env_override(self, tmp_path, monkeypatch):
+        from app.api.routes.dataset import _thumbnails_root
+
+        monkeypatch.setenv("THUMBNAILS_DIR", str(tmp_path / "vol"))
+        assert _thumbnails_root() == tmp_path / "vol"
+
+        monkeypatch.delenv("THUMBNAILS_DIR")
+        with patch("app.api.routes.dataset._get_dataset_base", return_value=tmp_path / "cropped_256x512"):
+            assert _thumbnails_root() == tmp_path / ".thumbnails"
