@@ -1,5 +1,6 @@
 import json
 import mimetypes
+import os
 from pathlib import Path
 
 import httpx
@@ -149,6 +150,24 @@ async def list_class_images(
     return ClassImagesResponse(class_name=class_name, split=split, total=total, images=images)
 
 
+def _write_bytes_atomic(path: Path, data: bytes) -> None:
+    """Scrive il file e poi lo rinomina: nessun lettore vede un file a metà.
+
+    Serve perché più richieste concorrenti sulla stessa immagine (galleria
+    dataset) possono scrivere e servire lo stesso percorso. Scrivendo in place,
+    la `FileResponse` di un'altra richiesta stima il `Content-Length` su un file
+    ancora incompleto e poi legge più byte del dichiarato: il server solleva
+    `LocalProtocolError: Too much data for declared Content-Length` e il client
+    vede un 520.
+    """
+    tmp = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    try:
+        tmp.write_bytes(data)
+        os.replace(tmp, path)
+    finally:
+        tmp.unlink(missing_ok=True)
+
+
 async def _hf_proxy(class_name: str, filename: str, cache_dir: Path | None = None) -> Response:
     """Proxy image from HuggingFace dataset CDN, optionally caching to disk."""
     token = _hf_token()
@@ -166,7 +185,7 @@ async def _hf_proxy(class_name: str, filename: str, cache_dir: Path | None = Non
             # Cache to disk if requested
             if cache_dir:
                 cache_dir.mkdir(parents=True, exist_ok=True)
-                (cache_dir / filename).write_bytes(resp.content)
+                _write_bytes_atomic(cache_dir / filename, resp.content)
             content_type = resp.headers.get("content-type", "image/jpeg")
             return Response(content=resp.content, media_type=content_type)
     raise HTTPException(status_code=404, detail="Image not found locally or on HuggingFace")
@@ -191,6 +210,7 @@ async def _serve_resized(file_path: Path, size: int, split: str, class_name: str
             raise HTTPException(status_code=404, detail="Image not found")
 
     def _generate():
+        tmp_path = cache_path.with_name(f".{cache_path.name}.{os.getpid()}.tmp")
         try:
             cache_dir.mkdir(parents=True, exist_ok=True)
             with Image.open(img_path) as img:
@@ -198,11 +218,16 @@ async def _serve_resized(file_path: Path, size: int, split: str, class_name: str
                 if w > size:
                     new_h = int(h * (size / w))
                     img = img.resize((size, new_h), Image.Resampling.BILINEAR)
-                img.save(cache_path, "WEBP", quality=80)
+                img.save(tmp_path, "WEBP", quality=80)
+            # Rinomina atomica: un'altra richiesta che serve lo stesso file
+            # non lo vede mai a metà (vedi _write_bytes_atomic).
+            os.replace(tmp_path, cache_path)
             return True
         except Exception as e:
             print(f"Thumbnail generation failed: {e}")
             return False
+        finally:
+            tmp_path.unlink(missing_ok=True)
 
     success = await run_in_threadpool(_generate)
     if success and cache_path.is_file():
