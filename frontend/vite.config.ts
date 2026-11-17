@@ -10,6 +10,14 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    // Il chunk più grosso è three.js (~910 kB, caricato solo dalla pagina
+    // embeddings via React.lazy insieme a Scatter3D, quindi fuori dal bundle
+    // iniziale che resta ~115 kB). La soglia è 1000 kB, cioè un tetto: sotto
+    // c'è solo questa eccezione nota, sopra c'è qualcosa che è cresciuto senza
+    // che ce ne accorgessimo — e il warning deve tornare a dire qualcosa.
+    chunkSizeWarningLimit: 1000,
+  },
   server: {
     port: 5175,
     proxy: {
