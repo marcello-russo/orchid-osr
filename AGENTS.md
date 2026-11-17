@@ -179,7 +179,8 @@ orchid-osr/
 ### Container
 - L'immagine gira come utente **non privilegiato** `app` (uid 10001): l'entrypoint parte da root solo per sistemare i permessi del volume `/data` e poi si ri-esegue con `setpriv`. Lo stage `training` usa invece `APP_UID=42420` (owner di `/workspace` in quell'immagine).
 - Nella dist dentro l'immagine i **PNG non entrano** (`find … -name '*.png' -delete`): sono il sorgente 300 dpi della tesi, la SPA serve i `.webp`. Risparmio ~14 MB per immagine.
-- Dall'immagine sono esclusi `backend/data/merged_weights/` (1,7 GB di checkpoint usati solo per gli upload su HF), `users.json`, `jwt_secret.txt` e `orchid.db`: in produzione la fonte è il volume `/data` (`USERS_PATH`, `JWT_SECRET_PATH`). Il Dockerfile copia solo `species_counts.json` e `kfold_indices_seed57.json`.
+- Dall'immagine sono esclusi `backend/data/merged_weights/` (1,7 GB di checkpoint usati solo per gli upload su HF), `users.json`, `jwt_secret.txt` e `orchid.db`: in produzione la fonte è il volume `/data` (`USERS_PATH`, `JWT_SECRET_PATH`, `DB_PATH`). Il Dockerfile copia solo `species_counts.json` e `kfold_indices_seed57.json`.
+- `dataset` **non** esiste nel layer: l'entrypoint lo collega a `/data/dataset` (e lo fa solo se non è già un link o se la directory è vuota — un dataset vero in locale non viene mai toccato). Con una directory già presente, `ln -sfn` avrebbe creato `dataset/dataset` lasciando `dataset_dir` vuota.
 - `ORCHID_VERSION` arriva nel container da `compose.yml`: `/openapi.json` riporta la versione davvero in esecuzione.
 
 
@@ -203,10 +204,10 @@ Tutti enforced dalla CI (`.github/workflows/ci.yml`), `pre-commit` anticipa ruff
 
 - backend: `pytest -m "not slow"` con copertura; la soglia (`fail_under`) e le esclusioni stanno **solo** in `pyproject.toml` (la CI non la sovrascrive: averla in due posti l'aveva fatta divergere)
 - `ruff check` + `ruff format --check` (max 120 righe) **senza ignore per-file**
-- `mypy app/cli` bloccante (era `continue-on-error`: rosso per settimane senza fermare nulla)
+- `mypy app/cli` bloccante e **reale**: le uniche deroghe sono sulle annotazioni mancanti (`disallow_untyped_defs/calls/incomplete_defs`), nessun modulo dello scope è coperto da `ignore_errors`. Il test `tests/test_ci_mypy.py` confronta lo scope della CI con gli override in `pyproject.toml`: se qualcuno li rimette, il test cade. (Prima era un gate vuoto: tutti i moduli avevano `ignore_errors` e passavano solo i due `__init__.py`.)
 - frontend: `eslint`, `check-i18n`, `vitest` (110 test) e `tsc -b && vite build`
-- dipendenze: `pip-audit` con allowlist motivata in `backend/audit-ignores.txt`
-- immagine: smoke test su `/health` + Trivy (CRITICAL, solo CVE con fix disponibile)
+- dipendenze: `pip-audit` su `requirements.txt` **e** `torch-pins.txt` (torch non passa da Dependabot e Trivy vede solo i CRITICAL), con allowlist motivata in `backend/audit-ignores.txt`; gli strumenti dei gate (mypy, pip-audit) sono pinnati nella CI — un gate il cui esito dipende dalla release di ieri non è un gate
+- immagine: smoke test su `/health` **e `GET /`** con il volume `/data` montato (esercita il ramo root→app dell'entrypoint e accorgersi di una dist rotta) + Trivy (CRITICAL, solo CVE con fix disponibile)
 - analisi statica di sicurezza: regole `S` di ruff (la famiglia di bandit) dentro il gate che già esiste, con ignore motivati in `pyproject.toml` e `# noqa: S…` sul singolo falso positivo
 
 ### Dipendenze e versioni
@@ -216,13 +217,15 @@ Tutti enforced dalla CI (`.github/workflows/ci.yml`), `pre-commit` anticipa ruff
 bash backend/scripts/ci/sync_requirements.sh   # dopo aver cambiato pyproject.toml
 ```
 
-torch/torchvision non sono nel lock perché vanno presi dall'indice CPU: le loro versioni stanno in `backend/torch-pins.txt`, lo stesso file usato da Dockerfile e CI, così un wheel CUDA non può finire nell'immagine di produzione e i due ambienti non divergono. Dependabot apre PR settimanali raggruppate (pip diviso in dev-tools/runtime-patch, npm in react/tooling, actions, docker); le major di torch/transformers sono escluse e si valutano a mano.
+torch/torchvision non sono nel lock perché vanno presi dall'indice CPU: le loro versioni stanno in `backend/torch-pins.txt`, lo stesso file usato da Dockerfile e CI, così un wheel CUDA non può finire nell'immagine di produzione e i due ambienti non divergono. Dependabot apre PR settimanali raggruppate (pip diviso in dev-tools/runtime-patch, npm in react/tooling, actions, docker); le major sono tutte escluse, e così ruff (una minor cambia il formatter), tokenizers (lo vincola transformers 4.x) e `pytorch/pytorch` (runtime CUDA): si aggiornano a mano.
+
+Lo stage `training` è un altro ambiente per necessità (Python 3.10, CUDA 12.1, `constraints-training.txt` con numpy<2): i suoi vincoli entrano nella **stessa** risoluzione di `pyproject.toml`, non in un secondo `pip install` che declassa un pacchetto dopo che pip ha già deciso. Il workflow `Training image` lo costruisce una volta a settimana (e sulle PR che toccano Dockerfile/constraint) e importa torch/transformers/peft: senza, un constraints rotto si scopriva solo al primo addestramento, con la GPU accesa.
 
 ### Database / state
-C'è **un** database SQLite, `backend/data/orchid.db` (`app/core/db.py`): metadati degli esperimenti (`experiments`, `folds`), utenti, inviti e tentativi di login; contiene un fallback su JSON (`users.json`) per retrocompatibilità. `sync_all()` popola le tabelle scandendo `experiments/` (thread periodico ogni 60s) e l'API legge da lì. Il resto è su filesystem: esperimenti JSON, pesi `.pt`, immagini via proxy HF CDN. L'API carica i modelli su richiesta con cache LRU (`MAX_CACHED_MODELS = 2`).
+C'è **un** database SQLite, `backend/data/orchid.db` (`app/core/db.py`): metadati degli esperimenti (`experiments`, `folds`), utenti, inviti e tentativi di login; contiene un fallback su JSON (`users.json`) per retrocompatibilità. In container il path viene da `DB_PATH`, che l'entrypoint punta su `/data/orchid.db`: nel layer scrivibile i tentativi di login (lockout anti brute-force) si azzererebbero a ogni redeploy. `sync_all()` popola le tabelle scandendo `experiments/` (thread periodico ogni 60s) e l'API legge da lì. Il resto è su filesystem: esperimenti JSON, pesi `.pt`, immagini via proxy HF CDN. L'API carica i modelli su richiesta con cache LRU (`MAX_CACHED_MODELS = 2`).
 
 ### Debito tecnico dichiarato
-- **Tipizzazione**: `mypy` in `strict` è attivo solo dove il codice è tipizzato (`app/cli`); `app/core`, `app/api`, `preprocessing`, `visualization`, `explainability` hanno `ignore_errors` in `pyproject.toml`. Allargare lo scope è un cantiere, non una patch: finché è così lo si dichiara qui e nei commenti, invece di lasciare intendere che tutto sia tipizzato.
+- **Tipizzazione**: `mypy` in `strict` copre `app/cli` (e quindi `app/hf`, `app/figures` importati); `app/core`, `app/api`, `preprocessing`, `visualization`, `explainability` hanno ancora `ignore_errors` in `pyproject.toml`. Allargare lo scope è un cantiere, non una patch: finché è così lo si dichiara qui e nei commenti, invece di lasciare intendere che tutto sia tipizzato. Lo scope `app/cli` è reale: se un override con `ignore_errors` lo copre, `tests/test_ci_mypy.py` fallisce.
 - **transformers 4.x**: 6 avvisi di sicurezza hanno fix solo in 5.x, un major che cambia il caricamento dei modelli DINOv2 e va validato con i pesi su GPU. Allowlist motivata in `backend/audit-ignores.txt`; rischio ridotto perché i pesi arrivano da un repo nostro pinnato, non da input utente.
 - **`core/training.py` e `core/supcon.py`**: primitive di training usate da `core/kfold/`, non codice morto — ma convivono con le versioni k-fold e vanno lette insieme.
 - **Code scanning (CodeQL)**: non attivo. Su un repository privato di un'organizzazione richiede GitHub Advanced Security, che un account *member* non può abilitare: il workflow falliva solo in fase di upload (`Advanced Security must be enabled`). Un job perennemente rosso è peggio di un buco dichiarato, quindi il file è stato tolto e la copertura statica è affidata a ruff `S`. Se GHAS viene attivato, il workflow si riprende dalla storia (`git show 5c05b23:.github/workflows/codeql.yml`, `security-extended` + `build-mode: none`).
