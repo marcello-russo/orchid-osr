@@ -8,8 +8,12 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from app.config import settings
+
+if TYPE_CHECKING:
+    from huggingface_hub import HfApi
 
 HF_REPO = settings.hf_models_repo
 HF_DATASET_REPO = settings.hf_dataset_repo
@@ -36,7 +40,7 @@ EXPERIMENTS = [
 ]
 
 
-def upload_model(api, model, exp, exp_prefix, exp_base: str = DEFAULT_EXP_BASE):
+def upload_model(api: HfApi, model: str, exp: str, exp_prefix: str, exp_base: str = DEFAULT_EXP_BASE) -> bool:
     exp_name = f"{exp_prefix}_{model}"
     local_dir = os.path.join(exp_base, exp_name)
     remote_dir = f"{exp}/{exp_name}"
@@ -107,7 +111,7 @@ def upload_model(api, model, exp, exp_prefix, exp_base: str = DEFAULT_EXP_BASE):
     return True
 
 
-def cleanup_old_files(api, exp_base: str = DEFAULT_EXP_BASE):
+def cleanup_old_files(api: HfApi, exp_base: str = DEFAULT_EXP_BASE) -> None:
     """Remove old fold weights and non-best fold files from HF."""
     print("\n  Cleaning up old files from HF...")
     all_files = api.list_repo_files(HF_REPO)
@@ -155,7 +159,7 @@ def cleanup_old_files(api, exp_base: str = DEFAULT_EXP_BASE):
     print(f"  Cleaned up {removed} old files")
 
 
-def _build_results_table(exp, exp_prefix, exp_base: str = DEFAULT_EXP_BASE):
+def _build_results_table(exp: str, exp_prefix: str, exp_base: str = DEFAULT_EXP_BASE) -> list[str]:
     rows = []
     for model in MODELS:
         exp_name = f"{exp_prefix}_{model}"
@@ -177,7 +181,13 @@ def _build_results_table(exp, exp_prefix, exp_base: str = DEFAULT_EXP_BASE):
     return rows
 
 
-def _build_results_yaml(exp6_rows, exp7_rows, exp8_rows, exp9_rows=None, exp10_rows=None):
+def _build_results_yaml(
+    exp6_rows: list[str],
+    exp7_rows: list[str],
+    exp8_rows: list[str],
+    exp9_rows: list[str] | None = None,
+    exp10_rows: list[str] | None = None,
+) -> str:
     """Generate structured YAML for model evaluation results."""
     lines = ["model-index:"]
     all_rows = []
@@ -215,7 +225,7 @@ def _build_results_yaml(exp6_rows, exp7_rows, exp8_rows, exp9_rows=None, exp10_r
     return "\n".join(lines)
 
 
-def update_readme(api):
+def update_readme(api: HfApi) -> None:
     """Update HF model repo README with current results."""
     header = "| Model | Val F1 (macro) | Test F1 | Test Acc | Best Fold | Folds |\n|---|---|---|---|---|---|"
 

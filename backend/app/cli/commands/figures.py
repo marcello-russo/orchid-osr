@@ -64,6 +64,8 @@ def figures(
 
     typer.echo(f"figures all={all} -> {len(built)} files in {fig_dir}")
     if sync_frontend:
-        from app.figures.sync import sync_figures
+        from app.figures.sync import sync_frontend as copy_to_frontend
 
-        sync_figures(fig_dir)
+        dst = PROJECT_ROOT.parent / "frontend" / "public" / "figures"
+        copy_to_frontend(fig_dir, dst)
+        typer.echo(f"sync -> {dst}")

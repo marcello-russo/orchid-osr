@@ -15,10 +15,3 @@ def sync_frontend(src: Path, dst: Path) -> None:
     for pattern in ("*.png", "*.webp"):
         for p in src.glob(pattern):
             shutil.copy2(p, dst / p.name)
-
-
-def build(*a, **kw):
-    # keep stub compat
-    if len(a) >= 2:
-        return sync_frontend(a[0], a[1])
-    raise NotImplementedError

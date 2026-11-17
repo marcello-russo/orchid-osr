@@ -8,11 +8,12 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.figure import Figure
 
 from app.figures.style import MATPLOTLIB_RC, PALETTE
 
 
-def _save_fig(fig: plt.Figure, base: Path) -> list[Path]:
+def _save_fig(fig: Figure, base: Path) -> list[Path]:
     out: list[Path] = []
     for suffix in (".png", ".webp", ".pdf"):
         p = base.with_suffix(suffix)
@@ -58,7 +59,3 @@ def build_reliability(fig_dir: Path, exps: dict[int, Path]) -> list[Path]:
     plt.close(fig)
 
     return paths
-
-
-def build(*a, **kw):
-    return build_reliability(*a, **kw)

@@ -29,6 +29,19 @@ def setup_logging(log_dir: str | None = None, level: int = logging.INFO) -> str:
     return log_file
 
 
+class _FlushingFileHandler(logging.FileHandler):
+    """FileHandler che scrive su disco dopo ogni record.
+
+    Il log di un esperimento si legge mentre il training gira (`show_status`,
+    tail a mano): senza flush resta nel buffer e sembra che non stia
+    succedendo niente.
+    """
+
+    def emit(self, record: logging.LogRecord) -> None:
+        super().emit(record)
+        self.flush()
+
+
 def get_device() -> torch.device:
     if torch.cuda.is_available():
         return torch.device("cuda")
@@ -85,7 +98,7 @@ def run_experiment(
     ce_epochs: int = 50,
     use_prototypes: bool = False,
     repulse_weight: float = 0.01,
-    pair_weights: dict | None = None,
+    pair_weights: dict[tuple[int, int], float] | None = None,
     full_finetune: bool = False,
     osr_ensemble: bool = False,
     novel: str | None = None,
@@ -117,16 +130,9 @@ def run_experiment(
     # Per-experiment log file
     exp_log_name = f"{config['name']}_{model_variant}.log"
     exp_log = os.path.join(output_dir, exp_log_name)
-    exp_handler = logging.FileHandler(exp_log)
+    exp_handler = _FlushingFileHandler(exp_log)
     exp_handler.setFormatter(logging.Formatter("%(asctime)s | %(levelname)s | %(message)s"))
     logging.getLogger().addHandler(exp_handler)
-    orig_emit = exp_handler.emit
-
-    def flushing_emit(record):
-        orig_emit(record)
-        exp_handler.flush()
-
-    exp_handler.emit = flushing_emit
     logger.info(f"Log file: {exp_log}")
 
     phase = detect_phase(phases, aggregate_only)

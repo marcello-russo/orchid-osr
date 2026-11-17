@@ -36,7 +36,7 @@ def _active_classes_for_exp(exp_id: int) -> list[str] | None:
     return [c for c in TRAIN_CLASSES if c not in set(exclude)]
 
 
-def _build_pair_weights(hard_weight: float, active_classes: list[str] | None = None) -> dict:
+def _build_pair_weights(hard_weight: float, active_classes: list[str] | None = None) -> dict[tuple[int, int], float]:
     """Build pair_weights dict from class names (not hardcoded indices).
 
     active_classes: lista delle classi effettivamente usate nel training
@@ -46,7 +46,7 @@ def _build_pair_weights(hard_weight: float, active_classes: list[str] | None = N
     """
     cls_list = active_classes if active_classes is not None else TRAIN_CLASSES
     cls_map = {name: i for i, name in enumerate(cls_list)}
-    result = {}
+    result: dict[tuple[int, int], float] = {}
 
     def _add(a, b, weight):
         i, j = cls_map.get(a), cls_map.get(b)
@@ -66,13 +66,13 @@ def _handle_auth_commands(args) -> int | None:
     from app.core.auth import (
         _load_data,
         _save_data,
-        ensure_admin_exists,
+        ensure_superadmin_exists,
         generate_invite,
         hash_password,
         list_users_and_invites,
     )
 
-    ensure_admin_exists()
+    ensure_superadmin_exists()
     if args.list_users:
         data = list_users_and_invites()
         print("=== Users ===")
