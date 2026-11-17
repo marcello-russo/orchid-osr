@@ -120,52 +120,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: backend/scripts/ci
       - name: Tieni le ultime ${{ env.KEEP_VERSIONS }} versioni taggate
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OWNER: ${{ env.OWNER }}
           PACKAGE: ${{ env.PACKAGE }}
           KEEP: ${{ env.KEEP_VERSIONS }}
-        run: |
-          python3 - <<'EOF'
-          import json, os, urllib.error, urllib.request
-
-          token, owner = os.environ["GH_TOKEN"], os.environ["OWNER"]
-          pkg, keep = os.environ["PACKAGE"], int(os.environ["KEEP"])
-
-          def api(method, path):
-              req = urllib.request.Request(
-                  f"https://api.github.com{path}", method=method,
-                  headers={"Authorization": f"Bearer {token}",
-                           "Accept": "application/vnd.github+json",
-                           "X-GitHub-Api-Version": "2022-11-28"})
-              try:
-                  with urllib.request.urlopen(req) as r:
-                      body = r.read().decode()
-                      return json.loads(body) if body else True
-              except urllib.error.HTTPError as e:
-                  if e.code == 404:
-                      return None
-                  raise
-
-          versions = api("GET", f"/orgs/{owner}/packages/container/{pkg}/versions?per_page=100") or []
-          # MAI cancellare versioni untagged: sono manifest figli dell'indice
-          # (buildx pusha indice + figli come record separati). Cancellarli =
-          # tag che esiste ma manifest 404 al pull.
-          tagged = [v for v in versions
-                    if v.get("metadata", {}).get("container", {}).get("tags")]
-          tagged.sort(key=lambda v: v["created_at"], reverse=True)
-          for v in tagged[keep:]:
-              tags = ",".join(v["metadata"]["container"]["tags"])
-              try:
-                  api("DELETE", f"/orgs/{owner}/packages/container/{pkg}/versions/{v['id']}")
-                  print(f"eliminata versione [{tags}] del {v['created_at']}")
-              except urllib.error.HTTPError as e:
-                  if e.code in (403, 404):
-                      print(f"::warning::prune non permesso ({e.code}) su [{tags}]: "
-                            f"servono admin del pacchetto; il deploy non è toccato")
-                      break
-                  raise
-          print(f"tenute {min(keep, len(tagged))} versioni taggate "
-                f"(+{len(versions) - len(tagged)} untagged preservate)")
-          EOF
+        run: python3 backend/scripts/ci/prune_versions.py
