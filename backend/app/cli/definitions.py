@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any
 
 from app.config import settings
 
@@ -40,7 +41,10 @@ DATASET_PATHS = {
     },
 }
 
-DEFAULT_CONFIG = {
+# I valori sono eterogenei per esperimento (int, str, liste, dict): il tipo
+# preciso sarebbe un TypedDict con una variante per exp, cioè più codice del
+# problema. `Any` qui è onesto — il CLI valida i campi dove li usa.
+DEFAULT_CONFIG: dict[str, Any] = {
     "model_variant": "resnet18",
     "epochs": 26,
     "batch_size": 8,
@@ -51,7 +55,7 @@ DEFAULT_CONFIG = {
 }
 
 
-EXPERIMENTS = {
+EXPERIMENTS: dict[int, dict[str, Any]] = {
     1: {
         "name": "exp1_ce",
         "train_dataset": "clean",
@@ -173,7 +177,7 @@ def parse_novel_arg(s: str) -> list[str]:
     return normed
 
 
-def resolve_experiment(exp_id: int, novel_override: list[str] | None = None) -> dict:
+def resolve_experiment(exp_id: int, novel_override: list[str] | None = None) -> dict[str, Any]:
     import copy
 
     if exp_id not in EXPERIMENTS:

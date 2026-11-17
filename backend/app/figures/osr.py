@@ -13,8 +13,10 @@ import json
 import logging
 from pathlib import Path
 
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.figure import Figure
 
 from app.figures.style import MATPLOTLIB_RC, PALETTE
 
@@ -25,7 +27,7 @@ ARCH_LABELS = ["ResNet-18", "ResNet-50", "ConvNeXt-T", "ConvNeXt-S", "DINOv2-S",
 DETECTORS = ["Mahalanobis", "KNN", "Energy", "Ensemble"]
 
 
-def _save_fig(fig: plt.Figure, base: Path) -> list[Path]:
+def _save_fig(fig: Figure, base: Path) -> list[Path]:
     out: list[Path] = []
     for suffix in (".png", ".webp", ".pdf"):
         p = base.with_suffix(suffix)
@@ -95,7 +97,7 @@ def _auroc_heatmap(fig_dir: Path) -> list[Path]:
         data4 = FALLBACK_DET4
     mat = np.array([[data4.get(a, {}).get(d, np.nan) for d in DETECTORS] for a in ARCHS])
     fig, ax = plt.subplots(figsize=(8, 4))
-    cmap = plt.cm.Blues.with_extremes(bad="#f0f0f0")
+    cmap = matplotlib.colormaps["Blues"].with_extremes(bad="#f0f0f0")
     im = ax.imshow(mat, cmap=cmap, vmin=0.4, vmax=1.0, aspect="auto")
     for i in range(len(ARCHS)):
         for j in range(len(DETECTORS)):
@@ -311,7 +313,3 @@ def build_osr(fig_dir: Path, exps: dict[int, Path]) -> list[Path]:
     fig_dir = Path(fig_dir)
     fig_dir.mkdir(parents=True, exist_ok=True)
     return _auroc_heatmap(fig_dir) + _dual_1vs2(fig_dir) + _closed_vs_open(fig_dir)
-
-
-def build(*a, **kw):
-    return build_osr(*a, **kw)

@@ -9,6 +9,7 @@ import logging
 import os
 import shutil
 import time
+from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -46,7 +47,7 @@ LOCK_FILENAME = ".sync.lock"
 
 
 @contextmanager
-def _sync_lock(dst_dir: str, wait_seconds: float = 0):
+def _sync_lock(dst_dir: str, wait_seconds: float = 0) -> Iterator[bool]:
     """Lock esclusivo sulla directory di sync, con attesa opzionale.
 
     Entrypoint e job di deploy lanciano il sync insieme: senza lock due

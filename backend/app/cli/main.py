@@ -25,7 +25,7 @@ def embeddings(
     model: str = typer.Option("resnet18", help="Model variant"),
 ) -> None:
     """Alias to train --embeddings (extract embeddings for latent viewer)."""
-    train(exp=exp, model=model, embeddings=True)  # type: ignore[call-arg]
+    train(exp=exp, model=model, embeddings=True)
 
 
 if __name__ == "__main__":

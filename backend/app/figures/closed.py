@@ -6,8 +6,11 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.figure import Figure
+from matplotlib.patches import Rectangle
 
 from app.core.perfold import perfold_means
 from app.figures.style import MATPLOTLIB_RC, PALETTE
@@ -15,7 +18,7 @@ from app.figures.style import MATPLOTLIB_RC, PALETTE
 EXP_PREFIX = {1: "exp1_ce", 2: "exp2_supcon", 3: "exp3_sphor", 4: "exp4_sphor_ncd", 5: "exp5_sphor_ncd"}
 
 
-def _save_fig(fig: plt.Figure, base: Path) -> list[Path]:
+def _save_fig(fig: Figure, base: Path) -> list[Path]:
     out: list[Path] = []
     for suffix in (".png", ".webp", ".pdf"):
         p = base.with_suffix(suffix)
@@ -133,7 +136,7 @@ def build_closed(fig_dir: Path, exps: dict[int, Path]) -> list[Path]:
 
     # ── Benchmark heatmap: models × exps ──
     fig2, ax2 = plt.subplots(figsize=(12, 5))
-    cmap = plt.cm.Blues.with_extremes(bad="#f0f0f0")
+    cmap = matplotlib.colormaps["Blues"].with_extremes(bad="#f0f0f0")
     # data_T for imshow: rows=models, cols=exps
     data_t = data.T  # (6,4)
     im = ax2.imshow(data_t, cmap=cmap, vmin=0.2, vmax=1.0, aspect="auto")
@@ -146,7 +149,7 @@ def build_closed(fig_dir: Path, exps: dict[int, Path]) -> list[Path]:
                 if v < 0.30:
                     # cella collassata: tratteggio sobrio + valore in rosso scuro
                     ax2.add_patch(
-                        plt.Rectangle(
+                        Rectangle(
                             (j - 0.5, i - 0.5), 1, 1, facecolor="none", edgecolor="#8a8a8a", hatch="///", linewidth=0
                         )
                     )
@@ -167,11 +170,6 @@ def build_closed(fig_dir: Path, exps: dict[int, Path]) -> list[Path]:
     return all_paths
 
 
-# Backwards compat stub name
-def build(*a, **kw):
-    return build_closed(*a, **kw)
-
-
 def build_heatmap_13(fig_dir: Path, exps: dict[int, Path]) -> list[Path]:
     """Heatmap F1 I-A-3 only (Studio I Close World, 6 classes)."""
     import matplotlib.pyplot as plt
@@ -186,7 +184,7 @@ def build_heatmap_13(fig_dir: Path, exps: dict[int, Path]) -> list[Path]:
     stds = stds[:3]
     labels = ["I-A (CE, 6 cls)", "I-B (SupCon, 6 cls)", "I-C (SpHOR, 6 cls)"]
     fig, ax = plt.subplots(figsize=(8, 4))
-    cmap = plt.cm.Blues.with_extremes(bad="#f0f0f0")
+    cmap = matplotlib.colormaps["Blues"].with_extremes(bad="#f0f0f0")
     data_t = data.T
     im = ax.imshow(data_t, cmap=cmap, vmin=0.2, vmax=1.0, aspect="auto")
     for i in range(len(ARCHS)):
