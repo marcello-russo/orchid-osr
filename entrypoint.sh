@@ -3,6 +3,30 @@ set -e
 
 # Use persistent storage on HF Spaces (/data) — dataset, cache HF, users
 DATA_DIR="${DATA_DIR:-/data}"
+
+# --- Privilegi ----------------------------------------------------------------
+# Il volume /data arriva dal host come root:root, quindi il primo avvio deve
+# partire da root per sistemare i permessi; subito dopo questo script si
+# ri-esegue come utente non privilegiato (`app`, uid 10001) e da lì in poi il
+# server gira senza privilegi. Un `chown -R` su GB di cache a ogni redeploy
+# sarebbe un ritardo di minuti: si ricorre solo sulle voci di primo livello che
+# ancora non appartengono all'utente applicativo.
+APP_UID="${APP_UID:-10001}"
+if [ "$(id -u)" = "0" ]; then
+    if [ -d "$DATA_DIR" ]; then
+        if [ "$(stat -c %u "$DATA_DIR")" != "$APP_UID" ]; then
+            chown "$APP_UID:$APP_UID" "$DATA_DIR"
+        fi
+        for entry in "$DATA_DIR"/* "$DATA_DIR"/.[!.]*; do
+            [ -e "$entry" ] || continue
+            if [ "$(stat -c %u "$entry")" != "$APP_UID" ]; then
+                chown -R "$APP_UID:$APP_UID" "$entry"
+            fi
+        done
+    fi
+    exec setpriv --reuid="$APP_UID" --regid="$APP_UID" --clear-groups "$0" "$@"
+fi
+
 if [ -d "$DATA_DIR" ]; then
     export HF_HOME="$DATA_DIR/.hf_cache"
     # Miniature della galleria dataset: sul volume, così sopravvivono ai redeploy

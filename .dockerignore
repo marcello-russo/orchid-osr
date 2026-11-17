@@ -64,6 +64,17 @@ frontend/dist/
 # Secrets
 .env
 
+# Dati locali che non devono entrare nell'immagine:
+#  - merged_weights: 1,7 GB di checkpoint fusi, servono solo agli upload su HF
+#  - users.json / jwt_secret.txt / orchid.db: in produzione la fonte è il volume
+#    /data (l'entrypoint esporta USERS_PATH e JWT_SECRET_PATH), quindi le copie
+#    locali sarebbero al massimo un segreto in più dentro l'immagine
+backend/data/merged_weights/
+backend/data/users.json
+backend/data/jwt_secret.txt
+backend/data/orchid.db
+backend/data/osr_stats/
+
 # Misc
 *.log
 *.tmp

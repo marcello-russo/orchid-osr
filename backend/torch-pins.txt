@@ -1,0 +1,6 @@
+# Versioni di torch/torchvision per l'indice CPU, uniche per Dockerfile e CI.
+# Fuori da requirements.txt di proposito: vanno installate con
+#   --index-url https://download.pytorch.org/whl/cpu
+# altrimenti un wheel CUDA (~2,5 GB) può finire nell'immagine di produzione.
+torch==2.15.0
+torchvision==0.29.2
