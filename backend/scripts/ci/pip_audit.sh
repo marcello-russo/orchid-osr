@@ -18,4 +18,8 @@ while read -r id rest; do
     ARGS+=("--ignore-vuln" "$id")
 done < audit-ignores.txt
 
-pip-audit -r requirements.txt "${ARGS[@]}" --progress-spinner off -f columns
+# Anche torch/torchvision (torch-pins.txt): non stanno nel lock perché si
+# installano dall'indice CPU, ma il codice è lo stesso di PyPI e senza questa
+# riga una loro CVE non la vedeva nessuno — Dependabot li ignora e Trivy guarda
+# solo CRITICAL con fix.
+pip-audit -r requirements.txt -r torch-pins.txt "${ARGS[@]}" --progress-spinner off -f columns

@@ -7,6 +7,7 @@ progetto, nessuno se ne accorgeva). Questo test legge i file veri.
 """
 
 import pathlib
+import re
 import tomllib
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
@@ -68,3 +69,41 @@ def test_ci_installs_the_same_pins_as_the_image():
     assert "-r requirements-dev.txt" in ci
     # mypy non è più decorativo.
     assert "continue-on-error" not in ci
+
+
+def _req_names(path: pathlib.Path) -> set[str]:
+    """Nomi dei pacchetti di un requirements file (normalizzati, senza pin)."""
+    names = set()
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.split("#", 1)[0].strip()
+        if not line or line.startswith("-"):
+            continue
+        names.add(_package_name(line))
+    return names
+
+
+def _package_name(spec: str) -> str:
+    return re.split(r"[<>=!~\[; ]", spec, maxsplit=1)[0].lower().replace("_", "-")
+
+
+def test_lock_covers_every_declared_dependency():
+    """Il lock è generato: se si aggiunge una dipendenza e non lo si rigenera,
+    l'immagine non la installa e il guasto compare solo a runtime.
+
+    Non si rigenera qui (`uv pip compile` dipende da rete e versione di uv):
+    si controlla che ogni nome dichiarato in pyproject.toml esista nel lock
+    giusto. La rigenerazione resta `bash scripts/ci/sync_requirements.sh`.
+    """
+    backend = PYPROJECT.parent
+    project = _cfg()["project"]
+    runtime = _req_names(backend / "requirements.txt")
+    dev = _req_names(backend / "requirements-dev.txt")
+    torch_pins = _req_names(backend / "torch-pins.txt")
+
+    declared = {_package_name(d) for d in project["dependencies"]}
+    missing = declared - runtime - dev - torch_pins
+    assert not missing, f"dipendenze in pyproject.toml ma non nel lock: {sorted(missing)}"
+
+    declared_dev = {_package_name(d) for d in project["optional-dependencies"]["dev"]}
+    missing_dev = declared_dev - dev
+    assert not missing_dev, f"dev extra non in requirements-dev.txt: {sorted(missing_dev)}"

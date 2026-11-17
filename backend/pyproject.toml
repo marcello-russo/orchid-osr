@@ -143,30 +143,26 @@ ignore_errors = true
 module = "app.config"
 ignore_errors = true
 
+# --- Cosa il gate controlla davvero -----------------------------------------
+# `mypy app/cli` era un gate vuoto: ogni modulo di app/cli aveva
+# `ignore_errors = true`, quindi passavano solo i due __init__.py. Un tipo
+# sbagliato in un comando non faceva fallire niente (e infatti due bug veri —
+# `sync_figures` e `ensure_admin_exists`, funzioni che non esistono più — sono
+# arrivati fin qui indisturbati).
+#
+# Ora app/cli e app/hf sono controllati nei corpi e nelle firme già annotate;
+# il resto è debito dichiarato (vedi AGENTS.md, "Tipizzazione") e resta
+# ignorato esplicitamente, non per omissione.
+#
+# Perché non `disallow_untyped_defs` anche qui: il CLI legacy è scritto senza
+# annotazioni, e chiederle tutte trasformerebbe il gate in 53 errori di sola
+# annotazione, cioè di nuovo un gate da spegnere. Le tre flag sotto sono
+# l'unica deroga; tutto il resto di strict resta attivo.
 [[tool.mypy.overrides]]
-module = "app.cli.experiments"
-ignore_errors = true
-
-[[tool.mypy.overrides]]
-module = "app.cli.reports"
-ignore_errors = true
-
-# B-temp: new Typer CLI still untyped — strict deferred post-Exp5
-[[tool.mypy.overrides]]
-module = "app.cli.runner"
-ignore_errors = true
-
-[[tool.mypy.overrides]]
-module = "app.cli.definitions"
-ignore_errors = true
-
-[[tool.mypy.overrides]]
-module = "app.cli.commands.*"
-ignore_errors = true
-
-[[tool.mypy.overrides]]
-module = "app.cli.main"
-ignore_errors = true
+module = "app.cli.*"
+disallow_untyped_defs = false
+disallow_untyped_calls = false
+disallow_incomplete_defs = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
