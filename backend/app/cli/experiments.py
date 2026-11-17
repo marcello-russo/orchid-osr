@@ -3,15 +3,19 @@
 
 All experiment logic lives in:
   - definitions.py  — constants and experiment definitions
-  - reports.py      — report generation
   - runner.py       — run_experiment(), setup_logging(), get_device(), show_status()
+
+(reports.py è stato rimosso: non era importato da nessun modulo. La
+generazione dei report vive in app/core/kfold/reporting.py, invocata da
+runner.py.)
 """
 
 import argparse
 import logging
 import os
-from pathlib import Path
 import sys
+from pathlib import Path
+
 from app.cli.definitions import DEFAULT_CONFIG, EXPERIMENTS, PROJECT_ROOT, TRAIN_CLASSES
 from app.cli.runner import run_experiment, setup_logging, show_status
 from app.core.models import available_models
@@ -60,12 +64,12 @@ def _handle_auth_commands(args) -> int | None:
     if not any([args.list_users, args.gen_invites is not None, args.add_user is not None]):
         return None
     from app.core.auth import (
-        generate_invite,
-        list_users_and_invites,
-        hash_password,
         _load_data,
         _save_data,
         ensure_admin_exists,
+        generate_invite,
+        hash_password,
+        list_users_and_invites,
     )
 
     ensure_admin_exists()
@@ -212,8 +216,9 @@ def _run_pipeline(args) -> None:
 
 def _run_plot_mode(args) -> None:
     """Generate plots for experiment directories."""
-    from app.visualization import plot_experiment
     from glob import glob
+
+    from app.visualization import plot_experiment
 
     if args.plot.lower() == "all":
         exp_base = os.path.join(os.path.dirname(__file__), "..", "..", "experiments")
@@ -320,12 +325,14 @@ def _log_config(args, phases: list[str], exp_ids: list[int]) -> None:
 
 def _run_embeddings_missing(args, valid_models: list[str]) -> int:
     """Scan experiments and generate missing embeddings."""
+    import json
+
+    import torch
+
     from app.cli.definitions import ALL_CLASSES, PROJECT_ROOT
+    from app.core.hf_sync import parse_exp_dir_name
     from app.core.models import get_registry_entry
     from app.core.ncd.extract import run_embedding_extraction
-    from app.core.hf_sync import parse_exp_dir_name
-    import json
-    import torch
 
     if not torch.cuda.is_available():
         logging.error("--embeddings-missing requires CUDA (GPU). Aborting.")

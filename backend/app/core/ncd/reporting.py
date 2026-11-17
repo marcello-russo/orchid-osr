@@ -158,7 +158,7 @@ def plot_clustering_comparison(
     for i, (algo, metrics) in enumerate(algo_metrics.items()):
         values = [metrics.get(m, 0) for m in metrics_names]
         offset = (i - len(algo_names) / 2 + 0.5) * width
-        bars = ax.bar(x + offset, values, width, label=algo, color=colors[i])
+        ax.bar(x + offset, values, width, label=algo, color=colors[i])
 
     ax.set_xticks(x)
     ax.set_xticklabels(metrics_labels)

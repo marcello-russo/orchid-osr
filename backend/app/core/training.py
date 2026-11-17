@@ -3,9 +3,7 @@ import copy
 import gc
 import logging
 import os
-from typing import Optional
 
-import numpy as np
 import torch
 from torch import nn
 from torch.optim import Optimizer

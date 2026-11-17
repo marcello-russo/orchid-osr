@@ -233,13 +233,11 @@ def run_ncd_pipeline(
             traceback.print_exc()
 
     if run_osr:
-        novel_name: str | None = None
         novel_candidates: list[str] = []
         if ncd_mode and all_classes:
             train_classes = set(bundle.train_class_names)
             novel_candidates = [c for c in all_classes if c not in train_classes]
             if novel_candidates:
-                novel_name = novel_candidates[0]
                 logger.info("Novel class(es): %s", novel_candidates)
             else:
                 logger.warning("Nessuna novel class in all_classes vs train")
