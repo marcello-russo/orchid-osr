@@ -51,3 +51,10 @@ def test_static_mime_types_registered():
 
     assert mimetypes.guess_type("figura.webp")[0] == "image/webp"
     assert mimetypes.guess_type("font.woff2")[0] == "font/woff2"
+
+
+def test_head_health_is_200_without_body():
+    """I monitor usano HEAD: deve rispondere 200, non 405."""
+    resp = client.head("/health")
+    assert resp.status_code == 200
+    assert resp.content == b""

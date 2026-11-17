@@ -212,9 +212,14 @@ _static_dir = Path(os.environ.get("FRONTEND_DIST") or Path(__file__).resolve().p
 if _static_dir.is_dir():
     app.mount("/assets", StaticFiles(directory=_static_dir / "assets"), name="assets")
 
-    @app.get("/{full_path:path}")
+    @app.api_route("/{full_path:path}", methods=["GET", "HEAD"])
     async def serve_spa(full_path: str):
-        """Serve the SPA — return index.html for all non-API, non-asset routes."""
+        """Serve the SPA — return index.html for all non-API, non-asset routes.
+
+        Anche HEAD: i monitor e i link checker lo usano, e un 405 su `/` fa
+        sembrare il sito giù. `FileResponse` gestisce HEAD da sé (header senza
+        corpo), quindi qui non serve altro.
+        """
         if ".." in full_path:
             return FileResponse(_static_dir / "index.html")
         file_path = _static_dir / full_path
