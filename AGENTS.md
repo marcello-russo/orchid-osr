@@ -153,6 +153,7 @@ orchid-osr/
 - **Backend config**: `app/config.py` (`pydantic-settings`, reads `.env`). Model-specific params (input_size, lr, optimizer, weight_decay) are in the model registry at `app/core/models/registry.py`, not in config.
 - **Frontend env**: `frontend/.env` → `VITE_API_URL` (empty = relative paths, proxied in dev e same-origin in prod)
 - **Root env**: in locale `.env` (segreti + config); in produzione `.env` non segreto in `/srv/orchid` e segreti in `/srv/orchid/secrets/app.env`
+- **Cache su volume**: l'entrypoint esporta `HF_HOME=$DATA_DIR/.hf_cache` e `THUMBNAILS_DIR=$DATA_DIR/.thumbnails`; le miniature della galleria restano così tra un redeploy e l'altro (e un errore transitorio del CDN è un 502, non un 404)
 
 ### Image size convention
 
