@@ -6,9 +6,19 @@ on:
   push:
     branches: [main]
 
+# Un push nuovo sullo stesso ref annulla il run precedente: i minuti del runner
+# non si spendono su commit già superati.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
   backend:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     defaults:
       run:
         working-directory: backend
@@ -18,17 +28,22 @@ jobs:
         with:
           python-version: "3.11"
           cache: "pip"
-      # CPU-only torch: CUDA wheels (~5GB) exhaust runner disk (Errno 28).
-      # pip keeps the pre-installed CPU build when resolving ".[dev]".
-      - run: pip install --index-url https://download.pytorch.org/whl/cpu torch torchvision
-      - run: pip install ".[dev]"
+      # Stesse versioni dell'immagine: torch/torchvision dall'indice CPU
+      # (un wheel CUDA da ~5 GB esaurisce il disco del runner), tutto il resto
+      # dal lock. Se la CI installasse i range di pyproject, un verde qui non
+      # direbbe nulla sull'immagine che va in produzione.
+      - run: pip install --no-deps --index-url https://download.pytorch.org/whl/cpu -r torch-pins.txt
+      - run: pip install -r requirements-dev.txt
+      # Come nell'immagine: registra il comando `orchid` e valida il packaging.
+      - run: pip install --no-deps .
       - run: ruff check app/ tests/ scripts/
       - run: ruff format --check app/ tests/ scripts/ --diff
-      - run: pytest -x -q --cov=app --cov=scripts --cov-report=term --cov-fail-under=30
+      # Niente --cov-fail-under qui: la soglia è in pyproject.toml (fonte unica).
+      - run: pytest -q --cov=app --cov=scripts --cov-report=term
 
   mypy:
     runs-on: ubuntu-latest
-    continue-on-error: true
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: backend
@@ -39,12 +54,32 @@ jobs:
           python-version: "3.11"
           cache: "pip"
       - run: pip install mypy
-      # B-temp: strict solo su app/cli nuovo; legacy app/core/* ignorato via pyproject overrides
-      # TODO(strict): riabilitare --disallow-untyped-defs dopo tipizzazione runner/reports
+      # Gate reale: `continue-on-error` rendeva il job decorativo (poteva essere
+      # rosso per settimane senza bloccare nulla). Lo scope è quello che il
+      # progetti tipizza oggi (app/cli, vedi overrides in pyproject): allargarlo
+      # a app/core e app/api è debito dichiarato, non silenzioso.
       - run: mypy app/cli --ignore-missing-imports
+
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install pip-audit
+      # Allowlist motivata in backend/audit-ignores.txt: qualunque altra
+      # vulnerabilità nota nelle dipendenze pinnate blocca il merge.
+      - name: Dipendenze Python (pip-audit)
+        run: bash scripts/ci/pip_audit.sh
 
   docker:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - run: bash -n entrypoint.sh
@@ -82,9 +117,21 @@ jobs:
           docker logs "$container_id" || true
           docker rm -f "$container_id" || true
           exit 1
+      # Vulnerabilità dentro l'immagine finale (base image + wheel installati).
+      # `ignore-unfixed: true`: chiediamo solo ciò per cui esiste una patch —
+      # una CVE senza fix non è azionabile e bloccherebbe il progetto per sempre.
+      - name: Vulnerabilità dell'immagine (Trivy)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: orchid-osr
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          format: table
 
   frontend:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: frontend
@@ -97,5 +144,12 @@ jobs:
           cache-dependency-path: "frontend/package-lock.json"
       - run: npm ci
       - run: npm run lint
+      # Le traduzioni IT/EN sono un contratto: una chiave aggiunta solo da un
+      # lato non deve arrivare in produzione (il fallback silenzioso la nasconde).
+      - name: Traduzioni IT/EN allineate
+        run: npm run check-i18n
+      # 110 test già esistenti che nessuno eseguiva: girano in ~30s.
+      - name: Test (vitest)
+        run: npm test
       - run: npm run build
 

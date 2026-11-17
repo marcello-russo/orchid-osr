@@ -1,0 +1,95 @@
+version: 2
+
+# Aggiornamenti automatici: una PR per gruppo, non una per pacchetto.
+# Le major restano manuali: cambiano il contratto (API, build, runtime CUDA).
+updates:
+  - package-ecosystem: pip
+    directory: /backend
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+    open-pull-requests-limit: 3
+    groups:
+      dev-tools:
+        patterns:
+          - pytest*
+          - coverage
+          - ruff
+        update-types:
+          - minor
+          - patch
+      runtime-patch:
+        patterns:
+          - "*"
+        update-types:
+          - patch
+    ignore:
+      # torch/torchvision sono pinnati nel Dockerfile (wheel CPU) e nello stage
+      # training (CUDA 12.1): un bump automatico romperebbe uno dei due.
+      - dependency-name: torch
+      - dependency-name: torchvision
+      - dependency-name: transformers
+        update-types:
+          - version-update:semver-major
+
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+    open-pull-requests-limit: 3
+    groups:
+      react:
+        patterns:
+          - react
+          - react-dom
+          - "@types/react*"
+      tooling:
+        patterns:
+          - vite*
+          - typescript*
+          - eslint*
+          - "@vitest/*"
+          - vitest
+        update-types:
+          - minor
+          - patch
+      rest-patch:
+        patterns:
+          - "*"
+        update-types:
+          - patch
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+    open-pull-requests-limit: 2
+    groups:
+      actions:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+    open-pull-requests-limit: 2
+    ignore:
+      # python:3.11-slim e node:22-alpine sono scelte di runtime (minor version
+      # del linguaggio), non patch dell'immagine: si cambiano a mano.
+      - dependency-name: python
+        update-types:
+          - version-update:semver-minor
+      - dependency-name: node
+        update-types:
+          - version-update:semver-major
