@@ -24,7 +24,7 @@ dependencies = [
     "pillow",
     "pydantic>=2.0.0",
     "pydantic-settings>=2.0.0",
-    "pyjwt==2.10.1",
+    "pyjwt>=2.15.0,<3",
     "python-dotenv",
     "python-multipart",
     "scikit-learn",
@@ -45,6 +45,7 @@ orchid-osr = "app.cli.main:app"
 dev = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
+    "pytest-timeout>=2.3.0",
     "ruff~=0.5.0",
 ]
 ml = [
@@ -59,25 +60,24 @@ target-version = "py311"
 [tool.ruff.lint]
 select = ["E", "F", "I", "W"]
 
-[tool.ruff.lint.per-file-ignores]
-"app/explainability/*" = ["E501", "F841", "E402", "F401"]
-"app/preprocessing/*" = ["E501", "F401", "E402"]
-"app/preprocessing_tools.py" = ["E402", "F401"]
-"app/core/kfold/*" = ["E501", "F401", "E741"]
-"app/core/ncd/*" = ["F841"]
-"app/core/training.py" = ["F401"]
-"app/core/supcon.py" = ["F401"]
-"app/cli/experiments.py" = ["I001"]
-"tests/test_integration/*" = ["E501"]
-
 [tool.ruff.format]
 quote-style = "double"
 
 [tool.coverage.run]
-omit = ["app/figures/*", "app/api/*"]
+branch = true
+# Le figure della tesi non si misurano a righe: sono plotting puro, verificate
+# dal check phash (orchid figures --check). L'API invece si misura: era esclusa
+# e la route di /api/experiments (548 righe) non era coperta da nessun test.
+omit = ["app/figures/*"]
 
 [tool.coverage.report]
-fail_under = 50
+# Misurato: 49% (505 test, `pytest -m "not slow"`, branch coverage). La soglia
+# sta 3 punti sotto, non a 0: così una regressione reale (API o preprocessing
+# che perdono i test) fa fallire la CI, mentre aggiungere codice di training
+# non ancora testabile non la fa fallire per un decimale. Unica fonte: la CI
+# non passa più `--cov-fail-under` (averla in due posti l'aveva fatta divergere).
+fail_under = 46
+show_missing = true
 
 [tool.mypy]
 strict = true
