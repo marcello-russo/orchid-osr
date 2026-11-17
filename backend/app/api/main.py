@@ -8,6 +8,7 @@ import threading
 import uuid
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from email.utils import formatdate, mktime_tz, parsedate_tz
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
@@ -278,6 +279,26 @@ def _etag_matches(header: str | None, etag: str) -> bool:
     return any(candidate.strip().removeprefix("W/") == etag for candidate in header.split(","))
 
 
+def _not_modified_since(header: str | None, mtime: float) -> bool:
+    """`If-Modified-Since` da solo (RFC 9110 §13.1.2.2).
+
+    Non è ridondante con l'ETag: Cloudflare, sull'HTML, **toglie** l'`ETag` e
+    lascia `Last-Modified` (verificato in produzione: `/favicon.svg` conserva
+    il suo ETag, `/` no — la pipeline HTML della zona riscrive il corpo, quindi
+    un validatore strong non sarebbe più vero). Dietro la riva l'unico
+    validatore che il browser può rimandare è quindi la data.
+
+    `mktime_tz` e non `parsedate_to_datetime(...).timestamp()`: il secondo, su
+    un datetime naive prodotto da un fuso `-0000`, applica il fuso locale.
+    """
+    if not header:
+        return False
+    parsed = parsedate_tz(header)
+    if parsed is None:  # header malformato: si risponde 200, non 500
+        return False
+    return int(mtime) <= mktime_tz(parsed)
+
+
 def _spa_index(request: Request) -> Response:
     """`index.html` con `Cache-Control: no-cache` e rivalidazione vera.
 
@@ -290,9 +311,12 @@ def _spa_index(request: Request) -> Response:
 
     `no-cache` non significa "non salvare": obbliga a rivalidare prima di usare
     la copia. La rivalidazione qui è esplicita perché `FileResponse` da solo
-    ignora `If-None-Match` (lo fa `StaticFiles`, che però serve le directory e
-    non questa route): senza, ogni navigazione riscaricherebbe l'indice invece
-    di ricevere un `304` senza corpo.
+    ignora le precondizioni (le gestisce `StaticFiles`, che però serve le
+    directory e non questa route): senza, ogni navigazione riscaricherebbe
+    l'indice invece di ricevere un `304` senza corpo.
+
+    Si accettano entrambi i validatori perché a monte c'è una CDN che non
+    lascia passare sempre lo stesso: l'ETag quando c'è, altrimenti la data.
 
     Gli asset sotto `/assets` sono un caso diverso: il nome cambia col
     contenuto, quindi possono stare in cache a lungo — ed è Cloudflare, non
@@ -305,11 +329,28 @@ def _spa_index(request: Request) -> Response:
         # `dist` sparita dopo l'avvio (il mount è deciso all'import).
         raise HTTPException(status_code=404, detail="Not Found") from None
     etag = _index_etag(stat)
-    headers = {"Cache-Control": "no-cache", "ETag": etag}
-    if _etag_matches(request.headers.get("if-none-match"), etag):
-        # `content-length` sul 304 è ammesso e deve valere quanto il corpo del
-        # 200: è la dimensione del file, non zero.
-        return Response(status_code=304, headers={**headers, "Content-Length": str(stat.st_size)})
+    headers = {
+        "Cache-Control": "no-cache",
+        "ETag": etag,
+        # SHOULD sul 304 (RFC 9110 §15.4.5) e, dietro Cloudflare, l'unico
+        # validatore che sopravvive: va ripetuto, o il client non può
+        # rivalidare la volta dopo.
+        "Last-Modified": formatdate(stat.st_mtime, usegmt=True),
+    }
+    inm = request.headers.get("if-none-match")
+    # RFC 9110 §13.1.3: se c'è `If-None-Match`, `If-Modified-Since` si ignora.
+    not_modified = (
+        _etag_matches(inm, etag)
+        if inm is not None
+        else _not_modified_since(request.headers.get("if-modified-since"), stat.st_mtime)
+    )
+    if not_modified:
+        # Niente `Content-Length`: un 304 non ha corpo, e uvicorn con
+        # `--http httptools` solleva `Response content shorter than
+        # Content-Length` se lo vede (verificato: con h11 no, quindi il guasto
+        # arriverebbe solo cambiando trasporto). Starlette lo salta già per i
+        # 204/304.
+        return Response(status_code=304, headers=headers)
     return FileResponse(path, headers=headers, stat_result=stat)
 
 
@@ -335,6 +376,12 @@ if _static_dir.is_dir():
         except ValueError:
             return _spa_index(request)
         if full_path and file_path.is_file():
+            # `/index.html` diretto è lo stesso file, quindi la stessa regola:
+            # Cloudflare non normalizza quell'URL a `/` (verificato: 200), e un
+            # bookmark lì sopra tornerebbe senza `no-cache` — cioè con lo
+            # stesso guasto che questa funzione evita.
+            if file_path.resolve() == (_static_dir / "index.html").resolve():
+                return _spa_index(request)
             return FileResponse(file_path)
         # Un percorso che sembra un file (`*.webp`, `*.js`, `*.png`) e non
         # esiste è un 404, non la SPA: prima tornava 200 text/html e un'immagine
