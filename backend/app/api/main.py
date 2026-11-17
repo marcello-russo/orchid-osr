@@ -1,5 +1,6 @@
 # backend/app/api/main.py
 import logging
+import mimetypes
 import os
 import threading
 import uuid
@@ -197,6 +198,16 @@ app.include_router(ncd_router.router, tags=["ncd"])
 # Serve frontend static files in production (when frontend/dist exists).
 # Layout: <repo>/frontend/dist in locale, /workspace/frontend/dist nell'immagine.
 # FRONTEND_DIST permette di puntare altrove senza cambiare il codice.
+# Python 3.11 non conosce .webp (né .woff2/.map): senza questa registrazione
+# `FileResponse` li serve come `application/octet-stream`. I browser li
+# mostrano lo stesso, ma cache/CDN e client severi guardano il Content-Type.
+for _ext, _mime in (
+    (".webp", "image/webp"),
+    (".woff2", "font/woff2"),
+    (".map", "application/json"),
+):
+    mimetypes.add_type(_mime, _ext)
+
 _static_dir = Path(os.environ.get("FRONTEND_DIST") or Path(__file__).resolve().parents[3] / "frontend" / "dist")
 if _static_dir.is_dir():
     app.mount("/assets", StaticFiles(directory=_static_dir / "assets"), name="assets")
