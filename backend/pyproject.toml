@@ -170,7 +170,12 @@ ignore_errors = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-timeout = 60
+# Il timeout serve a intercettare gli hang (deadlock, rete senza timeout), non a
+# cronometrare il training: un test che qui dura 45s su un runner condiviso può
+# metterci minuti (è già successo: `test_overfit_single_batch` ucciso a 60s con
+# 526 test verdi in locale). 300s intercetta comunque un blocco e non trasforma
+# un runner lento in un rosso.
+timeout = 300
 timeout_method = "thread"
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
