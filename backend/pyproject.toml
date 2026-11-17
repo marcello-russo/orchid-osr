@@ -58,7 +58,39 @@ line-length = 120
 target-version = "py311"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "W"]
+# S = regole di sicurezza di flake8-bandit (la stessa famiglia di bandit).
+# Stanno nel gate che già esiste invece di un workflow separato: costano zero
+# tempo e non possono divergere da ruff.
+select = ["E", "F", "I", "W", "S"]
+
+ignore = [
+    # assert come validazione di input in codice numerico: idiomatico qui, e il
+    # codice non gira mai con -O. Se un giorno ci si appoggia per la sicurezza
+    # (es. controlli su path) questa riga va tolta.
+    "S101",
+    # 0.0.0.0 è il default di api_host: in container il bind deve essere su tutte
+    # le interfacce, l'ingresso è limitato da compose/docker (loopback + tunnel).
+    "S104",
+    # Falsi positivi su nomi di variabili che contengono "secret"/"password"
+    # (es. secret_path): il valore non è un segreto.
+    "S105",
+    # try/except/pass e try/except/continue nei cleanup: "consider logging"
+    # sarebbe rumore, il fallimento è già gestito dal chiamante.
+    "S110",
+    "S112",
+    # md5 in preprocessing/split.py calcola il fingerprint per deduplicare le
+    # immagini: non è un uso crittografico e non protegge nulla.
+    "S324",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Nei test alcune regole di sicurezza sono rumore per costruzione: `assert` è
+# il modo di verificare, le password sono fittizie, i path `/tmp/...` sono
+# segnaposto che nessuno scrive davvero e `tempfile.mktemp` serve a provare
+# funzioni che ricevono un path. Una sola voce, viva: `tests/test_quality_gate.py`
+# verifica che i pattern puntino a directory esistenti (in passato c'erano
+# ignore su file e cartelle che non esistevano più).
+"tests/**" = ["S107", "S108", "S306"]
 
 [tool.ruff.format]
 quote-style = "double"

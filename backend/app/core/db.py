@@ -286,7 +286,10 @@ def sync_experiment(exp_dir: str, conn: sqlite3.Connection | None = None) -> boo
         ]
 
         conn.execute(
-            f"INSERT OR REPLACE INTO experiments ({columns}) VALUES ({placeholders})",
+            # `columns`/`placeholders` vengono dallo schema definito in questo
+            # file, non da input: i valori passano come parametri (base_vals +
+            # ncd_vals). Non c'è SQL costruito da dati esterni.
+            f"INSERT OR REPLACE INTO experiments ({columns}) VALUES ({placeholders})",  # noqa: S608
             base_vals + ncd_vals,
         )
 

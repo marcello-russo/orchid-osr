@@ -207,7 +207,7 @@ Tutti enforced dalla CI (`.github/workflows/ci.yml`), `pre-commit` anticipa ruff
 - frontend: `eslint`, `check-i18n`, `vitest` (110 test) e `tsc -b && vite build`
 - dipendenze: `pip-audit` con allowlist motivata in `backend/audit-ignores.txt`
 - immagine: smoke test su `/health` + Trivy (CRITICAL, solo CVE con fix disponibile)
-- analisi statica: CodeQL `security-extended` su Python e TypeScript
+- analisi statica di sicurezza: regole `S` di ruff (la famiglia di bandit) dentro il gate che già esiste, con ignore motivati in `pyproject.toml` e `# noqa: S…` sul singolo falso positivo
 
 ### Dipendenze e versioni
 `backend/requirements.txt` è un lock **esatto** (Python 3.11, wheel CPU) e `requirements-dev.txt` aggiunge pytest/ruff. Immagine e CI installano esattamente quelle versioni:
@@ -225,6 +225,7 @@ C'è **un** database SQLite, `backend/data/orchid.db` (`app/core/db.py`): metada
 - **Tipizzazione**: `mypy` in `strict` è attivo solo dove il codice è tipizzato (`app/cli`); `app/core`, `app/api`, `preprocessing`, `visualization`, `explainability` hanno `ignore_errors` in `pyproject.toml`. Allargare lo scope è un cantiere, non una patch: finché è così lo si dichiara qui e nei commenti, invece di lasciare intendere che tutto sia tipizzato.
 - **transformers 4.x**: 6 avvisi di sicurezza hanno fix solo in 5.x, un major che cambia il caricamento dei modelli DINOv2 e va validato con i pesi su GPU. Allowlist motivata in `backend/audit-ignores.txt`; rischio ridotto perché i pesi arrivano da un repo nostro pinnato, non da input utente.
 - **`core/training.py` e `core/supcon.py`**: primitive di training usate da `core/kfold/`, non codice morto — ma convivono con le versioni k-fold e vanno lette insieme.
+- **Code scanning (CodeQL)**: non attivo. Su un repository privato di un'organizzazione richiede GitHub Advanced Security, che un account *member* non può abilitare: il workflow falliva solo in fase di upload (`Advanced Security must be enabled`). Un job perennemente rosso è peggio di un buco dichiarato, quindi il file è stato tolto e la copertura statica è affidata a ruff `S`. Se GHAS viene attivato, il workflow si riprende dalla storia (`git show 5c05b23:.github/workflows/codeql.yml`, `security-extended` + `build-mode: none`).
 
 
 ### Server vs CLI
