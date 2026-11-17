@@ -37,3 +37,17 @@ class TestHealthEndpoint:
         data = response.json()
 
         assert isinstance(data["model_loaded"], bool)
+
+
+def test_static_mime_types_registered():
+    """Python 3.11 non conosce .webp: il SPA server deve dichiararlo.
+
+    Senza registrazione `FileResponse` serve le immagini come
+    `application/octet-stream` (verificato in produzione su /figures/*.webp).
+    """
+    import mimetypes
+
+    from app.api import main  # noqa: F401  (la registrazione avviene all'import)
+
+    assert mimetypes.guess_type("figura.webp")[0] == "image/webp"
+    assert mimetypes.guess_type("font.woff2")[0] == "font/woff2"
