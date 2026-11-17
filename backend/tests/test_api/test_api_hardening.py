@@ -129,6 +129,51 @@ class TestSpaFallback:
     def test_head_on_page_is_200(self, client):
         assert client.head("/research").status_code == 200
 
+    @pytest.mark.parametrize("path", ["/", "/research", "/experiments/exp1"])
+    def test_index_is_not_cached_without_revalidation(self, client, path):
+        """`index.html` deve essere rivalidato: è la mappa degli asset.
+
+        Senza `Cache-Control` il browser usa la freschezza euristica e dopo un
+        deploy può chiedere `/assets/index-<hash-vecchio>.js`, che non esiste
+        più: pagina bianca senza nessun errore lato server. Il guasto si vede
+        solo in produzione (curl non ha cache), quindi il test lo blocca qui.
+        """
+        resp = client.get(path)
+        assert resp.headers.get("cache-control") == "no-cache", path
+
+    def test_index_revalidates_with_etag_instead_of_resending(self, client):
+        """`no-cache` non è "scarica sempre": con ETag uguale si risponde 304."""
+        first = client.get("/research")
+        etag = first.headers["etag"]
+        second = client.get("/research", headers={"If-None-Match": etag})
+        assert second.status_code == 304
+        assert second.content == b""
+        # Il 304 deve dire al client di continuare a rivalidare e quanto
+        # sarebbe lungo il corpo del 200 (ammesso dalla RFC, ed è quanto manda
+        # nginx): senza `cache-control` il client salvato come "fresco" non
+        # rivaliderebbe più, cioè si tornerebbe al guasto di partenza.
+        assert second.headers.get("cache-control") == "no-cache"
+        assert second.headers["etag"] == etag
+        assert second.headers["content-length"] == first.headers["content-length"]
+
+    @pytest.mark.parametrize("header", ["W/{etag}", '"{altro}", {etag}'])
+    def test_index_etag_matches_weak_and_list_forms(self, client, header):
+        """Un browser può mandare `W/"…"` o una lista: sono lo stesso ETag."""
+        etag = client.get("/").headers["etag"]
+        value = header.format(etag=etag, altro="deadbeef")
+        assert client.get("/", headers={"If-None-Match": value}).status_code == 304
+
+    def test_index_with_a_stale_etag_is_served_again(self, client):
+        """Indice cambiato dopo il deploy: 200 con il corpo nuovo, non un 304."""
+        resp = client.get("/", headers={"If-None-Match": '"non-e-questo"'})
+        assert resp.status_code == 200
+        assert "test" in resp.text
+
+    def test_hashed_assets_keep_their_own_caching(self, client):
+        """Gli asset hanno l'hash nel nome: la regola dell'indice non li tocca."""
+        resp = client.get("/assets/app.js")
+        assert resp.headers.get("cache-control") != "no-cache"
+
     def test_unhandled_error_has_header_and_body_id(self, client):
         """Il 500 è gestito fuori dai middleware: l'header va aggiunto a mano."""
         from fastapi.testclient import TestClient
