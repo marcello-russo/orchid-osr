@@ -15,7 +15,6 @@ updates:
         patterns:
           - pytest*
           - coverage
-          - ruff
         update-types:
           - minor
           - patch
@@ -29,12 +28,17 @@ updates:
       # training (CUDA 12.1): un bump automatico romperebbe uno dei due.
       - dependency-name: torch
       - dependency-name: torchvision
+      # ruff non si bumpa da solo: una minor porta spesso anche regole di
+      # formattazione nuove, quindi la PR arriva con `ruff format --check` rosso
+      # per codice che va riformattato. Si aggiorna a mano, con `ruff format`
+      # nello stesso commit (è successo con 0.5.7 -> 0.17.5).
+      - dependency-name: ruff
       - dependency-name: transformers
         update-types:
           - version-update:semver-major
-      # Nessuna major automatica, come gia' scritto in testa al file: una PR
-      # major e' quasi sempre rossa (contratto che cambia) e resta li' a fare
-      # rumore. Le major si leggono dal changelog e si fanno a mano.
+      # Nessuna major automatica, come dichiarato in testa al file: una PR major
+      # è quasi sempre rossa (cambia un contratto) e resta lì a fare rumore. Le
+      # major si leggono dal changelog e si fanno a mano.
       - dependency-name: "*"
         update-types:
           - version-update:semver-major
@@ -104,6 +108,9 @@ updates:
       - dependency-name: python
         update-types:
           - version-update:semver-minor
+      # L'immagine di training CUDA è una scelta di runtime (driver + toolkit
+      # della macchina): si cambia sapendo quale CUDA gira, non da una PR.
+      - dependency-name: pytorch/pytorch
       - dependency-name: node
         update-types:
           - version-update:semver-major
