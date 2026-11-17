@@ -1,8 +1,22 @@
 # tests/conftest.py
-import numpy as np
-import pytest
-import torch
-from torch.utils.data import DataLoader, Dataset
+import os
+import pathlib
+import tempfile
+
+# La SPA viene montata solo se `frontend/dist` esiste: senza questo, i test
+# sulle route SPA passerebbero in locale (dove la dist c'è) e fallirebbero in
+# CI (dove il job backend non la costruisce). Fissiamo qui una dist minima in
+# una directory temporanea, prima che `app.api.main` venga importato.
+_DIST = pathlib.Path(tempfile.mkdtemp(prefix="orchid-dist-"))
+(_DIST / "assets").mkdir()
+(_DIST / "index.html").write_text("<!doctype html><html><body>test</body></html>", encoding="utf-8")
+(_DIST / "assets" / "app.js").write_text("// test", encoding="utf-8")
+os.environ["FRONTEND_DIST"] = str(_DIST)
+
+import numpy as np  # noqa: E402
+import pytest  # noqa: E402
+import torch  # noqa: E402
+from torch.utils.data import DataLoader, Dataset  # noqa: E402
 
 
 def set_seed(seed: int = 42):
