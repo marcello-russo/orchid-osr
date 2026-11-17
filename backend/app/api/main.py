@@ -1,4 +1,5 @@
 # backend/app/api/main.py
+import hashlib
 import logging
 import mimetypes
 import os
@@ -12,7 +13,7 @@ from pathlib import Path
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -256,11 +257,67 @@ _RESERVED_PREFIXES = frozenset({"api", "auth", "classify", "health"})
 # tutto ciò che sta sotto (`/auth/me`, `/classify/models`) resta API.
 _SPA_EXACT_ROUTES = frozenset({"auth", "classify"})
 
+
+def _index_etag(stat: os.stat_result) -> str:
+    """Stesso ETag che darebbe `FileResponse`, calcolato da mtime e dimensione.
+
+    Si replica la formula di Starlette (`set_stat_headers`) apposta: se il
+    validatore cambiasse, il browser rimanderebbe l'ETag salvato e non
+    otterrebbe mai un 304.
+    """
+    base = f"{stat.st_mtime}-{stat.st_size}"
+    return f'"{hashlib.md5(base.encode(), usedforsecurity=False).hexdigest()}"'
+
+
+def _etag_matches(header: str | None, etag: str) -> bool:
+    """`If-None-Match` è una lista (`W/"a", "b"`), e per una GET il confronto è weak."""
+    if not header:
+        return False
+    if header.strip() == "*":
+        return True
+    return any(candidate.strip().removeprefix("W/") == etag for candidate in header.split(","))
+
+
+def _spa_index(request: Request) -> Response:
+    """`index.html` con `Cache-Control: no-cache` e rivalidazione vera.
+
+    È il file che dice al browser *quali* asset caricare (i nomi hanno un hash
+    nel contenuto: `index-DBHQmV5M.js`). Senza istruzioni di cache il browser
+    applica la freschezza euristica (10% dell'età di Last-Modified) e dopo un
+    deploy può tenere l'indice vecchio, che punta a `/assets/index-<hash>.js`
+    ormai inesistenti: pagina bianca finché non si svuota la cache, e nessun
+    errore lato server che lo spieghi.
+
+    `no-cache` non significa "non salvare": obbliga a rivalidare prima di usare
+    la copia. La rivalidazione qui è esplicita perché `FileResponse` da solo
+    ignora `If-None-Match` (lo fa `StaticFiles`, che però serve le directory e
+    non questa route): senza, ogni navigazione riscaricherebbe l'indice invece
+    di ricevere un `304` senza corpo.
+
+    Gli asset sotto `/assets` sono un caso diverso: il nome cambia col
+    contenuto, quindi possono stare in cache a lungo — ed è Cloudflare, non
+    questo server, a dar loro `max-age`.
+    """
+    path = _static_dir / "index.html"
+    try:
+        stat = path.stat()
+    except OSError:
+        # `dist` sparita dopo l'avvio (il mount è deciso all'import).
+        raise HTTPException(status_code=404, detail="Not Found") from None
+    etag = _index_etag(stat)
+    headers = {"Cache-Control": "no-cache", "ETag": etag}
+    if _etag_matches(request.headers.get("if-none-match"), etag):
+        # `content-length` sul 304 è ammesso e deve valere quanto il corpo del
+        # 200: è la dimensione del file, non zero.
+        return Response(status_code=304, headers={**headers, "Content-Length": str(stat.st_size)})
+    return FileResponse(path, headers=headers, stat_result=stat)
+
+
 if _static_dir.is_dir():
     app.mount("/assets", StaticFiles(directory=_static_dir / "assets"), name="assets")
 
     @app.api_route("/{full_path:path}", methods=["GET", "HEAD"])
-    async def serve_spa(full_path: str):
+    async def serve_spa(full_path: str, request: Request):
         """Serve the SPA — return index.html for all non-API, non-asset routes.
 
         Anche HEAD: i monitor e i link checker lo usano, e un 405 su `/` fa
@@ -271,12 +328,12 @@ if _static_dir.is_dir():
         if head in _RESERVED_PREFIXES and full_path.rstrip("/") not in _SPA_EXACT_ROUTES:
             raise HTTPException(status_code=404, detail="Not Found")
         if ".." in full_path:
-            return FileResponse(_static_dir / "index.html")
+            return _spa_index(request)
         file_path = _static_dir / full_path
         try:
             file_path.resolve().relative_to(_static_dir.resolve())
         except ValueError:
-            return FileResponse(_static_dir / "index.html")
+            return _spa_index(request)
         if full_path and file_path.is_file():
             return FileResponse(file_path)
         # Un percorso che sembra un file (`*.webp`, `*.js`, `*.png`) e non
@@ -284,4 +341,4 @@ if _static_dir.is_dir():
         # rotta sembrava caricata.
         if "." in full_path.rsplit("/", 1)[-1]:
             raise HTTPException(status_code=404, detail="Not Found")
-        return FileResponse(_static_dir / "index.html")
+        return _spa_index(request)
