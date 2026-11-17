@@ -96,25 +96,48 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: GitHub Release (note generate dai commit)
+      - name: GitHub Release (note dai commit)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ needs.publish.outputs.tag }}
+          REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
           # Il checkout qui è sul commit del tag quando il run nasce da un push
           # di tag; su dispatch il tag va recuperato esplicitamente, altrimenti
-          # `--verify-tag` fallisce. `--generate-notes` usa comunque la API.
+          # `--verify-tag` fallisce.
           git fetch --tags --force origin "refs/tags/${TAG}:refs/tags/${TAG}" || true
           if gh release view "$TAG" >/dev/null 2>&1; then
             echo "release $TAG già presente: nessuna modifica"
-          else
-            # --latest solo su creazione: una release nuova è la versione più
-            # recente. Una release esistente (re-dispatch, rollback) non muove
-            # il badge: il deploy di un tag vecchio non rende "Latest" il vecchio.
-            gh release create "$TAG" --verify-tag --generate-notes --latest --title "$TAG"
-            echo "release $TAG creata"
+            exit 0
           fi
+          # Note dai commit, non da --generate-notes: in questo repo si pusha
+          # dritto su main senza PR, e le note generate dalla API sarebbero solo
+          # un link "Full Changelog".
+          # Base del diff: il tag antenato più vicino (describe), non il tag
+          # semver più alto: se si tagga un commit vecchio il confronto resta
+          # quello giusto.
+          PREV="$(git describe --tags --abbrev=0 "${TAG}^" 2>/dev/null || true)"
+          [ -n "$PREV" ] || PREV="$(git tag -l 'v*' --sort=-v:refname | grep -vx "$TAG" | head -n1 || true)"
+          NOTES="$(mktemp)"
+          {
+            if [ -n "$PREV" ]; then
+              echo "## Cosa cambia rispetto a \`$PREV\`"
+              echo
+              git log --no-merges --pretty='- %s (`%h`)' "$PREV..$TAG"
+              echo
+              echo "**Full Changelog**: https://github.com/${REPO}/compare/${PREV}...${TAG}"
+            else
+              echo "## Primo rilascio"
+              echo
+              git log --no-merges --pretty='- %s (`%h`)' "$TAG"
+            fi
+          } > "$NOTES"
+          # --latest: una release nuova è la versione più recente. Una release
+          # esistente (re-dispatch, rollback) non muove il badge, così il deploy
+          # di un tag vecchio non rende "Latest" la versione vecchia.
+          gh release create "$TAG" --verify-tag --latest --title "$TAG" --notes-file "$NOTES"
+          echo "release $TAG creata"
 
   prune:
     # Housekeeping, non un gate: se il token non può cancellare (permessi del
