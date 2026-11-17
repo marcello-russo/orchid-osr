@@ -109,7 +109,10 @@ jobs:
           if gh release view "$TAG" >/dev/null 2>&1; then
             echo "release $TAG già presente: nessuna modifica"
           else
-            gh release create "$TAG" --verify-tag --generate-notes --title "$TAG"
+            # --latest solo su creazione: una release nuova è la versione più
+            # recente. Una release esistente (re-dispatch, rollback) non muove
+            # il badge: il deploy di un tag vecchio non rende "Latest" il vecchio.
+            gh release create "$TAG" --verify-tag --generate-notes --latest --title "$TAG"
             echo "release $TAG creata"
           fi
 
