@@ -118,21 +118,24 @@ jobs:
       # `COPY --from=frontend` o la dist si rompessero, il job restava verde.
       - name: Smoke test — API e SPA, con volume /data
         run: |
-          mkdir -p .ci-data
-          container_id=$(docker run -d -v "$PWD/.ci-data:/data" orchid-osr)
+          # Volume nominato, non bind mount: l'entrypoint fa `chown` del volume
+          # all'utente applicativo (10001), quindi dopo il primo avvio il
+          # runner non può più cancellare il contenuto di una directory sua —
+          # `rm -rf .ci-data` faceva fallire lo step *dopo* un test riuscito.
+          # `docker volume rm` invece non ha padroni.
+          VOLUME=orchid-ci-smoke
+          docker volume rm -f "$VOLUME" >/dev/null 2>&1 || true
+          container_id=$(docker run -d -v "$VOLUME:/data" orchid-osr)
           cleanup() {
             docker logs "$container_id" 2>/dev/null | tail -40 || true
             docker rm -f "$container_id" >/dev/null 2>&1 || true
-            # L'entrypoint fa chown del volume all'utente applicativo (10001):
-            # dopo il primo avvio il contenuto non è più cancellabile dal
-            # runner, e `rm -rf` faceva fallire lo step dopo un test riuscito.
-            sudo rm -rf .ci-data
+            docker volume rm -f "$VOLUME" >/dev/null 2>&1 || true
           }
           check() {
             docker exec "$container_id" python3 -c "import sys, urllib.request; r = urllib.request.urlopen('http://localhost:7860/health', timeout=5); sys.exit(0 if r.status == 200 else 1)" || return 1
             docker exec "$container_id" python3 -c "import sys, urllib.request; b = urllib.request.urlopen('http://localhost:7860/', timeout=5).read().decode(); sys.exit(0 if '<div id=\"root\">' in b else 1)"
           }
-          for i in $(seq 1 12); do
+          for i in $(seq 1 18); do
             sleep 5
             if check 2>/dev/null; then
               echo "OK: /health e / rispondono dopo $((i*5))s"
@@ -146,7 +149,7 @@ jobs:
               exit 1
             fi
           done
-          echo "FAIL: /health o / non rispondono dopo 60s"
+          echo "FAIL: /health o / non rispondono dopo 90s"
           cleanup
           exit 1
       # Vulnerabilità dentro l'immagine finale (base image + wheel installati).

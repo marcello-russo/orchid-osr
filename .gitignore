@@ -69,6 +69,3 @@ ProjectDocker/
 *_2/
 *_adapter/
 
-# Volume usa-e-getta degli smoke test dell'immagine (CI)
-.ci-data/
-.smoke-data/
