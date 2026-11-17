@@ -48,13 +48,17 @@ COPY backend/pyproject.toml .
 # (1,7 GB) servono unicamente agli upload su HuggingFace: niente di tutto ciò
 # deve entrare nell'immagine.
 COPY backend/data/species_counts.json backend/data/kfold_indices_seed57.json data/
-RUN mkdir -p models dataset
+# `dataset` non si crea: l'entrypoint lo collega a /data/dataset. Una directory
+# già presente farebbe nascere il link *dentro* (dataset/dataset).
+RUN mkdir -p models
 COPY backend/app/ app/
 COPY backend/server.py backend/cli.py ./
 COPY backend/scripts/ scripts/
 # --no-deps: le dipendenze arrivano da requirements.txt; qui serve solo
-# registrare il comando `orchid`.
-RUN pip install --no-cache-dir --no-deps .
+# registrare il comando `orchid`. --no-build-isolation: la build usa il
+# setuptools appena installato dal lock, non uno scaricato da PyPI adesso.
+RUN pip install --no-cache-dir --no-deps --no-build-isolation . && \
+    rm -rf build *.egg-info
 
 COPY entrypoint.sh .
 COPY --from=frontend /build/dist /workspace/frontend/dist
@@ -80,11 +84,13 @@ WORKDIR /workspace/backend
 ENV HOME=/workspace
 
 COPY backend/pyproject.toml .
-# KEEP IN SYNC con lo stage runtime
-# Su cloud il pinning di torch viene rilassato: vince il constraints file.
+# Non è lo stage di produzione: qui girano CUDA 12.1 e Python 3.10, quindi le
+# versioni non possono essere quelle del lock (numpy<2, torch 2.1, older libs).
+# Il vincolo è tutto in constraints-training.txt, applicato alla stessa
+# risoluzione di pyproject: nessun pacchetto viene declassato dopo.
 COPY backend/constraints-training.txt .
 RUN pip install --no-cache-dir --default-timeout=1000 . --constraint constraints-training.txt && \
-    pip install --no-cache-dir transformers==4.43.0 tokenizers==0.19.1
+    rm -rf build *.egg-info
 
 COPY backend/data/species_counts.json backend/data/kfold_indices_seed57.json data/
 COPY backend/app/ app/

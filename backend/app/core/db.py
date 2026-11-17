@@ -14,9 +14,11 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-# Path assoluto: backend/data/orchid.db
+# Path assoluto: backend/data/orchid.db. In container l'entrypoint esporta
+# DB_PATH sul volume /data, così i metadati (e il contatore dei tentativi di
+# login) non vivono nel layer scrivibile, che sparisce al redeploy.
 _BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
-DB_PATH = str(_BACKEND_DIR / "data" / "orchid.db")
+DB_PATH = os.environ.get("DB_PATH") or str(_BACKEND_DIR / "data" / "orchid.db")
 
 
 _SCHEMA_SQL = """
