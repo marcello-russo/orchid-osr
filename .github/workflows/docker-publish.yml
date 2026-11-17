@@ -97,18 +97,19 @@ jobs:
           TAG: ${{ steps.meta.outputs.tag }}
         run: |
           set -euo pipefail
-          mkdir -p .smoke-data
+          # Volume nominato: l'entrypoint fa `chown` del volume all'utente
+          # applicativo (10001), quindi una directory del runner non sarebbe
+          # più cancellabile dopo il primo avvio.
+          VOLUME=orchid-publish-smoke
+          docker volume rm -f "$VOLUME" >/dev/null 2>&1 || true
           docker pull "$IMAGE:$TAG"
-          cid=$(docker run -d -v "$PWD/.smoke-data:/data" "$IMAGE:$TAG")
+          cid=$(docker run -d -v "$VOLUME:/data" "$IMAGE:$TAG")
           cleanup() {
             docker logs "$cid" 2>/dev/null | tail -30 || true
             docker rm -f "$cid" >/dev/null 2>&1 || true
-            # L'entrypoint fa chown del volume all'utente applicativo (10001):
-            # dopo il primo avvio il contenuto non è più cancellabile dal
-            # runner, e `rm -rf` faceva fallire lo step dopo un test riuscito.
-            sudo rm -rf .smoke-data
+            docker volume rm -f "$VOLUME" >/dev/null 2>&1 || true
           }
-          for i in $(seq 1 12); do
+          for i in $(seq 1 18); do
             sleep 5
             if docker exec "$cid" python3 -c "import sys, urllib.request; sys.exit(0 if urllib.request.urlopen('http://localhost:7860/health', timeout=5).status == 200 else 1)" 2>/dev/null; then
               echo "OK: $IMAGE:$TAG risponde su /health dopo $((i*5))s"

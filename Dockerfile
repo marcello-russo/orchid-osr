@@ -75,6 +75,13 @@ ENV API_PORT=7860 \
     HOME=/home/app
 EXPOSE 7860
 
+# Nessun `USER`: il container parte da root perché il volume /data arriva
+# root:root e solo root può farne il chown; l'entrypoint si ri-esegue subito
+# con setpriv come utente `app` (uid 10001), e quello è il processo che serve le
+# richieste (verificato: PID 1 = 10001). Il prezzo, da sapere: `docker exec` e
+# un `--entrypoint` sovrascritto girano da root. Se un giorno servisse un
+# container root-free dall'inizio, il chown va spostato in un init separato:
+# non basta aggiungere `USER app`, perché il volume resterebbe di root.
 CMD ["./entrypoint.sh"]
 
 # --- Stage 3: training GPU ----------------------------------------------------
