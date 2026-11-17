@@ -32,6 +32,12 @@ updates:
       - dependency-name: transformers
         update-types:
           - version-update:semver-major
+      # Nessuna major automatica, come gia' scritto in testa al file: una PR
+      # major e' quasi sempre rossa (contratto che cambia) e resta li' a fare
+      # rumore. Le major si leggono dal changelog e si fanno a mano.
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
 
   - package-ecosystem: npm
     directory: /frontend
@@ -61,6 +67,10 @@ updates:
           - "*"
         update-types:
           - patch
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
 
   - package-ecosystem: github-actions
     directory: /
@@ -76,6 +86,10 @@ updates:
         update-types:
           - minor
           - patch
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
 
   - package-ecosystem: docker
     directory: /
@@ -91,5 +105,8 @@ updates:
         update-types:
           - version-update:semver-minor
       - dependency-name: node
+        update-types:
+          - version-update:semver-major
+      - dependency-name: "*"
         update-types:
           - version-update:semver-major
