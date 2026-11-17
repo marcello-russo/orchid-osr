@@ -34,4 +34,3 @@ def test_sync_frontend_copies_png_and_webp(tmp_path):
     sync_frontend(src, dst)
 
     assert sorted(p.name for p in dst.iterdir()) == ["fig.png", "fig.webp"]
-

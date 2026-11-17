@@ -55,9 +55,17 @@ jobs:
         with:
           python-version: "3.11"
           cache: "pip"
-      # Versione pinnata: un gate il cui esito dipende dalla release di ieri
-      # non è un gate. Si aggiorna a mano, verificando il codice.
-      - run: pip install mypy==1.19.1
+      # mypy con gli stessi tipi che ha in locale. `app/cli` decora i comandi
+      # con `@app.command()`: se typer non è installato quell'import vale `Any`
+      # e `disallow_untyped_decorators` (strict) segnala sul runner 5 errori
+      # che in locale non esistono. La cura non è spegnere il check — è dare a
+      # mypy il pacchetto. La versione è quella del lock, non l'ultima: un gate
+      # il cui esito dipende dalla release di ieri non è un gate.
+      - name: mypy + le dipendenze i cui tipi controlla
+        run: |
+          TYPER=$(sed -n 's/^typer==//p' requirements.txt | head -n1)
+          [ -n "$TYPER" ] || { echo "::error::typer non è nel lock (requirements.txt)"; exit 1; }
+          pip install "mypy==1.19.1" "typer==$TYPER"
       # Gate reale, in due sensi: `continue-on-error` lo rendeva decorativo
       # prima (rosso per settimane senza fermare nulla), e ogni modulo di
       # app/cli aveva `ignore_errors = true` in pyproject.toml, quindi
@@ -115,7 +123,10 @@ jobs:
           cleanup() {
             docker logs "$container_id" 2>/dev/null | tail -40 || true
             docker rm -f "$container_id" >/dev/null 2>&1 || true
-            rm -rf .ci-data
+            # L'entrypoint fa chown del volume all'utente applicativo (10001):
+            # dopo il primo avvio il contenuto non è più cancellabile dal
+            # runner, e `rm -rf` faceva fallire lo step dopo un test riuscito.
+            sudo rm -rf .ci-data
           }
           check() {
             docker exec "$container_id" python3 -c "import sys, urllib.request; r = urllib.request.urlopen('http://localhost:7860/health', timeout=5); sys.exit(0 if r.status == 200 else 1)" || return 1
