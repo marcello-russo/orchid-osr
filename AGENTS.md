@@ -90,13 +90,33 @@ non si usa in locale.
 
 ## Deploy
 
-Build in CI, deploy da questa macchina (la VPS è raggiungibile solo via tailnet):
+Build in CI, deploy da questa macchina (la VPS è raggiungibile solo via tailnet).
+Il tag è l'unica fonte di verità, come in `personale/actions`:
 
-1. tag `v*` → workflow `Publish Docker images` → build con il `GITHUB_TOKEN` del
-   repo (nessun secret aggiuntivo) e push di `ghcr.io/squidslab/orchid-app:<tag>`
-2. `scripts/deploy-vps.sh [tag]` → scp di `compose.yml` + `edge.yml` in
-   `/srv/orchid`, `pull` + `up -d` via SSH, healthcheck su
-   `https://osr.marrusso.dev/health`, rollback automatico al tag precedente
+1. `git tag -a vX.Y.Z` + push del tag → workflow `Publish Docker images`:
+   build con il `GITHUB_TOKEN` del repo (nessun secret aggiuntivo), push di
+   `ghcr.io/squidslab/orchid-app:<tag>` (+ `:sha-<commit>`), **GitHub Release
+   con le note generate dai commit** e prune GHCR che tiene le ultime
+   `KEEP_VERSIONS` (3) versioni taggate
+2. `scripts/deploy-vps.sh [tag]` (default: ultimo tag) → `compose.yml` +
+   `edge.yml` **presi dal tag** via `git archive`, scp in `/srv/orchid`,
+   `pull` + `up -d` via SSH, healthcheck in loopback sull'host, registro
+   `/srv/orchid/.deployed` (tag + commit + istante), rollback automatico alla
+   versione precedente se il servizio non torna sano
+
+Regole di versioning (stesse del repo `actions`: nessun `latest`, nessun
+deploy da un working tree sporco):
+
+- si tagga **quando la versione deve andare online**, non a ogni commit di
+  lavoro: i tag sono un registro di ciò che è stato pubblicato, non una cronologia
+  di sviluppo (quella la fanno i commit)
+- semver: patch = fix, minor = funzionalità compatibili, major = cambi che
+  rompono il contratto (API, formato esperimenti, layout)
+- `:sha-<commit>` esiste per tracciare un'immagine a un commit, ma il deploy
+  usa sempre un tag versione: così esiste una Release, un'immagine e una
+  voce nel registro
+- rollback = tag precedente **con immagine ancora in GHCR**: con
+  `KEEP_VERSIONS=3` i due tag precedenti sono sempre disponibili
 
 Perché non un workflow di deploy: l'SSH della VPS è aperto solo su `tailscale0`
 e il runner self-hosted `central` è registrato solo su `marcello-russo/actions`.
