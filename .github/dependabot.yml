@@ -36,6 +36,10 @@ updates:
       - dependency-name: transformers
         update-types:
           - version-update:semver-major
+      # tokenizers è vincolato dalla major di transformers (4.x richiede <0.22):
+      # bumpato da solo rende il lock irrisolvibile (ResolutionImpossible). Si
+      # aggiorna insieme a transformers, a mano, provando i pesi DINOv2.
+      - dependency-name: tokenizers
       # Nessuna major automatica, come dichiarato in testa al file: una PR major
       # è quasi sempre rossa (cambia un contratto) e resta lì a fare rumore. Le
       # major si leggono dal changelog e si fanno a mano.
