@@ -1,4 +1,5 @@
 # tests/test_core/test_training.py
+import pytest
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
@@ -39,6 +40,10 @@ class TestTraining:
         assert 0.0 <= accuracy <= 1.0
         assert 0.0 <= f1 <= 1.0
 
+    # 50 epoche su CPU: qui il tempo è lavoro vero, non un blocco. Il timeout
+    # globale (300s) serve a intercettare gli hang; questa prova addestra, quindi
+    # ha un tetto suo più largo (su un runner condiviso è già stata uccisa a 60s).
+    @pytest.mark.timeout(600)
     def test_overfit_single_batch(self, tiny_dataset, device):
         """Core sanity check: model can overfit a tiny dataset.
         If this fails, something is fundamentally broken.
