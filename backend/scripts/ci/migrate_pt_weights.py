@@ -11,7 +11,10 @@ from huggingface_hub import HfApi, snapshot_download
 from scripts.hf_config import HF_MODELS_REPO
 
 HF_REPO = HF_MODELS_REPO
-LOCAL_CACHE = "/tmp/pt_migration"
+# Directory di lavoro della migrazione una-tantum (poi cancellata): path fisso
+# voluto, così i file scaricati si trovano a colpo d'occhio. Nessun dato di
+# altri processi passa di qui.
+LOCAL_CACHE = "/tmp/pt_migration"  # noqa: S108
 os.makedirs(LOCAL_CACHE, exist_ok=True)
 
 

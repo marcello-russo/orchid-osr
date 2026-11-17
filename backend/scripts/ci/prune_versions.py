@@ -91,7 +91,10 @@ def main() -> int:
             },
         )
         try:
-            with urllib.request.urlopen(req) as r:
+            # L'URL è costruito qui sopra da una costante https e da un path
+            # dell'API GitHub: nessuno schema alternativo (file:, ftp:) è
+            # raggiungibile da input.
+            with urllib.request.urlopen(req) as r:  # noqa: S310
                 body = r.read().decode()
                 return json.loads(body) if body else True
         except urllib.error.HTTPError as e:

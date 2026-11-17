@@ -22,10 +22,15 @@ def _cfg() -> dict:
 def test_ruff_rules_are_strict_without_dead_ignores():
     lint = _cfg()["tool"]["ruff"]["lint"]
     assert {"E", "F", "I", "W"} <= set(lint["select"])
-    # Gli ignore per-file puntavano anche a file e cartelle inesistenti
-    # (preprocessing_tools.py, tests/test_integration/*): o si pulisce il codice
-    # o si dichiara il debito, non si nasconde con un glob morto.
-    assert "per-file-ignores" not in lint
+    # S = regole di sicurezza (bandit). Se qualcuno le toglie per far passare
+    # build, questo test lo dice.
+    assert "S" in lint["select"]
+    # Gli ignore per-file devono puntare a qualcosa che esiste: in passato
+    # contenevano preprocessing_tools.py e tests/test_integration/*, cioè glob
+    # morti che nascondevano debito senza che nessuno se ne accorgesse.
+    backend = PYPROJECT.parent
+    for pattern in lint.get("per-file-ignores", {}):
+        assert list(backend.glob(pattern)), f"per-file-ignores su un path inesistente: {pattern}"
 
 
 def test_coverage_measures_the_api_and_has_one_threshold():
@@ -40,9 +45,7 @@ def test_coverage_measures_the_api_and_has_one_threshold():
 
 def _ci_code() -> str:
     """Solo le righe eseguibili: i commenti citano le opzioni per spiegarle."""
-    return "\n".join(
-        line for line in CI.read_text(encoding="utf-8").splitlines() if not line.lstrip().startswith("#")
-    )
+    return "\n".join(line for line in CI.read_text(encoding="utf-8").splitlines() if not line.lstrip().startswith("#"))
 
 
 def test_ci_does_not_override_the_coverage_threshold():

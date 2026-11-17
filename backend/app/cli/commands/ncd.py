@@ -24,7 +24,9 @@ def ncd(
         from pathlib import Path
 
         script = Path(__file__).resolve().parent.parent.parent / "scripts" / "compute_delong.py"
-        raise SystemExit(subprocess.call([sys.executable, str(script)]))
+        # Lista di argomenti, nessuna shell e nessun input utente: il comando è
+        # questo interprete su uno script del repo.
+        raise SystemExit(subprocess.call([sys.executable, str(script)]))  # noqa: S603
     from app.cli.runner import run_experiment
 
     typer.echo(f"ncd exp={exp} model={model} (GPU auto)")
