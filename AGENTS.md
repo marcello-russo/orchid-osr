@@ -174,6 +174,14 @@ orchid-osr/
 - **Frontend env**: `frontend/.env` → `VITE_API_URL` (empty = relative paths, proxied in dev e same-origin in prod)
 - **Root env**: in locale `.env` (segreti + config); in produzione `.env` non segreto in `/srv/orchid` e segreti in `/srv/orchid/secrets/app.env`
 - **Cache su volume**: l'entrypoint esporta `HF_HOME=$DATA_DIR/.hf_cache` e `THUMBNAILS_DIR=$DATA_DIR/.thumbnails`; le miniature della galleria restano così tra un redeploy e l'altro (e un errore transitorio del CDN è un 502, non un 404)
+- **CORS**: solo dev server (`CORS_ORIGINS`, CSV, default `localhost:5173/5175`); in produzione la SPA è same-origin e l'auth è `Authorization: Bearer`, quindi niente cookie e niente wildcard
+
+### Container
+- L'immagine gira come utente **non privilegiato** `app` (uid 10001): l'entrypoint parte da root solo per sistemare i permessi del volume `/data` e poi si ri-esegue con `setpriv`. Lo stage `training` usa invece `APP_UID=42420` (owner di `/workspace` in quell'immagine).
+- Nella dist dentro l'immagine i **PNG non entrano** (`find … -name '*.png' -delete`): sono il sorgente 300 dpi della tesi, la SPA serve i `.webp`. Risparmio ~14 MB per immagine.
+- Dall'immagine sono esclusi `backend/data/merged_weights/` (1,7 GB di checkpoint usati solo per gli upload su HF), `users.json`, `jwt_secret.txt` e `orchid.db`: in produzione la fonte è il volume `/data` (`USERS_PATH`, `JWT_SECRET_PATH`). Il Dockerfile copia solo `species_counts.json` e `kfold_indices_seed57.json`.
+- `ORCHID_VERSION` arriva nel container da `compose.yml`: `/openapi.json` riporta la versione davvero in esecuzione.
+
 
 ### Image size convention
 
@@ -191,7 +199,33 @@ The preliminary experiments (pre-renumbering) had undetected train/test overlap 
 - Su questa macchina (Quadro T2000, 4 GB) il batch è fissato a 8: batch 4 fa collassare la loss contrastiva su DINOv2.
 
 ### Quality gate
-`pytest`, `ruff check` + `ruff format --check` (max line 120) e `mypy app/cli` sono enforced dalla CI; `pre-commit` li anticipa in locale. Il frontend ha ESLint v9.
+Tutti enforced dalla CI (`.github/workflows/ci.yml`), `pre-commit` anticipa ruff e mypy in locale:
+
+- backend: `pytest -m "not slow"` con copertura; la soglia (`fail_under`) e le esclusioni stanno **solo** in `pyproject.toml` (la CI non la sovrascrive: averla in due posti l'aveva fatta divergere)
+- `ruff check` + `ruff format --check` (max 120 righe) **senza ignore per-file**
+- `mypy app/cli` bloccante (era `continue-on-error`: rosso per settimane senza fermare nulla)
+- frontend: `eslint`, `check-i18n`, `vitest` (110 test) e `tsc -b && vite build`
+- dipendenze: `pip-audit` con allowlist motivata in `backend/audit-ignores.txt`
+- immagine: smoke test su `/health` + Trivy (CRITICAL, solo CVE con fix disponibile)
+- analisi statica: CodeQL `security-extended` su Python e TypeScript
+
+### Dipendenze e versioni
+`backend/requirements.txt` è un lock **esatto** (Python 3.11, wheel CPU) e `requirements-dev.txt` aggiunge pytest/ruff. Immagine e CI installano esattamente quelle versioni:
+
+```bash
+bash backend/scripts/ci/sync_requirements.sh   # dopo aver cambiato pyproject.toml
+```
+
+torch/torchvision non sono nel lock perché vanno presi dall'indice CPU: le loro versioni stanno in `backend/torch-pins.txt`, lo stesso file usato da Dockerfile e CI, così un wheel CUDA non può finire nell'immagine di produzione e i due ambienti non divergono. Dependabot apre PR settimanali raggruppate (pip diviso in dev-tools/runtime-patch, npm in react/tooling, actions, docker); le major di torch/transformers sono escluse e si valutano a mano.
+
+### Database / state
+C'è **un** database SQLite, `backend/data/orchid.db` (`app/core/db.py`): metadati degli esperimenti (`experiments`, `folds`), utenti, inviti e tentativi di login; contiene un fallback su JSON (`users.json`) per retrocompatibilità. `sync_all()` popola le tabelle scandendo `experiments/` (thread periodico ogni 60s) e l'API legge da lì. Il resto è su filesystem: esperimenti JSON, pesi `.pt`, immagini via proxy HF CDN. L'API carica i modelli su richiesta con cache LRU (`MAX_CACHED_MODELS = 2`).
+
+### Debito tecnico dichiarato
+- **Tipizzazione**: `mypy` in `strict` è attivo solo dove il codice è tipizzato (`app/cli`); `app/core`, `app/api`, `preprocessing`, `visualization`, `explainability` hanno `ignore_errors` in `pyproject.toml`. Allargare lo scope è un cantiere, non una patch: finché è così lo si dichiara qui e nei commenti, invece di lasciare intendere che tutto sia tipizzato.
+- **transformers 4.x**: 6 avvisi di sicurezza hanno fix solo in 5.x, un major che cambia il caricamento dei modelli DINOv2 e va validato con i pesi su GPU. Allowlist motivata in `backend/audit-ignores.txt`; rischio ridotto perché i pesi arrivano da un repo nostro pinnato, non da input utente.
+- **`core/training.py` e `core/supcon.py`**: primitive di training usate da `core/kfold/`, non codice morto — ma convivono con le versioni k-fold e vanno lette insieme.
+
 
 ### Server vs CLI
 - `python server.py` starts the FastAPI API on `0.0.0.0:5000`
@@ -204,9 +238,6 @@ The preliminary experiments (pre-renumbering) had undetected train/test overlap 
 - Models: `marcellorusso/orchid-osr-models`
 - Sync via CLI (logic in `app/hf/`, tested): `orchid hf download|sync|upload-models|upload-ncd` (requires `HF_TOKEN`)
 - All'avvio l'entrypoint sincronizza in background esperimenti e pesi nel volume `/data` (con lock, skip per dimensione)
-
-### Database / state
-No database. All state is filesystem-based: experiments JSON, model `.pt` files, users in `users.json`, dataset images (proxy HF CDN). The backend API scans `experiments/` at runtime to discover available models (LRU cache, max 5 loaded at once).
 
 ### Studio I-C (SpHOR) and Studio II-A (SpHOR-NCD)
 - Studio I-C adds Spherical Orthogonal Prototypes (SpHOR) on top of SupCon. Prototypes are L2-normalized hypersphere embeddings with repulsion loss.
