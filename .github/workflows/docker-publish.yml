@@ -103,7 +103,10 @@ jobs:
           cleanup() {
             docker logs "$cid" 2>/dev/null | tail -30 || true
             docker rm -f "$cid" >/dev/null 2>&1 || true
-            rm -rf .smoke-data
+            # L'entrypoint fa chown del volume all'utente applicativo (10001):
+            # dopo il primo avvio il contenuto non è più cancellabile dal
+            # runner, e `rm -rf` faceva fallire lo step dopo un test riuscito.
+            sudo rm -rf .smoke-data
           }
           for i in $(seq 1 12); do
             sleep 5
