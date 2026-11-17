@@ -66,6 +66,11 @@ PREV=$(sed -n 's/^ORCHID_VERSION=//p' .env | tail -n1)
 echo "versione precedente: ${PREV:-nessuna}"
 
 set_version() {
+    # `sed` sostituisce solo una riga che esiste già: su un host nuovo (o se il
+    # .env è stato scritto a mano senza quella riga) l'aggiornamento sarebbe un
+    # no-op e `compose.yml` si fermerebbe su ${ORCHID_VERSION:?...}, facendo
+    # sembrare "impossibile da deployare" un tag che va benissimo.
+    grep -q '^ORCHID_VERSION=' .env || printf 'ORCHID_VERSION=\n' >> .env
     sed -i "s|^ORCHID_VERSION=.*|ORCHID_VERSION=$1|" .env
 }
 
