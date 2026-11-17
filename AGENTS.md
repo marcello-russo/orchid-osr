@@ -15,7 +15,7 @@ All code lives under `orchid-osr/`. Commands must be relative to that subtree:
 - Python 3.11+ (`cd backend && pip install -e ".[dev]"`)
 - NVIDIA GPU + CUDA for training (CPU-only inference is supported)
 - Docker + NVIDIA Container Toolkit for containerized runs
-- Dataset e pesi **non sono nel repo** (rimossi l'8/11/2026, vedi `BACKUP-HF-MANIFEST.txt`): servono `HF_TOKEN` e `orchid hf download`
+- Dataset e pesi **non sono nel repo** (rimossi l'8/11/2026, elenco completo in `BACKUP-HF-MANIFEST.txt.gz`, ~20 MB di testo compressi a 1,3 MB: `zgrep -i exaltata BACKUP-HF-MANIFEST.txt.gz`): servono `HF_TOKEN` e `orchid hf download`
 
 ## Commands
 
