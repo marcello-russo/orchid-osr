@@ -158,7 +158,6 @@ def train_supcon(
 
     Returns (model with best backbone weights, metrics dict).
     """
-    from app.core.models.registry import get_registry_entry
 
     model = model.to(device)
     proj_head = ProjectionHead(model.embedding_dim, proj_dim).to(device)

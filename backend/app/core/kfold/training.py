@@ -12,7 +12,6 @@ import torch
 import torch.nn.functional as F
 from sklearn.metrics import accuracy_score, f1_score
 from sklearn.model_selection import StratifiedKFold
-from torch import nn
 from torch.utils.data import DataLoader, Subset
 
 logger = logging.getLogger(__name__)
