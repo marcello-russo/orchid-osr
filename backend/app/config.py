@@ -76,6 +76,13 @@ class Settings(BaseSettings):
     api_host: str = "0.0.0.0"
     api_port: int = 5000
     api_reload: bool = False
+    # Origini ammesse per CORS: serve solo al dev server Vite, in produzione la
+    # SPA è same-origin. CSV da env (CORS_ORIGINS="http://a,http://b").
+    cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5175,http://127.0.0.1:5175"
+
+    def cors_origins_list(self) -> list[str]:
+        """Origini CORS come lista, scartando voci vuote (es. CORS_ORIGINS="")."""
+        return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
 
     # HuggingFace token (from .env)
     hf_token: str = ""
