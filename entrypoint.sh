@@ -80,6 +80,18 @@ fi
 python3 server.py$EXTRA_ARGS &
 SERVER_PID=$!
 
+# bash è PID 1 e non inoltra i segnali al figlio: senza questo trap
+# `docker stop` (grace 30s) aspettava il timeout e poi uccideva uvicorn con
+# SIGKILL, troncando le richieste in volo. Verificato: prima stop = 20s e
+# exit 137 senza "Shutting down"; con il trap stop = 1s, exit 0 e
+# "Application shutdown complete".
+term_handler() {
+    kill -TERM "$SERVER_PID" 2>/dev/null || true
+    wait "$SERVER_PID" || true
+    exit 0
+}
+trap term_handler TERM INT
+
 # Sync experiments/models in background (non blocca il server)
 if [ -d "$DATA_DIR" ]; then
     (
@@ -90,4 +102,4 @@ fi
 
 # Dataset non scaricato localmente: le immagini vengono servite via proxy HF CDN
 
-wait $SERVER_PID
+wait "$SERVER_PID"
