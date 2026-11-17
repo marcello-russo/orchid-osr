@@ -1,78 +1,70 @@
-
-*$py.class
-*_1/
-*_2/
-*_adapter/
-!app/core/models/
-archive/
-# Backend data dirs
-backend/dataset*/
-backend/experiments/
-backend/inference*/
-backend/logs*/
-backend/models*/
-backend/orchid-ncd-models/
-backend/temp_kfold/
-backend/test_dataset/
-.coverage
-.coverage.*
-# Coverage
-# Data and Models
-dataset*/
-# Docker artifacts
-documents/
-*_done
-.DS_Store
-embeddings.npy
-.env
-# Environment and Secrets
-# Generated outputs
-htmlcov/
-.idea/
-# IDEs
-inference*/
-.ipynb_checkpoints/
-# K-fold temporary directories
-*.log
-backend/models*/
-*.npy
-frontend/src/stores/
-backend/users.json
-backend/data/users.json
-backend/*.egg-info/
-smart-train.log
-.pytest_cache/
-.ruff_cache/
-__pycache__/
-*.pyc
-ProjectDocker/
-*.pt
+# --- Python -----------------------------------------------------------------
 __pycache__/
 *.py[cod]
-# Python
-*.safetensors
-superpowers/
-# System
-temp_kfold/
-.vscode/
+backend/*.egg-info/
 backend/build/
-.worktrees/
-# Draft docs (non committati)
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# --- Dati, esperimenti, pesi (stanno su HuggingFace, non nel repo) ----------
+dataset*/
+backend/dataset*/
+backend/test_dataset/
+backend/experiments/
+backend/inference*/
+backend/models*/
+backend/orchid-ncd-models/
+backend/logs*/
+backend/temp_kfold/
+temp_kfold/
+inference*/
+archive/
+*.npy
+*.pt
+*.safetensors
+*.log
+embeddings.npy
+smart-train.log
+
+# --- Frontend ---------------------------------------------------------------
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/coverage/
+frontend/src/stores/
+
+# --- Segreti e stato locale -------------------------------------------------
+.env
+keys/
+backend/users.json
+backend/data/users.json
+backend/data/jwt_secret.txt
+backend/data/orchid.db
+backend/data/osr_stats/
+
+# --- Documenti non versionati -----------------------------------------------
+documents/
 docs/experiments-draft.md
 docs/plans/
 docs/specs/
-docs/training-status.md
-
 docs/superpowers/
-backend/data/orchid.db
-backend/data/jwt_secret.txt
+docs/training-status.md
+superpowers/
 
-backend/data/osr_stats/
-keys/
-.mypy_cache/
-frontend/coverage/
-node_modules/
-frontend/node_modules/
+# --- Sistema e IDE ----------------------------------------------------------
+.DS_Store
+.idea/
+.vscode/
+.ipynb_checkpoints/
+.worktrees/
 
-# Build output del frontend
-frontend/dist/
+# --- Storici / build di altre piattaforme -----------------------------------
+ProjectDocker/
+*_done
+*_1/
+*_2/
+*_adapter/
