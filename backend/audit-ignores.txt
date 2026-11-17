@@ -1,0 +1,19 @@
+# Vulnerabilità accettate, con il motivo. Una riga = un ID, tutto ciò che segue
+# è commento.
+#
+# Regola: qui finisce solo ciò che non si può correggere adesso, e ogni voce deve
+# dire perché. Se l'ID non esiste più in un report, va tolta (il job di audit
+# stampa il conteggio, così si vede quando la lista è diventata inutile).
+#
+# transformers 4.57.6 — tutte le fix sono nella 5.x, un major che cambia come si
+# caricano i modelli DINOv2 (app/core/models/dinov2.py) e che va validato con i
+# pesi veri su GPU, non a cuore leggero. Esposizione attuale: caricamento di pesi
+# da un repo HuggingFace nostro e pinnato (marcellorusso/orchid-osr-models), non
+# da input utente — il vettore tipico di questi avvisi (repo modello arbitrario).
+# Aggiornamento tracciato in AGENTS.md, sezione debito tecnico.
+PYSEC-2025-217
+PYSEC-2026-2288
+PYSEC-2026-2289
+PYSEC-2026-2290
+PYSEC-2026-3929
+PYSEC-2026-4174
