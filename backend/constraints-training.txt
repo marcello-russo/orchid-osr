@@ -1,5 +1,10 @@
 torch>=2.0.0,<2.2.0
 torchvision>=0.15.0,<0.17.0
+# transformers 4.x con tokenizers compatibile: prima venivano abbassati con un
+# secondo `pip install` dopo la risoluzione, cioè quando pip non può più
+# accorgersi di un conflitto con peft. Qui entrano nella risoluzione.
+transformers==4.43.0
+tokenizers==0.19.1
 # Python 3.10 compatibility (base image pytorch/pytorch:2.1.0)
 numpy<2.0.0
 scipy<1.15.0

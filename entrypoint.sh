@@ -27,14 +27,30 @@ if [ "$(id -u)" = "0" ]; then
     exec setpriv --reuid="$APP_UID" --regid="$APP_UID" --clear-groups "$0" "$@"
 fi
 
+# --- Volume -----------------------------------------------------------------
+# Dataset, esperimenti, utenti e DB vivono su /data. Le directory del progetto
+# che li contengono diventano symlink al volume.
+link_to_data() {
+    # Un `ln -sfn` su una directory che esiste già crea il link *dentro*
+    # (dataset/dataset): il volume resterebbe vuoto e gli upload finirebbero nel
+    # layer dell'immagine. Si toglie la directory solo se è vuota, così un
+    # dataset vero in locale non viene mai distrutto.
+    local name="$1"
+    mkdir -p "$DATA_DIR/$name"
+    [ -L "$name" ] && return 0
+    if [ ! -e "$name" ]; then
+        ln -s "$DATA_DIR/$name" "$name"
+    elif [ -d "$name" ] && [ -z "$(ls -A "$name")" ]; then
+        rmdir "$name" && ln -s "$DATA_DIR/$name" "$name"
+    fi
+}
+
 if [ -d "$DATA_DIR" ]; then
     export HF_HOME="$DATA_DIR/.hf_cache"
     # Miniature della galleria dataset: sul volume, così sopravvivono ai redeploy
     export THUMBNAILS_DIR="$DATA_DIR/.thumbnails"
-    if [ ! -d "$DATA_DIR/dataset" ]; then
-        mkdir -p "$DATA_DIR/dataset"
-    fi
-    [ ! -L dataset ] && ln -sfn "$DATA_DIR/dataset" dataset 2>/dev/null || true
+    link_to_data dataset
+    link_to_data experiments
 
     # Utenti sul volume persistente (il backup su hub e' disattivato: vedi auth.py).
     # Al primo avvio il file viene creato vuoto al primo salvataggio;
@@ -42,6 +58,10 @@ if [ -d "$DATA_DIR" ]; then
     export USERS_PATH="$DATA_DIR/users.json"
     # JWT secret path: persist in /data per sopravvivere ai restart
     export JWT_SECRET_PATH="$DATA_DIR/.jwt_secret"
+    # Metadati (esperimenti, utenti, tentativi di login) sul volume: senza
+    # questo il DB resta nel layer scrivibile e il lockout anti brute-force si
+    # azzera a ogni redeploy.
+    export DB_PATH="$DATA_DIR/orchid.db"
 fi
 
 # Check frontend dist (prima di operazioni lente)
@@ -49,12 +69,6 @@ FRONTEND_DIST="${FRONTEND_DIST:-../frontend/dist}"
 if [ ! -d "$FRONTEND_DIST" ]; then
     echo "⚠️  $FRONTEND_DIST non trovata. La SPA non sarà servita."
     echo "   Esegui 'cd frontend && npm run build' prima di avviare."
-fi
-
-# Pre-crea symlink per experiments (prima del server)
-if [ -d "$DATA_DIR" ]; then
-    mkdir -p "$DATA_DIR/experiments"
-    [ ! -L experiments ] && ln -sfn "$DATA_DIR/experiments" experiments 2>/dev/null || true
 fi
 
 # Avvia server SUBITO
