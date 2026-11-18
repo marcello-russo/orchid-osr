@@ -55,17 +55,15 @@ jobs:
         with:
           python-version: "3.11"
           cache: "pip"
-      # mypy con gli stessi tipi che ha in locale. `app/cli` decora i comandi
-      # con `@app.command()`: se typer non è installato quell'import vale `Any`
-      # e `disallow_untyped_decorators` (strict) segnala sul runner 5 errori
-      # che in locale non esistono. La cura non è spegnere il check — è dare a
-      # mypy il pacchetto. La versione è quella del lock, non l'ultima: un gate
+      # mypy con gli stessi tipi che ha in locale, cioè con le dipendenze vere
+      # del progetto: senza fastapi/starlette ogni `@router.get(...)` vale `Any`
+      # e `strict` segnala 62 `untyped-decorator` sul runner e zero in locale
+      # (successo davvero con la v0.4.0: verde qui, rosso in CI). Idem typer per
+      # `@app.command()`. Si installa il lock intero — niente elenco da tenere
+      # allineato a mano — alla versione esatta di `requirements.txt`: un gate
       # il cui esito dipende dalla release di ieri non è un gate.
       - name: mypy + le dipendenze i cui tipi controlla
-        run: |
-          TYPER=$(sed -n 's/^typer==//p' requirements.txt | head -n1)
-          [ -n "$TYPER" ] || { echo "::error::typer non è nel lock (requirements.txt)"; exit 1; }
-          pip install "mypy==1.19.1" "typer==$TYPER"
+        run: pip install -r requirements.txt "mypy==1.19.1"
       # Gate reale, in due sensi: `continue-on-error` lo rendeva decorativo
       # prima (rosso per settimane senza fermare nulla), e ogni modulo di
       # app/cli aveva `ignore_errors = true` in pyproject.toml, quindi

@@ -141,23 +141,22 @@ def test_typed_scope_includes_the_api_and_auth_storage():
     assert {"app.core.auth", "app.core.auth_store", "app.core.db"} <= targets
 
 
-def test_mypy_job_installs_the_typed_decorators_it_checks():
-    """Senza typer installato, `@app.command()` vale `Any`.
+def test_mypy_job_installs_the_packages_whose_types_it_checks():
+    """Senza fastapi/starlette/typer ogni decoratore vale `Any`.
 
-    Sotto `strict` questo è `untyped-decorator`: 5 errori che esistono solo sul
-    runner (dove si installa mypy e nient'altro), non in locale. La tentazione
-    è spegnere `disallow_untyped_decorators`; la cura è invece dare a mypy lo
-    stesso pacchetto che ha in locale, alla versione del lock — altrimenti il
-    gate è verde o rosso a seconda di cosa è installato, cioè non è un gate.
+    Sotto `strict` è `untyped-decorator`: 62 errori che esistono solo sul runner
+    (dove si installa mypy e nient'altro) e zero in locale. La tentazione è
+    spegnere `disallow_untyped_decorators`; la cura è dare a mypy gli stessi
+    pacchetti che ha in locale, alla versione del lock — il lock intero, così
+    non esiste un secondo elenco da tenere allineato.
     """
     block = _job_block("mypy")
     install = [line for line in block.splitlines() if "pip install" in line and "mypy==" in line]
     assert install, "il job mypy non installa mypy"
     assert any(
-        '"typer==$TYPER"' in line for line in install
-    ), f"il job mypy non installa typer: gli errori untyped-decorator tornano. Trovato: {install}"
-    # La versione deve venire dal lock, non da PyPI al momento della run.
-    assert "requirements.txt" in block
-    assert "s/^typer==//p" in block
+        "-r requirements.txt" in line for line in install
+    ), f"il job mypy non installa il lock: gli untyped-decorator tornano. Trovato: {install}"
+    assert '"mypy==1.19.1"' in block, "mypy deve essere pinnato, non l'ultima release"
     lock = (ROOT / "backend" / "requirements.txt").read_text(encoding="utf-8")
-    assert re.search(r"^typer==", lock, re.MULTILINE), "typer non è pinnato nel lock"
+    for package in ("fastapi==", "starlette==", "typer=="):
+        assert re.search(rf"^{package}", lock, re.MULTILINE), f"{package[:-2]} non è pinnato nel lock"
