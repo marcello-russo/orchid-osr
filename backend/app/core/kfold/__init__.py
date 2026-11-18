@@ -276,7 +276,7 @@ def kfold_experiment(
                 # GC: free model and loaders between folds
                 del model
                 del train_loader, val_loader
-                from app.core.training import cleanup_gpu
+                from app.core.kfold.epochs import cleanup_gpu
 
                 cleanup_gpu()
 

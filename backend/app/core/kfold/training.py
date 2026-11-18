@@ -302,7 +302,7 @@ def train_fold(
     weight_decay=0.0,
     full_finetune=False,
 ):
-    """Train di un singolo fold. Riutilizza train() da app.core.training.
+    """Train di un singolo fold. Riutilizza train() da app.core.kfold.epochs.
 
     Supports intra-fold resume: if resume=True and a last_ckpt.pt exists in the
     checkpoint directory, training continues from the saved epoch.
@@ -313,7 +313,7 @@ def train_fold(
 
     """
     from app.core.models import create_model, get_registry_entry
-    from app.core.training import train
+    from app.core.kfold.epochs import train
 
     ckpt_dir = os.path.dirname(checkpoint_path)
     os.makedirs(ckpt_dir, exist_ok=True)
@@ -517,7 +517,7 @@ def train_fold_supcon(
 
     """
     from app.core.models import create_model, get_registry_entry
-    from app.core.supcon import train_supcon
+    from app.core.kfold.supcon_epochs import train_supcon
 
     ckpt_dir = os.path.dirname(checkpoint_path)
     os.makedirs(ckpt_dir, exist_ok=True)
