@@ -162,8 +162,10 @@ orchid-osr/
 ├── frontend/
 │   └── src/
 │       ├── features/explorer/        # Experiment charts & KPIs
+│       ├── features/explorer/detail/ # Tab del dettaglio (grafici, baseline, NCD, log)
 │       ├── features/classify/        # Image upload + classify hooks
 │       ├── features/dataset/         # Dataset gallery + distribution
+│       ├── features/research/        # Tesi: una sezione per esperimento + primitive di prosa
 │       ├── pages/                    # Route pages (lazy-loaded except Dashboard/Experiments)
 │       ├── locales/                  # EN + IT translations
 │       └── components/               # Layout + Shadcn/ui wrappers
