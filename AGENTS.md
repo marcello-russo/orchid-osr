@@ -229,6 +229,8 @@ Lo stage `training` è un altro ambiente per necessità (Python 3.10, CUDA 12.1,
 ### Database / state
 C'è **un** database SQLite, `backend/data/orchid.db` (`app/core/db.py`), unica fonte di verità per: metadati degli esperimenti (`experiments`, `folds`), utenti, inviti, passi ospite (`users`, `invites`, `guest_passes`) e tentativi di login (`login_attempts`). Le scritture auth passano da `app/core/auth_store.py` con `BEGIN IMMEDIATE` e connessioni brevi: un invito monouso non può essere consumato due volte da due richieste concorrenti. Lo schema è creato una volta per processo (`_SCHEMA_READY`), non a ogni connessione.
 
+Un invito creato dall'API scade **sempre**: 72 ore di default, 30 giorni al massimo (`MAX_INVITE_HOURS`); un passo ospite arriva a 7 giorni (`MAX_GUEST_PASS_HOURS`). "Senza scadenza" esiste solo come `--invite-hours 0` sul CLI, cioè un'azione locale e consapevole, e la UI marca come *scaduto* un codice che non è più spendibile invece di lasciarlo "disponibile".
+
 In container `DB_PATH` punta a `/data/orchid.db` (volume nominato): senza, il lockout anti brute-force si azzererebbe a ogni redeploy. `users.json` è **solo** l'artefatto dell'import una-tantum da v0.3.x: l'import è marcato in `auth_meta.legacy_json_imported` e il file resta sul volume come rete di rollback, ma non è più letto né scritto. `sync_all()` popola le tabelle degli esperimenti scandendo `experiments/` (thread periodico ogni 60s). Il resto è su filesystem: esperimenti JSON, pesi `.pt`, immagini via proxy HF CDN. L'API carica i modelli su richiesta con cache LRU (`MAX_CACHED_MODELS = 2`).
 
 ### Debito tecnico dichiarato

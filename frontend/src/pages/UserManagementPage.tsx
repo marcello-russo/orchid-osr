@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { fetchInvites, generateInvites, deleteUser } from "@/lib/api";
 import { useAppStore } from "@/stores/useAppStore";
+import type { Invite } from "@/lib/types";
 import { useShallow } from "zustand/react/shallow";
 import {
   Card,
@@ -32,12 +33,12 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 
-interface Invite {
-  code: string;
-  role: string;
-  used: boolean;
-  used_by: string | null;
-  created_at: string | null;
+/** Stato reale di un invito: "disponibile" non basta, un codice può essere scaduto. */
+function inviteStatus(inv: Invite): "used" | "revoked" | "expired" | "available" {
+  if (inv.used) return "used";
+  if (inv.revoked) return "revoked";
+  if (inv.expires_at && new Date(inv.expires_at).getTime() <= Date.now()) return "expired";
+  return "available";
 }
 
 interface AppUser {
@@ -121,7 +122,7 @@ export function UserManagementPage() {
         <CardHeader>
           <CardTitle>{t("invites.generate_title")}</CardTitle>
           <CardDescription>
-            {t("invites.generate_description")}
+            {t("invites.generate_description")} {t("invites.generate_expiry_hint")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -167,8 +168,8 @@ export function UserManagementPage() {
           <CardDescription>
             {t("invites.list_description", {
               total: invites.length,
-              available: invites.filter((i) => !i.used).length,
-              used: invites.filter((i) => i.used).length,
+              available: invites.filter((i) => inviteStatus(i) === "available").length,
+              used: invites.filter((i) => inviteStatus(i) === "used").length,
               users: users.length,
             })}
           </CardDescription>
@@ -190,12 +191,15 @@ export function UserManagementPage() {
                   <TableHead>{t("invites.role")}</TableHead>
                   <TableHead>{t("invites.status")}</TableHead>
                   <TableHead>{t("invites.created_at")}</TableHead>
+                  <TableHead>{t("invites.expires_at")}</TableHead>
                   <TableHead>{t("invites.used_by")}</TableHead>
                   <TableHead className="w-10"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {invites.map((inv) => (
+                {invites.map((inv) => {
+                  const status = inviteStatus(inv);
+                  return (
                   <TableRow key={inv.code}>
                     <TableCell className="font-mono text-xs">
                       {inv.code}
@@ -211,22 +215,25 @@ export function UserManagementPage() {
                     </TableCell>
                     <TableCell>
                       <Badge
-                        variant={inv.used ? "outline" : "secondary"}
+                        variant={status === "available" ? "secondary" : "outline"}
                         className={
-                          inv.used
-                            ? "text-muted-foreground"
-                            : "bg-green-100 text-green-800 hover:bg-green-100"
+                          status === "available"
+                            ? "bg-green-100 text-green-800 hover:bg-green-100"
+                            : "text-muted-foreground"
                         }
                       >
-                        {inv.used
-                          ? t("invites.status_used")
-                          : t("invites.status_available")}
+                        {t(`invites.status_${status}`)}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {inv.created_at
                         ? new Date(inv.created_at).toLocaleDateString()
                         : "—"}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {inv.expires_at
+                        ? new Date(inv.expires_at).toLocaleString()
+                        : t("invites.never_expires")}
                     </TableCell>
                     <TableCell className="text-sm">
                       {inv.used_by || "—"}
@@ -242,7 +249,8 @@ export function UserManagementPage() {
                       </Button>
                     </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
               </TableBody>
             </Table>
           )}

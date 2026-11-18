@@ -355,7 +355,12 @@
     "users_title": "Registered users",
     "users_description": "{{count}} registered users",
     "username": "Username",
-    "sidebar": "Invites"
+    "sidebar": "Invites",
+    "expires_at": "Expires",
+    "status_expired": "Expired",
+    "status_revoked": "Revoked",
+    "generate_expiry_hint": "Invites expire after 72 hours (30 days at most) and are single-use.",
+    "never_expires": "Never"
   },
   "admin_users": {
     "title": "User Management",
