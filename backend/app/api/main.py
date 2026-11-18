@@ -370,7 +370,18 @@ def _spa_index(request: Request) -> Response:
 
 
 if _static_dir.is_dir():
-    app.mount("/assets", StaticFiles(directory=_static_dir / "assets"), name="assets")
+    # `StaticFiles` solleva `RuntimeError` se la directory non esiste: un mount
+    # incondizionato trasformava una dist costruita a metà (o un volume
+    # montato male) in un container che non parte, cioè in un errore di build
+    # mascherato da sito giù. Senza `assets/` rispondiamo 404 e basta.
+    _assets_dir = _static_dir / "assets"
+    if _assets_dir.is_dir():
+        app.mount("/assets", StaticFiles(directory=_assets_dir), name="assets")
+    else:
+
+        @app.api_route("/assets/{path:path}", methods=["GET", "HEAD"], include_in_schema=False)
+        async def missing_assets(path: str) -> Response:
+            raise HTTPException(status_code=404, detail="Frontend assets not built")
 
     @app.api_route("/{full_path:path}", methods=["GET", "HEAD"])
     async def serve_spa(full_path: str, request: Request) -> Response:
