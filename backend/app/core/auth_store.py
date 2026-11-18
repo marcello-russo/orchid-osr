@@ -205,7 +205,12 @@ def _as_list(data: dict[str, Any], key: str) -> list[dict[str, Any]]:
 
 
 def _import_legacy_json(conn: sqlite3.Connection, path: Path) -> None:
-    if conn.execute("SELECT 1 FROM auth_meta WHERE key = 'legacy_json_imported'").fetchone():
+    marker = conn.execute("SELECT value FROM auth_meta WHERE key = 'legacy_json_imported'").fetchone()
+    # `absent` è l'eredità della v0.4.0, che marcava la *mancanza* del file come
+    # migrazione fatta: per quel DB l'import era già morto, e il rimedio "rimetto
+    # users.json e riavvio" non lo resuscitava. Il marker vale solo se è una
+    # data, cioè se un import è davvero avvenuto.
+    if marker is not None and marker[0] != "absent":
         return
     if not path.exists():
         # NON si marca niente: "file assente" non è "migrazione fatta". Marcarlo

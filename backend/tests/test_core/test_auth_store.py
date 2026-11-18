@@ -149,14 +149,39 @@ def test_missing_legacy_json_is_not_marked(store):
     assert auth_store.get_user("amico") is not None
 
 
-def test_missing_legacy_json_keeps_working_after_marker(store):
-    """Con un import già fatto, un file sparito non cambia nulla e non riparte."""
-    auth_store.initialize(store / "assente.json")
+def test_absent_marker_from_v040_does_not_block_the_import(store):
+    """Il marker `absent` scritto dalla v0.4.0 non è una migrazione: si riprova.
+
+    Quel valore marcava la *mancanza* del file, e da lì l'import era morto per
+    sempre: rimettere `users.json` e riavviare non importava niente. Ora conta
+    solo una data. (In produzione non è successo — l'import del 2026-11-18 c'è
+    stato — ma un DB locale o un volume rimontato sì.)
+    """
     with auth_store.transaction() as conn:
+        auth_store._set_meta(conn, "legacy_json_imported", "absent")
         auth_store.insert_user(conn, "mario", "h", "user")
+
+    path = store / "users.json"
+    path.write_text(json.dumps({"users": [{"username": "tardivo", "password_hash": "h", "role": "user"}]}))
     auth_store.reset_for_tests()
-    auth_store.initialize(store / "assente.json")
-    assert auth_store.get_user("mario") is not None
+    auth_store.initialize(path)
+    assert auth_store.get_user("tardivo") is not None
+    with auth_store.transaction() as conn:
+        row = conn.execute("SELECT value FROM auth_meta WHERE key='legacy_json_imported'").fetchone()
+    assert row[0] != "absent", "il marker deve tornare una data dopo un import vero"
+
+
+def test_imported_marker_stops_a_second_import(store):
+    """Con un import già fatto (marker = data), un file nuovo non viene riletto."""
+    path = store / "users.json"
+    path.write_text(json.dumps({"users": [{"username": "primo", "password_hash": "h", "role": "user"}]}))
+    auth_store.initialize(path)
+
+    path.write_text(json.dumps({"users": [{"username": "secondo", "password_hash": "h", "role": "user"}]}))
+    auth_store.reset_for_tests()
+    auth_store.initialize(path)
+    assert auth_store.get_user("primo") is not None
+    assert auth_store.get_user("secondo") is None
 
 
 def test_legacy_invite_ttl_matches_api_policy():
