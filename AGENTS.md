@@ -119,6 +119,16 @@ Il tag è l'unica fonte di verità, come in `personale/actions`:
    legge i due script veri e cade se lo smoke smette di guardare i byte, se il
    deploy smette di chiamarlo o se un tag vecchio senza smoke viene saltato in
    silenzio
+4. `scripts/smoke-pages.py` (manuale, richiede Playwright) guarda le **pagine**
+   in un browser vero: sezioni di `/research`, grafici del dettaglio, tabella
+   inviti in `/admin/users`, e su `/dataset` conta gli `<img>` **decodificati**
+   (`complete && naturalWidth > 0`), non quelli nel DOM. È il controllo che ha
+   smascherato un errore mio: avevo dedotto "pagina vuota" da due endpoint che
+   scandiscono il disco e che nessuno chiama, mentre la pagina mostrava 34
+   immagini. Fallisce anche su un solo errore di console. Uso:
+   `scripts/smoke-pages.py --url https://osr.marrusso.dev` (credenziali da
+   `/srv/orchid/secrets/app.env` o `ORCHID_SMOKE_USER/PASSWORD`, mai stampate;
+   `ORCHID_SMOKE_CHROME` se il Chromium non è quello di Playwright)
 
 Regole di versioning (stesse del repo `actions`: nessun `latest`, nessun
 deploy da un working tree sporco):
