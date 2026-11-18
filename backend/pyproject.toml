@@ -116,16 +116,15 @@ strict = true
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
-module = "app.api.*"
-ignore_errors = true
-
-[[tool.mypy.overrides]]
 module = "app.core.*"
 ignore_errors = true
 
+# ...tranne il percorso auth/DB, che è controllato davvero: mypy applica
+# l'override più specifico, quindi questi riaccendono il gate dentro il
+# wildcard qui sopra. `tests/test_ci_mypy.py` verifica la precedenza.
 [[tool.mypy.overrides]]
-module = "app.preprocessing.*"
-ignore_errors = true
+module = ["app.core.auth", "app.core.auth_store", "app.core.db"]
+ignore_errors = false
 
 [[tool.mypy.overrides]]
 module = "app.visualization.*"
@@ -137,10 +136,6 @@ ignore_errors = true
 
 [[tool.mypy.overrides]]
 module = "scripts.*"
-ignore_errors = true
-
-[[tool.mypy.overrides]]
-module = "app.config"
 ignore_errors = true
 
 # --- Cosa il gate controlla davvero -----------------------------------------
