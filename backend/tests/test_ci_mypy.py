@@ -69,18 +69,44 @@ def test_ci_has_a_blocking_mypy_job():
     assert "continue-on-error" not in code
 
 
+def _module(target: str) -> str:
+    """`app/core/auth.py` → `app.core.auth`; `app/cli/` → `app.cli`."""
+    return target.rstrip("/").removesuffix(".py").replace("/", ".")
+
+
+def _matches(module: str, pattern: str) -> bool:
+    """fnmatch da solo non copre `app.cli.*` quando il target è `app.cli`."""
+    return fnmatch.fnmatch(module, pattern) or pattern == f"{module}.*"
+
+
+def _patterns(override: dict) -> list[str]:
+    """`module` in un override TOML può essere una stringa o una lista."""
+    module = override["module"]
+    return [module] if isinstance(module, str) else list(module)
+
+
+def _most_specific(module: str, overrides: list[dict]) -> dict | None:
+    """Replica la precedenza di mypy: con più override vince il più specifico.
+
+    Verificato sul campo: con `app.core.*` + `app.core.auth`, l'ordine nel
+    pyproject.toml è irrilevante e il secondo riaccende il gate dentro il
+    wildcard. Il test non deve quindi accontentarsi di "esiste un override che
+    non spegne": deve guardare quello che mypy applicherà davvero.
+    """
+    matches = [(pattern, ov) for ov in overrides for pattern in _patterns(ov) if _matches(module, pattern)]
+    if not matches:
+        return None
+    return max(matches, key=lambda item: len(item[0]))[1]
+
+
 def test_mypy_targets_are_not_silenced_by_ignore_errors():
     targets = _mypy_targets()
     assert targets, "la CI non lancia mypy su nessun percorso"
     overrides = _mypy_config().get("overrides", [])
     silenced = [
-        (target, ov["module"])
-        for target in targets
-        for ov in overrides
-        if ov.get("ignore_errors")
-        for module in [target.replace("/", ".")]
-        # un override `app.cli.*` copre anche i moduli dentro app/cli
-        if fnmatch.fnmatch(module, ov["module"]) or ov["module"].startswith(module + ".")
+        (module, _patterns(ov))
+        for module in (_module(t) for t in targets)
+        if (ov := _most_specific(module, overrides)) and ov.get("ignore_errors")
     ]
     assert not silenced, f"mypy gira su {targets} ma questi override lo azzerano: {silenced}"
 
@@ -94,12 +120,25 @@ def test_mypy_scope_keeps_the_rest_of_strict():
     cfg = _mypy_config()
     assert cfg["strict"] is True
     relaxed = {"disallow_untyped_defs", "disallow_untyped_calls", "disallow_incomplete_defs"}
-    targets = [t.replace("/", ".") for t in _mypy_targets()]
-    for ov in cfg.get("overrides", []):
-        if not any(t == ov["module"] or fnmatch.fnmatch(t, ov["module"]) for t in targets):
+    overrides = cfg.get("overrides", [])
+    for target in _mypy_targets():
+        ov = _most_specific(_module(target), overrides)
+        if ov is None:
             continue
-        assert set(ov) - {"module"} <= relaxed, f"override troppo permissivo: {ov}"
+        assert set(ov) - {"module", "ignore_errors"} <= relaxed, f"override troppo permissivo: {ov}"
+        if "ignore_errors" in ov:
+            # `false` è legittimo: riaccende il gate dentro un wildcard.
+            assert ov["ignore_errors"] is False, f"override spegne il gate: {ov}"
         assert "check_untyped_defs" not in ov, "salterebbe i corpi delle funzioni non annotate"
+
+
+def test_typed_scope_includes_the_api_and_auth_storage():
+    """Il debito dichiarato non deve tornare a coprire API e storage auth."""
+    targets = {_module(t) for t in _mypy_targets()}
+    assert "app.api" in targets
+    assert "app.preprocessing" in targets
+    assert "app.config" in targets
+    assert {"app.core.auth", "app.core.auth_store", "app.core.db"} <= targets
 
 
 def test_mypy_job_installs_the_typed_decorators_it_checks():
