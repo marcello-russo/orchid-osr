@@ -52,6 +52,16 @@ git archive "$TAG" compose.yml edge.yml | tar -x -C "$STAGE" \
 echo "==> deploy $TAG ($COMMIT) su $HOST:$REMOTE_DIR"
 scp -q "$STAGE/compose.yml" "$STAGE/edge.yml" "$HOST:$REMOTE_DIR/"
 
+# Lo smoke post-deploy viaggia col tag (non col working tree). I tag vecchi non
+# lo hanno: il rollback a una versione precedente deve continuare a funzionare,
+# quindi la sua assenza non è un errore.
+git archive "$TAG" scripts/smoke-live.py 2>/dev/null | tar -x -C "$STAGE" 2>/dev/null || true
+if [ -f "$STAGE/scripts/smoke-live.py" ]; then
+    # shellcheck disable=SC2029  # voluto: REMOTE_DIR è una costante nostra
+    ssh "$HOST" "mkdir -p '$REMOTE_DIR/bin'"
+    scp -q "$STAGE/scripts/smoke-live.py" "$HOST:$REMOTE_DIR/bin/smoke-live.py"
+fi
+
 # L'healthcheck autorevole è in loopback sull'host: la VPS ha IP datacenter e
 # Cloudflare (WAF della zona) risponde con una challenge agli IP non residenziali,
 # quindi `curl https://osr.marrusso.dev` da lì non è affidabile.
@@ -96,6 +106,25 @@ for i in $(seq 1 36); do
         printf '{"tag":"%s","commit":"%s","ts":"%s"}\n' "$TAG" "$COMMIT" \
             "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > .deployed.tmp && mv .deployed.tmp .deployed
         docker compose ps
+
+        # "Sano" non è "giusto": /health risponde 200 anche con la dist sbagliata
+        # o il CDN delle immagini giù, e un errore mascherato è spesso un 200 con
+        # content-type application/json. Lo smoke guarda i byte delle immagini,
+        # i totali del dataset e la versione dichiarata in /openapi.json (un
+        # container vecchio con il tag nuovo in .env si vede solo lì).
+        if [ -f bin/smoke-live.py ]; then
+            if sudo -n true 2>/dev/null; then
+                sudo -n python3 bin/smoke-live.py --url "http://127.0.0.1:${PORT}" \
+                    --env-file secrets/app.env --expect-version "$TAG" \
+                    || {
+                        echo "errore: smoke live fallito su $TAG (servizio su, risposte sbagliate)" >&2
+                        echo "rollback: scripts/deploy-vps.sh <tag precedente>" >&2
+                        exit 1
+                    }
+            else
+                echo "!! smoke live saltato: sudo senza password non disponibile su $HOST" >&2
+            fi
+        fi
         exit 0
     fi
     sleep 5
