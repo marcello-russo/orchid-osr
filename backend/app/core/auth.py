@@ -1,21 +1,27 @@
-import json
 import logging
 import os
 import secrets
+import sqlite3
 import threading
 import time
 from collections import OrderedDict
+from contextlib import closing
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import Any
 
 import bcrypt
 import jwt
 from fastapi import HTTPException, status
 
 from app.config import settings
+from app.core import auth_store
+from app.core.db import get_db
 
 logger = logging.getLogger(__name__)
 
+# Solo per l'import una-tantum dei dati v0.3.x: dopo la migrazione il file non
+# viene più letto (il marker sta in auth_meta) né scritto.
 USERS_PATH = Path(os.environ.get("USERS_PATH", "data/users.json"))
 JWT_ALGORITHM = "HS256"
 _LOGIN_ATTEMPTS: OrderedDict[str, int] = OrderedDict()
@@ -24,8 +30,23 @@ _CACHE_LAST_SYNC: float = 0.0
 MAX_LOGIN_ATTEMPTS = 5
 _MAX_TRACKED_USERS = 1000
 _LOGIN_LOCK = threading.Lock()
+MAX_INVITE_HOURS = 720  # 30 giorni
+MAX_GUEST_PASS_HOURS = 168  # 7 giorni
 
 ROLE_HIERARCHY = {"user": 0, "admin": 1, "superadmin": 2}
+
+
+def _initialize() -> None:
+    auth_store.initialize(USERS_PATH)
+
+
+def initialize_auth() -> None:
+    """Prepara lo storage auth all'avvio (import legacy una-tantum incluso).
+
+    Chiamata esplicita dal lifespan: un `users.json` malformato deve fermare il
+    container con un errore chiaro, non diventare un 500 al primo login.
+    """
+    _initialize()
 
 
 def _load_attempts() -> dict[str, int]:
@@ -33,62 +54,26 @@ def _load_attempts() -> dict[str, int]:
     if time.time() - _CACHE_LAST_SYNC < 5.0:
         return LOGIN_ATTEMPTS_CACHE
     try:
-        from app.core.db import get_db
-
-        conn = get_db()
-        rows = conn.execute("SELECT username, attempts FROM login_attempts").fetchall()
+        with closing(get_db()) as conn:
+            rows = conn.execute("SELECT username, attempts FROM login_attempts").fetchall()
         LOGIN_ATTEMPTS_CACHE.clear()
         LOGIN_ATTEMPTS_CACHE.update({r[0]: r[1] for r in rows})
         _CACHE_LAST_SYNC = time.time()
-    except Exception:
-        pass
+    except sqlite3.Error:
+        logger.warning("Tentativi di login non leggibili dal DB", exc_info=True)
     return LOGIN_ATTEMPTS_CACHE
 
 
 def _save_attempts(username: str, count: int) -> None:
     try:
-        from app.core.db import get_db
-
-        conn = get_db()
-        conn.execute(
-            "INSERT OR REPLACE INTO login_attempts (username, attempts, last_attempt) VALUES (?, ?, ?)",
-            (username, count, time.time()),
-        )
-        conn.commit()
-    except Exception:
-        pass
-
-
-_DATA_LOCK = threading.Lock()
-
-
-def _sync_to_hf() -> None:
-    """Backup utenti su volume privato del VPS (mai su repo pubblici).
-
-    Il vecchio backup su HF dataset repo e' disattivato: il repo ospita il
-    dataset destinato alla pubblicazione e non deve contenere credenziali
-    (users.json cancellato da hub). Il file locale resta l'unica fonte.
-    """
-    return
-
-
-def _load_data() -> dict:
-    if USERS_PATH.exists():
-        return json.loads(USERS_PATH.read_text())
-    return {"invites": [], "users": []}
-
-
-def _save_data(data: dict) -> None:
-    USERS_PATH.write_text(json.dumps(data, indent=2, default=str))
-    _sync_to_hf()
-
-
-def _atomic_modify(modifier):
-    """Read-modify-write atomico per users.json."""
-    with _DATA_LOCK:
-        data = _load_data()
-        modifier(data)
-        _save_data(data)
+        with closing(get_db()) as conn:
+            conn.execute(
+                "INSERT OR REPLACE INTO login_attempts (username, attempts, last_attempt) VALUES (?, ?, ?)",
+                (username, count, time.time()),
+            )
+            conn.commit()
+    except sqlite3.Error:
+        logger.warning("Tentativi di login non salvati nel DB", exc_info=True)
 
 
 def hash_password(password: str) -> str:
@@ -100,8 +85,6 @@ def verify_password(password: str, hashed: str) -> bool:
 
 
 def create_jwt(username: str, role: str) -> str:
-    import time
-
     payload = {
         "sub": username,
         "role": role,
@@ -113,9 +96,9 @@ def create_jwt(username: str, role: str) -> str:
     return jwt.encode(payload, settings.jwt_secret, algorithm=JWT_ALGORITHM)
 
 
-def decode_jwt(token: str) -> dict:
+def decode_jwt(token: str) -> dict[str, Any]:
     try:
-        payload = jwt.decode(
+        payload: dict[str, Any] = jwt.decode(
             token,
             settings.jwt_secret,
             algorithms=[JWT_ALGORITHM],
@@ -127,21 +110,29 @@ def decode_jwt(token: str) -> dict:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid or expired token")
 
 
-def _invite_error(invite: dict) -> str | None:
+def _parse_deadline(value: Any) -> datetime | None:
+    """Interpreta una scadenza ISO; None se assente, ValueError se malformata."""
+    if not value:
+        return None
+    parsed = datetime.fromisoformat(str(value))
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=UTC)
+    return parsed
+
+
+def _invite_error(invite: dict[str, Any]) -> str | None:
     """Ritorna il motivo di rifiuto di un invito, o None se utilizzabile.
 
-    Gestisce sia il formato legacy (solo used/role) che quello esteso
-    (expires_at, max_uses/uses, revoked, label)."""
+    Fail-closed: una data malformata rende l'invito invalido, non eterno.
+    """
     if invite.get("revoked"):
         return "Invite code revoked"
-    exp = invite.get("expires_at")
-    if exp:
-        try:
-            expired = datetime.fromisoformat(exp) <= datetime.now(UTC)
-        except Exception:
-            expired = False
-        if expired:
-            return "Invite code expired"
+    try:
+        expires = _parse_deadline(invite.get("expires_at"))
+    except ValueError:
+        return "Invite code invalid"
+    if expires is not None and expires <= datetime.now(UTC):
+        return "Invite code expired"
     uses = int(invite.get("uses", 0))
     max_uses = int(invite.get("max_uses", 1))
     if invite.get("used") or uses >= max_uses:
@@ -149,46 +140,34 @@ def _invite_error(invite: dict) -> str | None:
     return None
 
 
-def register_user(invite_code: str, username: str, password: str) -> dict:
-    result = {"username": username, "role": "user"}
-
-    def _modify(data):
-        invite = next((i for i in data["invites"] if i["code"] == invite_code), None)
-        if not invite:
+def register_user(invite_code: str, username: str, password: str) -> dict[str, Any]:
+    _initialize()
+    # bcrypt costa ~250ms: si calcola prima di prendere il lock di scrittura.
+    hashed = hash_password(password)
+    with auth_store.transaction() as conn:
+        invite = auth_store.find_invite(conn, invite_code)
+        if invite is None:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid invite code")
         err = _invite_error(invite)
         if err:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, err)
-        if any(u["username"] == username for u in data["users"]):
+        if auth_store.find_user(conn, username):
             raise HTTPException(status.HTTP_409_CONFLICT, "Username already taken")
 
-        invite["uses"] = int(invite.get("uses", 0)) + 1
-        if invite["uses"] >= int(invite.get("max_uses", 1)):
-            invite["used"] = True
-        invite["used_by"] = username
-        role = invite["role"]
-        data["users"].append(
-            {
-                "username": username,
-                "password_hash": hash_password(password),
-                "role": role,
-            }
-        )
-        result["role"] = role
-
-    _atomic_modify(_modify)
-    return result
+        role = str(invite["role"])
+        auth_store.insert_user(conn, username, hashed, role)
+        auth_store.consume_invite(conn, invite_code, username)
+    return {"username": username, "role": role}
 
 
-def login_user(username: str, password: str) -> dict:
+def login_user(username: str, password: str) -> dict[str, Any]:
+    _initialize()
     _load_attempts()
     with _LOGIN_LOCK:
         if LOGIN_ATTEMPTS_CACHE.get(username, 0) >= MAX_LOGIN_ATTEMPTS:
             raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, "Account temporarily locked. Try again later.")
 
-    with _DATA_LOCK:
-        data = _load_data()
-    user = next((u for u in data["users"] if u["username"] == username), None)
+    user = auth_store.get_user(username)
     if not user or not verify_password(password, user["password_hash"]):
         with _LOGIN_LOCK:
             count = LOGIN_ATTEMPTS_CACHE.get(username, 0) + 1
@@ -211,25 +190,11 @@ def ensure_superadmin_exists() -> None:
     if not username or not password:
         logger.warning("SUPERADMIN_USERNAME/PASSWORD non configurati — skip bootstrap")
         return
+    _initialize()
     hashed = hash_password(password)
-
-    def _modify(data):
-        existing = next((u for u in data["users"] if u["username"] == username), None)
-        if existing:
-            existing["password_hash"] = hashed
-            existing["role"] = "superadmin"
-            logger.info("Superadmin %s aggiornato", username)
-        else:
-            data["users"].append(
-                {
-                    "username": username,
-                    "password_hash": hashed,
-                    "role": "superadmin",
-                }
-            )
-            logger.info("Superadmin %s creato", username)
-
-    _atomic_modify(_modify)
+    with auth_store.transaction() as conn:
+        auth_store.upsert_user(conn, username, hashed, "superadmin")
+    logger.info("Superadmin %s allineato", username)
 
 
 def generate_invite(
@@ -241,55 +206,49 @@ def generate_invite(
     label: str = "",
     code: str | None = None,
 ) -> list[str]:
-    """Crea inviti. expires_in_hours=0 → senza scadenza; max_uses=1 → monouso.
-
-    Il formato legacy (solo used/role) resta valido: i controlli usano
-    default compatibili quando i nuovi campi mancano."""
+    """Crea inviti. expires_in_hours=0 → senza scadenza; max_uses=1 → monouso."""
     if max_uses < 1:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "max_uses must be >= 1")
-    if expires_in_hours < 0:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "expires_in_hours must be >= 0")
-    expires_at = (datetime.now(UTC) + timedelta(hours=expires_in_hours)).isoformat() if expires_in_hours > 0 else None
-    codes: list[str] = []
+    if expires_in_hours < 0 or expires_in_hours > MAX_INVITE_HOURS:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, f"expires_in_hours must be 0..{MAX_INVITE_HOURS}")
+    if role not in ("user", "admin"):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid role")
+    if code and count > 1:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Custom code requires count=1")
 
-    def _modify(data):
-        existing = {i["code"] for i in data["invites"]}
+    expires_at = (datetime.now(UTC) + timedelta(hours=expires_in_hours)).isoformat() if expires_in_hours > 0 else None
+    _initialize()
+    codes: list[str] = []
+    with auth_store.transaction() as conn:
         for _ in range(count):
-            new_code = code if code else f"INV-{secrets.token_urlsafe(9).upper()}"
-            if code and count > 1:
-                raise HTTPException(status.HTTP_400_BAD_REQUEST, "Custom code requires count=1")
-            if new_code in existing:
+            new_code = code or f"INV-{secrets.token_urlsafe(9).upper()}"
+            if auth_store.find_invite(conn, new_code):
                 raise HTTPException(status.HTTP_409_CONFLICT, "Invite code already exists")
-            existing.add(new_code)
-            data["invites"].append(
+            auth_store.insert_invite(
+                conn,
                 {
                     "code": new_code,
-                    "used": False,
                     "role": role,
+                    "used": False,
+                    "used_by": None,
                     "created_at": datetime.now(UTC).isoformat(),
                     "expires_at": expires_at,
                     "max_uses": max_uses,
                     "uses": 0,
                     "label": label,
                     "revoked": False,
-                }
+                },
             )
             codes.append(new_code)
-
-    _atomic_modify(_modify)
     return codes
 
 
 def revoke_invite(code: str) -> None:
     """Revoca un invito (kill-switch manuale). Idempotente."""
-
-    def _modify(data):
-        invite = next((i for i in data["invites"] if i["code"] == code), None)
-        if not invite:
+    _initialize()
+    with auth_store.transaction() as conn:
+        if not auth_store.set_invite_revoked(conn, code):
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Invite code not found")
-        invite["revoked"] = True
-
-    _atomic_modify(_modify)
 
 
 GUEST_USERNAME = "ospite"
@@ -297,27 +256,23 @@ GUEST_USERNAME = "ospite"
 
 def ensure_guest_user() -> None:
     """Crea l'utente ospite condiviso (ruolo user) se manca."""
-
-    def _modify(data):
-        if not any(u["username"] == GUEST_USERNAME for u in data["users"]):
-            data["users"].append(
-                {
-                    "username": GUEST_USERNAME,
-                    "password_hash": hash_password(secrets.token_urlsafe(32)),
-                    "role": "user",
-                }
-            )
-
-    _atomic_modify(_modify)
+    _initialize()
+    if auth_store.get_user(GUEST_USERNAME):
+        return
+    hashed = hash_password(secrets.token_urlsafe(32))
+    with auth_store.transaction() as conn:
+        if not auth_store.find_user(conn, GUEST_USERNAME):
+            auth_store.insert_user(conn, GUEST_USERNAME, hashed, "user")
 
 
-def create_guest_pass(*, expires_in_hours: int = 24, label: str = "") -> dict:
-    """Crea un passo ospite: token firmato a tempo che logga come ospite.
-
-    Il token vale solo se il suo jti è nell'allowlist non revocata:
-    kill-switch istantaneo via revoke_guest_pass. Ritorna token + metadati."""
-    if expires_in_hours < 1 or expires_in_hours > 1440:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "expires_in_hours must be 1..1440")
+def create_guest_pass(*, expires_in_hours: int = 24, label: str = "") -> dict[str, Any]:
+    """Crea un passo ospite: token firmato a tempo che logga come ospite."""
+    if expires_in_hours < 1 or expires_in_hours > MAX_GUEST_PASS_HOURS:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            f"expires_in_hours must be 1..{MAX_GUEST_PASS_HOURS}",
+        )
+    _initialize()
     now = int(time.time())
     jti = secrets.token_urlsafe(16)
     payload = {
@@ -339,18 +294,14 @@ def create_guest_pass(*, expires_in_hours: int = 24, label: str = "") -> dict:
         "revoked": False,
     }
 
-    def _modify(data):
-        data.setdefault("guest_passes", []).append(record)
-
     ensure_guest_user()
-    _atomic_modify(_modify)
+    with auth_store.transaction() as conn:
+        auth_store.insert_guest_pass(conn, record)
     return {"pass": token, **record}
 
 
-def redeem_guest_pass(token: str) -> dict:
-    """Valida un passo ospite e restituisce le credenziali di sessione.
-
-    Controlli: firma, scadenza, purpose e jti in allowlist non revocata."""
+def redeem_guest_pass(token: str) -> dict[str, str]:
+    """Valida un passo ospite e restituisce le credenziali di sessione."""
     try:
         payload = jwt.decode(
             token,
@@ -363,29 +314,32 @@ def redeem_guest_pass(token: str) -> dict:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid or expired pass")
     if payload.get("purpose") != "guest-pass" or payload.get("sub") != GUEST_USERNAME:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid pass")
-    data = _load_data()
-    record = next((g for g in data.get("guest_passes", []) if g.get("jti") == payload.get("jti")), None)
-    if not record or record.get("revoked"):
+
+    _initialize()
+    record = auth_store.get_guest_pass(str(payload.get("jti")))
+    if record is None or record.get("revoked"):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Pass revoked")
+    try:
+        expires = _parse_deadline(record.get("expires_at"))
+    except ValueError:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid pass") from None
+    if expires is not None and expires <= datetime.now(UTC):
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Pass expired")
     return {"username": GUEST_USERNAME, "role": "user"}
 
 
 def revoke_guest_pass(jti: str) -> None:
     """Revoca un passo ospite (kill-switch manuale). Idempotente."""
-
-    def _modify(data):
-        record = next((g for g in data.get("guest_passes", []) if g.get("jti") == jti), None)
-        if not record:
+    _initialize()
+    with auth_store.transaction() as conn:
+        if not auth_store.set_guest_pass_revoked(conn, jti):
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Pass not found")
-        record["revoked"] = True
-
-    _atomic_modify(_modify)
 
 
-def list_users_and_invites() -> dict:
-    data = _load_data()
+def list_users_and_invites() -> dict[str, Any]:
+    _initialize()
     return {
-        "users": [{"username": u["username"], "role": u["role"]} for u in data["users"]],
+        "users": auth_store.list_users(),
         "invites": [
             {
                 "code": i["code"],
@@ -399,34 +353,46 @@ def list_users_and_invites() -> dict:
                 "label": i.get("label", ""),
                 "revoked": i.get("revoked", False),
             }
-            for i in data["invites"]
+            for i in auth_store.list_invites()
         ],
     }
 
 
 def delete_user(target_username: str, requester_username: str) -> None:
     if target_username == requester_username:
-        raise HTTPException(400, "Cannot delete yourself")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Cannot delete yourself")
 
-    def _modify(data):
-        target = next((u for u in data["users"] if u["username"] == target_username), None)
+    _initialize()
+    with auth_store.transaction() as conn:
+        target = auth_store.find_user(conn, target_username)
         if not target:
-            raise HTTPException(404, "User not found")
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
 
-        requester = next((u for u in data["users"] if u["username"] == requester_username), None)
+        requester = auth_store.find_user(conn, requester_username)
         if not requester:
-            raise HTTPException(401, "Requester not found")
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Requester not found")
 
-        target_level = ROLE_HIERARCHY.get(target["role"], -1)
-        requester_level = ROLE_HIERARCHY.get(requester["role"], -1)
-
+        target_level = ROLE_HIERARCHY.get(str(target["role"]), -1)
+        requester_level = ROLE_HIERARCHY.get(str(requester["role"]), -1)
         if requester_level <= target_level:
-            raise HTTPException(403, "Cannot delete a user with equal or higher role")
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "Cannot delete a user with equal or higher role")
 
-        data["users"] = [u for u in data["users"] if u["username"] != target_username]
-        for invite in data["invites"]:
-            if invite.get("used_by") == target_username:
-                invite["used"] = False
-                invite.pop("used_by", None)
+        auth_store.delete_user(conn, target_username)
+        # `uses` va azzerato insieme a `used`: con il solo used=0 l'invito
+        # resterebbe bruciato (uses >= max_uses).
+        conn.execute(
+            "UPDATE invites SET used = 0, uses = 0, used_by = NULL WHERE used_by = ?",
+            (target_username,),
+        )
 
-    _atomic_modify(_modify)
+
+def create_user(username: str, password: str, role: str = "user") -> None:
+    """Crea un utente da CLI. 409 se esiste già."""
+    if role not in ROLE_HIERARCHY:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid role")
+    _initialize()
+    hashed = hash_password(password)
+    with auth_store.transaction() as conn:
+        if auth_store.find_user(conn, username):
+            raise HTTPException(status.HTTP_409_CONFLICT, "Username already taken")
+        auth_store.insert_user(conn, username, hashed, role)

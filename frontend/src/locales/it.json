@@ -355,7 +355,12 @@
     "users_title": "Utenti registrati",
     "users_description": "{{count}} utenti registrati",
     "username": "Username",
-    "sidebar": "Inviti"
+    "sidebar": "Inviti",
+    "expires_at": "Scade il",
+    "status_expired": "Scaduto",
+    "status_revoked": "Revocato",
+    "generate_expiry_hint": "Gli inviti scadono dopo 72 ore (30 giorni al massimo) e valgono un solo uso.",
+    "never_expires": "Mai"
   },
   "admin_users": {
     "title": "Gestione Utenti",

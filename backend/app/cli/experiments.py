@@ -16,6 +16,7 @@ import os
 import sys
 from pathlib import Path
 
+from app.cli.auth_commands import handle_auth_commands as _handle_auth_commands
 from app.cli.definitions import DEFAULT_CONFIG, EXPERIMENTS, PROJECT_ROOT, TRAIN_CLASSES
 from app.cli.runner import run_experiment, setup_logging, show_status
 from app.core.models import available_models
@@ -57,60 +58,6 @@ def _build_pair_weights(hard_weight: float, active_classes: list[str] | None = N
     _add("O. majellensis", "O. sphegodes", hard_weight)
     _add("O. sphegodes", "O. sphegodes_Palena", hard_weight * 0.6)
     return result
-
-
-def _handle_auth_commands(args) -> int | None:
-    """Handle user management commands. Returns exit code or None if not an auth command."""
-    if not any([args.list_users, args.gen_invites is not None, args.add_user is not None]):
-        return None
-    from app.core.auth import (
-        _load_data,
-        _save_data,
-        ensure_superadmin_exists,
-        generate_invite,
-        hash_password,
-        list_users_and_invites,
-    )
-
-    ensure_superadmin_exists()
-    if args.list_users:
-        data = list_users_and_invites()
-        print("=== Users ===")
-        for u in data["users"]:
-            print(f"  {u['username']} ({u['role']})")
-        print("\n=== Invites ===")
-        for i in data["invites"]:
-            status = "used" if i["used"] else "available"
-            print(f"  {i['code']} [{status}] ({i['role']})")
-        return 0
-    if args.gen_invites is not None:
-        codes = generate_invite(count=args.gen_invites)
-        for c in codes:
-            print(c)
-        return 0
-    if args.add_user is not None:
-        if not args.password:
-            print("--password is required with --add-user")
-            return 1
-        username = args.add_user or args.username
-        if not username:
-            print("Specify username with --add-user <name> or --username")
-            return 1
-        data = _load_data()
-        if any(u["username"] == username for u in data["users"]):
-            print(f"User '{username}' already exists")
-            return 1
-        data["users"].append(
-            {
-                "username": username,
-                "password_hash": hash_password(args.password),
-                "role": args.role,
-            }
-        )
-        _save_data(data)
-        print(f"User '{username}' created with role '{args.role}'")
-        return 0
-    return None
 
 
 def _run_crop_step(args, cropped_dir: str, internet_dir: str, cropper_model: str) -> None:
@@ -585,6 +532,12 @@ Examples:
     parser.add_argument("--password", help="Password for --add-user")
     parser.add_argument("--role", default="user", choices=["user", "admin"], help="Role for --add-user")
     parser.add_argument("--gen-invites", nargs="?", type=int, const=1, help="Generate N invite tokens")
+    parser.add_argument(
+        "--invite-hours",
+        type=int,
+        default=72,
+        help="Expiry for --gen-invites in hours (default: 72, 0 = no expiry)",
+    )
     parser.add_argument("--list-users", action="store_true", help="List users and invites")
 
     # Pipeline parameters

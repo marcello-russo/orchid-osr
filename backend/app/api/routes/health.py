@@ -10,7 +10,7 @@ router = APIRouter()
 
 
 @router.get("/health", response_model=HealthResponse)
-async def health_check():
+async def health_check() -> HealthResponse:
     """Health check endpoint."""
     try:
         models = available_models()
@@ -29,7 +29,7 @@ async def health_check():
 
 
 @router.api_route("/health", methods=["HEAD"], include_in_schema=False)
-async def health_head():
+async def health_head() -> Response:
     """HEAD per i monitor: solo lo stato, nessun corpo.
 
     `JSONResponse` non gestisce HEAD (manderebbe un corpo che h11 rifiuta),

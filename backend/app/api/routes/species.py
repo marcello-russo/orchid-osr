@@ -57,7 +57,7 @@ def _get_dataset_dirs() -> list[Path]:
 
 
 @router.get("/api/species", response_model=SpeciesListResponse)
-async def list_species():
+async def list_species() -> SpeciesListResponse:
     """List all species in the dataset with image counts."""
     dataset_dirs = _get_dataset_dirs()
     if dataset_dirs:

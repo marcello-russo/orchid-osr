@@ -7,7 +7,7 @@ import shutil
 import threading
 from collections import OrderedDict
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 from huggingface_hub import hf_hub_download
@@ -26,7 +26,7 @@ MAX_CACHED_MODELS = 2
 _model_cache: OrderedDict[str, ClassifierModel] = OrderedDict()
 _model_cache_lock = threading.Lock()
 
-_osr_stats_cache: dict[str, dict] = {}
+_osr_stats_cache: dict[str, dict[str, Any]] = {}
 _osr_stats_lock = threading.Lock()
 
 _HF_PREFIX_MAP = {
@@ -40,10 +40,11 @@ _HF_PREFIX_MAP = {
 _STATS_CACHE_DIR = Path.home() / ".cache" / "orchid-weights" / "osr_stats"
 
 
-def get_model(model_type: str = "resnet18", model_id: str | None = None):
+def get_model(model_type: str = "resnet18", model_id: str | None = None) -> ClassifierModel:
     """Load and cache model, downloading weights from HF if needed."""
     from app.core.models import available_models, create_model
 
+    weights_path: Path | None
     if model_id:
         result = _resolve_weights(model_id)
         if result is None:
@@ -82,7 +83,7 @@ def get_model(model_type: str = "resnet18", model_id: str | None = None):
     return model
 
 
-def get_osr_stats(model_id: str) -> dict | None:
+def get_osr_stats(model_id: str) -> dict[str, Any] | None:
     """Load OSR calibration stats for a model, with LRU cache.
 
     Returns dict with keys: class_means, cov_inv, nn (NearestNeighbors),

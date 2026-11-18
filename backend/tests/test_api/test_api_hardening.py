@@ -12,6 +12,8 @@ Tre regressioni reali, ognuna osservata in produzione:
 
 import os
 import re
+import subprocess
+import sys
 import time
 from email.utils import formatdate, parsedate_to_datetime
 from pathlib import Path
@@ -273,3 +275,33 @@ class TestSpaFallback:
             app.router.routes[:] = before
         assert resp.status_code == 500
         assert resp.json()["request_id"] == resp.headers["x-request-id"]
+
+
+class TestAssetMount:
+    """`/assets` non deve poter impedire l'import dell'app.
+
+    Il mount era incondizionato: con una dist senza `assets/` (build
+    interrotta, volume montato a metà, immagine costruita male) `StaticFiles`
+    solleva `RuntimeError` all'import e il container non parte più — un
+    errore di build che diventa un sito giù invece di un 404 leggibile.
+    """
+
+    def test_api_imports_without_frontend_assets(self, tmp_path):
+        (tmp_path / "index.html").write_text("<!doctype html><html></html>", encoding="utf-8")
+        env = {**os.environ, "FRONTEND_DIST": str(tmp_path)}
+        code = (
+            "from fastapi.testclient import TestClient;"
+            "from app.api.main import app;"
+            "c = TestClient(app);"
+            "r = c.get('/assets/app.js');"
+            "assert r.status_code == 404, r.status_code;"
+            "assert c.get('/').status_code == 200"
+        )
+        # sottoprocesso: l'errore nasce all'import, non alla prima richiesta
+        subprocess.run(  # noqa: S603
+            [sys.executable, "-c", code],
+            env=env,
+            cwd=Path(__file__).resolve().parents[2],
+            check=True,
+            timeout=180,
+        )

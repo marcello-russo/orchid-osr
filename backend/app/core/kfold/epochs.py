@@ -1,4 +1,4 @@
-# app/core/training.py
+# app/core/kfold/epochs.py
 import copy
 import gc
 import logging

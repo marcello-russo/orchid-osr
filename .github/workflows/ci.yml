@@ -73,7 +73,11 @@ jobs:
       # volta). Ora i corpi sono controllati: la sola deroga è sulle
       # annotazioni mancanti, e `tests/test_ci_mypy.py` verifica che nessun
       # override torni a spegnere lo scope.
-      - run: mypy app/cli --ignore-missing-imports
+      #
+      # Lo scope copre anche API, preprocessing, config e i tre moduli
+      # auth/DB: lì `ignore_errors = false` scavalca il wildcard
+      # `app.core.*` (mypy applica il pattern più specifico).
+      - run: mypy app/cli app/api app/preprocessing app/config.py app/core/auth.py app/core/auth_store.py app/core/db.py --ignore-missing-imports
 
   audit:
     runs-on: ubuntu-latest

@@ -8,7 +8,9 @@ import json
 import logging
 import os
 import sqlite3
+import threading
 from pathlib import Path
+from typing import Any
 
 from app.config import settings
 
@@ -63,14 +65,34 @@ CREATE TABLE IF NOT EXISTS folds (
 CREATE TABLE IF NOT EXISTS users (
     username TEXT PRIMARY KEY,
     password_hash TEXT NOT NULL,
-    role TEXT NOT NULL DEFAULT 'user' CHECK(role IN ('user', 'admin')),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    role TEXT NOT NULL DEFAULT 'user' CHECK(role IN ('user', 'admin', 'superadmin')),
+    created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );
 
 CREATE TABLE IF NOT EXISTS invites (
     code TEXT PRIMARY KEY,
+    role TEXT NOT NULL DEFAULT 'user' CHECK(role IN ('user', 'admin')),
     used INTEGER NOT NULL DEFAULT 0 CHECK(used IN (0, 1)),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    used_by TEXT,
+    created_at TEXT NOT NULL,
+    expires_at TEXT,
+    max_uses INTEGER NOT NULL DEFAULT 1 CHECK(max_uses >= 1),
+    uses INTEGER NOT NULL DEFAULT 0 CHECK(uses >= 0),
+    label TEXT NOT NULL DEFAULT '',
+    revoked INTEGER NOT NULL DEFAULT 0 CHECK(revoked IN (0, 1))
+);
+
+CREATE TABLE IF NOT EXISTS guest_passes (
+    jti TEXT PRIMARY KEY,
+    label TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    revoked INTEGER NOT NULL DEFAULT 0 CHECK(revoked IN (0, 1))
+);
+
+CREATE TABLE IF NOT EXISTS auth_meta (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS login_attempts (
@@ -109,19 +131,101 @@ def _migrate_schema(conn: sqlite3.Connection) -> None:
 def _init_schema(conn: sqlite3.Connection) -> None:
     conn.executescript(_SCHEMA_SQL)
     _migrate_schema(conn)
+    _migrate_auth_schema(conn)
+
+
+def _table_sql(conn: sqlite3.Connection, table: str) -> str:
+    row = conn.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name=?", (table,)).fetchone()
+    return row[0] if row else ""
+
+
+def _rebuild_users(conn: sqlite3.Connection) -> None:
+    # BEGIN/COMMIT dentro lo script: se il processo muore a metà, SQLite
+    # riporta indietro il rename e la tabella vecchia resta intatta.
+    conn.executescript(
+        """
+        BEGIN IMMEDIATE;
+        ALTER TABLE users RENAME TO users_legacy;
+        CREATE TABLE users (
+            username TEXT PRIMARY KEY,
+            password_hash TEXT NOT NULL,
+            role TEXT NOT NULL DEFAULT 'user' CHECK(role IN ('user', 'admin', 'superadmin')),
+            created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+        );
+        INSERT OR IGNORE INTO users (username, password_hash, role, created_at)
+            SELECT username, password_hash, role, COALESCE(created_at, strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+            FROM users_legacy;
+        DROP TABLE users_legacy;
+        COMMIT;
+        """
+    )
+
+
+def _rebuild_invites(conn: sqlite3.Connection) -> None:
+    conn.executescript(
+        """
+        BEGIN IMMEDIATE;
+        ALTER TABLE invites RENAME TO invites_legacy;
+        CREATE TABLE invites (
+            code TEXT PRIMARY KEY,
+            role TEXT NOT NULL DEFAULT 'user' CHECK(role IN ('user', 'admin')),
+            used INTEGER NOT NULL DEFAULT 0 CHECK(used IN (0, 1)),
+            used_by TEXT,
+            created_at TEXT NOT NULL,
+            expires_at TEXT,
+            max_uses INTEGER NOT NULL DEFAULT 1 CHECK(max_uses >= 1),
+            uses INTEGER NOT NULL DEFAULT 0 CHECK(uses >= 0),
+            label TEXT NOT NULL DEFAULT '',
+            revoked INTEGER NOT NULL DEFAULT 0 CHECK(revoked IN (0, 1))
+        );
+        INSERT OR IGNORE INTO invites
+            (code, role, used, used_by, created_at, expires_at, max_uses, uses, label, revoked)
+        SELECT code, 'user', used, NULL,
+               COALESCE(created_at, strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+               NULL, 1, CASE WHEN used = 1 THEN 1 ELSE 0 END, '', 0
+        FROM invites_legacy;
+        DROP TABLE invites_legacy;
+        COMMIT;
+        """
+    )
+
+
+def _migrate_auth_schema(conn: sqlite3.Connection) -> None:
+    """Porta le vecchie tabelle auth (mai usate, CHECK senza superadmin) allo schema nuovo."""
+    has_version = conn.execute("SELECT 1 FROM auth_meta WHERE key='schema_version'").fetchone()
+    if has_version:
+        return
+    if "superadmin" not in _table_sql(conn, "users"):
+        _rebuild_users(conn)
+    if "max_uses" not in _table_sql(conn, "invites"):
+        _rebuild_invites(conn)
+    conn.execute("INSERT OR REPLACE INTO auth_meta (key, value) VALUES ('schema_version', '2')")
+    conn.commit()
+
+
+_SCHEMA_READY: set[str] = set()
+_SCHEMA_LOCK = threading.Lock()
 
 
 def get_db() -> sqlite3.Connection:
-    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-    conn = sqlite3.connect(DB_PATH)
+    path = Path(DB_PATH).expanduser()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(str(path))
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA journal_mode=WAL")
+    # default 0: due scritture concorrenti = "database is locked" immediato
+    conn.execute("PRAGMA busy_timeout=5000")
     conn.execute("PRAGMA foreign_keys=ON")
-    _init_schema(conn)
+    key = str(path.resolve())
+    if key not in _SCHEMA_READY:
+        with _SCHEMA_LOCK:
+            if key not in _SCHEMA_READY:
+                _init_schema(conn)
+                _SCHEMA_READY.add(key)
     return conn
 
 
-def _row_to_dict(row: sqlite3.Row) -> dict:
+def _row_to_dict(row: sqlite3.Row) -> dict[str, Any]:
     d = dict(row)
     for key in ("phases", "history", "phase_epochs"):
         if isinstance(d.get(key), str):
@@ -132,15 +236,16 @@ def _row_to_dict(row: sqlite3.Row) -> dict:
     return d
 
 
-def _read_file(path: str) -> dict | None:
+def _read_file(path: str) -> dict[str, Any] | None:
     try:
         with open(path) as f:
-            return json.load(f)
+            data: Any = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
         return None
+    return data if isinstance(data, dict) else None
 
 
-def _read_ncd_metrics(exp_dir: str) -> dict:
+def _read_ncd_metrics(exp_dir: str) -> dict[str, Any]:
     """Legge le metriche NCD da ncd_results.json e calcola i valori migliori."""
     ncd_file = os.path.join(exp_dir, "ncd_results.json")
     if not os.path.exists(ncd_file):
@@ -193,7 +298,7 @@ def _read_ncd_metrics(exp_dir: str) -> dict:
 
 def sync_experiment(exp_dir: str, conn: sqlite3.Connection | None = None) -> bool:
     own_conn = conn is None
-    if own_conn:
+    if conn is None:
         conn = get_db()
 
     try:
@@ -217,7 +322,8 @@ def sync_experiment(exp_dir: str, conn: sqlite3.Connection | None = None) -> boo
 
         config = _read_file(config_file) or {}
         results = _read_file(results_file) or {}
-        test_metrics = results.get("test_metrics") if isinstance(results.get("test_metrics"), dict) else {}
+        _raw_test_metrics = results.get("test_metrics")
+        test_metrics: dict[str, Any] = _raw_test_metrics if isinstance(_raw_test_metrics, dict) else {}
 
         started_at_raw = results.get("started_at")
         if started_at_raw is not None:

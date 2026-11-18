@@ -52,6 +52,23 @@ def deterministic_mode():
 
 
 @pytest.fixture
+def auth_store_db(tmp_path, monkeypatch):
+    """DB auth isolato per test: nessun file reale, nessun import legacy."""
+    from app.core import auth as auth_module
+    from app.core import auth_store
+    from app.core import db as db_module
+
+    monkeypatch.setattr(db_module, "DB_PATH", str(tmp_path / "orchid.db"))
+    monkeypatch.setattr(db_module, "_SCHEMA_READY", set())
+    monkeypatch.setattr(auth_module, "USERS_PATH", tmp_path / "users.json")
+    auth_store.reset_for_tests()
+    auth_module.LOGIN_ATTEMPTS_CACHE.clear()
+    auth_module._CACHE_LAST_SYNC = 0.0
+    yield tmp_path / "orchid.db"
+    auth_store.reset_for_tests()
+
+
+@pytest.fixture
 def device():
     """Get available device."""
     return torch.device("cuda" if torch.cuda.is_available() else "cpu")

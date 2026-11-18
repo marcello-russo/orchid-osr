@@ -6,7 +6,7 @@ import os
 import re
 import threading
 import uuid
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from email.utils import formatdate, mktime_tz, parsedate_tz
 from pathlib import Path
@@ -57,7 +57,7 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
     perdeva il valore e gli errori riportavano ``"???"``.
     """
 
-    async def dispatch(self, request: Request, call_next):
+    async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
         request.state.request_id = _new_request_id(request.headers.get("X-Request-ID"))
         response = await call_next(request)
         response.headers["X-Request-ID"] = request.state.request_id
@@ -87,11 +87,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     The only resource that needs cleanup is _http_client (aiohttp session).
     """
     from app.api.weights import download_all_weights
-    from app.core.auth import ensure_superadmin_exists
+    from app.core.auth import ensure_superadmin_exists, initialize_auth
 
+    initialize_auth()
     ensure_superadmin_exists()
 
-    def _sync():
+    def _sync() -> None:
         try:
             download_all_weights(background=False)
         except Exception as e:
@@ -118,7 +119,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         logger.warning("Lazy sync fallita (non bloccante): %s", e)
 
     # Periodic DB sync ogni 60 secondi (rileva nuovi esperimenti/fold completati)
-    def _periodic_sync():
+    def _periodic_sync() -> None:
         while True:
             try:
                 from app.core.db import sync_all
@@ -154,7 +155,7 @@ app = FastAPI(
 
 
 @app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request, exc):
+async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
     rid = _req_id(request)
     logger.warning("req=%s validation_error: %s", rid, exc.errors())
     return JSONResponse(
@@ -169,7 +170,7 @@ async def validation_exception_handler(request, exc):
 
 
 @app.exception_handler(StarletteHTTPException)
-async def starlette_http_exception_handler(request, exc):
+async def starlette_http_exception_handler(request: Request, exc: StarletteHTTPException) -> JSONResponse:
     rid = _req_id(request)
     if exc.status_code >= 500:
         logger.error("req=%s http_%d: %s", rid, exc.status_code, exc.detail)
@@ -182,7 +183,7 @@ async def starlette_http_exception_handler(request, exc):
 
 
 @app.exception_handler(Exception)
-async def general_exception_handler(request, exc):
+async def general_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     rid = _req_id(request)
     logger.error("req=%s unhandled: %s", rid, exc, exc_info=True)
     # L'header va messo qui: l'handler `Exception` gira in ServerErrorMiddleware,
@@ -218,7 +219,21 @@ app.add_middleware(RequestIDMiddleware)
 
 # Rate limiting
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+
+def _handle_rate_limit(request: Request, exc: Exception) -> Response:
+    """Adatta l'handler di slowapi alla firma `Exception` di Starlette.
+
+    `add_exception_handler` pretende `Callable[[Request, Exception], Response]`;
+    slowapi dichiara il tipo concreto `RateLimitExceeded`, quindi passarlo
+    direttamente è un errore di tipo (e un `# type: ignore` qui nasconderebbe
+    un cambio di firma vero).
+    """
+    assert isinstance(exc, RateLimitExceeded)
+    return _rate_limit_exceeded_handler(request, exc)
+
+
+app.add_exception_handler(RateLimitExceeded, _handle_rate_limit)
 
 # Include routers
 app.include_router(auth.router)
@@ -355,10 +370,21 @@ def _spa_index(request: Request) -> Response:
 
 
 if _static_dir.is_dir():
-    app.mount("/assets", StaticFiles(directory=_static_dir / "assets"), name="assets")
+    # `StaticFiles` solleva `RuntimeError` se la directory non esiste: un mount
+    # incondizionato trasformava una dist costruita a metà (o un volume
+    # montato male) in un container che non parte, cioè in un errore di build
+    # mascherato da sito giù. Senza `assets/` rispondiamo 404 e basta.
+    _assets_dir = _static_dir / "assets"
+    if _assets_dir.is_dir():
+        app.mount("/assets", StaticFiles(directory=_assets_dir), name="assets")
+    else:
+
+        @app.api_route("/assets/{path:path}", methods=["GET", "HEAD"], include_in_schema=False)
+        async def missing_assets(path: str) -> Response:
+            raise HTTPException(status_code=404, detail="Frontend assets not built")
 
     @app.api_route("/{full_path:path}", methods=["GET", "HEAD"])
-    async def serve_spa(full_path: str, request: Request):
+    async def serve_spa(full_path: str, request: Request) -> Response:
         """Serve the SPA — return index.html for all non-API, non-asset routes.
 
         Anche HEAD: i monitor e i link checker lo usano, e un 405 su `/` fa

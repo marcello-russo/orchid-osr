@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
@@ -10,7 +11,7 @@ from app.config import settings
 _ALLOWED_EXPERIMENTS: set[str] = set()
 
 
-def _load_allowed_experiments():
+def _load_allowed_experiments() -> set[str]:
     global _ALLOWED_EXPERIMENTS
     if not _ALLOWED_EXPERIMENTS:
         exp_dir = Path(settings.results_dir)
@@ -22,20 +23,21 @@ def _load_allowed_experiments():
 router = APIRouter(prefix="/api/embeddings", tags=["embeddings"])
 
 
-def _load_json(path: Path) -> dict | None:
+def _load_json(path: Path) -> dict[str, Any] | None:
     try:
         with open(path) as f:
-            return json.load(f)
+            data: Any = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
         return None
+    return data if isinstance(data, dict) else None
 
 
 @router.get("", response_model=EmbeddingResponse)
 async def get_embeddings(
-    user=Depends(require_role("user")),
+    user: dict[str, Any] = Depends(require_role("user")),
     experiment: str = Query("", description="Experiment directory name (e.g. exp1_ce_resnet50)"),
     method: str = Query("tsne_3d", description="Dimensionality reduction: tsne_3d, tsne_2d, umap_2d"),
-):
+) -> EmbeddingResponse:
     exp_dir = Path(settings.results_dir)
 
     if experiment:
