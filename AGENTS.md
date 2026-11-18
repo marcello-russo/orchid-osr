@@ -153,6 +153,7 @@ orchid-osr/
 │   │   ├── preprocessing/            # Cropper (Faster R-CNN), split, resize
 │   │   ├── cli/                      # Arg parsing, experiment runner, definitions
 │   │   ├── api/                      # FastAPI routes + deps + schemas
+│   │   ├── api/serializers/          # JSON su disco → payload (fold, esperimenti)
 │   │   ├── explainability/           # Captum occlusion heatmaps
 │   │   ├── figures/                  # Figure della tesi (300 dpi, phash check)
 │   │   └── hf/                       # Sync dataset/modelli su HuggingFace

@@ -312,8 +312,8 @@ def train_fold(
         tuple: (modello, fold_metrics_dict)
 
     """
-    from app.core.models import create_model, get_registry_entry
     from app.core.kfold.epochs import train
+    from app.core.models import create_model, get_registry_entry
 
     ckpt_dir = os.path.dirname(checkpoint_path)
     os.makedirs(ckpt_dir, exist_ok=True)
@@ -516,8 +516,8 @@ def train_fold_supcon(
         tuple: (model, fold_metrics_dict with both phases)
 
     """
-    from app.core.models import create_model, get_registry_entry
     from app.core.kfold.supcon_epochs import train_supcon
+    from app.core.models import create_model, get_registry_entry
 
     ckpt_dir = os.path.dirname(checkpoint_path)
     os.makedirs(ckpt_dir, exist_ok=True)
