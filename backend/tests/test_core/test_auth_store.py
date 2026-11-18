@@ -1,6 +1,7 @@
 """Test del layer di persistenza auth (SQLite, transazioni)."""
 
 import json
+from datetime import UTC, datetime
 
 import pytest
 
@@ -127,13 +128,66 @@ def test_legacy_import_does_not_overwrite_existing_rows(store):
     assert auth_store.get_user("mario")["role"] == "superadmin"
 
 
-def test_missing_legacy_json_is_marked(store):
+def test_missing_legacy_json_is_not_marked(store):
+    """Un file assente non è una migrazione fatta.
+
+    Marcarlo tale significa che il rimedio ovvio — rimettere `users.json` e
+    riavviare — non importa più niente, in silenzio: zero utenti tranne il
+    superadmin da env. Il primo avvio su un volume senza JSON deve poter
+    riprovare al boot successivo.
+    """
     auth_store.initialize(store / "assente.json")
+    with auth_store.transaction() as conn:
+        row = conn.execute("SELECT value FROM auth_meta WHERE key='legacy_json_imported'").fetchone()
+    assert row is None
+
+    # Il file compare (volume rimontato, copia recuperata): il boot dopo lo importa.
+    path = store / "assente.json"
+    path.write_text(json.dumps({"users": [{"username": "amico", "password_hash": "h", "role": "user"}]}))
     auth_store.reset_for_tests()
+    auth_store.initialize(path)
+    assert auth_store.get_user("amico") is not None
+
+
+def test_missing_legacy_json_keeps_working_after_marker(store):
+    """Con un import già fatto, un file sparito non cambia nulla e non riparte."""
+    auth_store.initialize(store / "assente.json")
     with auth_store.transaction() as conn:
         auth_store.insert_user(conn, "mario", "h", "user")
+    auth_store.reset_for_tests()
     auth_store.initialize(store / "assente.json")
     assert auth_store.get_user("mario") is not None
+
+
+def test_legacy_invite_ttl_matches_api_policy():
+    """`_LEGACY_INVITE_HOURS` è replicato per evitare un import circolare: qui si verifica."""
+    from app.core import auth
+
+    assert auth_store._LEGACY_INVITE_HOURS == auth.MAX_INVITE_HOURS
+
+
+def test_legacy_invites_get_an_expiry_on_import(store):
+    """Un codice legacy senza scadenza non deve restare spendibile per sempre."""
+    path = store / "users.json"
+    path.write_text(
+        json.dumps(
+            {
+                "users": [],
+                "invites": [
+                    {"code": "INV-LIBERO", "used": False, "role": "user"},
+                    {"code": "INV-USATO", "used": True, "role": "user"},
+                ],
+                "guest_passes": [],
+            }
+        )
+    )
+    auth_store.initialize(path)
+
+    invite = auth_store.get_invite("INV-LIBERO")
+    assert invite["expires_at"] is not None, "un invito non usato deve scadere"
+    assert datetime.fromisoformat(invite["expires_at"]) > datetime.now(UTC)
+    # un invito già consumato non ha bisogno di una scadenza: non è più spendibile
+    assert auth_store.get_invite("INV-USATO")["expires_at"] is None
 
 
 def test_malformed_legacy_json_fails_loudly(store):

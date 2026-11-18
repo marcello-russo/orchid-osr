@@ -47,12 +47,25 @@ def test_initialize_auth_is_idempotent(auth_store_db):
     assert auth_store.list_users() == []
 
 
-def test_initialize_auth_reports_the_marker(auth_store_db):
+def test_initialize_auth_without_legacy_file_does_not_burn_the_import(auth_store_db):
+    """Senza `users.json` non si marca niente: il rimedio "rimetto il file" funziona.
+
+    Prima si scriveva `legacy_json_imported = 'absent'`, e da quel momento il file
+    — ricomparso dopo un volume rimontato — non veniva più importato: zero utenti
+    e nessun errore.
+    """
     from app.core import auth as auth_module
     from app.core import auth_store
 
     auth_module.initialize_auth()
     with auth_store._connection() as conn:
         row = conn.execute("SELECT value FROM auth_meta WHERE key = 'legacy_json_imported'").fetchone()
-    assert row is not None
-    assert row[0] == "absent"
+    assert row is None
+
+    auth_module.USERS_PATH.write_text(
+        '{"users": [{"username": "tardivo", "password_hash": "h", "role": "user"}], "invites": [], "guest_passes": []}',
+        encoding="utf-8",
+    )
+    auth_store.reset_for_tests()  # come un riavvio del processo
+    auth_module.initialize_auth()
+    assert auth_store.get_user("tardivo") is not None
