@@ -40,6 +40,15 @@ def _initialize() -> None:
     auth_store.initialize(USERS_PATH)
 
 
+def initialize_auth() -> None:
+    """Prepara lo storage auth all'avvio (import legacy una-tantum incluso).
+
+    Chiamata esplicita dal lifespan: un `users.json` malformato deve fermare il
+    container con un errore chiaro, non diventare un 500 al primo login.
+    """
+    _initialize()
+
+
 def _load_attempts() -> dict[str, int]:
     global _CACHE_LAST_SYNC
     if time.time() - _CACHE_LAST_SYNC < 5.0:
@@ -207,9 +216,7 @@ def generate_invite(
     if code and count > 1:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Custom code requires count=1")
 
-    expires_at = (
-        (datetime.now(UTC) + timedelta(hours=expires_in_hours)).isoformat() if expires_in_hours > 0 else None
-    )
+    expires_at = (datetime.now(UTC) + timedelta(hours=expires_in_hours)).isoformat() if expires_in_hours > 0 else None
     _initialize()
     codes: list[str] = []
     with auth_store.transaction() as conn:

@@ -87,8 +87,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     The only resource that needs cleanup is _http_client (aiohttp session).
     """
     from app.api.weights import download_all_weights
-    from app.core.auth import ensure_superadmin_exists
+    from app.core.auth import ensure_superadmin_exists, initialize_auth
 
+    initialize_auth()
     ensure_superadmin_exists()
 
     def _sync():
