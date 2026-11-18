@@ -101,10 +101,10 @@ Il tag è l'unica fonte di verità, come in `personale/actions`:
 2. `scripts/deploy-vps.sh [tag]` (default: ultimo tag) → `compose.yml` +
    `edge.yml` **presi dal tag** via `git archive`, scp in `/srv/orchid`,
    `pull` + `up -d` via SSH, healthcheck in loopback sull'host, registro
-   `/srv/orchid/.deployed` (`tag`, `commit`, `ts` **e `smoke`**: `ok`, `failed`
-   o `skipped` — un tag registrato come "ciò che gira" non è un tag
-   verificato), rollback automatico alla versione precedente se il servizio non
-   torna sano
+   `/srv/orchid/.deployed` (`tag`, `commit`, `ts` **e `smoke`**: `pending` appena
+   il servizio è su, poi `ok`, `failed` o `skipped` — così il file dice sempre
+   cosa gira, e separatamente se qualcuno l'ha verificato), rollback automatico
+   alla versione precedente se il servizio non torna sano
 3. `scripts/smoke-live.py` **dentro il deploy** (stesso tag, eseguito sull'host
    via `sudo -n`): oltre agli status guarda i **byte** delle immagini
    (magic bytes JPEG/WebP, non solo il 200: un errore mascherato è spesso un 200

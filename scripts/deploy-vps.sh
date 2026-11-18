@@ -105,6 +105,16 @@ fi
 for i in $(seq 1 36); do
     if curl -fsS -o /dev/null "http://127.0.0.1:${PORT}/health"; then
         echo "health locale OK dopo ~$((i * 5))s"
+
+        # Il registro è scritto due volte: `pending` appena il servizio è su
+        # (così dice sempre cosa gira, anche se questo script viene interrotto
+        # durante lo smoke) e poi con l'esito. Prima veniva scritto una volta
+        # sola e senza esito: "questo gira" spacciato per "questo è verificato".
+        write_deployed() {
+            printf '{"tag":"%s","commit":"%s","ts":"%s","smoke":"%s"}\n' "$TAG" "$COMMIT" \
+                "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$1" > .deployed.tmp && mv .deployed.tmp .deployed
+        }
+        write_deployed pending
         docker compose ps
 
         # "Sano" non è "giusto": /health risponde 200 anche con la dist sbagliata
@@ -130,10 +140,8 @@ for i in $(seq 1 36); do
             echo "!! smoke live assente in bin/: controlli sui byte saltati (tag anteriore a v0.4.2?)" >&2
         fi
 
-        # Il registro dice cosa gira *e* se qualcuno l'ha verificato: un tag
-        # registrato senza smoke è la bugia che questo script esiste per evitare.
-        printf '{"tag":"%s","commit":"%s","ts":"%s","smoke":"%s"}\n' "$TAG" "$COMMIT" \
-            "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$smoke" > .deployed.tmp && mv .deployed.tmp .deployed
+        # Un deploy non verificato non è un deploy riuscito: `failed` esce 1.
+        write_deployed "$smoke"
         if [ "$smoke" = "failed" ]; then
             exit 1
         fi
