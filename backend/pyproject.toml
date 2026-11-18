@@ -103,12 +103,12 @@ branch = true
 omit = ["app/figures/*"]
 
 [tool.coverage.report]
-# Misurato: 49% (505 test, `pytest -m "not slow"`, branch coverage). La soglia
+# Misurato: 51,7% (610 test, `pytest -m "not slow"`, branch coverage). La soglia
 # sta 3 punti sotto, non a 0: così una regressione reale (API o preprocessing
 # che perdono i test) fa fallire la CI, mentre aggiungere codice di training
 # non ancora testabile non la fa fallire per un decimale. Unica fonte: la CI
 # non passa più `--cov-fail-under` (averla in due posti l'aveva fatta divergere).
-fail_under = 46
+fail_under = 48
 show_missing = true
 
 [tool.mypy]

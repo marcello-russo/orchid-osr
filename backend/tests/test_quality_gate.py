@@ -39,9 +39,9 @@ def test_coverage_measures_the_api_and_has_one_threshold():
     assert cov["run"]["branch"] is True
     # L'API era esclusa dalla misura: la route più grande non aveva test.
     assert cov["run"]["omit"] == ["app/figures/*"]
-    # Soglia 3 punti sotto il misurato (49%): regressioni vere passano, codice
+    # Soglia 3 punti sotto il misurato (51,7%): regressioni vere passano, codice
     # di training non ancora testabile non fa fallire la build per un decimale.
-    assert cov["report"]["fail_under"] == 46
+    assert cov["report"]["fail_under"] == 48
 
 
 def _ci_code() -> str:
