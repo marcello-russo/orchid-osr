@@ -12,26 +12,28 @@ import json
 import logging
 import os
 import shutil
+from collections.abc import Iterable
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 
 logger = logging.getLogger(__name__)
 
 
-def _md5(path):
+def _md5(path: str | Path) -> str:
     with open(path, "rb") as f:
         return hashlib.md5(f.read()).hexdigest()
 
 
-def _list_images(directory):
+def _list_images(directory: str | Path) -> list[str]:
     if not os.path.exists(directory):
         return []
     return sorted([f for f in os.listdir(directory) if f.lower().endswith((".jpg", ".jpeg", ".png"))])
 
 
-def _split_class(source_dir, n_test, rng):
+def _split_class(source_dir: str | Path, n_test: int, rng: np.random.Generator) -> tuple[list[str], list[str]]:
     """Split images into test (n_test) and train (rest)."""
     files = _list_images(source_dir)
     if len(files) < n_test:
@@ -43,8 +45,14 @@ def _split_class(source_dir, n_test, rng):
 
 
 def create_clean_split(
-    cropped_dir, internet_dir, output_dir, class_names, internet_classes, test_per_class=50, seed=42
-):
+    cropped_dir: str | Path,
+    internet_dir: str | Path | None,
+    output_dir: str | Path,
+    class_names: list[str],
+    internet_classes: Iterable[str],
+    test_per_class: int = 50,
+    seed: int = 42,
+) -> dict[str, Any]:
     """Create a clean train/test split from cropped images.
 
     Args:
@@ -71,7 +79,7 @@ def create_clean_split(
     train_dir = output_dir / "train"
     test_dir = output_dir / "test"
 
-    manifest = {
+    manifest: dict[str, Any] = {
         "seed": seed,
         "test_per_class": test_per_class,
         "timestamp": datetime.now().isoformat(),
@@ -87,7 +95,7 @@ def create_clean_split(
         train_cls.mkdir(parents=True, exist_ok=True)
         test_cls.mkdir(parents=True, exist_ok=True)
 
-        cls_manifest = {"train_sources": {}, "test_source": None}
+        cls_manifest: dict[str, Any] = {"train_sources": {}, "test_source": None}
 
         if cls in internet_classes and internet_dir:
             inet_dir = Path(internet_dir)
@@ -114,7 +122,7 @@ def create_clean_split(
             cls_manifest["test_source"] = str(inet_class_dir.relative_to(inet_dir.parent))
 
             # Build set of test content hashes for dedup
-            test_hashes = set()
+            test_hashes: set[str] = set()
             for f in test_files:
                 shutil.copy2(inet_class_dir / f, test_cls / f)
                 test_hashes.add(_md5(test_cls / f))
@@ -197,8 +205,8 @@ def create_clean_split(
         logger.info("MD5 check: zero overlap between train and test")
 
     manifest_path = output_dir / "split_manifest.json"
-    with open(manifest_path, "w") as f:
-        json.dump(manifest, f, indent=2)
+    with open(manifest_path, "w") as fh:
+        json.dump(manifest, fh, indent=2)
     logger.info(f"Manifest saved: {manifest_path}")
     logger.info(f"Total: {total_train} train + {total_test} test = {total_train + total_test} images")
 

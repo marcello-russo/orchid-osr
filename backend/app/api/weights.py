@@ -7,6 +7,7 @@ import logging
 import shutil
 import threading
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 from huggingface_hub import hf_hub_download, snapshot_download
 
@@ -14,6 +15,9 @@ from app.api.schemas import CacheStatus, ModelOption
 from app.cli.definitions import EXPERIMENTS as _EXPERIMENTS
 from app.config import settings
 from app.core.experiment_paths import hf_exp_dir, hf_file
+
+if TYPE_CHECKING:
+    import torch
 
 logger = logging.getLogger(__name__)
 
@@ -51,22 +55,24 @@ _is_downloading: bool = False
 _download_lock = threading.Lock()
 
 
-def get_device():
+def get_device() -> torch.device:
     import torch
 
     return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-def _safe_json_load(path: Path) -> dict | None:
+def _safe_json_load(path: Path) -> dict[str, Any] | None:
     try:
         with open(path) as f:
-            return json.load(f)
-    except Exception:
+            data: Any = json.load(f)
+    except (OSError, json.JSONDecodeError):
         return None
+    return data if isinstance(data, dict) else None
 
 
-def _get_mean_f1(results: dict) -> float | None:
-    return results.get("mean_f1") or results.get("test_metrics", {}).get("f1_macro")
+def _get_mean_f1(results: dict[str, Any]) -> float | None:
+    value = results.get("mean_f1") or results.get("test_metrics", {}).get("f1_macro")
+    return float(value) if value is not None else None
 
 
 def _get_exp_prefix(dir_name: str) -> str | None:

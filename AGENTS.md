@@ -131,7 +131,7 @@ anche la SPA da `frontend/dist`. Layout e regole: `actions/docs/host-layout.md`.
 
 - Live demo: `https://osr.marrusso.dev`
 - Tunnel: `orchid-ncd` (Cloudflare), ingress da `edge.yml`
-- Backup: `backup@orchid.timer` salva `users.json`; dataset e esperimenti stanno su HuggingFace
+- Backup: `backup@orchid.timer` salva **`orchid.db`** con l'API di backup SQLite (`type: sqlite`: snapshot coerente anche con WAL, `--verify` con `integrity_check`), non più `users.json`; dataset e esperimenti stanno su HuggingFace. Il job e il suo `backup.json` **vivono sull'host**, fuori dal repo: la voce va cambiata nello stesso deploy che porta il DB in produzione (v0.4.0), altrimenti il timer continua a salvare un file congelato e i dati auth nuovi non finiscono in nessun backup
 
 ## Architecture
 
@@ -153,6 +153,7 @@ orchid-osr/
 │   │   ├── preprocessing/            # Cropper (Faster R-CNN), split, resize
 │   │   ├── cli/                      # Arg parsing, experiment runner, definitions
 │   │   ├── api/                      # FastAPI routes + deps + schemas
+│   │   ├── api/serializers/          # JSON su disco → payload (fold, esperimenti)
 │   │   ├── explainability/           # Captum occlusion heatmaps
 │   │   ├── figures/                  # Figure della tesi (300 dpi, phash check)
 │   │   └── hf/                       # Sync dataset/modelli su HuggingFace
@@ -161,8 +162,10 @@ orchid-osr/
 ├── frontend/
 │   └── src/
 │       ├── features/explorer/        # Experiment charts & KPIs
+│       ├── features/explorer/detail/ # Tab del dettaglio (grafici, baseline, NCD, log)
 │       ├── features/classify/        # Image upload + classify hooks
 │       ├── features/dataset/         # Dataset gallery + distribution
+│       ├── features/research/        # Tesi: una sezione per esperimento + primitive di prosa
 │       ├── pages/                    # Route pages (lazy-loaded except Dashboard/Experiments)
 │       ├── locales/                  # EN + IT translations
 │       └── components/               # Layout + Shadcn/ui wrappers
@@ -180,7 +183,7 @@ orchid-osr/
 - L'immagine gira come utente **non privilegiato** `app` (uid 10001): l'entrypoint parte da root solo per sistemare i permessi del volume `/data` e poi si ri-esegue con `setpriv`. Lo stage `training` usa invece `APP_UID=42420` (owner di `/workspace` in quell'immagine). L'immagine **non dichiara `USER`**: è il processo del server a girare come `app` (PID 1 = 10001), mentre `docker exec` e un `--entrypoint` sovrascritto girano da root — il chown del volume non si può fare altrimenti se non con un init separato.
 - L'entrypoint inoltra SIGTERM/SIGINT a uvicorn: senza, `bash` come PID 1 non passa il segnale, `docker stop` aspetta i 30s di grace e poi uccide il processo (exit 137) troncando le richieste in volo.
 - Nella dist dentro l'immagine i **PNG non entrano** (`find … -name '*.png' -delete`): sono il sorgente 300 dpi della tesi, la SPA serve i `.webp`. Risparmio ~14 MB per immagine.
-- Dall'immagine sono esclusi `backend/data/merged_weights/` (1,7 GB di checkpoint usati solo per gli upload su HF), `users.json`, `jwt_secret.txt` e `orchid.db`: in produzione la fonte è il volume `/data` (`USERS_PATH`, `JWT_SECRET_PATH`, `DB_PATH`). Il Dockerfile copia solo `species_counts.json` e `kfold_indices_seed57.json`.
+- Dall'immagine sono esclusi `backend/data/merged_weights/` (1,7 GB di checkpoint usati solo per gli upload su HF), `users.json` (artefatto legacy, serve solo all'import una-tantum), `jwt_secret.txt` e `orchid.db`: in produzione la fonte è il volume `/data` (`JWT_SECRET_PATH`, `DB_PATH`, più `USERS_PATH` per il solo import). Il Dockerfile copia solo `species_counts.json` e `kfold_indices_seed57.json`.
 - `dataset` **non** esiste nel layer: l'entrypoint lo collega a `/data/dataset` (e lo fa solo se non è già un link o se la directory è vuota — un dataset vero in locale non viene mai toccato). Con una directory già presente, `ln -sfn` avrebbe creato `dataset/dataset` lasciando `dataset_dir` vuota.
 - `ORCHID_VERSION` arriva nel container da `compose.yml`: `/openapi.json` riporta la versione davvero in esecuzione.
 - `index.html` esce con `Cache-Control: no-cache` e un 304 senza corpo quando la copia è ancora buona: è la mappa degli asset, i cui nomi cambiano a ogni build — un indice tenuto in cache dopo un deploy chiederebbe `/assets/index-<hash-vecchio>.js`, che non esiste, e la pagina resterebbe bianca senza nessun errore lato server. La rivalidazione accetta ETag **e** `Last-Modified`, perché Cloudflare sull'HTML toglie l'ETag (verificato: `/favicon.svg` lo conserva, `/` no) e la data è l'unico validatore che sopravvive alla riva. Gli altri file non hanno un `Cache-Control` nostro: `/assets` lo cacha Cloudflare (4h) e i nomi sono hashati, ma `assets/images/` no, quindi niente `immutable`.
@@ -224,12 +227,15 @@ torch/torchvision non sono nel lock perché vanno presi dall'indice CPU: le loro
 Lo stage `training` è un altro ambiente per necessità (Python 3.10, CUDA 12.1, `constraints-training.txt` con numpy<2): i suoi vincoli entrano nella **stessa** risoluzione di `pyproject.toml`, non in un secondo `pip install` che declassa un pacchetto dopo che pip ha già deciso. Il workflow `Training image` lo costruisce una volta a settimana (e sulle PR che toccano Dockerfile/constraint) e importa torch/transformers/peft: senza, un constraints rotto si scopriva solo al primo addestramento, con la GPU accesa.
 
 ### Database / state
-C'è **un** database SQLite, `backend/data/orchid.db` (`app/core/db.py`): metadati degli esperimenti (`experiments`, `folds`), utenti, inviti e tentativi di login; contiene un fallback su JSON (`users.json`) per retrocompatibilità. In container il path viene da `DB_PATH`, che l'entrypoint punta su `/data/orchid.db`: nel layer scrivibile i tentativi di login (lockout anti brute-force) si azzererebbero a ogni redeploy. `sync_all()` popola le tabelle scandendo `experiments/` (thread periodico ogni 60s) e l'API legge da lì. Il resto è su filesystem: esperimenti JSON, pesi `.pt`, immagini via proxy HF CDN. L'API carica i modelli su richiesta con cache LRU (`MAX_CACHED_MODELS = 2`).
+C'è **un** database SQLite, `backend/data/orchid.db` (`app/core/db.py`), unica fonte di verità per: metadati degli esperimenti (`experiments`, `folds`), utenti, inviti, passi ospite (`users`, `invites`, `guest_passes`) e tentativi di login (`login_attempts`). Le scritture auth passano da `app/core/auth_store.py` con `BEGIN IMMEDIATE` e connessioni brevi: un invito monouso non può essere consumato due volte da due richieste concorrenti. Lo schema è creato una volta per processo (`_SCHEMA_READY`), non a ogni connessione.
+
+Un invito creato dall'API scade **sempre**: 72 ore di default, 30 giorni al massimo (`MAX_INVITE_HOURS`); un passo di difesa (link multi-uso per la discussione) parte da 72 ore (`DEFAULT_DEFENSE_HOURS`), un passo ospite da 24 con cap a 7 giorni (`MAX_GUEST_PASS_HOURS`). "Senza scadenza" esiste solo come `--invite-hours 0` sul CLI, cioè un'azione locale e consapevole, e la UI marca come *scaduto* un codice che non è più spendibile invece di lasciarlo "disponibile". Anche gli inviti importati dal `users.json` legacy ricevono una scadenza (30 giorni) se non l'avevano e non sono già stati usati.
+
+In container `DB_PATH` punta a `/data/orchid.db` (volume nominato): senza, il lockout anti brute-force si azzererebbe a ogni redeploy. `users.json` è **solo** l'artefatto dell'import una-tantum da v0.3.x: l'import è marcato in `auth_meta.legacy_json_imported` e il file resta sul volume come rete di rollback, ma non è più letto né scritto — quindi dopo la migrazione è **stale**: un utente creato dopo il passaggio a SQLite esiste solo in `orchid.db`, e un rollback a v0.3.x è sicuro solo nella finestra di manutenzione (prima cioè che qualcuno si registri). Se il file manca all'avvio l'import **non** viene marcato: il rimedio "rimetto il file e riavvio" continua a funzionare. `sync_all()` popola le tabelle degli esperimenti scandendo `experiments/` (thread periodico ogni 60s). Il resto è su filesystem: esperimenti JSON, pesi `.pt`, immagini via proxy HF CDN. L'API carica i modelli su richiesta con cache LRU (`MAX_CACHED_MODELS = 2`).
 
 ### Debito tecnico dichiarato
-- **Tipizzazione**: `mypy` in `strict` copre `app/cli` (e quindi `app/hf`, `app/figures` importati); `app/core`, `app/api`, `preprocessing`, `visualization`, `explainability` hanno ancora `ignore_errors` in `pyproject.toml`. Allargare lo scope è un cantiere, non una patch: finché è così lo si dichiara qui e nei commenti, invece di lasciare intendere che tutto sia tipizzato. Lo scope `app/cli` è reale: se un override con `ignore_errors` lo copre, `tests/test_ci_mypy.py` fallisce.
+- **Tipizzazione**: `mypy` in `strict` copre `app/cli` (e quindi `app/hf`, `app/figures` importati), `app/api`, `app/preprocessing`, `app/config.py` e i tre moduli auth/DB (`app/core/auth.py`, `app/core/auth_store.py`, `app/core/db.py`). Restano sotto `ignore_errors` in `pyproject.toml` il resto di `app/core` (modelli, kfold, ncd), `visualization`, `explainability` e `scripts`. Allargare lo scope è un cantiere, non una patch: finché è così lo si dichiara qui, invece di lasciare intendere che tutto sia tipizzato. Lo scope dichiarato è reale: `tests/test_ci_mypy.py` replica la precedenza degli override di mypy e fallisce se uno di questi percorsi torna coperto da `ignore_errors = true`.
 - **transformers 4.x**: 6 avvisi di sicurezza hanno fix solo in 5.x, un major che cambia il caricamento dei modelli DINOv2 e va validato con i pesi su GPU. Allowlist motivata in `backend/audit-ignores.txt`; rischio ridotto perché i pesi arrivano da un repo nostro pinnato, non da input utente.
-- **`core/training.py` e `core/supcon.py`**: primitive di training usate da `core/kfold/`, non codice morto — ma convivono con le versioni k-fold e vanno lette insieme.
 - **Code scanning (CodeQL)**: non attivo. Su un repository privato di un'organizzazione richiede GitHub Advanced Security, che un account *member* non può abilitare: il workflow falliva solo in fase di upload (`Advanced Security must be enabled`). Un job perennemente rosso è peggio di un buco dichiarato, quindi il file è stato tolto e la copertura statica è affidata a ruff `S`. Se GHAS viene attivato, il workflow si riprende dalla storia (`git show 5c05b23:.github/workflows/codeql.yml`, `security-extended` + `build-mode: none`).
 
 

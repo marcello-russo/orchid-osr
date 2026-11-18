@@ -1,7 +1,9 @@
 import multiprocessing
 import os
 import shutil
+from collections.abc import Callable
 from concurrent.futures import ProcessPoolExecutor
+from typing import Any
 
 import torch
 from dotenv import dotenv_values
@@ -15,17 +17,19 @@ config = dotenv_values(".env")
 
 
 # Used during preprocessing to save data to a file while preserving file names
-class TensorDatasetWithName(Dataset):
-    def __init__(self, tensors, file_paths, classes=None):
+class TensorDatasetWithName(Dataset[tuple[Any, ...]]):
+    def __init__(
+        self, tensors: tuple[torch.Tensor, ...], file_paths: list[str], classes: list[str] | None = None
+    ) -> None:
         assert len(tensors[0]) == len(file_paths), "Mismatch between data and file paths length"
         self.tensors = tensors
         self.file_names = [os.path.basename(path) for path in file_paths]
         self.classes = classes if classes is not None else []
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int) -> tuple[Any, ...]:
         return tuple(tensor[index] for tensor in self.tensors) + (self.file_names[index],)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.tensors[0])
 
 
@@ -41,21 +45,24 @@ class TensorDatasetWithName(Dataset):
 # │   ├── img1.jpg
 # │   └── ...
 # └── ...
-class ImageFolderWithName(ImageFolder):
-    def __getitem__(self, index):
+# torchvision non distribuisce `py.typed`, quindi `ImageFolder` vale `Any` per
+# mypy e lo strict vieta di ereditare da `Any`. L'ignore è mirato: se una
+# versione futura aggiunge i tipi, `warn_unused_ignores` lo segnala e si toglie.
+class ImageFolderWithName(ImageFolder):  # type: ignore[misc]
+    def __getitem__(self, index: int) -> tuple[Any, int, str]:
         original_tuple = super(ImageFolderWithName, self).__getitem__(index)
         path, _ = self.samples[index]
         file_name = os.path.basename(path)
         return original_tuple[0], original_tuple[1], file_name
 
 
-def getDatasetFromFile(file_path):
+def getDatasetFromFile(file_path: str) -> Any:
     processed_data_dict = torch.load(file_path, weights_only=False)
     processed_dataset = processed_data_dict["data"]
     return processed_dataset
 
 
-def preprocessImage(image, width, height):
+def preprocessImage(image: Image.Image, width: int, height: int) -> Image.Image:
     if rotation.is_landscape(image):
         image = rotation.rotate_image(image)
     if not resizing.is_correct_image_size(image, width, height):
@@ -63,14 +70,21 @@ def preprocessImage(image, width, height):
     return image
 
 
-def augmentDataPath(data_path, output_path, max_images_per_class, width, height, augmentation_functions):
+def augmentDataPath(
+    data_path: str,
+    output_path: str,
+    max_images_per_class: int,
+    width: int,
+    height: int,
+    augmentation_functions: list[Callable[[Any], Any]],
+) -> None:
     """Augments images and saves them to output_path."""
     class_count = 0
     for function in augmentation_functions:
         for idx, foto in enumerate(os.listdir(data_path)):
             if class_count >= max_images_per_class and function != rotation.identity:
                 return
-            img = Image.open(os.path.join(data_path, foto))
+            img: Image.Image = Image.open(os.path.join(data_path, foto))
             img = preprocessImage(img, width, height)
             original_name = os.path.splitext(foto)[0]
             output_file_path = os.path.join(output_path, f"{function.__name__}_{original_name}_{idx}.jpg")
@@ -80,11 +94,13 @@ def augmentDataPath(data_path, output_path, max_images_per_class, width, height,
             class_count += 1
 
 
-def CalculateBalancedTargets(raw_data_path, class_names, augmentation_functions):
+def CalculateBalancedTargets(
+    raw_data_path: str, class_names: list[str], augmentation_functions: list[Callable[[Any], Any]]
+) -> tuple[int, dict[str, int]]:
     """Calculates balanced target images per class.
     Target = min_class_size * num_augmentations (all classes reach the same number)
     """
-    class_sizes = {}
+    class_sizes: dict[str, int] = {}
     for class_name in class_names:
         class_path = os.path.join(raw_data_path, class_name)
         if os.path.exists(class_path):
@@ -99,10 +115,10 @@ def CalculateBalancedTargets(raw_data_path, class_names, augmentation_functions)
     return target_per_class, class_sizes
 
 
-def _process_single_image(args):
+def _process_single_image(args: tuple[str, str, str, str, int, int, int]) -> bool:
     """Processes a single image (for parallelization)."""
     data_path, foto, output_path, func_name, idx, width, height = args
-    img = Image.open(os.path.join(data_path, foto))
+    img: Image.Image = Image.open(os.path.join(data_path, foto))
     img = preprocessImage(img, width, height)
     original_name = os.path.splitext(foto)[0]
     output_file_path = os.path.join(output_path, f"{func_name}_{original_name}_{idx}.jpg")
@@ -121,8 +137,14 @@ def _process_single_image(args):
 
 
 def augmentDataPathBalanced(
-    data_path, output_path, target_images, width, height, augmentation_functions, current_count
-):
+    data_path: str,
+    output_path: str,
+    target_images: int,
+    width: int,
+    height: int,
+    augmentation_functions: list[Callable[[Any], Any]],
+    current_count: int,
+) -> int:
     """Augments images until target_images is reached.
     Parallelized with ProcessPoolExecutor.
     If originals > target: undersample to target.

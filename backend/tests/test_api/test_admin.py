@@ -1,19 +1,13 @@
-import json
-
-
 class TestAdminDeleteUser:
     """DELETE /auth/users/{username} — richiede ruolo admin/superadmin."""
 
-    def test_superadmin_can_delete_user(self, client, auth_db, superadmin_token):
-        auth_data = json.loads(auth_db.read_text())
-        invite = next(i for i in auth_data["invites"] if not i["used"] and i["role"] == "user")
-
+    def test_superadmin_can_delete_user(self, client, auth_db, superadmin_token, next_invite):
         client.post(
             "/auth/register",
             json={
                 "username": "delete_me",
                 "password": "Password1",
-                "invite_code": invite["code"],
+                "invite_code": next_invite(),
             },
         )
 
@@ -35,16 +29,13 @@ class TestAdminDeleteUser:
         response = client.delete("/auth/users/someone")
         assert response.status_code == 401
 
-    def test_user_cannot_delete_other(self, client, auth_db, user_token, superadmin_token):
-        auth_data = json.loads(auth_db.read_text())
-        invite = next(i for i in auth_data["invites"] if not i["used"] and i["role"] == "user")
-
+    def test_user_cannot_delete_other(self, client, auth_db, user_token, superadmin_token, next_invite):
         client.post(
             "/auth/register",
             json={
                 "username": "target_user",
                 "password": "Password1",
-                "invite_code": invite["code"],
+                "invite_code": next_invite(),
             },
         )
 

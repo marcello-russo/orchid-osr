@@ -1,159 +1,123 @@
-"""Test superadmin bootstrap, user deletion, and role hierarchy."""
-
-from unittest.mock import patch
+"""Test superadmin bootstrap, user deletion, and role hierarchy (SQLite reale)."""
 
 import pytest
 from fastapi import HTTPException
 
+from app.core import auth_store
 from app.core.auth import delete_user, ensure_superadmin_exists
 
 # ── helpers ────────────────────────────────────────────────
 
 
-def _make_user(username: str, role: str = "user") -> dict:
-    return {"username": username, "password_hash": "fakehash", "role": role}
+def _make_user(username: str, role: str = "user") -> None:
+    with auth_store.transaction() as conn:
+        auth_store.insert_user(conn, username, "fakehash", role)
 
 
-def _make_invite(code: str = "INV-TEST", used: bool = False, used_by: str = "") -> dict:
-    inv = {"code": code, "used": used, "role": "user", "created_at": "2026-01-01T00:00:00"}
-    if used and used_by:
-        inv["used"] = True
-        inv["used_by"] = used_by
-    return inv
+def _make_invite(code: str = "INV-TEST", *, used_by: str | None = None) -> None:
+    with auth_store.transaction() as conn:
+        auth_store.insert_invite(
+            conn,
+            {
+                "code": code,
+                "role": "user",
+                "used": used_by is not None,
+                "used_by": used_by,
+                "created_at": "2026-01-01T00:00:00+00:00",
+                "expires_at": None,
+                "max_uses": 1,
+                "uses": 1 if used_by else 0,
+                "label": "",
+                "revoked": False,
+            },
+        )
 
 
-def _default_data() -> dict:
-    return {
-        "users": [
-            _make_user("super", "superadmin"),
-            _make_user("alfa", "admin"),
-            _make_user("beta", "user"),
-        ],
-        "invites": [
-            _make_invite("INV-UNUSED"),
-            _make_invite("INV-USED", used=True, used_by="beta"),
-        ],
-    }
+@pytest.fixture
+def seeded(auth_store_db):
+    _make_user("super", "superadmin")
+    _make_user("alfa", "admin")
+    _make_user("beta", "user")
+    _make_invite("INV-UNUSED")
+    _make_invite("INV-USED", used_by="beta")
+    return auth_store_db
 
 
 # ── delete_user ────────────────────────────────────────────
 
 
 class TestDeleteUser:
-    def test_superadmin_deletes_user(self):
-        """Superadmin può eliminare un user."""
-        data = _default_data()
-        with patch("app.core.auth._atomic_modify", side_effect=lambda fn: fn(data)):
-            delete_user("beta", "super")
-        users = [u["username"] for u in data["users"]]
-        assert "beta" not in users
+    def test_superadmin_deletes_user(self, seeded):
+        delete_user("beta", "super")
+        assert auth_store.get_user("beta") is None
 
-    def test_superadmin_deletes_admin(self):
-        """Superadmin può eliminare un admin."""
-        data = _default_data()
-        with patch("app.core.auth._atomic_modify", side_effect=lambda fn: fn(data)):
-            delete_user("alfa", "super")
-        users = [u["username"] for u in data["users"]]
-        assert "alfa" not in users
+    def test_superadmin_deletes_admin(self, seeded):
+        delete_user("alfa", "super")
+        assert auth_store.get_user("alfa") is None
 
-    def test_admin_deletes_user(self):
-        """Admin può eliminare un user."""
-        data = _default_data()
-        with patch("app.core.auth._atomic_modify", side_effect=lambda fn: fn(data)):
-            delete_user("beta", "alfa")
-        users = [u["username"] for u in data["users"]]
-        assert "beta" not in users
+    def test_admin_deletes_user(self, seeded):
+        delete_user("beta", "alfa")
+        assert auth_store.get_user("beta") is None
 
-    def test_admin_cannot_delete_admin(self):
-        """Admin NON può eliminare un altro admin."""
-        data = _default_data()
-        data["users"].append(_make_user("gamma", "admin"))
-        with patch("app.core.auth._atomic_modify", side_effect=lambda fn: fn(data)):
-            with pytest.raises(HTTPException, match="Cannot delete a user with equal or higher role"):
-                delete_user("gamma", "alfa")
+    def test_admin_cannot_delete_admin(self, seeded):
+        _make_user("gamma", "admin")
+        with pytest.raises(HTTPException, match="Cannot delete a user with equal or higher role"):
+            delete_user("gamma", "alfa")
+        assert auth_store.get_user("gamma") is not None
 
-    def test_admin_cannot_delete_superadmin(self):
-        """Admin NON può eliminare un superadmin."""
-        data = _default_data()
-        with patch("app.core.auth._atomic_modify", side_effect=lambda fn: fn(data)):
-            with pytest.raises(HTTPException, match="Cannot delete a user with equal or higher role"):
-                delete_user("super", "alfa")
+    def test_admin_cannot_delete_superadmin(self, seeded):
+        with pytest.raises(HTTPException, match="Cannot delete a user with equal or higher role"):
+            delete_user("super", "alfa")
+        assert auth_store.get_user("super") is not None
 
-    def test_cannot_delete_self(self):
-        """Un utente non può eliminare sé stesso."""
-        data = _default_data()
-        with patch("app.core.auth._atomic_modify", side_effect=lambda fn: fn(data)):
-            with pytest.raises(HTTPException, match="Cannot delete yourself"):
-                delete_user("super", "super")
+    def test_cannot_delete_self(self, seeded):
+        with pytest.raises(HTTPException, match="Cannot delete yourself"):
+            delete_user("super", "super")
+        assert auth_store.get_user("super") is not None
 
-    def test_delete_nonexistent_user(self):
-        """Eliminare un utente inesistente → 404."""
-        data = _default_data()
-        with patch("app.core.auth._atomic_modify", side_effect=lambda fn: fn(data)):
-            with pytest.raises(HTTPException, match="User not found"):
-                delete_user("nonexistent", "super")
+    def test_delete_nonexistent_user(self, seeded):
+        with pytest.raises(HTTPException, match="User not found"):
+            delete_user("nonexistent", "super")
 
-    def test_delete_resets_invites(self):
-        """Gli inviti usati dall'utente eliminato vengono resettati."""
-        data = _default_data()
-        with patch("app.core.auth._atomic_modify", side_effect=lambda fn: fn(data)):
-            delete_user("beta", "super")
-        invites = [i for i in data["invites"] if i["code"] == "INV-USED"]
-        assert len(invites) == 1
-        assert invites[0]["used"] is False
-        assert "used_by" not in invites[0]
+    def test_delete_resets_invites(self, seeded):
+        """L'invito torna utilizzabile: *sia* `used` che `uses` vanno azzerati."""
+        delete_user("beta", "super")
+        invite = auth_store.get_invite("INV-USED")
+        assert invite is not None
+        assert invite["used"] is False
+        assert invite["uses"] == 0
+        assert invite["used_by"] is None
 
 
 # ── ensure_superadmin_exists ───────────────────────────────
 
 
 class TestEnsureSuperadminExists:
-    def _patch_settings(self, username: str = "super", password: str = "pass"):
-        return patch(
-            "app.core.auth.settings",
-            superadmin_username=username,
-            superadmin_password=password,
-        )
+    def _patch_settings(self, monkeypatch, username: str = "super", password: str = "pass"):
+        monkeypatch.setattr("app.core.auth.settings.superadmin_username", username)
+        monkeypatch.setattr("app.core.auth.settings.superadmin_password", password)
 
-    def test_creates_superadmin_when_missing(self):
-        """Se il superadmin non esiste, viene creato."""
-        data = {"users": [_make_user("user1")], "invites": []}
-        with (
-            patch("app.core.auth._atomic_modify", side_effect=lambda fn: fn(data)),
-            self._patch_settings(),
-        ):
-            ensure_superadmin_exists()
-        users = {u["username"]: u["role"] for u in data["users"]}
-        assert "super" in users
-        assert users["super"] == "superadmin"
-
-    def test_updates_existing_user_to_superadmin(self):
-        """Se l'utente esiste già, il ruolo viene aggiornato a superadmin."""
-        data = {"users": [_make_user("super", "admin")], "invites": []}
-        with (
-            patch("app.core.auth._atomic_modify", side_effect=lambda fn: fn(data)),
-            self._patch_settings(),
-        ):
-            ensure_superadmin_exists()
-        user = next(u for u in data["users"] if u["username"] == "super")
+    def test_creates_superadmin_when_missing(self, auth_store_db, monkeypatch):
+        self._patch_settings(monkeypatch)
+        ensure_superadmin_exists()
+        user = auth_store.get_user("super")
+        assert user is not None
         assert user["role"] == "superadmin"
 
-    def test_skips_when_credentials_missing(self):
-        """Se SUPERADMIN_USERNAME/PASSWORD non sono configurati, non fa nulla."""
-        data = {"users": [], "invites": []}
-        with (
-            patch("app.core.auth._atomic_modify", side_effect=lambda fn: fn(data)),
-            self._patch_settings(username="", password=""),
-        ):
-            ensure_superadmin_exists()
-        assert len(data["users"]) == 0
+    def test_updates_existing_user_to_superadmin(self, auth_store_db, monkeypatch):
+        _make_user("super", "admin")
+        self._patch_settings(monkeypatch)
+        ensure_superadmin_exists()
+        assert auth_store.get_user("super")["role"] == "superadmin"
 
-    def test_preserves_other_users(self):
-        """La funzione non elimina altri utenti."""
-        data = {"users": [_make_user("alfa"), _make_user("beta")], "invites": []}
-        with (
-            patch("app.core.auth._atomic_modify", side_effect=lambda fn: fn(data)),
-            self._patch_settings(),
-        ):
-            ensure_superadmin_exists()
-        assert len(data["users"]) == 3
+    def test_skips_when_credentials_missing(self, auth_store_db, monkeypatch):
+        self._patch_settings(monkeypatch, username="", password="")
+        ensure_superadmin_exists()
+        assert auth_store.list_users() == []
+
+    def test_preserves_other_users(self, auth_store_db, monkeypatch):
+        _make_user("alfa")
+        _make_user("beta")
+        self._patch_settings(monkeypatch)
+        ensure_superadmin_exists()
+        assert {u["username"] for u in auth_store.list_users()} == {"alfa", "beta", "super"}

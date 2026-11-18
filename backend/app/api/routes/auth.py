@@ -1,5 +1,5 @@
 import re
-from typing import Literal
+from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field, field_validator
@@ -8,6 +8,8 @@ from slowapi.util import get_remote_address
 
 from app.api.deps import require_role
 from app.core.auth import (
+    MAX_GUEST_PASS_HOURS,
+    MAX_INVITE_HOURS,
     create_guest_pass,
     create_jwt,
     decode_jwt,
@@ -25,9 +27,21 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 limiter = Limiter(key_func=get_remote_address)
 
 
+# Un invito senza scadenza è una credenziale dimenticata in un log: l'API ne
+# impone sempre una (72h di default, 30 giorni al massimo). "Per sempre" resta
+# possibile solo dal CLI, che è un'azione locale e consapevole. Il cap è lo
+# stesso di `generate_invite`, importato: due costanti divergerebbero.
+DEFAULT_INVITE_HOURS = 72
+# Un passo di difesa è un link multi-uso per un evento (la discussione): 72h
+# coprono il giorno dell'esame e i due di margine, senza restare valido per
+# settimane. Nome esplicito: non è un effetto collaterale del default degli inviti.
+DEFAULT_DEFENSE_HOURS = 72
+
+
 class GenerateInviteRequest(BaseModel):
     count: int = Field(default=1, ge=1, le=10, description="Numero di inviti da generare (1-10)")
     role: str = Field(default="user", pattern=r"^(user|admin)$")
+    expires_in_hours: int = Field(default=DEFAULT_INVITE_HOURS, ge=1, le=MAX_INVITE_HOURS)
 
 
 class DefensePassRequest(BaseModel):
@@ -38,14 +52,14 @@ class DefensePassRequest(BaseModel):
 
     role: Literal["user"] = "user"
     max_uses: int = Field(default=25, ge=1, le=200)
-    expires_in_hours: int = Field(default=24, ge=1, le=1440)
+    expires_in_hours: int = Field(default=DEFAULT_DEFENSE_HOURS, ge=1, le=MAX_INVITE_HOURS)
     label: str = Field(default="difesa", max_length=40)
 
 
 class GuestPassRequest(BaseModel):
     """Crea un magic link ospite: chi lo apre entra subito, senza registrarsi."""
 
-    expires_in_hours: int = Field(default=24, ge=1, le=1440)
+    expires_in_hours: int = Field(default=24, ge=1, le=MAX_GUEST_PASS_HOURS)
     label: str = Field(default="difesa", max_length=40)
 
 
@@ -77,7 +91,7 @@ class LoginRequest(BaseModel):
 
 @router.post("/register")
 @limiter.limit("10/minute")
-def register(request: Request, body: RegisterRequest):  # noqa: ARG001 — required by slowapi
+def register(request: Request, body: RegisterRequest) -> dict[str, Any]:  # noqa: ARG001 — required by slowapi
     user = register_user(body.invite_code, body.username, body.password)
     token = create_jwt(user["username"], user["role"])
     return {"token": token, "user": user}
@@ -85,14 +99,14 @@ def register(request: Request, body: RegisterRequest):  # noqa: ARG001 — requi
 
 @router.post("/login")
 @limiter.limit("10/minute")
-def login(request: Request, body: LoginRequest):
+def login(request: Request, body: LoginRequest) -> dict[str, Any]:
     user = login_user(body.username, body.password)
     token = create_jwt(user["username"], user["role"])
     return {"token": token, "user": user}
 
 
 @router.get("/me")
-def me(request: Request):
+def me(request: Request) -> dict[str, Any]:
     auth = request.headers.get("Authorization", "")
     if not auth.startswith("Bearer "):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Missing token")
@@ -101,18 +115,26 @@ def me(request: Request):
 
 
 @router.get("/invites")
-def list_invites(request: Request, admin=Depends(require_role("admin"))):
+def list_invites(request: Request, admin: dict[str, Any] = Depends(require_role("admin"))) -> dict[str, Any]:
     return list_users_and_invites()
 
 
 @router.post("/invites/generate")
-def create_invites(request: Request, body: GenerateInviteRequest, admin=Depends(require_role("admin"))):
-    codes = generate_invite(role=body.role, count=body.count)
+def create_invites(
+    request: Request, body: GenerateInviteRequest, admin: dict[str, Any] = Depends(require_role("admin"))
+) -> dict[str, list[str]]:
+    codes = generate_invite(
+        role=body.role,
+        count=body.count,
+        expires_in_hours=body.expires_in_hours,
+    )
     return {"codes": codes}
 
 
 @router.post("/invites/defense-pass")
-def create_defense_pass(request: Request, body: DefensePassRequest, admin=Depends(require_role("admin"))):
+def create_defense_pass(
+    request: Request, body: DefensePassRequest, admin: dict[str, Any] = Depends(require_role("admin"))
+) -> dict[str, Any]:
     codes = generate_invite(
         role=body.role,
         count=1,
@@ -132,26 +154,32 @@ def create_defense_pass(request: Request, body: DefensePassRequest, admin=Depend
 
 
 @router.post("/invites/{code}/revoke")
-def revoke_invite_endpoint(code: str, request: Request, admin=Depends(require_role("admin"))):
+def revoke_invite_endpoint(
+    code: str, request: Request, admin: dict[str, Any] = Depends(require_role("admin"))
+) -> dict[str, str]:
     revoke_invite(code)
     return {"revoked": code}
 
 
 @router.post("/guest-pass")
-def create_guest_pass_endpoint(request: Request, body: GuestPassRequest, admin=Depends(require_role("admin"))):
+def create_guest_pass_endpoint(
+    request: Request, body: GuestPassRequest, admin: dict[str, Any] = Depends(require_role("admin"))
+) -> dict[str, Any]:
     record = create_guest_pass(expires_in_hours=body.expires_in_hours, label=body.label)
     return record
 
 
 @router.post("/guest/revoke/{jti}")
-def revoke_guest_pass_endpoint(jti: str, request: Request, admin=Depends(require_role("admin"))):
+def revoke_guest_pass_endpoint(
+    jti: str, request: Request, admin: dict[str, Any] = Depends(require_role("admin"))
+) -> dict[str, str]:
     revoke_guest_pass(jti)
     return {"revoked": jti}
 
 
 @router.post("/guest/enter")
 @limiter.limit("120/minute")
-def guest_enter(request: Request, body: GuestEnterRequest):  # noqa: ARG001 — required by slowapi
+def guest_enter(request: Request, body: GuestEnterRequest) -> dict[str, Any]:  # noqa: ARG001 — required by slowapi
     user = redeem_guest_pass(body.token)
     token = create_jwt(user["username"], user["role"])
     return {"token": token, "user": user}
@@ -160,8 +188,8 @@ def guest_enter(request: Request, body: GuestEnterRequest):  # noqa: ARG001 — 
 @router.delete("/users/{username}")
 async def delete_user_endpoint(
     username: str,
-    current_user: dict = Depends(require_role("admin")),
-):
+    current_user: dict[str, Any] = Depends(require_role("admin")),
+) -> dict[str, str]:
     """Delete a user. Superadmin can delete anyone, admin can only delete users."""
     delete_user(username, current_user["username"])
     return {"deleted": username}

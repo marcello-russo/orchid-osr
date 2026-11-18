@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from typing import Any
+
 from fastapi import Depends, HTTPException, Request, status
 
 from app.core.auth import ROLE_HIERARCHY, decode_jwt
 
 
-async def get_current_user(request: Request) -> dict:
+async def get_current_user(request: Request) -> dict[str, Any]:
     auth = request.headers.get("Authorization", "")
     if not auth.startswith("Bearer "):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Missing token")
@@ -16,8 +19,8 @@ async def get_current_user(request: Request) -> dict:
     return {"username": payload["sub"], "role": payload["role"]}
 
 
-def require_role(min_role: str):
-    def _check(current_user: dict = Depends(get_current_user)):
+def require_role(min_role: str) -> Callable[..., dict[str, Any]]:
+    def _check(current_user: dict[str, Any] = Depends(get_current_user)) -> dict[str, Any]:
         role = current_user.get("role", "")
         user_level = ROLE_HIERARCHY.get(role, -1)
         min_level = ROLE_HIERARCHY.get(min_role, -1)

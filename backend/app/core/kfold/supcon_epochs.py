@@ -1,4 +1,4 @@
-# app/core/supcon.py
+# app/core/kfold/supcon_epochs.py
 """Supervised Contrastive Learning utilities: projection head, training loop, embedding extraction."""
 
 import copy
@@ -11,9 +11,9 @@ import torch.nn.functional as F
 from torch import nn
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
+from app.core.kfold.epochs import cleanup_gpu
 from app.core.losses import SupConLoss
 from app.core.models.base import ClassifierModel
-from app.core.training import cleanup_gpu
 
 logger = logging.getLogger(__name__)
 
