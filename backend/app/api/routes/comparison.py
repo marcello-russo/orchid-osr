@@ -2,6 +2,7 @@ import json
 import re
 import time
 from pathlib import Path
+from typing import Any
 
 from fastapi import APIRouter, HTTPException
 
@@ -32,14 +33,14 @@ _CACHE: dict[str, tuple[float, object]] = {}
 _CACHE_TTL = 30
 
 
-def _cache_get(key: str):
+def _cache_get(key: str) -> object | None:
     now = time.time()
     if key in _CACHE and now - _CACHE[key][0] < _CACHE_TTL:
         return _CACHE[key][1]
     return None
 
 
-def _cache_set(key: str, value: object):
+def _cache_set(key: str, value: object) -> None:
     _CACHE[key] = (time.time(), value)
 
 
@@ -83,18 +84,19 @@ def _experiment_dir(model_variant: str) -> Path:
     return Path(settings.results_dir) / f"{prefix}_{model_variant}"
 
 
-def _load_json(path: Path) -> dict | None:
+def _load_json(path: Path) -> dict[str, Any] | None:
     try:
         with open(path) as f:
-            return json.load(f)
+            data: Any = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
         return None
+    return data if isinstance(data, dict) else None
 
 
 @router.get("", response_model=ModelComparisonResponse)
-async def get_comparison():
+async def get_comparison() -> ModelComparisonResponse:
     cached = _cache_get("comparison")
-    if cached:
+    if isinstance(cached, ModelComparisonResponse):
         return cached
 
     exp_dir = Path(settings.results_dir)
@@ -206,9 +208,9 @@ def _build_exp_group(prefix: str) -> list[ModelComparisonEntry]:
 
 
 @router.get("/experiments", response_model=ExperimentComparisonResponse)
-async def compare_experiments():
+async def compare_experiments() -> ExperimentComparisonResponse:
     cached = _cache_get("experiments")
-    if cached:
+    if isinstance(cached, ExperimentComparisonResponse):
         return cached
     exp1 = _build_exp_group("exp1_ce")
     exp2 = _build_exp_group("exp2_supcon")
@@ -216,7 +218,7 @@ async def compare_experiments():
 
     # Build delta for exp1→exp2→exp3
     all_models = list({m.model_variant for m in exp1 + exp2 + exp3})
-    delta = []
+    delta: list[SeriesModelEntry] = []
     for variant in sorted(all_models):
         m1 = next((m for m in exp1 if m.model_variant == variant), None)
         m2 = next((m for m in exp2 if m.model_variant == variant), None)
@@ -241,7 +243,7 @@ async def compare_experiments():
     return result
 
 
-def _normalize_fold(fold: dict) -> dict:
+def _normalize_fold(fold: dict[str, Any]) -> dict[str, Any]:
     """Normalize fold data, separating SupCon and CE phases into fold_phases.
 
     If fold already has fold_phases (already normalized), return as-is.
@@ -335,7 +337,7 @@ def _normalize_fold(fold: dict) -> dict:
 
 
 @router.get("/{model_variant}/fold/{fold_number}")
-async def get_comparison_fold(model_variant: str, fold_number: int):
+async def get_comparison_fold(model_variant: str, fold_number: int) -> dict[str, Any]:
     if model_variant not in _KNOWN_MODELS:
         raise HTTPException(status_code=400, detail=f"Unknown model variant: {model_variant}")
     exp_dir = _experiment_dir(model_variant)
@@ -347,4 +349,6 @@ async def get_comparison_fold(model_variant: str, fold_number: int):
         raise HTTPException(status_code=404, detail=f"Fold {fold_number} not found for {model_variant}")
 
     raw = _load_json(fold_file)
+    if raw is None:
+        raise HTTPException(status_code=500, detail=f"Fold {fold_number} illeggibile per {model_variant}")
     return _normalize_fold(raw)

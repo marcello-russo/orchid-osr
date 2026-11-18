@@ -6,6 +6,7 @@ and crops to the detected flower bounding box.
 
 import logging
 from pathlib import Path
+from typing import Any
 
 import torch
 import torchvision.transforms as T
@@ -17,7 +18,9 @@ logger = logging.getLogger(__name__)
 DEFAULT_SCORE_THRESHOLD = 0.5
 
 
-def load_cropper_model(model_path, device=None, num_classes=2):
+def load_cropper_model(
+    model_path: str | Path, device: torch.device | None = None, num_classes: int = 2
+) -> torch.nn.Module:
     """Load the Faster R-CNN cropper model.
 
     Args:
@@ -34,7 +37,8 @@ def load_cropper_model(model_path, device=None, num_classes=2):
     if device is None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    model = fasterrcnn_resnet50_fpn(weights=None, num_classes=num_classes)
+    # torchvision non è tipizzato: il tipo lo dichiariamo noi (è un `Module`).
+    model: torch.nn.Module = fasterrcnn_resnet50_fpn(weights=None, num_classes=num_classes)
     state_dict = torch.load(model_path, map_location=device, weights_only=True)
     model.load_state_dict(state_dict)
     model.to(device)
@@ -43,7 +47,9 @@ def load_cropper_model(model_path, device=None, num_classes=2):
     return model
 
 
-def detect_flower(model, image, score_threshold=DEFAULT_SCORE_THRESHOLD):
+def detect_flower(
+    model: torch.nn.Module, image: Image.Image, score_threshold: float = DEFAULT_SCORE_THRESHOLD
+) -> tuple[int, int, int, int] | None:
     """Detect the most prominent flower in an image.
 
     Returns
@@ -66,10 +72,11 @@ def detect_flower(model, image, score_threshold=DEFAULT_SCORE_THRESHOLD):
         return None
 
     box = outputs["boxes"][best_idx].cpu().tolist()
-    return tuple(int(round(v)) for v in box)
+    x_min, y_min, x_max, y_max = (int(round(v)) for v in box)
+    return x_min, y_min, x_max, y_max
 
 
-def crop_to_bbox(image, bbox, padding=0):
+def crop_to_bbox(image: Image.Image, bbox: tuple[int, int, int, int], padding: int = 0) -> Image.Image:
     """Crop image to bounding box with optional padding.
 
     Args:
@@ -93,7 +100,13 @@ def crop_to_bbox(image, bbox, padding=0):
     return image.crop((x_min, y_min, x_max, y_max))
 
 
-def crop_single_image(model, image_path, score_threshold=DEFAULT_SCORE_THRESHOLD, padding=0, fallback="full"):
+def crop_single_image(
+    model: torch.nn.Module,
+    image_path: str | Path,
+    score_threshold: float = DEFAULT_SCORE_THRESHOLD,
+    padding: int = 0,
+    fallback: str = "full",
+) -> tuple[Image.Image | None, dict[str, Any]]:
     """Crop a single image using the detector.
 
     Args:
@@ -106,7 +119,7 @@ def crop_single_image(model, image_path, score_threshold=DEFAULT_SCORE_THRESHOLD
 
     """
     image = Image.open(image_path).convert("RGB")
-    metadata = {"path": image_path, "detected": False, "score": None, "fallback_used": False}
+    metadata: dict[str, Any] = {"path": image_path, "detected": False, "score": None, "fallback_used": False}
 
     bbox = detect_flower(model, image, score_threshold)
     if bbox is not None:
@@ -123,15 +136,15 @@ def crop_single_image(model, image_path, score_threshold=DEFAULT_SCORE_THRESHOLD
 
 
 def crop_dataset(
-    input_dir,
-    output_dir,
-    model_path,
-    score_threshold=DEFAULT_SCORE_THRESHOLD,
-    padding=0,
-    fallback="full",
-    device=None,
-    num_classes=2,
-):
+    input_dir: str | Path,
+    output_dir: str | Path,
+    model_path: str | Path,
+    score_threshold: float = DEFAULT_SCORE_THRESHOLD,
+    padding: int = 0,
+    fallback: str = "full",
+    device: torch.device | None = None,
+    num_classes: int = 2,
+) -> dict[str, Any]:
     """Crop all images in input_dir and save to output_dir.
 
     Preserves class subdirectory structure. Processes all jpg/jpeg/png files.
@@ -145,7 +158,7 @@ def crop_dataset(
     input_dir = Path(input_dir)
     output_dir = Path(output_dir)
 
-    summary = {"total": 0, "cropped": 0, "fallback": 0, "failed": 0, "classes": {}}
+    summary: dict[str, Any] = {"total": 0, "cropped": 0, "fallback": 0, "failed": 0, "classes": {}}
 
     class_dirs = sorted([d for d in input_dir.iterdir() if d.is_dir()])
     if not class_dirs:
@@ -158,7 +171,7 @@ def crop_dataset(
         out_class_dir.mkdir(parents=True, exist_ok=True)
 
         files = sorted([f for f in class_dir.iterdir() if f.suffix.lower() in (".jpg", ".jpeg", ".png")])
-        class_stats = {"total": len(files), "cropped": 0, "fallback": 0, "failed": 0}
+        class_stats: dict[str, int] = {"total": len(files), "cropped": 0, "fallback": 0, "failed": 0}
 
         for i, img_path in enumerate(files):
             summary["total"] += 1

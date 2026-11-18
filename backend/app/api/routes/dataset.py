@@ -3,6 +3,7 @@ import json
 import mimetypes
 import os
 from pathlib import Path
+from typing import Any
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -25,7 +26,7 @@ _HF_BRANCH = "main"
 _LISTING_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "dataset_listing.json"
 
 _http_client: httpx.AsyncClient | None = None
-_listing_cache: dict | None = None
+_listing_cache: dict[str, Any] | None = None
 
 
 async def _get_http_client() -> httpx.AsyncClient:
@@ -35,14 +36,16 @@ async def _get_http_client() -> httpx.AsyncClient:
     return _http_client
 
 
-def _get_listing() -> dict:
+def _get_listing() -> dict[str, Any]:
     global _listing_cache
     if _listing_cache is not None:
         return _listing_cache
     if _LISTING_PATH.is_file():
         with open(_LISTING_PATH) as f:
-            _listing_cache = json.load(f)
-        return _listing_cache
+            listing: Any = json.load(f)
+        _listing_cache = listing if isinstance(listing, dict) else None
+        if _listing_cache is not None:
+            return _listing_cache
     return {"classes": {}, "files": {"train": {}, "test": {}}, "total_images": 0}
 
 
@@ -67,7 +70,7 @@ def _validate_segment(value: str) -> str:
 
 
 @router.get("/classes", response_model=DatasetClassesResponse)
-async def list_classes(user=Depends(require_role("user"))):
+async def list_classes(user: dict[str, Any] = Depends(require_role("user"))) -> DatasetClassesResponse:
     listing = _get_listing()
     classes: list[DatasetClassInfo] = []
     total_train = 0
@@ -127,8 +130,8 @@ async def list_class_images(
     split: str = "train",
     limit: int = 12,
     offset: int = 0,
-    user=Depends(require_role("user")),
-):
+    user: dict[str, Any] = Depends(require_role("user")),
+) -> ClassImagesResponse:
     class_name = _validate_segment(class_name)
     if class_name not in settings.class_names:
         raise HTTPException(status_code=404, detail="Classe non presente nel dataset dello studio")
@@ -220,7 +223,7 @@ def _thumbnails_root() -> Path:
     return _get_dataset_base().parent / ".thumbnails"
 
 
-async def _serve_resized(file_path: Path, size: int, split: str, class_name: str, filename: str):
+async def _serve_resized(file_path: Path, size: int, split: str, class_name: str, filename: str) -> Response:
     """Generate and serve a resized WebP thumbnail, fetching from HF if needed."""
     cache_base = _thumbnails_root() / str(size)
     cache_dir = cache_base / split / class_name
@@ -238,15 +241,18 @@ async def _serve_resized(file_path: Path, size: int, split: str, class_name: str
         if not img_path.is_file():
             raise HTTPException(status_code=404, detail="Image not found")
 
-    def _generate():
+    def _generate() -> bool:
         tmp_path = cache_path.with_name(f".{cache_path.name}.{os.getpid()}.tmp")
         try:
             cache_dir.mkdir(parents=True, exist_ok=True)
-            with Image.open(img_path) as img:
-                w, h = img.size
+            with Image.open(img_path) as src:
+                w, h = src.size
+                # `Image.open` restituisce `ImageFile`, `resize` un `Image`:
+                # dichiarare il tipo evita di inferire `ImageFile` e poi
+                # assegnargli un `Image`.
+                img: Image.Image = src
                 if w > size:
-                    new_h = int(h * (size / w))
-                    img = img.resize((size, new_h), Image.Resampling.BILINEAR)
+                    img = src.resize((size, int(h * (size / w))), Image.Resampling.BILINEAR)
                 img.save(tmp_path, "WEBP", quality=80)
             # Rinomina atomica: un'altra richiesta che serve lo stesso file
             # non lo vede mai a metà (vedi _write_bytes_atomic).
@@ -275,8 +281,8 @@ async def serve_image(
     split: str,
     class_name: str,
     filename: str,
-    size: int = Query(None, gt=0, le=1024),
-):
+    size: int | None = Query(None, gt=0, le=1024),
+) -> Response:
     """Serve a dataset image file, optionally resized and converted to WebP.
 
     Checks local filesystem first, then falls back to HuggingFace CDN proxy.
@@ -312,7 +318,7 @@ async def serve_image(
 
 
 @router.get("/summary")
-async def dataset_summary():
+async def dataset_summary() -> dict[str, int]:
     """Summary of the dataset: total species and total images."""
     dataset_dirs = _get_dataset_dirs()
     valid = set(settings.class_names) | {settings.novel_class_name}
@@ -326,10 +332,10 @@ async def dataset_summary():
 
 
 @router.get("/gallery")
-async def dataset_gallery(user=Depends(require_role("user"))):
+async def dataset_gallery(user: dict[str, Any] = Depends(require_role("user"))) -> list[dict[str, Any]]:
     """Flat list of all dataset images across all classes and splits."""
     dataset_dirs = _get_dataset_dirs()
-    images: list[dict] = []
+    images: list[dict[str, Any]] = []
     valid = set(settings.class_names) | {settings.novel_class_name}
     for d in dataset_dirs:
         split = d.name

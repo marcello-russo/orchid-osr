@@ -9,7 +9,7 @@ def rotate_image(image: Any) -> Any:
 
 def is_landscape(image: Any) -> bool:
     width, height = image.size
-    return width > height
+    return bool(width > height)
 
 
 def horizontal_flip(img: Any) -> Any:

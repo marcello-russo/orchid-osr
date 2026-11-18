@@ -4,7 +4,7 @@ import numpy as np
 import torch
 
 
-def set_seed(seed):
+def set_seed(seed: int) -> None:
     print(f"Setting seed: {seed}")
     torch.manual_seed(seed)
     if torch.cuda.is_available():
@@ -19,7 +19,7 @@ def set_seed(seed):
     random.seed(seed)
 
 
-def seed_worker(worker_id):
+def seed_worker(worker_id: int) -> None:
     worker_seed = torch.initial_seed() % 2**32
     np.random.seed(worker_seed)
     random.seed(worker_seed)

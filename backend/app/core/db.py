@@ -10,6 +10,7 @@ import os
 import sqlite3
 import threading
 from pathlib import Path
+from typing import Any
 
 from app.config import settings
 
@@ -224,7 +225,7 @@ def get_db() -> sqlite3.Connection:
     return conn
 
 
-def _row_to_dict(row: sqlite3.Row) -> dict:
+def _row_to_dict(row: sqlite3.Row) -> dict[str, Any]:
     d = dict(row)
     for key in ("phases", "history", "phase_epochs"):
         if isinstance(d.get(key), str):
@@ -235,15 +236,16 @@ def _row_to_dict(row: sqlite3.Row) -> dict:
     return d
 
 
-def _read_file(path: str) -> dict | None:
+def _read_file(path: str) -> dict[str, Any] | None:
     try:
         with open(path) as f:
-            return json.load(f)
+            data: Any = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
         return None
+    return data if isinstance(data, dict) else None
 
 
-def _read_ncd_metrics(exp_dir: str) -> dict:
+def _read_ncd_metrics(exp_dir: str) -> dict[str, Any]:
     """Legge le metriche NCD da ncd_results.json e calcola i valori migliori."""
     ncd_file = os.path.join(exp_dir, "ncd_results.json")
     if not os.path.exists(ncd_file):
@@ -296,7 +298,7 @@ def _read_ncd_metrics(exp_dir: str) -> dict:
 
 def sync_experiment(exp_dir: str, conn: sqlite3.Connection | None = None) -> bool:
     own_conn = conn is None
-    if own_conn:
+    if conn is None:
         conn = get_db()
 
     try:
@@ -320,7 +322,8 @@ def sync_experiment(exp_dir: str, conn: sqlite3.Connection | None = None) -> boo
 
         config = _read_file(config_file) or {}
         results = _read_file(results_file) or {}
-        test_metrics = results.get("test_metrics") if isinstance(results.get("test_metrics"), dict) else {}
+        _raw_test_metrics = results.get("test_metrics")
+        test_metrics: dict[str, Any] = _raw_test_metrics if isinstance(_raw_test_metrics, dict) else {}
 
         started_at_raw = results.get("started_at")
         if started_at_raw is not None:

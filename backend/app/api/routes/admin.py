@@ -1,6 +1,7 @@
 """Admin endpoints: sync DB, cache management, etc."""
 
 import logging
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 
@@ -16,7 +17,7 @@ router = APIRouter(prefix="/api/admin", tags=["admin"])
 
 @router.post("/sync-db")
 @limiter.limit("5/minute")
-async def sync_database(request: Request, admin=Depends(require_role("admin"))):
+async def sync_database(request: Request, admin: dict[str, Any] = Depends(require_role("admin"))) -> dict[str, Any]:
     try:
         synced = sync_all()
         return {"synced": synced, "status": "ok"}
@@ -30,20 +31,24 @@ async def sync_database(request: Request, admin=Depends(require_role("admin"))):
 
 @router.get("/cache", response_model=CacheStatus)
 @limiter.limit("10/minute")
-async def cache_status(request: Request, admin=Depends(require_role("admin"))):
+async def cache_status(request: Request, admin: dict[str, Any] = Depends(require_role("admin"))) -> CacheStatus:
     return get_cache_status()
 
 
 @router.post("/cache/download")
 @limiter.limit("2/minute")
-async def cache_download_all(request: Request, admin=Depends(require_role("admin"))):
+async def cache_download_all(
+    request: Request, admin: dict[str, Any] = Depends(require_role("admin"))
+) -> dict[str, str]:
     download_all_weights(background=True)
     return {"status": "started"}
 
 
 @router.post("/cache/download/{model_id}")
 @limiter.limit("5/minute")
-async def cache_download_one(model_id: str, request: Request, admin=Depends(require_role("admin"))):
+async def cache_download_one(
+    model_id: str, request: Request, admin: dict[str, Any] = Depends(require_role("admin"))
+) -> dict[str, str]:
     from app.api.weights import _resolve_weights
 
     result = _resolve_weights(model_id)
@@ -54,7 +59,9 @@ async def cache_download_one(model_id: str, request: Request, admin=Depends(requ
 
 @router.delete("/cache/{model_id}")
 @limiter.limit("10/minute")
-async def cache_delete_one(model_id: str, request: Request, admin=Depends(require_role("admin"))):
+async def cache_delete_one(
+    model_id: str, request: Request, admin: dict[str, Any] = Depends(require_role("admin"))
+) -> dict[str, str]:
     deleted = delete_cached_weight(model_id)
     if not deleted:
         raise HTTPException(404, f"No cached weights for {model_id}")
@@ -63,6 +70,6 @@ async def cache_delete_one(model_id: str, request: Request, admin=Depends(requir
 
 @router.delete("/cache")
 @limiter.limit("5/minute")
-async def cache_clear(request: Request, admin=Depends(require_role("admin"))):
+async def cache_clear(request: Request, admin: dict[str, Any] = Depends(require_role("admin"))) -> dict[str, Any]:
     count = clear_cache()
     return {"status": "cleared", "files_removed": count}
