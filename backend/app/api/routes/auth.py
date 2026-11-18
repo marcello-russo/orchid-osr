@@ -32,6 +32,10 @@ limiter = Limiter(key_func=get_remote_address)
 # possibile solo dal CLI, che è un'azione locale e consapevole. Il cap è lo
 # stesso di `generate_invite`, importato: due costanti divergerebbero.
 DEFAULT_INVITE_HOURS = 72
+# Un passo di difesa è un link multi-uso per un evento (la discussione): 72h
+# coprono il giorno dell'esame e i due di margine, senza restare valido per
+# settimane. Nome esplicito: non è un effetto collaterale del default degli inviti.
+DEFAULT_DEFENSE_HOURS = 72
 
 
 class GenerateInviteRequest(BaseModel):
@@ -48,7 +52,7 @@ class DefensePassRequest(BaseModel):
 
     role: Literal["user"] = "user"
     max_uses: int = Field(default=25, ge=1, le=200)
-    expires_in_hours: int = Field(default=DEFAULT_INVITE_HOURS, ge=1, le=MAX_INVITE_HOURS)
+    expires_in_hours: int = Field(default=DEFAULT_DEFENSE_HOURS, ge=1, le=MAX_INVITE_HOURS)
     label: str = Field(default="difesa", max_length=40)
 
 

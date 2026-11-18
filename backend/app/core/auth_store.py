@@ -14,13 +14,20 @@ import sqlite3
 import threading
 from collections.abc import Iterator
 from contextlib import contextmanager
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
 from app.core.db import get_db
 
 logger = logging.getLogger(__name__)
+
+# Quanto vivono gli inviti importati dal JSON, che non avevano scadenza.
+# Uguale a `app.core.auth.MAX_INVITE_HOURS`: importarlo qui creerebbe un ciclo
+# (auth importa auth_store), quindi il valore è replicato e verificato dal test
+# `test_legacy_invite_ttl_matches_api_policy`.
+_LEGACY_INVITE_HOURS = 720
+
 _INIT_LOCK = threading.Lock()
 _INITIALIZED = False
 
@@ -201,7 +208,10 @@ def _import_legacy_json(conn: sqlite3.Connection, path: Path) -> None:
     if conn.execute("SELECT 1 FROM auth_meta WHERE key = 'legacy_json_imported'").fetchone():
         return
     if not path.exists():
-        _set_meta(conn, "legacy_json_imported", "absent")
+        # NON si marca niente: "file assente" non è "migrazione fatta". Marcarlo
+        # disattiverebbe l'import per sempre, e il rimedio ovvio (rimettere il
+        # file e riavviare) non importerebbe niente, in silenzio.
+        logger.info("users.json assente in %s: nessun import legacy, si riprova al prossimo avvio", path)
         return
 
     raw = json.loads(path.read_text(encoding="utf-8"))
@@ -218,8 +228,13 @@ def _import_legacy_json(conn: sqlite3.Connection, path: Path) -> None:
             "INSERT OR IGNORE INTO users (username, password_hash, role, created_at) VALUES (?, ?, ?, ?)",
             (user["username"], user["password_hash"], user.get("role", "user"), user.get("created_at") or now),
         )
+    # Un invito legacy non ha scadenza: resterebbe spendibile per sempre, contro
+    # l'invariante che l'API ora impone. Agli inviti ancora utilizzabili se ne
+    # dà una (stesso cap dell'API); quelli già consumati non servono a nessuno.
+    legacy_deadline = (datetime.now(UTC) + timedelta(hours=_LEGACY_INVITE_HOURS)).isoformat()
     for invite in invites:
         used = bool(invite.get("used"))
+        expires_at = invite.get("expires_at") or (None if used else legacy_deadline)
         conn.execute(
             """
             INSERT OR IGNORE INTO invites
@@ -232,7 +247,7 @@ def _import_legacy_json(conn: sqlite3.Connection, path: Path) -> None:
                 int(used),
                 invite.get("used_by"),
                 invite.get("created_at") or now,
-                invite.get("expires_at"),
+                expires_at,
                 int(invite.get("max_uses", 1)),
                 int(invite.get("uses", 1 if used else 0)),
                 invite.get("label", ""),
