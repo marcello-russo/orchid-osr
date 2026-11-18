@@ -52,15 +52,15 @@ if [ -d "$DATA_DIR" ]; then
     link_to_data dataset
     link_to_data experiments
 
-    # Utenti sul volume persistente (il backup su hub e' disattivato: vedi auth.py).
-    # Al primo avvio il file viene creato vuoto al primo salvataggio;
-    # il superadmin e' bootstrappato dalle env SUPERADMIN_*.
+    # SOLO import legacy: `users.json` viene letto una volta (marcato in
+    # auth_meta.legacy_json_imported) e poi ignorato. Non ci si scrive più.
+    # Resta sul volume perché un rollback a v0.3.x lo ritrova popolato.
     export USERS_PATH="$DATA_DIR/users.json"
     # JWT secret path: persist in /data per sopravvivere ai restart
     export JWT_SECRET_PATH="$DATA_DIR/.jwt_secret"
-    # Metadati (esperimenti, utenti, tentativi di login) sul volume: senza
-    # questo il DB resta nel layer scrivibile e il lockout anti brute-force si
-    # azzera a ogni redeploy.
+    # UNICA fonte di verità per esperimenti, utenti, inviti, passi ospite e
+    # tentativi di login. Senza questo il DB resta nel layer scrivibile e il
+    # lockout anti brute-force si azzera a ogni redeploy.
     export DB_PATH="$DATA_DIR/orchid.db"
 fi
 
