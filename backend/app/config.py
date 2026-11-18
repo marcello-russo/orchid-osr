@@ -2,6 +2,7 @@
 import logging
 import os
 from pathlib import Path
+from typing import Self
 
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -96,7 +97,7 @@ class Settings(BaseSettings):
     jwt_secret_path: str = "data/jwt_secret.txt"
 
     @model_validator(mode="after")
-    def _validate_jwt_secret(self):
+    def _validate_jwt_secret(self) -> Self:
         if self.jwt_secret:
             return self
 
@@ -153,7 +154,7 @@ class Settings(BaseSettings):
     def hf_configured(self) -> bool:
         return bool(self.hf_token) and self.hf_token.startswith("hf_")
 
-    def _check_env_exists(self):
+    def _check_env_exists(self) -> None:
         """Avvisa se manca il .env e la configurazione non arriva dall'ambiente.
 
         In produzione i segreti sono env vars (docker `env_file: secrets/app.env`),
@@ -170,7 +171,7 @@ class Settings(BaseSettings):
 
         warnings.warn(f".env not found at {env_path}. Create it from .env.example with your HF_TOKEN.")
 
-    def model_post_init(self, __context):
+    def model_post_init(self, __context: object) -> None:
         self._check_env_exists()
         return super().model_post_init(__context) if hasattr(super(), "model_post_init") else None
 

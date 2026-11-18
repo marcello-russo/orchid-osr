@@ -1,12 +1,13 @@
 # app/core/models/__init__.py
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from app.core.models.registry import MODEL_REGISTRY
 
 if TYPE_CHECKING:
     from app.core.models.base import ClassifierModel, ModelConfig  # noqa: F401
+    from app.core.models.registry import ModelRegistryEntry  # noqa: F401
 
 __REGISTERED = False
 
@@ -120,26 +121,26 @@ def _register_all():
     __REGISTERED = True
 
 
-def available_models():
+def available_models() -> list[str]:
     _register_all()
     return list(MODEL_REGISTRY.keys())
 
 
-def get_registry_entry(model_type: str):
+def get_registry_entry(model_type: str) -> ModelRegistryEntry:
     _register_all()
     from app.core.models.registry import get_registry_entry as _get
 
     return _get(model_type)
 
 
-def create_model(model_type: str, num_classes: int = 6, pretrained: bool = True, **kwargs):
+def create_model(model_type: str, num_classes: int = 6, pretrained: bool = True, **kwargs: Any) -> ClassifierModel:
     _register_all()
     from app.core.models.registry import create_model as _create
 
     return _create(model_type, num_classes=num_classes, pretrained=pretrained, **kwargs)
 
 
-def create_transform(model_type: str):
+def create_transform(model_type: str) -> Any:
     _register_all()
     from app.core.models.registry import create_transform as _create_t
 
@@ -152,4 +153,8 @@ __all__ = [
     "create_transform",
     "get_registry_entry",
     "MODEL_REGISTRY",
+    # assegnati a runtime da `_register_all()`, tipizzati in TYPE_CHECKING
+    "ClassifierModel",
+    "ModelConfig",
+    "ModelRegistryEntry",
 ]

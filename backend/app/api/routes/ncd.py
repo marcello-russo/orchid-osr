@@ -2,6 +2,7 @@ import json
 import logging
 import os
 from pathlib import Path
+from typing import Any
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
@@ -34,12 +35,13 @@ def _get_exp_dir(model_variant: str, exp_num: int = 8) -> str | None:
     return None
 
 
-def _load_npy_or_none(path: str) -> list | None:
+def _load_npy_or_none(path: str) -> list[Any] | None:
     if not _NP_AVAILABLE:
         return None
     try:
         arr = np.load(path)
-        return arr.tolist()
+        rows: list[Any] = arr.tolist()
+        return rows
     except FileNotFoundError:
         return None
     except Exception as e:
@@ -48,7 +50,7 @@ def _load_npy_or_none(path: str) -> list | None:
 
 
 @router.get("/{model_variant}/results")
-async def get_ncd_results(model_variant: str, exp: int = 8):
+async def get_ncd_results(model_variant: str, exp: int = 8) -> dict[str, Any]:
     exp_dir = _get_exp_dir(model_variant, exp)
     if not exp_dir:
         raise HTTPException(404, f"Exp {exp} model '{model_variant}' not found")
@@ -56,7 +58,7 @@ async def get_ncd_results(model_variant: str, exp: int = 8):
     if not os.path.exists(ncd_path):
         raise HTTPException(404, "NCD results not found — run --ncd pipeline first")
     with open(ncd_path) as f:
-        data = json.load(f)
+        data: dict[str, Any] = json.load(f)
 
     # Enrich with t-SNE coordinates (best-effort, skip if .npy missing)
     emb_dir = os.path.join(exp_dir, "embeddings")
@@ -96,7 +98,7 @@ _ALLOWED_FIGURES = {
 
 
 @router.get("/{model_variant}/figure/{figure_name}")
-async def get_ncd_figure(model_variant: str, figure_name: str, exp: int = 8):
+async def get_ncd_figure(model_variant: str, figure_name: str, exp: int = 8) -> FileResponse:
     exp_dir = _get_exp_dir(model_variant, exp)
     if not exp_dir:
         raise HTTPException(404, f"Exp {exp} model '{model_variant}' not found")
@@ -109,7 +111,7 @@ async def get_ncd_figure(model_variant: str, figure_name: str, exp: int = 8):
 
 
 @router.get("/comparison")
-async def get_ncd_comparison():
+async def get_ncd_comparison() -> Any:
     base = Path(settings.results_dir)
     comparison_path = os.path.join(str(base), "ncd_comparison.json")
     if not os.path.exists(comparison_path):

@@ -96,9 +96,9 @@ def create_jwt(username: str, role: str) -> str:
     return jwt.encode(payload, settings.jwt_secret, algorithm=JWT_ALGORITHM)
 
 
-def decode_jwt(token: str) -> dict:
+def decode_jwt(token: str) -> dict[str, Any]:
     try:
-        payload = jwt.decode(
+        payload: dict[str, Any] = jwt.decode(
             token,
             settings.jwt_secret,
             algorithms=[JWT_ALGORITHM],

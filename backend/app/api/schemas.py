@@ -1,5 +1,6 @@
 # app/api/schemas.py
 from datetime import datetime
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -18,7 +19,7 @@ class ClassifyResponse(BaseModel):
     predicted_class_id: int
     confidence: float
     probabilities: dict[str, float]
-    novelty: dict | None = None
+    novelty: dict[str, Any] | None = None
 
 
 class HealthResponse(BaseModel):
@@ -72,13 +73,13 @@ class ExperimentDetailResponse(BaseModel):
     """Full experiment detail."""
 
     id: str
-    config: dict
-    folds: list[dict]
-    results: dict | None = None
-    detectors: dict | None = None
-    openset: dict | None = None
-    clustering: dict | None = None
-    summary: dict
+    config: dict[str, Any]
+    folds: list[dict[str, Any]]
+    results: dict[str, Any] | None = None
+    detectors: dict[str, Any] | None = None
+    openset: dict[str, Any] | None = None
+    clustering: dict[str, Any] | None = None
+    summary: dict[str, Any]
 
 
 class FoldHistory(BaseModel):
@@ -102,7 +103,7 @@ class FoldDataResponse(BaseModel):
     history: FoldHistory
     train_size: int
     val_size: int
-    fold_phases: list[dict] | None = None
+    fold_phases: list[dict[str, Any]] | None = None
 
 
 class TopPrediction(BaseModel):
@@ -118,7 +119,7 @@ class ClassifyUploadResponse(BaseModel):
     top_predictions: list[TopPrediction]
     predicted_species: str
     confidence: float
-    novelty: dict | None = None
+    novelty: dict[str, Any] | None = None
 
 
 class ExplainResponse(BaseModel):

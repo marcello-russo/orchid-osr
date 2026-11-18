@@ -4,6 +4,7 @@ import json
 import logging
 import re
 from pathlib import Path
+from typing import Any
 
 from fastapi import APIRouter, HTTPException
 
@@ -35,12 +36,15 @@ def _parse_exp_num(name: str) -> int:
     return int(m.group(1)) if m else 999
 
 
-def _load_json(path: Path) -> dict:
+def _load_json(path: Path) -> dict[str, Any]:
     with open(path) as f:
-        return json.load(f)
+        data: Any = json.load(f)
+    if not isinstance(data, dict):
+        raise ValueError(f"{path}: atteso un oggetto JSON")
+    return data
 
 
-def _read_ncd_metrics(d: Path) -> dict:
+def _read_ncd_metrics(d: Path) -> dict[str, Any]:
     """Legge metriche NCD da ncd_results.json, se presente."""
     ncd_path = d / "ncd_results.json"
     if not ncd_path.exists():
@@ -50,7 +54,7 @@ def _read_ncd_metrics(d: Path) -> dict:
     except (json.JSONDecodeError, FileNotFoundError):
         return {}
 
-    metrics: dict = {}
+    metrics: dict[str, Any] = {}
     detectors = ncd_data.get("detectors", {})
     if isinstance(detectors, dict):
         # Regola ufficiale (tesi): Ensemble, stesso rivelatore per tutti.
@@ -89,13 +93,13 @@ def _read_ncd_metrics(d: Path) -> dict:
 
 
 @router.get("", response_model=list[ExperimentSummary])
-async def list_experiments():
+async def list_experiments() -> list[dict[str, Any]]:
     """List all experiments with summary metrics."""
     exp_dir = _get_experiments_dir()
     if not exp_dir.exists():
         return []
 
-    experiments = []
+    experiments: list[dict[str, Any]] = []
     for d in sorted(exp_dir.iterdir(), key=lambda p: _parse_exp_num(p.name)):
         if not d.is_dir():
             continue
@@ -172,7 +176,7 @@ async def list_experiments():
     return experiments
 
 
-def _perfold_stats(exp_dir) -> tuple[float | None, float | None]:
+def _perfold_stats(exp_dir: Path) -> tuple[float | None, float | None]:
     """(mean, std) F1 test da perfold_test.json, o (None, None) se manca."""
     from app.core.perfold import load_perfold
 
@@ -185,7 +189,7 @@ def _perfold_stats(exp_dir) -> tuple[float | None, float | None]:
         return None, None
 
 
-def _override_test_metrics(exp_dir, results: dict | None) -> None:
+def _override_test_metrics(exp_dir: Path, results: dict[str, Any] | None) -> None:
     """Sostituisce test_metrics con la confusion del best fold sul test ufficiale."""
     if not results:
         return
@@ -233,7 +237,7 @@ def _override_test_metrics(exp_dir, results: dict | None) -> None:
 
 
 @router.get("/{experiment_id}", response_model=ExperimentDetailResponse)
-async def get_experiment(experiment_id: str):
+async def get_experiment(experiment_id: str) -> dict[str, Any]:
     """Get full experiment detail with all folds. Prova DB, fallback a JSON."""
     experiment_id = _validate_id(experiment_id)
     exp_dir = _get_experiments_dir() / experiment_id
@@ -402,7 +406,7 @@ async def get_experiment(experiment_id: str):
     _override_test_metrics(exp_dir, results)
 
     # NCD metrics from ncd_results.json (JSON fallback)
-    ncd_full: dict | None = None
+    ncd_full: dict[str, Any] | None = None
     ncd_path = exp_dir / "ncd_results.json"
     if ncd_path.exists():
         try:
@@ -432,13 +436,13 @@ async def get_experiment(experiment_id: str):
 
 def _build_experiment_response(
     exp_id: str,
-    config: dict,
-    folds: list,
-    results: dict | None = None,
-    exp_data: dict | None = None,
+    config: dict[str, Any],
+    folds: list[dict[str, Any]],
+    results: dict[str, Any] | None = None,
+    exp_data: dict[str, Any] | None = None,
     last_modified: str | None = None,
-    ncd_full: dict | None = None,
-) -> dict:
+    ncd_full: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """Costruisce risposta standard per un esperimento."""
     # Normalize results from DB row or JSON dict
     if exp_data:
@@ -511,7 +515,7 @@ def _build_experiment_response(
 
 
 @router.get("/{experiment_id}/log")
-async def get_experiment_log(experiment_id: str):
+async def get_experiment_log(experiment_id: str) -> dict[str, Any]:
     """Get the training log file for an experiment.
     On HF Space (no log files synced), returns available=false.
     """
@@ -526,7 +530,7 @@ async def get_experiment_log(experiment_id: str):
 
 
 @router.get("/{experiment_id}/folds/{fold_number}", response_model=FoldDataResponse)
-async def get_fold(experiment_id: str, fold_number: int):
+async def get_fold(experiment_id: str, fold_number: int) -> dict[str, Any]:
     """Get a single fold with full training history.
 
     fold_number is 0-based (matching file names: fold_0.json, fold_1.json, ...).

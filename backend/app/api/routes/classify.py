@@ -1,6 +1,7 @@
 # app/api/routes/classify.py
 import base64
 import io
+from typing import Any
 
 import numpy as np
 import torch
@@ -28,7 +29,7 @@ router = APIRouter()
 
 
 @router.get("/classify/models", response_model=ModelListResponse)
-async def list_models():
+async def list_models() -> ModelListResponse:
     """List available trained models for classification."""
     return ModelListResponse(models=get_model_options())
 
@@ -65,7 +66,7 @@ def decode_base64_image(image_base64: str, model_type: str) -> torch.Tensor:
 
         # Preprocess
         preprocess = create_transform(model_type)
-        tensor = preprocess(image)
+        tensor: torch.Tensor = preprocess(image)
         return tensor.unsqueeze(0)  # Add batch dimension
 
     except Exception as e:
@@ -73,7 +74,7 @@ def decode_base64_image(image_base64: str, model_type: str) -> torch.Tensor:
 
 
 @router.post("/classify", response_model=ClassifyResponse)
-async def classify_image(request: ClassifyRequest):
+async def classify_image(request: ClassifyRequest) -> ClassifyResponse:
     """Classify an orchid image.
 
     Args:
@@ -109,14 +110,14 @@ async def classify_image(request: ClassifyRequest):
     probs_dict = {CLASS_NAMES[i]: probabilities[0, i].item() for i in range(len(CLASS_NAMES))}
 
     return ClassifyResponse(
-        predicted_class=CLASS_NAMES[predicted_idx],
+        predicted_class=CLASS_NAMES[int(predicted_idx)],
         predicted_class_id=predicted_idx,
         confidence=confidence,
         probabilities=probs_dict,
     )
 
 
-def _compute_ensemble(embedding: np.ndarray, logits: torch.Tensor, stats: dict) -> tuple[bool, float]:
+def _compute_ensemble(embedding: np.ndarray, logits: torch.Tensor, stats: dict[str, Any]) -> tuple[bool, float]:
     """Compute Ensemble score: Mahalanobis + KNN.
 
     Both calibrated with z-score normalization at 10% FPR during offline
@@ -138,7 +139,7 @@ def _compute_ensemble(embedding: np.ndarray, logits: torch.Tensor, stats: dict) 
 
 
 @router.post("/classify/upload", response_model=ClassifyUploadResponse)
-async def classify_upload(file: UploadFile = File(...), model_id: str = Form(None)):
+async def classify_upload(file: UploadFile = File(...), model_id: str | None = Form(None)) -> ClassifyUploadResponse:
     """Classify an orchid image uploaded as multipart form data."""
     # Load model first to determine model_type for correct transform
     model = get_model(model_id=model_id) if model_id else get_model(available_models()[0])
@@ -180,7 +181,7 @@ async def classify_upload(file: UploadFile = File(...), model_id: str = Form(Non
     topk = torch.topk(probabilities, min(6, len(CLASS_NAMES)), dim=1)
     top_predictions = [
         TopPrediction(
-            species=CLASS_NAMES[topk.indices[0, i].item()],
+            species=CLASS_NAMES[int(topk.indices[0, i].item())],
             confidence=topk.values[0, i].item(),
         )
         for i in range(topk.indices.shape[1])
@@ -188,7 +189,7 @@ async def classify_upload(file: UploadFile = File(...), model_id: str = Form(Non
 
     return ClassifyUploadResponse(
         top_predictions=top_predictions,
-        predicted_species=CLASS_NAMES[predicted_idx],
+        predicted_species=CLASS_NAMES[int(predicted_idx)],
         confidence=confidence,
         novelty=novelty,
     )

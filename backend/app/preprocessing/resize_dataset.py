@@ -15,7 +15,9 @@ from app.preprocessing.rotation import is_landscape, rotate_image
 logger = logging.getLogger(__name__)
 
 
-def resize_dataset(input_dir, output_dir, target_width, target_height):
+def resize_dataset(
+    input_dir: str | Path, output_dir: str | Path, target_width: int, target_height: int
+) -> dict[str, int]:
     """Resize all images in input_dir to target dimensions via letterbox.
 
     Applies rotate-if-landscape before resizing. Preserves class subdirectory
@@ -28,7 +30,7 @@ def resize_dataset(input_dir, output_dir, target_width, target_height):
     """
     input_dir = Path(input_dir)
     output_dir = Path(output_dir)
-    summary = {"total": 0, "resized": 0, "errors": 0}
+    summary: dict[str, int] = {"total": 0, "resized": 0, "errors": 0}
 
     class_dirs = sorted([d for d in input_dir.iterdir() if d.is_dir()])
     if not class_dirs:
@@ -60,7 +62,9 @@ def resize_dataset(input_dir, output_dir, target_width, target_height):
     return summary
 
 
-def resize_for_all_architectures(input_dir, base_dir, split_name=None):
+def resize_for_all_architectures(
+    input_dir: str | Path, base_dir: str | Path, split_name: str | None = None
+) -> dict[str, str]:
     """Produce resized datasets for all registered architecture sizes.
 
     Reads unique input sizes from the model registry and creates
@@ -80,7 +84,7 @@ def resize_for_all_architectures(input_dir, base_dir, split_name=None):
     """
     from app.core.models.registry import unique_input_sizes
 
-    results = {}
+    results: dict[str, str] = {}
     for label, (w, h) in unique_input_sizes().items():
         out_dir = Path(base_dir) / f"cropped_{label}"
         if split_name:
