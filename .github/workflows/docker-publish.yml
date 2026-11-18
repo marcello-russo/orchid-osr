@@ -144,9 +144,17 @@ jobs:
           # di tag; su dispatch il tag va recuperato esplicitamente, altrimenti
           # `--verify-tag` fallisce.
           git fetch --tags --force origin "refs/tags/${TAG}:refs/tags/${TAG}" || true
+          # Una release esistente può essere una **bozza**: GitHub trasforma in
+          # bozza la release di un tag cancellato e ricreato (è successo con la
+          # v0.4.0, ritaggata dopo un fix alla CI). Uscire qui lascerebbe la
+          # versione fuori da "Latest", con le note del commit vecchio. Solo una
+          # release già pubblicata è definitiva.
           if gh release view "$TAG" >/dev/null 2>&1; then
-            echo "release $TAG già presente: nessuna modifica"
-            exit 0
+            if [ "$(gh release view "$TAG" --json isDraft -q .isDraft)" != "true" ]; then
+              echo "release $TAG già presente: nessuna modifica"
+              exit 0
+            fi
+            echo "release $TAG era una bozza (tag ricreato): la ripubblico"
           fi
           # Note dai commit, non da --generate-notes: in questo repo si pusha
           # dritto su main senza PR, e le note generate dalla API sarebbero solo
@@ -173,8 +181,13 @@ jobs:
           # --latest: una release nuova è la versione più recente. Una release
           # esistente (re-dispatch, rollback) non muove il badge, così il deploy
           # di un tag vecchio non rende "Latest" la versione vecchia.
-          gh release create "$TAG" --verify-tag --latest --title "$TAG" --notes-file "$NOTES"
-          echo "release $TAG creata"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG" --draft=false --latest --title "$TAG" --notes-file "$NOTES"
+            echo "release $TAG aggiornata e pubblicata"
+          else
+            gh release create "$TAG" --verify-tag --latest --title "$TAG" --notes-file "$NOTES"
+            echo "release $TAG creata"
+          fi
 
   prune:
     # Housekeeping, non un gate: se il token non può cancellare (permessi del

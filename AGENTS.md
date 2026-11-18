@@ -117,6 +117,12 @@ deploy da un working tree sporco):
   voce nel registro
 - rollback = tag precedente **con immagine ancora in GHCR**: con
   `KEEP_VERSIONS=3` i due tag precedenti sono sempre disponibili
+- se un tag va rifatto (build rotta, commit sbagliato), GitHub converte la
+  Release del tag cancellato in **bozza**: il workflow la ripubblica da solo
+  (`gh release edit --draft=false`) con le note del commit nuovo, e
+  `tests/test_ci_release.py` tiene la guardia. L'immagine, invece, va rifatta a
+  mano: `docker-publish.yml` si può rilanciare con `workflow_dispatch` sul tag
+  (`gh workflow run docker-publish.yml -f tag=vX.Y.Z`)
 
 Perché non un workflow di deploy: l'SSH della VPS è aperto solo su `tailscale0`
 e il runner self-hosted `central` è registrato solo su `marcello-russo/actions`.
