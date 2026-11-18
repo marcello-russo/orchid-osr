@@ -101,8 +101,10 @@ Il tag è l'unica fonte di verità, come in `personale/actions`:
 2. `scripts/deploy-vps.sh [tag]` (default: ultimo tag) → `compose.yml` +
    `edge.yml` **presi dal tag** via `git archive`, scp in `/srv/orchid`,
    `pull` + `up -d` via SSH, healthcheck in loopback sull'host, registro
-   `/srv/orchid/.deployed` (tag + commit + istante), rollback automatico alla
-   versione precedente se il servizio non torna sano
+   `/srv/orchid/.deployed` (`tag`, `commit`, `ts` **e `smoke`**: `ok`, `failed`
+   o `skipped` — un tag registrato come "ciò che gira" non è un tag
+   verificato), rollback automatico alla versione precedente se il servizio non
+   torna sano
 3. `scripts/smoke-live.py` **dentro il deploy** (stesso tag, eseguito sull'host
    via `sudo -n`): oltre agli status guarda i **byte** delle immagini
    (magic bytes JPEG/WebP, non solo il 200: un errore mascherato è spesso un 200
@@ -111,7 +113,12 @@ Il tag è l'unica fonte di verità, come in `personale/actions`:
    `.env` non passa per un deploy. Si può lanciare a mano:
    `scripts/smoke-live.py --url http://127.0.0.1:8000 --env-file /srv/orchid/secrets/app.env --expect-version vX.Y.Z`
    (in locale contro la produzione autentica solo se hai le credenziali; senza,
-   salta i controlli autenticati e lo dice)
+   salta i controlli autenticati e lo dice). Uno smoke fallito **non** fa
+   rollback da solo (un CDN lento non è una regressione): il deploy esce 1, il
+   registro scrive `failed`, e la decisione è umana. `tests/test_smoke_live.py`
+   legge i due script veri e cade se lo smoke smette di guardare i byte, se il
+   deploy smette di chiamarlo o se un tag vecchio senza smoke viene saltato in
+   silenzio
 
 Regole di versioning (stesse del repo `actions`: nessun `latest`, nessun
 deploy da un working tree sporco):
@@ -146,6 +153,16 @@ anche la SPA da `frontend/dist`. Layout e regole: `actions/docs/host-layout.md`.
 
 - Live demo: `https://osr.marrusso.dev`
 - Tunnel: `orchid-ncd` (Cloudflare), ingress da `edge.yml`
+- Segreti: `/srv/orchid/secrets/app.env` (mode 600), passati via `env_file`.
+  Si ruotano con `scripts/rotate-app-secrets.py --env-file /srv/orchid/secrets/app.env`
+  (`--rotate jwt|superadmin`, `--dry-run`), che riscrive il file in modo atomico
+  preservando mode e owner e **non stampa mai i valori**. `JWT_SECRET` nuovo =
+  tutte le sessioni e i guest pass in corso invalidati (è il modo di buttare
+  fuori un token compromesso); `SUPERADMIN_PASSWORD` nuova entra in vigore al
+  riavvio, quando `ensure_superadmin_exists()` allinea l'hash nel DB. `HF_TOKEN`
+  non si genera in locale: si crea sull'account HuggingFace e lo script lo
+  rifiuta con la spiegazione. `tests/test_rotate_secrets.py` copre duplicati,
+  mode, dry-run e il divieto di stampare i segreti
 - Backup: `backup@orchid.timer` salva **`orchid.db`** con l'API di backup SQLite (`type: sqlite`: snapshot coerente anche con WAL, `--verify` con `integrity_check`), non più `users.json`; dataset e esperimenti stanno su HuggingFace. Il job e il suo `backup.json` **vivono sull'host**, fuori dal repo: la voce va cambiata nello stesso deploy che porta il DB in produzione (v0.4.0), altrimenti il timer continua a salvare un file congelato e i dati auth nuovi non finiscono in nessun backup
 
 ## Architecture

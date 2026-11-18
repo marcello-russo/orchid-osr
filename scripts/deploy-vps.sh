@@ -60,6 +60,10 @@ if [ -f "$STAGE/scripts/smoke-live.py" ]; then
     # shellcheck disable=SC2029  # voluto: REMOTE_DIR è una costante nostra
     ssh "$HOST" "mkdir -p '$REMOTE_DIR/bin'"
     scp -q "$STAGE/scripts/smoke-live.py" "$HOST:$REMOTE_DIR/bin/smoke-live.py"
+else
+    # Silenzio qui vorrebbe dire "deploy verificato" quando nessuno ha guardato:
+    # succede solo con un tag anteriore allo smoke (v0.4.2), cioè un rollback.
+    echo "!! smoke live assente nel tag $TAG: il deploy non sarà verificato sui byte" >&2
 fi
 
 # L'healthcheck autorevole è in loopback sull'host: la VPS ha IP datacenter e
@@ -101,10 +105,6 @@ fi
 for i in $(seq 1 36); do
     if curl -fsS -o /dev/null "http://127.0.0.1:${PORT}/health"; then
         echo "health locale OK dopo ~$((i * 5))s"
-        # Registro di ciò che gira davvero (stesso ruolo di `bin/.deployed`
-        # in personale/actions): scritto solo a deploy sano.
-        printf '{"tag":"%s","commit":"%s","ts":"%s"}\n' "$TAG" "$COMMIT" \
-            "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > .deployed.tmp && mv .deployed.tmp .deployed
         docker compose ps
 
         # "Sano" non è "giusto": /health risponde 200 anche con la dist sbagliata
@@ -112,18 +112,30 @@ for i in $(seq 1 36); do
         # content-type application/json. Lo smoke guarda i byte delle immagini,
         # i totali del dataset e la versione dichiarata in /openapi.json (un
         # container vecchio con il tag nuovo in .env si vede solo lì).
+        smoke="skipped"
         if [ -f bin/smoke-live.py ]; then
             if sudo -n true 2>/dev/null; then
-                sudo -n python3 bin/smoke-live.py --url "http://127.0.0.1:${PORT}" \
-                    --env-file secrets/app.env --expect-version "$TAG" \
-                    || {
-                        echo "errore: smoke live fallito su $TAG (servizio su, risposte sbagliate)" >&2
-                        echo "rollback: scripts/deploy-vps.sh <tag precedente>" >&2
-                        exit 1
-                    }
+                if sudo -n python3 bin/smoke-live.py --url "http://127.0.0.1:${PORT}" \
+                    --env-file secrets/app.env --expect-version "$TAG"; then
+                    smoke="ok"
+                else
+                    smoke="failed"
+                    echo "errore: smoke live fallito su $TAG (servizio su, risposte sbagliate)" >&2
+                    echo "rollback: scripts/deploy-vps.sh ${PREV:-<tag precedente>}" >&2
+                fi
             else
                 echo "!! smoke live saltato: sudo senza password non disponibile su $HOST" >&2
             fi
+        else
+            echo "!! smoke live assente in bin/: controlli sui byte saltati (tag anteriore a v0.4.2?)" >&2
+        fi
+
+        # Il registro dice cosa gira *e* se qualcuno l'ha verificato: un tag
+        # registrato senza smoke è la bugia che questo script esiste per evitare.
+        printf '{"tag":"%s","commit":"%s","ts":"%s","smoke":"%s"}\n' "$TAG" "$COMMIT" \
+            "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$smoke" > .deployed.tmp && mv .deployed.tmp .deployed
+        if [ "$smoke" = "failed" ]; then
+            exit 1
         fi
         exit 0
     fi
