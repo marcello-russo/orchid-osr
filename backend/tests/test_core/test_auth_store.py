@@ -99,9 +99,7 @@ def test_legacy_json_is_imported_once(store):
             {
                 "users": [{"username": "vecchio", "password_hash": "h", "role": "admin"}],
                 "invites": [{"code": "INV-OLD", "used": True, "role": "user"}],
-                "guest_passes": [
-                    {"jti": "j1", "label": "", "created_at": "x", "expires_at": "y", "revoked": False}
-                ],
+                "guest_passes": [{"jti": "j1", "label": "", "created_at": "x", "expires_at": "y", "revoked": False}],
             }
         )
     )

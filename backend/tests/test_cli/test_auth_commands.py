@@ -7,6 +7,8 @@ import pytest
 from app.cli.auth_commands import handle_auth_commands
 from app.core import auth_store
 
+PASSWORD = "Password1"  # noqa: S105 — password di test, nessun segreto
+
 
 @pytest.fixture(autouse=True)
 def _no_superadmin(monkeypatch):
@@ -34,13 +36,13 @@ def test_returns_none_when_not_an_auth_command(auth_store_db):
 
 
 def test_add_user_positional(auth_store_db, capsys):
-    assert handle_auth_commands(_args(add_user="cli-user", password="Password1")) == 0
+    assert handle_auth_commands(_args(add_user="cli-user", password=PASSWORD)) == 0
     assert auth_store.get_user("cli-user")["role"] == "user"
     assert "created" in capsys.readouterr().out
 
 
 def test_add_user_via_username_flag(auth_store_db):
-    args = _args(username="flag-user", password="Password1", role="admin")
+    args = _args(username="flag-user", password=PASSWORD, role="admin")
     assert handle_auth_commands(args) == 0
     assert auth_store.get_user("flag-user")["role"] == "admin"
 
@@ -52,8 +54,8 @@ def test_add_user_without_password_fails(auth_store_db, capsys):
 
 
 def test_add_duplicate_user_fails(auth_store_db, capsys):
-    assert handle_auth_commands(_args(add_user="dup", password="Password1")) == 0
-    assert handle_auth_commands(_args(add_user="dup", password="Password1")) == 1
+    assert handle_auth_commands(_args(add_user="dup", password=PASSWORD)) == 0
+    assert handle_auth_commands(_args(add_user="dup", password=PASSWORD)) == 1
     assert "already exists" in capsys.readouterr().out
 
 

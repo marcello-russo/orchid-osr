@@ -41,4 +41,3 @@ def test_agents_documents_the_single_auth_store():
 def test_agents_does_not_claim_users_json_is_written():
     txt = _read("AGENTS.md")
     assert "salva `users.json`" not in txt
-

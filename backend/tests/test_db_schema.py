@@ -24,7 +24,8 @@ def _open(tmp_path):
 
 
 def _tables(conn):
-    return {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")}
+    rows = conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")
+    return {r[0] for r in rows}
 
 
 def test_schema_creates_tables(tmp_path):
