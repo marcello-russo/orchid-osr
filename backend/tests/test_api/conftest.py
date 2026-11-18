@@ -1,5 +1,3 @@
-import json
-
 import pytest
 from fastapi.testclient import TestClient
 
@@ -16,7 +14,8 @@ def _no_rate_limits():
 
     import app.core.auth as auth_mod
 
-    # login_attempts tracking usa DB SQLite condiviso → va disabilitato nei test
+    # login_attempts tracking usa DB SQLite: nei test API il lockout è coperto
+    # dai test unitari, qui non deve scrivere su un DB condiviso.
     auth_mod._load_attempts = lambda: {}
     auth_mod._save_attempts = lambda _u, _c: None
     auth_mod.LOGIN_ATTEMPTS_CACHE.clear()
@@ -31,12 +30,15 @@ def client():
 
 @pytest.fixture
 def auth_db(tmp_path, monkeypatch):
-    """Crea database auth temporaneo con superadmin e invite codes."""
+    """DB auth SQLite temporaneo con superadmin e inviti (nessun users.json)."""
     from app.core import auth as auth_module
+    from app.core import auth_store
+    from app.core import db as db_module
 
-    db_path = tmp_path / "auth_db.json"
-    db_path.write_text(json.dumps({"invites": [], "users": []}))
-    monkeypatch.setattr(auth_module, "USERS_PATH", db_path)
+    monkeypatch.setattr(db_module, "DB_PATH", str(tmp_path / "orchid.db"))
+    monkeypatch.setattr(db_module, "_SCHEMA_READY", set())
+    monkeypatch.setattr(auth_module, "USERS_PATH", tmp_path / "users.json")
+    auth_store.reset_for_tests()
 
     monkeypatch.setattr(settings, "superadmin_username", "testsuperadmin")
     monkeypatch.setattr(settings, "superadmin_password", "TestAdmin2026!")
@@ -45,7 +47,21 @@ def auth_db(tmp_path, monkeypatch):
     auth_module.generate_invite(role="user", count=5)
     auth_module.generate_invite(role="admin", count=2)
 
-    return db_path
+    yield tmp_path / "orchid.db"
+    auth_store.reset_for_tests()
+
+
+@pytest.fixture
+def next_invite():
+    """Codice di un invito non ancora usato del ruolo richiesto."""
+
+    def _next(role: str = "user") -> str:
+        from app.core import auth_store
+
+        invite = next(i for i in auth_store.list_invites() if not i["used"] and i["role"] == role)
+        return str(invite["code"])
+
+    return _next
 
 
 @pytest.fixture
@@ -62,17 +78,14 @@ def superadmin_token(auth_db, client):
 
 
 @pytest.fixture
-def user_token(auth_db, client):
+def user_token(auth_db, client, next_invite):
     """Registra e logga un utente normale, restituisce il token."""
-    auth_data = json.loads(auth_db.read_text())
-    invite = next(i for i in auth_data["invites"] if not i["used"] and i["role"] == "user")
-
     client.post(
         "/auth/register",
         json={
             "username": "testuser",
             "password": "Password1",
-            "invite_code": invite["code"],
+            "invite_code": next_invite(),
         },
     )
     resp = client.post(
