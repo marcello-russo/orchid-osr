@@ -5,7 +5,7 @@ from torch import nn
 from torch.utils.data import DataLoader
 
 from app.core.models.resnet import ResNetClassifier, ResNetConfig
-from app.core.training import train, train_one_epoch, validate_one_epoch
+from app.core.kfold.epochs import train, train_one_epoch, validate_one_epoch
 from app.preprocessing.reproducibility import set_seed
 
 
