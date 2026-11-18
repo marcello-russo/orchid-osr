@@ -9,6 +9,7 @@ from slowapi.util import get_remote_address
 from app.api.deps import require_role
 from app.core.auth import (
     MAX_GUEST_PASS_HOURS,
+    MAX_INVITE_HOURS,
     create_guest_pass,
     create_jwt,
     decode_jwt,
@@ -28,9 +29,9 @@ limiter = Limiter(key_func=get_remote_address)
 
 # Un invito senza scadenza è una credenziale dimenticata in un log: l'API ne
 # impone sempre una (72h di default, 30 giorni al massimo). "Per sempre" resta
-# possibile solo dal CLI, che è un'azione locale e consapevole.
+# possibile solo dal CLI, che è un'azione locale e consapevole. Il cap è lo
+# stesso di `generate_invite`, importato: due costanti divergerebbero.
 DEFAULT_INVITE_HOURS = 72
-MAX_INVITE_HOURS = 720
 
 
 class GenerateInviteRequest(BaseModel):
