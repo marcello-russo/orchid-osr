@@ -233,6 +233,44 @@ class TestDefensePass:
         assert r.status_code == 422
 
 
+class TestInviteExpiry:
+    """Un invito non deve vivere per sempre, e il cap non dipende dall'endpoint."""
+
+    def test_generated_invite_expires_by_default(self, client, auth_db, superadmin_token):
+        from app.core import auth_store
+
+        h = {"Authorization": f"Bearer {superadmin_token}"}
+        resp = client.post("/auth/invites/generate", json={"count": 1}, headers=h)
+        assert resp.status_code == 200
+        code = resp.json()["codes"][0]
+        invite = next(i for i in auth_store.list_invites() if i["code"] == code)
+        assert invite["expires_at"] is not None
+
+    def test_defense_pass_expires_by_default(self, client, auth_db, superadmin_token):
+        h = {"Authorization": f"Bearer {superadmin_token}"}
+        body = client.post("/auth/invites/defense-pass", json={}, headers=h).json()
+        assert body["expires_at"] is not None
+
+    def test_invite_ttl_cannot_exceed_30_days(self, client, auth_db, superadmin_token):
+        h = {"Authorization": f"Bearer {superadmin_token}"}
+        r = client.post("/auth/invites/generate", json={"count": 1, "expires_in_hours": 721}, headers=h)
+        assert r.status_code == 422
+        r = client.post("/auth/invites/defense-pass", json={"expires_in_hours": 721}, headers=h)
+        assert r.status_code == 422
+
+    def test_invite_ttl_cannot_be_zero(self, client, auth_db, superadmin_token):
+        """0 = "eterno" resta possibile solo dal CLI, non da un client HTTP."""
+        h = {"Authorization": f"Bearer {superadmin_token}"}
+        r = client.post("/auth/invites/generate", json={"count": 1, "expires_in_hours": 0}, headers=h)
+        assert r.status_code == 422
+
+    def test_guest_pass_cap_is_seven_days(self, client, auth_db, superadmin_token):
+        h = {"Authorization": f"Bearer {superadmin_token}"}
+        assert client.post("/auth/guest-pass", json={"expires_in_hours": 168}, headers=h).status_code == 200
+        r = client.post("/auth/guest-pass", json={"expires_in_hours": 169}, headers=h)
+        assert r.status_code == 422
+
+
 class TestGuestEnter:
     """POST /auth/guest-pass + /auth/guest/enter + revoke (solo admin per creare)."""
 

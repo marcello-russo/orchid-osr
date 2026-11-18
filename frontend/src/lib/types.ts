@@ -389,3 +389,16 @@ export interface AuthUser {
   username: string;
   role: Role;
 }
+
+export interface Invite {
+  code: string;
+  role: string;
+  used: boolean;
+  used_by: string | null;
+  created_at: string | null;
+  expires_at: string | null;
+  revoked: boolean;
+  max_uses: number;
+  uses: number;
+  label: string;
+}

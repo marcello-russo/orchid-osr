@@ -8,6 +8,7 @@ from slowapi.util import get_remote_address
 
 from app.api.deps import require_role
 from app.core.auth import (
+    MAX_GUEST_PASS_HOURS,
     create_guest_pass,
     create_jwt,
     decode_jwt,
@@ -25,9 +26,17 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 limiter = Limiter(key_func=get_remote_address)
 
 
+# Un invito senza scadenza è una credenziale dimenticata in un log: l'API ne
+# impone sempre una (72h di default, 30 giorni al massimo). "Per sempre" resta
+# possibile solo dal CLI, che è un'azione locale e consapevole.
+DEFAULT_INVITE_HOURS = 72
+MAX_INVITE_HOURS = 720
+
+
 class GenerateInviteRequest(BaseModel):
     count: int = Field(default=1, ge=1, le=10, description="Numero di inviti da generare (1-10)")
     role: str = Field(default="user", pattern=r"^(user|admin)$")
+    expires_in_hours: int = Field(default=DEFAULT_INVITE_HOURS, ge=1, le=MAX_INVITE_HOURS)
 
 
 class DefensePassRequest(BaseModel):
@@ -38,14 +47,14 @@ class DefensePassRequest(BaseModel):
 
     role: Literal["user"] = "user"
     max_uses: int = Field(default=25, ge=1, le=200)
-    expires_in_hours: int = Field(default=24, ge=1, le=1440)
+    expires_in_hours: int = Field(default=DEFAULT_INVITE_HOURS, ge=1, le=MAX_INVITE_HOURS)
     label: str = Field(default="difesa", max_length=40)
 
 
 class GuestPassRequest(BaseModel):
     """Crea un magic link ospite: chi lo apre entra subito, senza registrarsi."""
 
-    expires_in_hours: int = Field(default=24, ge=1, le=1440)
+    expires_in_hours: int = Field(default=24, ge=1, le=MAX_GUEST_PASS_HOURS)
     label: str = Field(default="difesa", max_length=40)
 
 
@@ -109,7 +118,11 @@ def list_invites(request: Request, admin: dict[str, Any] = Depends(require_role(
 def create_invites(
     request: Request, body: GenerateInviteRequest, admin: dict[str, Any] = Depends(require_role("admin"))
 ) -> dict[str, list[str]]:
-    codes = generate_invite(role=body.role, count=body.count)
+    codes = generate_invite(
+        role=body.role,
+        count=body.count,
+        expires_in_hours=body.expires_in_hours,
+    )
     return {"codes": codes}
 
 

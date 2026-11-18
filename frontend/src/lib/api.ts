@@ -1,7 +1,7 @@
 // frontend/src/lib/api.ts
 
 import { useAppStore } from "../stores/useAppStore";
-import type { AuthUser } from "./types";
+import type { AuthUser, Invite } from "./types";
 import i18n from "./i18n";
 
 const API_BASE = import.meta.env.VITE_API_URL ?? "";
@@ -228,13 +228,7 @@ export async function guestEnter(pass: string): Promise<{ token: string; user: A
 }
 
 export async function fetchInvites(): Promise<{
-  invites: Array<{
-    code: string;
-    role: string;
-    used: boolean;
-    used_by: string | null;
-    created_at: string | null;
-  }>;
+  invites: Invite[];
   users: Array<{ username: string; role: string }>;
 }> {
   return fetchApi("/auth/invites");
