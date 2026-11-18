@@ -78,15 +78,23 @@ def test_deploy_runs_the_smoke_and_fails_the_deploy():
     assert re.search(r"rollback: scripts/deploy-vps\.sh", text[run:]), "il messaggio deve dire come tornare indietro"
 
 
-def test_registry_says_whether_the_deploy_was_verified():
-    """`.deployed` senza esito è una promessa non mantenuta: se lo smoke fallisce
-    il file deve dirlo, invece di sembrare un deploy riuscito."""
+def test_registry_says_what_runs_and_whether_it_was_verified():
+    """`.deployed` senza esito è una promessa non mantenuta: prima diceva "questo
+    gira" e basta, e uno smoke fallito lasciava il file identico a un successo."""
     text = _deploy()
-    write = text.index('".deployed.tmp"') if '".deployed.tmp"' in text else text.index(".deployed.tmp")
-    smoke = text.index("python3 bin/smoke-live.py")
-    assert smoke < write, "il registro viene scritto prima dello smoke"
+    run = text.index("python3 bin/smoke-live.py")
+    pending = text.index("write_deployed pending")
+    final = text.index('write_deployed "$smoke"')
+    # `pending` prima dello smoke: se il deploy viene interrotto a metà verifica,
+    # il registro dice comunque cosa sta girando.
+    assert pending < run < final, "il registro non racconta né prima né dopo la verifica"
     assert '"smoke":"%s"' in text, "il registro non riporta l'esito della verifica"
-    assert '"skipped"' in text and '"failed"' in text and '"ok"' in text, "esiti non distinguibili"
+    assert "write_deployed pending" in text, "nessuna scrittura `pending` prima dello smoke"
+    for outcome in ("ok", "failed", "skipped"):
+        assert f'smoke="{outcome}"' in text, f"esito {outcome} non prodotto"
+    assert re.search(
+        r'write_deployed "\$smoke"\s*\n\s*if \[ "\$smoke" = "failed" \]; then\s*\n\s*exit 1', text
+    ), "un deploy non verificato non deve uscire 0"
 
 
 def test_an_old_tag_without_the_smoke_says_so_instead_of_being_silent():
