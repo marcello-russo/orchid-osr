@@ -103,6 +103,15 @@ Il tag è l'unica fonte di verità, come in `personale/actions`:
    `pull` + `up -d` via SSH, healthcheck in loopback sull'host, registro
    `/srv/orchid/.deployed` (tag + commit + istante), rollback automatico alla
    versione precedente se il servizio non torna sano
+3. `scripts/smoke-live.py` **dentro il deploy** (stesso tag, eseguito sull'host
+   via `sudo -n`): oltre agli status guarda i **byte** delle immagini
+   (magic bytes JPEG/WebP, non solo il 200: un errore mascherato è spesso un 200
+   con `content-type: application/json`), i totali del dataset e la versione
+   dichiarata in `/openapi.json` — così un container vecchio con il tag nuovo in
+   `.env` non passa per un deploy. Si può lanciare a mano:
+   `scripts/smoke-live.py --url http://127.0.0.1:8000 --env-file /srv/orchid/secrets/app.env --expect-version vX.Y.Z`
+   (in locale contro la produzione autentica solo se hai le credenziali; senza,
+   salta i controlli autenticati e lo dice)
 
 Regole di versioning (stesse del repo `actions`: nessun `latest`, nessun
 deploy da un working tree sporco):
