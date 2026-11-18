@@ -1,3 +1,19 @@
+# tests/test_api/test_auth.py
+from datetime import UTC, datetime
+
+import pytest
+
+from app.api.routes.auth import DEFAULT_DEFENSE_HOURS, DEFAULT_INVITE_HOURS
+
+
+def _hours_from_now(deadline: str) -> float:
+    """Ore che mancano a `deadline` (ISO, con o senza fuso orario)."""
+    when = datetime.fromisoformat(deadline)
+    if when.tzinfo is None:
+        when = when.replace(tzinfo=UTC)
+    return (when - datetime.now(UTC)).total_seconds() / 3600
+
+
 class TestRegister:
     """POST /auth/register — usa fixture auth_db (SQLite temporaneo)."""
 
@@ -244,12 +260,14 @@ class TestInviteExpiry:
         assert resp.status_code == 200
         code = resp.json()["codes"][0]
         invite = next(i for i in auth_store.list_invites() if i["code"] == code)
-        assert invite["expires_at"] is not None
+        assert _hours_from_now(invite["expires_at"]) == pytest.approx(DEFAULT_INVITE_HOURS, abs=0.2)
 
     def test_defense_pass_expires_by_default(self, client, auth_db, superadmin_token):
         h = {"Authorization": f"Bearer {superadmin_token}"}
         body = client.post("/auth/invites/defense-pass", json={}, headers=h).json()
-        assert body["expires_at"] is not None
+        # Il default è una policy (72h: il giorno della discussione più margine),
+        # non un effetto collaterale del default degli inviti: qui si asserisce.
+        assert _hours_from_now(body["expires_at"]) == pytest.approx(DEFAULT_DEFENSE_HOURS, abs=0.2)
 
     def test_invite_ttl_cannot_exceed_30_days(self, client, auth_db, superadmin_token):
         h = {"Authorization": f"Bearer {superadmin_token}"}

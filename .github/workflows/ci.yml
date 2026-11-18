@@ -62,8 +62,17 @@ jobs:
       # `@app.command()`. Si installa il lock intero — niente elenco da tenere
       # allineato a mano — alla versione esatta di `requirements.txt`: un gate
       # il cui esito dipende dalla release di ieri non è un gate.
+      #
+      # torch però va preso dall'indice CPU **prima**, come nel job backend:
+      # accelerate/peft/captum lo tirano dentro come dipendenza e senza il pin
+      # arrivano 3,2 GB di wheel CUDA non versionate (una versione di torch
+      # scelta da PyPI quel giorno, cioè il gate che dipende dalla release di
+      # ieri). Con 2.15.0+cpu già soddisfatto, `pip install` del lock non tocca
+      # torch: risolve solo il resto.
       - name: mypy + le dipendenze i cui tipi controlla
-        run: pip install -r requirements.txt "mypy==1.19.1"
+        run: |
+          pip install --no-deps --index-url https://download.pytorch.org/whl/cpu -r torch-pins.txt
+          pip install -r requirements.txt "mypy==1.19.1"
       # Gate reale, in due sensi: `continue-on-error` lo rendeva decorativo
       # prima (rosso per settimane senza fermare nulla), e ogni modulo di
       # app/cli aveva `ignore_errors = true` in pyproject.toml, quindi

@@ -151,8 +151,8 @@ def test_mypy_job_installs_the_packages_whose_types_it_checks():
     non esiste un secondo elenco da tenere allineato.
     """
     block = _job_block("mypy")
-    install = [line for line in block.splitlines() if "pip install" in line and "mypy==" in line]
-    assert install, "il job mypy non installa mypy"
+    install = [line for line in block.splitlines() if "pip install" in line]
+    assert any("mypy==" in line for line in install), "il job mypy non installa mypy"
     assert any(
         "-r requirements.txt" in line for line in install
     ), f"il job mypy non installa il lock: gli untyped-decorator tornano. Trovato: {install}"
@@ -160,3 +160,21 @@ def test_mypy_job_installs_the_packages_whose_types_it_checks():
     lock = (ROOT / "backend" / "requirements.txt").read_text(encoding="utf-8")
     for package in ("fastapi==", "starlette==", "typer=="):
         assert re.search(rf"^{package}", lock, re.MULTILINE), f"{package[:-2]} non è pinnato nel lock"
+
+
+def test_mypy_job_installs_the_cpu_torch_first():
+    """accelerate/peft/captum tirano dentro torch: senza pin arriva il wheel CUDA.
+
+    Il lock non contiene torch (per scelta, vedi l'intestazione di
+    requirements.txt) ma tre sue dipendenze lo richiedono. Sul runner questo
+    significava 3,2 GB di wheel `nvidia-*` e una versione di torch scelta da
+    PyPI quel giorno — cioè il gate che dipende dalla release di ieri, più il
+    rischio di timeout a cache fredda. Il job backend lo evita da sempre; qui
+    si verifica che anche mypy lo faccia, e **prima** del lock.
+    """
+    lines = [line.strip() for line in _job_block("mypy").splitlines() if "pip install" in line]
+    torch_line = next((i for i, line in enumerate(lines) if "torch-pins.txt" in line), None)
+    assert torch_line is not None, f"il job mypy non installa torch dai pin CPU: {lines}"
+    assert "--index-url https://download.pytorch.org/whl/cpu" in lines[torch_line], lines[torch_line]
+    lock_line = next(i for i, line in enumerate(lines) if "-r requirements.txt" in line)
+    assert torch_line < lock_line, "torch va installato prima del lock, o pip lo risolve da PyPI"
