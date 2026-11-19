@@ -73,13 +73,19 @@ def main() -> None:
         class_names = [c for c in definition.get("test_classes", ALL_CLASSES) if c not in exclude]
         num_classes = definition.get("num_classes", len(class_names))
         _w, _h = get_registry_entry(model_variant).input_size
-        if exclude:
-            test_dir = str(PROJECT_ROOT / "dataset" / f"cropped_{_w}x{_h}" / "test_ncd_exp4")
-            if not os.path.exists(test_dir):
-                print(f"SKIP {dirname}: manca {test_dir}", flush=True)
-                continue
-        else:
-            test_dir = str(PROJECT_ROOT / "dataset" / "cropped_256x512" / "test")
+        # `final_test` scarta i campioni di classi che il modello non ha, quindi
+        # per II-A/II-B basta il test completo: il F1 resta sulle sole classi
+        # note. Prima qui si faceva SKIP se mancava `test_ncd_exp4`, una cartella
+        # creata a mano e assente dal dataset HF: su una macchina pulita il
+        # per-fold test di II-A/II-B non era riproducibile.
+        # Per gli esperimenti senza esclusioni resta il 256x512 di sempre: il
+        # resize letterbox da 224 a 224 non e' identico a quello da 256x512, e
+        # cambiare la sorgente cambierebbe i numeri della tesi.
+        size_dir = f"cropped_{_w}x{_h}" if exclude else "cropped_256x512"
+        test_dir = str(PROJECT_ROOT / "dataset" / size_dir / "test")
+        if not os.path.exists(test_dir):
+            print(f"SKIP {dirname}: manca {test_dir}", flush=True)
+            continue
 
         f1s, accs = [], []
         per_class_f1 = {}

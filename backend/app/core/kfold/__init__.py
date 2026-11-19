@@ -353,10 +353,10 @@ def kfold_experiment(
         if os.path.exists(_dedicated):
             test_dir_final = _dedicated
         else:
-            logger.warning(
-                f"test_ncd_exp4 non trovato in {os.path.dirname(test_dataset_dir)}, "
-                f"uso test standard (potrebbe includere classi non nel modello)"
-            )
+            # Nessuna cartella dedicata: si usa il test completo. `final_test`
+            # scarta i campioni di classi che il modello non ha, quindi il F1
+            # resta sulle sole classi note (200 immagini in II-B, non 300).
+            logger.info(f"Test dedicato assente: uso {test_dataset_dir} (le classi nascoste vengono filtrate)")
 
     return aggregate_and_test(
         output_dir=kfold_dir,
