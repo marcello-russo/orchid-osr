@@ -430,11 +430,16 @@ def train_supcon(
             torch.save(ckpt_data, tmp_path)
             os.replace(tmp_path, ckpt_path)
 
-        # Il warm-up non si taglia: se la KNN smette di migliorare all'epoca 0,
-        # con patience 15 si fermerebbe prima dell'init dei prototipi e
-        # l'esperimento "SpHOR" finirebbe senza SpHOR (il bug di prima, in
-        # un'altra forma).
-        if patience > 0 and epochs_no_improve >= patience and not in_warmup:
+        # Ne' il warm-up ne' il ramp si tagliano. Se la KNN raggiunge il
+        # massimo durante il warm-up (succede: e' la fase in cui il contrastivo
+        # fa il lavoro grosso), con patience 15 la run si fermerebbe prima che
+        # i termini SpHOR abbiano peso, e il modello salvato sarebbe quello del
+        # warm-up: due varianti diverse darebbero lo stesso checkpoint byte per
+        # byte e l'esperimento misurerebbe SupCon spacciato per SpHOR. E'
+        # successo davvero: ablazione B e C, checkpoint identico.
+        if prototypes is not None and epoch < warmup + ramp:
+            epochs_no_improve = 0
+        if patience > 0 and epochs_no_improve >= patience:
             logger.info(f"[SupCon] Early stopping at epoch {epoch + 1}")
             break
 
