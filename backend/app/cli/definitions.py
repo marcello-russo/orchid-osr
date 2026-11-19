@@ -63,6 +63,7 @@ EXPERIMENTS: dict[int, dict[str, Any]] = {
         "num_classes": 6,
         "test_classes": TRAIN_CLASSES,
         "loss_type": "ce",
+        "num_epochs": 150,
         "phases": ["CE"],
         "recipe": "Standard Cross-Entropy training con backbone intero. "
         "Una fase sola: loss CE su 6 classi. Backbone e testa addestrati insieme. "
@@ -76,6 +77,7 @@ EXPERIMENTS: dict[int, dict[str, Any]] = {
         "num_classes": 6,
         "test_classes": TRAIN_CLASSES,
         "loss_type": "supcon",
+        "num_epochs": 150,
         "phases": ["SupCon", "CE fine-tune"],
         "recipe": "Due fasi: (1) SupCon contrastive pretraining: organizza lo spazio di embedding "
         "attraendo campioni della stessa specie e respingendo specie diverse. "
@@ -93,6 +95,7 @@ EXPERIMENTS: dict[int, dict[str, Any]] = {
         "test_classes": TRAIN_CLASSES,
         "loss_type": "supcon",
         "ncd_mode": False,
+        "num_epochs": 150,
         "phases": ["SupCon + SpHOR", "CE fine-tune"],
         "recipe": "Due fasi. (1) SupCon + SpHOR in tre tempi: warm-up di sola SupCon "
         "(20 epoche) in cui le classi trovano la loro forma; poi un prototipo per classe "
@@ -118,6 +121,7 @@ EXPERIMENTS: dict[int, dict[str, Any]] = {
         "exclude_classes": ["O. garganica"],
         "loss_type": "supcon",
         "ncd_mode": True,
+        "num_epochs": 150,
         "phases": ["SupCon + SpHOR", "CE fine-tune"],
         "recipe": "Identico a Exp 3 (warm-up 20 ep, vMF hard κ=10 con ramp 20 ep, "
         "λ_rep=0.01, 150 epoche e patience 15 in entrambe le fasi). Novità: O. garganica "
