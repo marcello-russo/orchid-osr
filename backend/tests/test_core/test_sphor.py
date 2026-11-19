@@ -220,6 +220,36 @@ class TestTrainSupcon:
         assert len(weights) >= 5
         assert weights[-1] == pytest.approx(1.0)
 
+    def test_restore_best_false_keeps_the_last_epoch(self, tmp_path, monkeypatch):
+        """Le ablazioni vogliono il modello con cui il metodo finisce, non
+        l'epoca migliore per KNN (che su SpHOR cade nel warm-up)."""
+        import app.core.kfold.supcon_epochs as se
+
+        monkeypatch.setattr(se, "validate_supcon", lambda model, loader, device: (0.5, 1.0))
+
+        def run(restore_best: bool, sub: str):
+            torch.manual_seed(0)
+            model = _StubModel()
+            train_loader, val_loader = _loaders()
+            trained, _ = se.train_supcon(
+                model,
+                train_loader,
+                val_loader,
+                num_epochs=4,
+                learning_rate=1e-2,
+                device=torch.device("cpu"),
+                checkpoint_dir=str(tmp_path / sub),
+                proj_dim=16,
+                use_prototypes=False,
+                patience=0,
+                restore_best=restore_best,
+            )
+            return next(trained.parameters()).detach().clone()
+
+        best = run(True, "best")
+        last = run(False, "last")
+        assert not torch.equal(best, last)
+
     def test_prototypes_stay_on_the_unit_sphere(self, tmp_path):
         _, metrics = self._run(tmp_path)
         norms = metrics["sphor"]["prototypes"].norm(dim=1)

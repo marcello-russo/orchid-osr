@@ -239,6 +239,7 @@ def train_supcon(
     ramp_epochs: int = 20,
     repulse_mode: str = "squared",
     repulse_threshold: float = 0.3,
+    restore_best: bool = True,
 ) -> tuple[ClassifierModel, dict]:
     """Phase 1: train backbone + projection head with SupCon loss.
 
@@ -464,6 +465,7 @@ def train_supcon(
             "alignment_val": alignment,
             "probe_accuracy": probe_acc,
             "probe_f1": probe_f1,
+            "model_selection": "best_knn" if restore_best else "final_epoch",
             "prototypes": prototypes.prototypes.detach().cpu().clone(),
         }
         logger.info(
@@ -471,8 +473,15 @@ def train_supcon(
             f"probe (spazio proiezione) Acc {probe_acc:.4f}, F1 {probe_f1:.4f}"
         )
 
-    model.load_state_dict(best_backbone_wts)
-    logger.info(f"[SupCon] Phase 1 complete. Best KNN Acc: {best_knn:.4f}")
+    # restore_best=False serve alle ablazioni: si vuole il modello con cui il
+    # metodo finisce (ultima epoca, peso pieno), non l'epoca migliore per KNN —
+    # che su SpHOR cade spesso nel warm-up e renderebbe due varianti identiche.
+    if restore_best:
+        model.load_state_dict(best_backbone_wts)
+    logger.info(
+        f"[SupCon] Phase 1 complete. Best KNN Acc: {best_knn:.4f} "
+        f"({'pesi migliori' if restore_best else 'ultima epoca'})"
+    )
 
     if ckpt_path and os.path.exists(ckpt_path):
         os.remove(ckpt_path)

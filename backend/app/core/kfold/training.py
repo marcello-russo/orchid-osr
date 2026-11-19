@@ -505,6 +505,7 @@ def train_fold_supcon(
     ramp_epochs=20,
     repulse_mode="squared",
     repulse_threshold=0.3,
+    restore_best=True,
 ):
     """Two-phase training for SupCon: Phase 1 (contrastive) + Phase 2 (CE fine-tune).
 
@@ -567,6 +568,7 @@ def train_fold_supcon(
         ramp_epochs=ramp_epochs,
         repulse_mode=repulse_mode,
         repulse_threshold=repulse_threshold,
+        restore_best=restore_best,
     )
 
     # Prototipi SpHOR: sidecar accanto al checkpoint, cosi' un rerun e la
@@ -584,6 +586,7 @@ def train_fold_supcon(
                 "kappa": sphor_metrics.get("kappa"),
                 "repulse_mode": sphor_metrics.get("repulse_mode"),
                 "repulse_threshold": sphor_metrics.get("repulse_threshold"),
+                "model_selection": sphor_metrics.get("model_selection"),
                 "warmup_epochs": sphor_metrics.get("warmup_epochs"),
                 "ramp_epochs": sphor_metrics.get("ramp_epochs"),
                 "alignment_val": sphor_metrics.get("alignment_val"),
