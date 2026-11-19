@@ -326,6 +326,13 @@ step o se il ramp non parte da 0.
 Studio II-A è identico ma esclude *O. garganica* (1.629 immagini note); II-B
 esclude anche *O. majellensis* (1.477). `--sphor` per tutti e tre.
 
+Il test set dedicato senza le classi nascoste (`test_ncd_exp4`) **non serve**:
+`final_test` scarta i campioni di classi che il modello non ha, quindi il F1
+resta sulle sole classi note anche passando il test completo (200 immagini in
+II-B, non 300). `scripts/compute_perfold_test.py` non fa più `SKIP` quando
+quella cartella manca: prima il per-fold test di II-A/II-B era riproducibile
+solo sulla macchina dove era stata creata a mano.
+
 ### Studio II-A results (OSR + GCD)
 - **OSR**: best AUROC 0.875 (DINOv2-Base + SpHOR + Ensemble), ConvNeXt-Tiny 0.850.
 - **GCD** (Vaze et al. 2022; `orchid ncd`): known-class recovery works (SS-KM ACC old up to 0.93), novel discovery fails with the standard semi-supervised method (ACC new ~0). Only DINOv2-Base discovers the hidden species uninformed (K-means ACC new 0.83±0.04).
