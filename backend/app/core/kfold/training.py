@@ -555,7 +555,10 @@ def train_fold_supcon(
         checkpoint_dir=ckpt_dir,
         proj_dim=proj_dim,
         temperature=temperature,
-        patience=patience or 15,
+        # `patience or 15` trasformava 0 (documentato come "disabilitato") in 15:
+        # un run con `--patience 0` si fermava comunque, e in un'ablazione due
+        # varianti finivano con budget diversi senza che si vedesse.
+        patience=patience,
         gradient_accumulation_steps=gradient_accumulation_steps,
         resume=resume,
         optimizer_type=opt_type,
