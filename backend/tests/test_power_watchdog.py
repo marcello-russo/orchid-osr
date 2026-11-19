@@ -62,6 +62,70 @@ class TestDecide:
         assert wd.decide(50, "Charging", 1, paused=True, resume_at=45) == "resume"
 
 
+class TestDebounce:
+    def test_unplugged_rule_needs_more_confirmations(self, tmp_path):
+        """Il sensore AC sfarfalla: la regola 'cavo staccato' deve chiedere
+        piu' conferme della soglia di capacita'."""
+        child = subprocess.Popen(["sleep", "30"])  # noqa: S603, S607
+        try:
+            source = tmp_path / "battery.json"
+            source.write_text(json.dumps({"capacity": 80, "status": "Discharging", "ac_online": 0}), encoding="utf-8")
+            done = subprocess.run(  # noqa: S603
+                [
+                    sys.executable,
+                    str(SCRIPT),
+                    "--pid",
+                    str(child.pid),
+                    "--once",
+                    "--unplugged-confirmations",
+                    "4",
+                    "--capacity-source",
+                    str(source),
+                    "--state-file",
+                    str(tmp_path / "state.json"),
+                ],
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+            assert done.returncode == 0
+            assert Path(f"/proc/{child.pid}/stat").read_text().split()[2] != "T"
+        finally:
+            child.kill()
+            child.wait(timeout=5)
+
+    def test_a_single_reading_does_not_signal(self, tmp_path):
+        """Una lettura isolata sotto soglia non deve fermare il training: serve
+        la conferma alla lettura successiva."""
+        child = subprocess.Popen(["sleep", "30"])  # noqa: S603, S607
+        try:
+            source = tmp_path / "battery.json"
+            source.write_text(json.dumps({"capacity": 10, "status": "Discharging", "ac_online": 0}), encoding="utf-8")
+            done = subprocess.run(  # noqa: S603
+                [
+                    sys.executable,
+                    str(SCRIPT),
+                    "--pid",
+                    str(child.pid),
+                    "--once",
+                    "--confirmations",
+                    "2",
+                    "--capacity-source",
+                    str(source),
+                    "--state-file",
+                    str(tmp_path / "state.json"),
+                ],
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+            assert done.returncode == 0
+            assert Path(f"/proc/{child.pid}/stat").read_text().split()[2] != "T"
+        finally:
+            child.kill()
+            child.wait(timeout=5)
+
+
 class TestProcessTree:
     def test_collects_children_and_grandchildren(self):
         code = "import subprocess,time; subprocess.Popen(['sleep','30']); time.sleep(30)"

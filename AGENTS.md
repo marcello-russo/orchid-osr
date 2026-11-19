@@ -118,6 +118,22 @@ varianti (SupCon, +vMF, +repulsione hinge, κ più alto) su una fold di II-A con
 DINOv2-Small, misurate in AUROC open-set. Gira sulla stessa macchina, quindi
 sotto lo stesso watchdog.
 
+**Freno alla GPU.** Il watchdog evita lo spegnimento, ma non riduce il consumo:
+quello lo fa `scripts/gpu-throttle.sh`. Su questa Quadro T2000 `nvidia-smi -pl`
+non viene applicato (il driver riporta `power.limit: N/A`), quindi il freno è il
+clock:
+
+```bash
+scripts/gpu-throttle.sh --status
+scripts/gpu-throttle.sh --clock 900    # 1200 MHz/~29 W/66 °C -> 900 MHz/~21.5 W/61 °C
+scripts/gpu-throttle.sh --reset
+```
+
+Misurato: −27% di potenza e −5 °C per circa +15% di tempo per epoca (74 s → 86 s
+su DINOv2-Small, batch 8). Il blocco non sopravvive al reboot e non tocca il
+risultato del training, solo la velocità. Con il clock a 900 MHz la batteria,
+prima in scarica lenta anche con l'AC collegato, torna a caricare.
+
 ## Deploy
 
 Build in CI, deploy da questa macchina (la VPS è raggiungibile solo via tailnet).
