@@ -7,6 +7,8 @@ nulla rispetto a SupCon (era solo un seed diverso). Se qualcuno rimuove il
 `add_param_group` in `train_supcon`, questo file cade.
 """
 
+from pathlib import Path
+
 import pytest
 import torch
 import torch.nn as nn
@@ -128,6 +130,16 @@ class TestOneEpoch:
         assert parts["loss"] >= parts["supcon"]
 
 
+def test_fold_supcon_does_not_silently_enable_patience():
+    """`train_fold_supcon` faceva `patience=patience or 15`: con `--patience 0`
+    (documentato come disabilitato) la Fase 1 si fermava comunque, e in
+    un'ablazione due varianti finivano con budget diversi."""
+    source = Path(__file__).resolve().parents[2] / "app" / "core" / "kfold" / "training.py"
+    text = source.read_text(encoding="utf-8")
+    assert "patience=patience or 15" not in text
+    assert "patience=patience," in text
+
+
 class TestTrainSupcon:
     def _run(self, tmp_path, epochs=3, warmup=1, ramp=2, resume=False):
         model = _StubModel()
@@ -219,6 +231,27 @@ class TestTrainSupcon:
         # warm-up 2 + ramp 2 = epoca 4 e' la prima a peso pieno, poi patience 1
         assert len(weights) >= 5
         assert weights[-1] == pytest.approx(1.0)
+
+    def test_patience_zero_really_runs_all_epochs(self, tmp_path):
+        """`--patience 0` e' documentato come "disabilitato": la Fase 1 deve
+        arrivare in fondo, altrimenti due varianti hanno budget diversi."""
+        model = _FrozenStub()
+        train_loader, val_loader = _loaders()
+        _, metrics = train_supcon(
+            model,
+            train_loader,
+            val_loader,
+            num_epochs=5,
+            learning_rate=1e-3,
+            device=torch.device("cpu"),
+            checkpoint_dir=str(tmp_path),
+            proj_dim=16,
+            use_prototypes=True,
+            warmup_epochs=1,
+            ramp_epochs=1,
+            patience=0,
+        )
+        assert len(metrics["supcon_history"]["train_loss"]) == 5
 
     def test_restore_best_false_keeps_the_last_epoch(self, tmp_path, monkeypatch):
         """Le ablazioni vogliono il modello con cui il metodo finisce, non

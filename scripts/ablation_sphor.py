@@ -131,6 +131,17 @@ def evaluate(name: str) -> dict:
     return results
 
 
+def checkpoint_hashes(names: list[str]) -> dict[str, str | None]:
+    """md5 dei checkpoint: due varianti con lo stesso file sono un errore, non un risultato."""
+    import hashlib
+
+    out: dict[str, str | None] = {}
+    for name in names:
+        path = out_dir(name) / f"best_fold_{FOLD}.pt"
+        out[name] = hashlib.md5(path.read_bytes()).hexdigest()[:12] if path.exists() else None
+    return out
+
+
 def train(name: str) -> None:
     from app.cli.runner import run_experiment
 
@@ -175,7 +186,16 @@ def main() -> int:
                 continue
             train(name)
 
-    report = {}
+    hashes = checkpoint_hashes(names)
+    print("checkpoint:", hashes, flush=True)
+    identical = [
+        (a, b) for i, a in enumerate(names) for b in names[i + 1 :] if hashes[a] and hashes[a] == hashes[b]
+    ]
+    if identical:
+        print("!!! ATTENZIONE: varianti con lo STESSO checkpoint:", identical, flush=True)
+        print("!!! I numeri non sono un confronto tra metodi: controlla selezione e schedule.", flush=True)
+
+    report = {"_checkpoints": hashes, "_identical": identical}
     for name in names:
         report[name] = evaluate(name)
         print(f"--- {name}: {json.dumps(report[name], ensure_ascii=False)}", flush=True)
