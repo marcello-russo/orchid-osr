@@ -323,6 +323,13 @@ quello che è successo fino alla v0.6.0 — `tests/test_core/test_sphor.py` cade
 qualcuno toglie quel `add_param_group`, se i prototipi non si muovono dopo N
 step o se il ramp non parte da 0.
 
+**Numeri della tesi.** I risultati discussi il 29/10 sono quelli prodotti dal
+codice fino alla **v0.5.1**, dove i prototipi erano decorativi. Dalla v0.6.0 il
+metodo è quello vero, quindi un rerun di I-C/II-A/II-B **non riproduce** quei
+numeri: per la tesi si fa checkout di `v0.5.1`, per la demo conta l'ultima run.
+La tesi non si tocca (è già discussa): è una differenza da sapere, non un
+errore da correggere nel testo.
+
 Studio II-A è identico ma esclude *O. garganica* (1.629 immagini note); II-B
 esclude anche *O. majellensis* (1.477). `--sphor` per tutti e tre.
 
