@@ -194,6 +194,32 @@ class TestTrainSupcon:
         assert len(weights) >= 4
         assert any(w > 0 for w in weights)
 
+    def test_early_stopping_cannot_fire_during_the_ramp(self, tmp_path):
+        """Con patience 1 e una KNN piatta, la run deve arrivare almeno alla
+        fine del ramp: selezionare un'epoca del warm-up vorrebbe dire spedire
+        un modello SupCon come se fosse SpHOR (ablazione B e C: stesso
+        checkpoint)."""
+        model = _FrozenStub()
+        train_loader, val_loader = _loaders()
+        _, metrics = train_supcon(
+            model,
+            train_loader,
+            val_loader,
+            num_epochs=10,
+            learning_rate=1e-3,
+            device=torch.device("cpu"),
+            checkpoint_dir=str(tmp_path),
+            proj_dim=16,
+            use_prototypes=True,
+            warmup_epochs=2,
+            ramp_epochs=2,
+            patience=1,
+        )
+        weights = metrics["supcon_history"]["vmf_weight"]
+        # warm-up 2 + ramp 2 = epoca 4 e' la prima a peso pieno, poi patience 1
+        assert len(weights) >= 5
+        assert weights[-1] == pytest.approx(1.0)
+
     def test_prototypes_stay_on_the_unit_sphere(self, tmp_path):
         _, metrics = self._run(tmp_path)
         norms = metrics["sphor"]["prototypes"].norm(dim=1)

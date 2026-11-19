@@ -137,13 +137,16 @@ def train(name: str) -> None:
     kwargs = dict(VARIANTS[name])
     start = time.time()
     print(f"=== variante {name}: {kwargs} ===", flush=True)
+    # Budget fisso per tutte e quattro: con early stopping la variante A
+    # (senza prototipi) si ferma molto prima, e il confronto mischierebbe
+    # l'effetto dei termini SpHOR con un budget di addestramento diverso.
     run_experiment(
         exp_id=EXP,
         model_variant=MODEL,
         fold_index=FOLD,
-        epochs=150,
+        epochs=60,
         ce_epochs=50,
-        patience=15,
+        patience=0,
         tag=f"abl-{name.lower()}",
         warmup_epochs=20,
         ramp_epochs=20,

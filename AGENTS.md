@@ -354,6 +354,14 @@ La Fase 1 di SupCon diventa tre tempi (`--sphor`):
    default 10): ogni foto è tirata verso il prototipo della propria classe,
    quindi i prototipi seguono i dati. `L_rep` li tiene ortogonali.
 
+L'early stopping **non scatta prima della fine del ramp**: se la KNN raggiunge
+il massimo durante il warm-up (succede), con patience 15 la run si fermerebbe
+prima che i termini SpHOR abbiano peso e il modello salvato sarebbe quello del
+warm-up — due varianti diverse darebbero lo stesso checkpoint. È successo
+davvero nell'ablazione (B e C, stesso file): per confrontare le varianti si usa
+un budget fisso (`patience=0`), per il grid il conteggio della patience parte
+dopo il ramp.
+
 I prototipi vivono nello spazio di proiezione e vengono scartati con la
 projection head: il loro effetto resta nel backbone, che è ciò che vedono i
 rivelatori OSR. Per riproducibilità finiscono in un sidecar
