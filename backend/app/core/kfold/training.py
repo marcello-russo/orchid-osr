@@ -500,6 +500,9 @@ def train_fold_supcon(
     pair_weights=None,
     full_finetune=False,
     ncd_mode=False,
+    warmup_epochs=20,
+    vmf_kappa=10.0,
+    ramp_epochs=20,
 ):
     """Two-phase training for SupCon: Phase 1 (contrastive) + Phase 2 (CE fine-tune).
 
@@ -557,7 +560,31 @@ def train_fold_supcon(
         use_prototypes=use_prototypes,
         repulse_weight=repulse_weight,
         pair_weights=pair_weights,
+        warmup_epochs=warmup_epochs,
+        vmf_kappa=vmf_kappa,
+        ramp_epochs=ramp_epochs,
     )
+
+    # Prototipi SpHOR: sidecar accanto al checkpoint, cosi' un rerun e la
+    # valutazione possono ispezionare cosa ha imparato la Fase 1. Il tensore
+    # non entra in fold_metrics (che finisce in JSON).
+    sphor_metrics = supcon_metrics.get("sphor") or {}
+    sphor_prototypes = sphor_metrics.pop("prototypes", None)
+    if sphor_prototypes is not None:
+        sidecar = os.path.splitext(checkpoint_path)[0] + ".sphor.pt"
+        torch.save(
+            {
+                "prototypes": sphor_prototypes,
+                "num_classes": int(num_classes),
+                "proj_dim": int(sphor_prototypes.shape[1]),
+                "kappa": sphor_metrics.get("kappa"),
+                "warmup_epochs": sphor_metrics.get("warmup_epochs"),
+                "ramp_epochs": sphor_metrics.get("ramp_epochs"),
+                "alignment_val": sphor_metrics.get("alignment_val"),
+            },
+            sidecar,
+        )
+        logger.info(f"  Prototipi SpHOR salvati in {sidecar}")
 
     # --- Phase 2: CE fine-tuning (head only) ---
     # Both full_finetune and non-full_finetune branches use the same Phase 2 setup:
@@ -609,12 +636,16 @@ def train_fold_supcon(
         _ncd_ckpt = _os.path.splitext(checkpoint_path)[0] + "_ncd.pt"
         model.save_weights(_ncd_ckpt)
 
-    # --- SpHOR prototype probe (if using prototypes) ---
-    sphor_probe_accuracy = None
-    sphor_probe_f1 = None
+    # --- Sonde: prototipi SpHOR (spazio proiezione) e centroidi (backbone) ---
+    # La sonda vera e' quella calcolata in train_supcon sui prototipi appresi;
+    # quella a centroidi resta come diagnostico del solo backbone.
+    sphor_probe_accuracy = sphor_metrics.get("probe_accuracy")
+    sphor_probe_f1 = sphor_metrics.get("probe_f1")
+    centroid_probe_accuracy = None
+    centroid_probe_f1 = None
 
     if use_prototypes:
-        logger.info("  === SpHOR Prototype Probe (nearest centroid) ===")
+        logger.info("  === Probe a centroidi (backbone, diagnostico) ===")
         model.eval()
         centroids, all_preds, all_labels, embed_dim = {}, [], [], None
 
@@ -669,15 +700,18 @@ def train_fold_supcon(
         all_preds = torch.cat(all_preds)
         all_labels = torch.cat(all_labels)
 
-        sphor_probe_accuracy = accuracy_score(all_labels.numpy(), all_preds.numpy())
-        sphor_probe_f1 = f1_score(all_labels.numpy(), all_preds.numpy(), average="macro")
-        logger.info(f"  SpHOR Probe — Acc: {sphor_probe_accuracy:.4f}, F1: {sphor_probe_f1:.4f}")
+        centroid_probe_accuracy = accuracy_score(all_labels.numpy(), all_preds.numpy())
+        centroid_probe_f1 = f1_score(all_labels.numpy(), all_preds.numpy(), average="macro")
+        logger.info(f"  Probe centroidi — Acc: {centroid_probe_accuracy:.4f}, F1: {centroid_probe_f1:.4f}")
 
     fold_metrics = {
         "best_f1": float(best_f1),
         "best_accuracy": float(best_acc),
         "sphor_probe_accuracy": sphor_probe_accuracy,
         "sphor_probe_f1": sphor_probe_f1,
+        "centroid_probe_accuracy": centroid_probe_accuracy,
+        "centroid_probe_f1": centroid_probe_f1,
+        "sphor": sphor_metrics or None,
         "best_epoch": best_epoch,
         "final_train_loss": float(ce_history["train_loss"][-1]),
         "final_val_loss": float(ce_history["val_loss"][-1]),

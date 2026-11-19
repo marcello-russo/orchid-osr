@@ -44,6 +44,9 @@ backend/users.json
 backend/data/users.json
 backend/data/jwt_secret.txt
 backend/data/orchid.db
+# WAL e shared-memory di SQLite: nascono all'apertura del DB, non sono sorgente
+backend/data/orchid.db-wal
+backend/data/orchid.db-shm
 backend/data/osr_stats/
 
 # --- Documenti non versionati -----------------------------------------------

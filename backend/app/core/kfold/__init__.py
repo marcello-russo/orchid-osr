@@ -58,6 +58,9 @@ def kfold_experiment(
     full_finetune=False,
     optimizer_type=None,
     ncd_mode=False,
+    warmup_epochs=20,
+    vmf_kappa=10.0,
+    ramp_epochs=20,
 ):
     """K-fold cross-validation con augmentation bilanciata per fold.
     optimizer_type: None = usa entry.optimizer dal registry, 'adam' = forza Adam per CE baseline.
@@ -100,6 +103,10 @@ def kfold_experiment(
             "temperature": temperature if loss_type == "supcon" else None,
             "ce_epochs": ce_epochs if loss_type == "supcon" else None,
             "use_prototypes": use_prototypes if loss_type == "supcon" else None,
+            "repulse_weight": repulse_weight if (loss_type == "supcon" and use_prototypes) else None,
+            "warmup_epochs": warmup_epochs if (loss_type == "supcon" and use_prototypes) else None,
+            "vmf_kappa": vmf_kappa if (loss_type == "supcon" and use_prototypes) else None,
+            "ramp_epochs": ramp_epochs if (loss_type == "supcon" and use_prototypes) else None,
             "full_finetune": full_finetune,
             "ncd_mode": ncd_mode if loss_type == "supcon" else None,
             "normalize_embeddings": True if loss_type == "supcon" else False,
@@ -250,6 +257,9 @@ def kfold_experiment(
                         pair_weights=pair_weights,
                         full_finetune=full_finetune,
                         ncd_mode=ncd_mode,
+                        warmup_epochs=warmup_epochs,
+                        vmf_kappa=vmf_kappa,
+                        ramp_epochs=ramp_epochs,
                     )
                 else:
                     model, fold_metrics = train_fold(

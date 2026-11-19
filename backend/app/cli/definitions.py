@@ -94,10 +94,17 @@ EXPERIMENTS: dict[int, dict[str, Any]] = {
         "loss_type": "supcon",
         "ncd_mode": False,
         "phases": ["SupCon + SpHOR", "CE fine-tune"],
-        "recipe": "Due fasi: (1) SupCon + SpHOR: come Exp 2 ma con prototipi ortogonali sferici "
-        "(Spherical Orthogonal Prototypes). Loss addizionale repulsiva "
-        "L_rep = (1/K(K-1)) Σ_{i≠j} cos(θ_ij)² che forza i prototipi "
-        "ad essere ortogonali, massimizzando la copertura angolare sulla sfera. "
+        "recipe": "Due fasi. (1) SupCon + SpHOR in tre tempi: warm-up di sola SupCon "
+        "(20 epoche) in cui le classi trovano la loro forma; poi un prototipo per classe "
+        "(dim 128, L2-normalizzato) inizializzato sul centroide di classe delle feature "
+        "proiettate; da lì la loss è SupCon + w(e)·vMF + λ_rep·L_rep, con w(e) che cresce "
+        "linearmente 0→1 in 20 epoche e λ_rep=0.01. Il termine vMF è un assegnamento hard "
+        "(κ=10): ogni foto è tirata verso il prototipo della propria classe, quindi i "
+        "prototipi seguono i dati invece di restare dove sono nati. "
+        "L_rep = (1/K(K-1)) Σ_{i≠j} cos(θ_ij)² li tiene ortogonali, massimizzando la "
+        "copertura angolare della sfera. I prototipi vivono nello spazio di proiezione e "
+        "sono scartati con la projection head: il loro effetto resta nel backbone, che è "
+        "ciò che vedono i rivelatori OSR. "
         "(2) CE fine-tuning: backbone congelato, testa lineare. "
         "Closed-set: tutte le 6 classi note, nessuna novel class.",
         "description": "SupCon + Spherical Orthogonal Prototypes (SpHOR-style, Exp 3, closed-set)",
@@ -112,9 +119,10 @@ EXPERIMENTS: dict[int, dict[str, Any]] = {
         "loss_type": "supcon",
         "ncd_mode": True,
         "phases": ["SupCon + SpHOR", "CE fine-tune"],
-        "recipe": "Identico a Exp 3 (150 epoche, patience 15 in entrambe le "
-        "fasi). Novità: O. garganica è esclusa dal training (5 classi note) "
-        "e usata solo in test come novel class per la valutazione OSR.",
+        "recipe": "Identico a Exp 3 (warm-up 20 ep, vMF hard κ=10 con ramp 20 ep, "
+        "λ_rep=0.01, 150 epoche e patience 15 in entrambe le fasi). Novità: O. garganica "
+        "è esclusa dal training (5 classi note) e usata solo in test come novel class "
+        "per la valutazione OSR.",
         "description": "SpHOR with O. garganica as hidden novel class (NCD)",
     },
     5: {
