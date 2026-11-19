@@ -63,9 +63,19 @@ class SupConLoss(nn.Module):  # type: ignore[misc]
 class SphericalPrototypes(nn.Module):  # type: ignore[misc]
     """Orthogonal prototypes on the unit sphere for SpHOR-style open-set.
 
-    Each class has a prototype vector on the unit sphere. Prototypes are
-    encouraged to be orthogonal via a repulse loss, creating a well-structured
-    latent space that improves open-set detection.
+    Each class owns a prototype vector on the unit sphere. Two terms act on
+    them during Phase 1:
+
+    - a von Mises-Fisher (vMF) term with **hard assignment**: every sample is
+      pulled towards the prototype of its own class, so the prototypes follow
+      the data instead of staying where they were initialised;
+    - a repulsion term that keeps the prototypes mutually orthogonal, which
+      maximises the angular coverage of the sphere and leaves room between
+      cones for unknown classes.
+
+    The prototypes live in the SupCon *projection* space (they are discarded
+    with the projection head at the end of Phase 1): their job is to shape the
+    backbone representation, which is what the open-set detectors then see.
 
     Args:
     ----
@@ -79,6 +89,66 @@ class SphericalPrototypes(nn.Module):  # type: ignore[misc]
         self.num_classes = num_classes
         self.prototypes = nn.Parameter(torch.zeros(num_classes, proj_dim))
         nn.init.kaiming_normal_(self.prototypes)
+
+    @torch.no_grad()
+    def init_from_features(self, features: torch.Tensor, labels: torch.Tensor) -> float:
+        """Initialise each prototype on the class centroid of the features.
+
+        Called at the end of the warm-up: the prototypes start from where the
+        classes already are, instead of from random directions.
+
+        Returns
+        -------
+            The mean cosine between prototype k and the centroid of class k
+            (1.0 = perfectly centred). Classes with no sample keep their
+            current prototype and do not contribute.
+
+        """
+        feats = F.normalize(features.detach().float().to(self.prototypes.device), dim=1)
+        labels = labels.detach().view(-1).to(self.prototypes.device)
+        updated = self.prototypes.detach().clone()
+        for k in range(self.num_classes):
+            mask = labels == k
+            if bool(mask.any()):
+                updated[k] = feats[mask].mean(dim=0)
+        self.prototypes.data.copy_(updated)
+        return self.alignment(features, labels)
+
+    @torch.no_grad()
+    def alignment(self, features: torch.Tensor, labels: torch.Tensor) -> float:
+        """Mean cosine between prototype k and the centroid of class k."""
+        feats = F.normalize(features.detach().float().to(self.prototypes.device), dim=1)
+        labels = labels.detach().view(-1).to(self.prototypes.device)
+        prots = F.normalize(self.prototypes, dim=1)
+        cosines = []
+        for k in range(self.num_classes):
+            mask = labels == k
+            if bool(mask.any()):
+                cosines.append(float((F.normalize(feats[mask].mean(dim=0), dim=0) * prots[k]).sum()))
+        return float(sum(cosines) / len(cosines)) if cosines else 0.0
+
+    def vmf_loss(self, features: torch.Tensor, labels: torch.Tensor, kappa: float = 10.0) -> torch.Tensor:
+        """Hard-assignment vMF negative log-likelihood.
+
+        With L2-normalised features and prototypes the von Mises-Fisher
+        log-density is proportional to ``kappa * cos(f, p_k)``, so the
+        supervised term is the cross-entropy of ``kappa * cosine`` against the
+        true class: every sample is assigned to (and only to) its own
+        prototype.
+
+        Args:
+        ----
+            features: (batch_size, proj_dim) — L2-normalised projection.
+            labels: (batch_size,) — class indices in ``[0, num_classes)``.
+            kappa: concentration of the vMF distribution (higher = sharper).
+
+        Returns
+        -------
+            Scalar loss.
+
+        """
+        logits = kappa * self.forward(features)
+        return F.cross_entropy(logits, labels.view(-1))
 
     def forward(self, features: torch.Tensor) -> torch.Tensor:
         """Compute similarity scores between features and prototypes.
@@ -110,5 +180,8 @@ class SphericalPrototypes(nn.Module):  # type: ignore[misc]
         prots = F.normalize(self.prototypes, dim=1)
         sim = torch.mm(prots, prots.T)
         off_diag = sim - torch.eye(self.num_classes, device=sim.device)
-        loss = (off_diag**2).sum() / (self.num_classes * (self.num_classes - 1))
+        denom = self.num_classes * (self.num_classes - 1)
+        if denom <= 0:  # una sola classe: non c'e' nulla da respingere
+            return torch.zeros((), device=sim.device, requires_grad=True)
+        loss = (off_diag**2).sum() / denom
         return loss

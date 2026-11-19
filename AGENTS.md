@@ -293,10 +293,38 @@ In container `DB_PATH` punta a `/data/orchid.db` (volume nominato): senza, il lo
 - Sync via CLI (logic in `app/hf/`, tested): `orchid hf download|sync|upload-models|upload-ncd` (requires `HF_TOKEN`)
 - All'avvio l'entrypoint sincronizza in background esperimenti e pesi nel volume `/data` (con lock, skip per dimensione)
 
-### Studio I-C (SpHOR) and Studio II-A (SpHOR-NCD)
-- Studio I-C adds Spherical Orthogonal Prototypes (SpHOR) on top of SupCon. Prototypes are L2-normalized hypersphere embeddings with repulsion loss.
-- Studio II-A is identical but excludes *O. garganica* from training (1.629 known images) — hidden novel class for OSR + GCD evaluation.
-- `--sphor` per entrambi.
+### Studio I-C (SpHOR) e Studio II-A/II-B
+La Fase 1 di SupCon diventa tre tempi (`--sphor`):
+
+1. **warm-up** (`--warmup-epochs`, default 20): sola SupCon, nessun vincolo
+   geometrico. Le classi trovano la loro forma prima che si intervenga.
+2. **init**: un prototipo per classe (128 dim) viene copiato sul centroide di
+   classe delle feature proiettate (`SphericalPrototypes.init_from_features`).
+   La distanza coseno media viene loggata: se non è ~1, l'init non ha trovato
+   la classe.
+3. **fase congiunta**: `SupCon + w(e)·vMF + λ_rep·L_rep`, con
+   `w(e) = min(1, (e - warmup + 1)/ramp)` (`--ramp-epochs`, default 20) e
+   λ_rep=0,01. Il termine vMF è un assegnamento **hard** (κ=`--vmf-kappa`,
+   default 10): ogni foto è tirata verso il prototipo della propria classe,
+   quindi i prototipi seguono i dati. `L_rep` li tiene ortogonali.
+
+I prototipi vivono nello spazio di proiezione e vengono scartati con la
+projection head: il loro effetto resta nel backbone, che è ciò che vedono i
+rivelatori OSR. Per riproducibilità finiscono in un sidecar
+`best_fold_<n>.sphor.pt` accanto al checkpoint, e `fold_metrics["sphor"]` porta
+allineamento e sonda (accuracy/F1 sullo spazio di proiezione). La vecchia sonda
+a centroidi resta come `centroid_probe_*`, diagnostico del solo backbone.
+
+**Il dettaglio che rende il metodo reale o finto**: i prototipi devono stare
+nell'optimizer (`optimizer.add_param_group` in `train_supcon`). Senza, il
+gradiente della repulsione si accumula su `.grad` e non viene mai applicato:
+`--sphor` diventa un no-op e l'esperimento è solo un seed diverso. È esattamente
+quello che è successo fino alla v0.6.0 — `tests/test_core/test_sphor.py` cade se
+qualcuno toglie quel `add_param_group`, se i prototipi non si muovono dopo N
+step o se il ramp non parte da 0.
+
+Studio II-A è identico ma esclude *O. garganica* (1.629 immagini note); II-B
+esclude anche *O. majellensis* (1.477). `--sphor` per tutti e tre.
 
 ### Studio II-A results (OSR + GCD)
 - **OSR**: best AUROC 0.875 (DINOv2-Base + SpHOR + Ensemble), ConvNeXt-Tiny 0.850.

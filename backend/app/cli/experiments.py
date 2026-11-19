@@ -393,6 +393,9 @@ def _run_experiment_loop(args, phases: list[str], exp_ids: list[int]) -> int:
                 ce_epochs=exp_ce,
                 use_prototypes=args.sphor,
                 repulse_weight=args.repulse_weight,
+                warmup_epochs=args.warmup_epochs,
+                vmf_kappa=args.vmf_kappa,
+                ramp_epochs=args.ramp_epochs,
                 pair_weights=(
                     _build_pair_weights(
                         args.hard_weight,
@@ -585,6 +588,24 @@ Examples:
     )
     parser.add_argument(
         "--repulse-weight", type=float, default=0.01, help="Weight for prototype repulsion loss (default: 0.01)"
+    )
+    parser.add_argument(
+        "--warmup-epochs",
+        type=int,
+        default=20,
+        help="Epoche di solo SupCon prima di attivare i prototipi SpHOR (default: 20)",
+    )
+    parser.add_argument(
+        "--vmf-kappa",
+        type=float,
+        default=10.0,
+        help="Concentrazione kappa della loss vMF (assegnamento hard) in SpHOR (default: 10.0)",
+    )
+    parser.add_argument(
+        "--ramp-epochs",
+        type=int,
+        default=20,
+        help="Epoche su cui il peso della loss vMF cresce linearmente 0 -> 1 (default: 20)",
     )
     parser.add_argument(
         "--full-finetune", action="store_true", help="Deep fine-tuning (LoRA++ + partial unfreeze) in Phase 2 (Exp 10)"

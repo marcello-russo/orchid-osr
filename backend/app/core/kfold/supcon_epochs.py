@@ -8,6 +8,7 @@ import os
 import numpy as np
 import torch
 import torch.nn.functional as F
+from sklearn.metrics import accuracy_score, f1_score
 from torch import nn
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
@@ -58,15 +59,32 @@ def train_supcon_one_epoch(
     optimizer,
     device: torch.device,
     gradient_accumulation_steps: int = 1,
-) -> float:
+    vmf_weight: float = 0.0,
+    vmf_kappa: float = 10.0,
+    repulse_weight: float | None = None,
+) -> dict[str, float]:
+    """One Phase-1 epoch: SupCon, plus the SpHOR terms when they are active.
+
+    ``vmf_weight`` is the ramp coefficient of the vMF hard-assignment term
+    (0 during the warm-up, then 0 -> 1). ``repulse_weight`` overrides the
+    weight stored on the criterion; ``None`` keeps it.
+
+    Returns
+    -------
+        Mean per-sample values of ``loss``, ``supcon``, ``vmf`` and
+        ``repulse`` over the epoch.
+
+    """
     model.train()
     proj_head.train()
-    running_loss = 0.0
+    running = {"loss": 0.0, "supcon": 0.0, "vmf": 0.0, "repulse": 0.0}
     num_samples = 0
     optimizer.zero_grad(set_to_none=True)
 
     prototypes = getattr(criterion, "prototypes", None)
-    repulse_weight = getattr(criterion, "_repulse_weight", 0.0)
+    if repulse_weight is None:
+        repulse_weight = getattr(criterion, "_repulse_weight", 0.0)
+    zero = torch.zeros((), device=device)
 
     for batch_idx, (inputs, labels, _) in enumerate(train_loader):
         inputs, labels = inputs.to(device, non_blocking=True), labels.to(device, non_blocking=True)
@@ -76,24 +94,75 @@ def train_supcon_one_epoch(
         proj_norm = torch.norm(projected, dim=1, keepdim=True)
         projected = projected / (proj_norm + 1e-8)
 
-        loss = criterion(projected, labels) / gradient_accumulation_steps
+        supcon = criterion(projected, labels)
+        loss = supcon / gradient_accumulation_steps
 
+        vmf = zero
+        if prototypes is not None and vmf_weight > 0:
+            vmf = prototypes.vmf_loss(projected, labels, kappa=vmf_kappa)
+            loss = loss + vmf_weight * vmf / gradient_accumulation_steps
+
+        repulse = zero
         if prototypes is not None and repulse_weight > 0:
-            repulse = prototypes.repulse_loss() * repulse_weight / gradient_accumulation_steps
-            loss = loss + repulse
+            repulse = prototypes.repulse_loss()
+            loss = loss + repulse_weight * repulse / gradient_accumulation_steps
 
         loss.backward()
 
         if (batch_idx + 1) % gradient_accumulation_steps == 0 or (batch_idx + 1) == len(train_loader):
             torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=2.0)
             torch.nn.utils.clip_grad_norm_(proj_head.parameters(), max_norm=2.0)
+            if prototypes is not None:
+                torch.nn.utils.clip_grad_norm_([prototypes.prototypes], max_norm=2.0)
             optimizer.step()
             optimizer.zero_grad(set_to_none=True)
 
-        running_loss += loss.item() * gradient_accumulation_steps * inputs.size(0)
-        num_samples += inputs.size(0)
+        n = inputs.size(0)
+        running["loss"] += float(loss.item()) * gradient_accumulation_steps * n
+        running["supcon"] += float(supcon.item()) * n
+        running["vmf"] += float(vmf.item()) * n
+        running["repulse"] += float(repulse.item()) * n
+        num_samples += n
 
-    return running_loss / max(num_samples, 1)
+    return {key: value / max(num_samples, 1) for key, value in running.items()}
+
+
+def _projected_embeddings(
+    model: ClassifierModel,
+    proj_head: ProjectionHead,
+    data_loader,
+    device: torch.device,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """L2-normalised projection-space features and labels for a whole loader."""
+    was_training = model.training
+    model.eval()
+    proj_head.eval()
+    feats, labels = [], []
+    with torch.no_grad():
+        for inputs, targets, _ in data_loader:
+            inputs = inputs.to(device, non_blocking=True)
+            projected = proj_head(model.get_embeddings(inputs))
+            feats.append(F.normalize(projected, dim=1).cpu())
+            labels.append(targets.cpu())
+    if was_training:
+        model.train()
+        proj_head.train()
+    return torch.cat(feats), torch.cat(labels)
+
+
+def _prototype_probe(
+    prototypes,
+    features: torch.Tensor,
+    labels: torch.Tensor,
+) -> tuple[float, float]:
+    """Nearest-prototype accuracy/F1 in projection space, using the learned prototypes."""
+    with torch.no_grad():
+        sims = prototypes(features.to(prototypes.prototypes.device))
+        preds = sims.argmax(dim=1).cpu()
+    return (
+        float(accuracy_score(labels.numpy(), preds.numpy())),
+        float(f1_score(labels.numpy(), preds.numpy(), average="macro")),
+    )
 
 
 def validate_supcon(
@@ -128,6 +197,18 @@ def validate_supcon(
     return knn_acc, avg_norm
 
 
+def _init_prototypes_from_loader(
+    model: ClassifierModel,
+    proj_head: ProjectionHead,
+    loader,
+    prototypes,
+    device: torch.device,
+) -> float:
+    """Init dei prototipi sui centroidi di classe (fine del warm-up)."""
+    feats, labels = _projected_embeddings(model, proj_head, loader, device)
+    return prototypes.init_from_features(feats, labels)
+
+
 def train_supcon(
     model: ClassifierModel,
     train_loader,
@@ -146,12 +227,27 @@ def train_supcon(
     use_prototypes: bool = False,
     repulse_weight: float = 0.05,
     pair_weights: dict | None = None,
+    warmup_epochs: int = 20,
+    vmf_kappa: float = 10.0,
+    ramp_epochs: int = 20,
 ) -> tuple[ClassifierModel, dict]:
     """Phase 1: train backbone + projection head with SupCon loss.
 
-    If use_prototypes=True, adds orthogonal prototype vectors (SpHOR-style)
-    with a repulsion loss that encourages class prototypes to be orthogonal
-    on the unit sphere, improving open-set separability.
+    With ``use_prototypes=True`` the phase is split in two:
+
+    1. **warm-up** (``warmup_epochs``): plain SupCon. The classes find their
+       shape before any geometric constraint is applied.
+    2. **joint phase**: the prototypes are initialised on the class centroids
+       of the projected features, then the loss becomes
+       ``SupCon + w(e) * vMF + repulse_weight * L_rep``, where ``w(e)`` grows
+       linearly from 0 to 1 over ``ramp_epochs`` epochs. The vMF term is a
+       hard assignment (each sample to its own prototype), so the prototypes
+       are pulled towards the data instead of staying where they were
+       initialised.
+
+    The prototypes live in the projection space and are discarded with the
+    projection head: they shape the backbone, which is what the open-set
+    detectors use. They are returned in ``metrics["sphor"]`` for persistence.
 
     If pair_weights is provided, applies hard negative mining: specific class
     pairs receive higher loss weight to force separation of difficult pairs.
@@ -164,15 +260,25 @@ def train_supcon(
 
     criterion = SupConLoss(temperature=temperature, pair_weights=pair_weights)
 
+    prototypes = None
     if use_prototypes:
         from app.core.losses import SphericalPrototypes
 
         prototypes = SphericalPrototypes(model.num_classes, proj_dim).to(device)
         criterion.prototypes = prototypes
         criterion._repulse_weight = repulse_weight
-        logger.info(f"  Spherical prototypes: {model.num_classes} classes, repulse={repulse_weight}")
+        logger.info(
+            f"  Spherical prototypes: {model.num_classes} classi, dim {proj_dim}, "
+            f"warm-up {warmup_epochs} ep, ramp {ramp_epochs} ep, kappa={vmf_kappa}, repulse={repulse_weight}"
+        )
 
     optimizer = _make_optimizer(model, proj_head, learning_rate, optimizer_type, weight_decay)
+    if prototypes is not None:
+        # I prototipi DEVONO stare nell'optimizer: senza questo il gradiente
+        # della repulsione si accumula su .grad e non viene mai applicato, e il
+        # metodo diventa un no-op (era il bug della I-C fino alla v0.6.0).
+        # La guardia vive in tests/test_sphor.py.
+        optimizer.add_param_group({"params": [prototypes.prototypes], "lr": learning_rate, "weight_decay": 0.0})
     scheduler = ReduceLROnPlateau(optimizer, mode="max", factor=0.1, patience=5)
 
     best_knn = 0.0
@@ -180,7 +286,22 @@ def train_supcon(
     epochs_no_improve = 0
     start_epoch = 0
 
-    history = {"train_loss": [], "val_knn_acc": [], "val_embedding_norm": []}
+    history: dict[str, list[float]] = {
+        "train_loss": [],
+        "val_knn_acc": [],
+        "val_embedding_norm": [],
+        "supcon_loss": [],
+        "vmf_loss": [],
+        "repulse_loss": [],
+        "vmf_weight": [],
+    }
+
+    # Il warm-up non puo' mangiarsi l'intera fase: almeno un'epoca congiunta.
+    warmup = max(0, min(int(warmup_epochs), max(num_epochs - 1, 0)))
+    ramp = max(1, int(ramp_epochs))
+    if use_prototypes and warmup != int(warmup_epochs):
+        logger.warning(f"  warmup_epochs {warmup_epochs} ridotto a {warmup} (num_epochs={num_epochs})")
+    protos_ready = False
 
     # Resume
     ckpt_path = None
@@ -190,33 +311,70 @@ def train_supcon(
 
     if resume and ckpt_path and os.path.exists(ckpt_path):
         ckpt = torch.load(ckpt_path, map_location=device)
-        model.load_state_dict(ckpt["model_state_dict"])
-        proj_head.load_state_dict(ckpt["proj_head_state_dict"])
-        if use_prototypes and "prototypes_state_dict" in ckpt:
-            prototypes.load_state_dict(ckpt["prototypes_state_dict"])
-        optimizer.load_state_dict(ckpt["optimizer_state_dict"])
-        scheduler.load_state_dict(ckpt["scheduler_state_dict"])
-        start_epoch = ckpt["epoch"] + 1
-        best_knn = ckpt["best_knn"]
-        epochs_no_improve = ckpt["epochs_no_improve"]
-        history = ckpt["history"]
-        best_backbone_wts = copy.deepcopy(model.state_dict())
-        logger.info(f"SupCon resumed from epoch {start_epoch}, best KNN: {best_knn:.4f}")
+        if use_prototypes and "prototypes_state_dict" not in ckpt:
+            # Checkpoint di un run precedente al metodo SpHOR vero: ripartire
+            # da li' significherebbe mescolare due loss diverse.
+            logger.warning("Checkpoint SupCon senza prototipi: riparto da zero (metodo cambiato)")
+        else:
+            model.load_state_dict(ckpt["model_state_dict"])
+            proj_head.load_state_dict(ckpt["proj_head_state_dict"])
+            if prototypes is not None:
+                prototypes.load_state_dict(ckpt["prototypes_state_dict"])
+            optimizer.load_state_dict(ckpt["optimizer_state_dict"])
+            scheduler.load_state_dict(ckpt["scheduler_state_dict"])
+            start_epoch = ckpt["epoch"] + 1
+            best_knn = ckpt["best_knn"]
+            epochs_no_improve = ckpt["epochs_no_improve"]
+            for key, value in ckpt["history"].items():
+                history[key] = value
+            best_backbone_wts = copy.deepcopy(model.state_dict())
+            protos_ready = prototypes is not None and start_epoch >= warmup
+            logger.info(f"SupCon resumed from epoch {start_epoch}, best KNN: {best_knn:.4f}")
 
     for epoch in range(start_epoch, num_epochs):
-        logger.info(f"[SupCon] Epoch {epoch + 1}/{num_epochs}")
+        in_warmup = prototypes is not None and epoch < warmup
+        if prototypes is not None and not protos_ready and not in_warmup:
+            alignment = _init_prototypes_from_loader(model, proj_head, train_loader, prototypes, device)
+            protos_ready = True
+            logger.info(f"[SupCon] Prototipi inizializzati sui centroidi (cos medio {alignment:.4f})")
 
-        train_loss = train_supcon_one_epoch(
-            model, proj_head, train_loader, criterion, optimizer, device, gradient_accumulation_steps
+        vmf_weight = 0.0 if (prototypes is None or in_warmup) else min(1.0, (epoch - warmup + 1) / ramp)
+        repulse_now = 0.0 if (prototypes is None or in_warmup) else repulse_weight
+
+        logger.info(
+            f"[SupCon] Epoch {epoch + 1}/{num_epochs}"
+            + (" (warm-up, solo SupCon)" if in_warmup else f" (vMF w={vmf_weight:.2f}, repulse={repulse_now})")
         )
+
+        parts = train_supcon_one_epoch(
+            model,
+            proj_head,
+            train_loader,
+            criterion,
+            optimizer,
+            device,
+            gradient_accumulation_steps,
+            vmf_weight=vmf_weight,
+            vmf_kappa=vmf_kappa,
+            repulse_weight=repulse_now,
+        )
+        train_loss = parts["loss"]
 
         knn_acc, avg_norm = validate_supcon(model, val_loader, device)
 
         history["train_loss"].append(train_loss)
         history["val_knn_acc"].append(knn_acc)
         history["val_embedding_norm"].append(avg_norm)
+        history["supcon_loss"].append(parts["supcon"])
+        history["vmf_loss"].append(parts["vmf"])
+        history["repulse_loss"].append(parts["repulse"])
+        history["vmf_weight"].append(vmf_weight)
 
-        logger.info(f"[SupCon] Train Loss: {train_loss:.4f} | Val KNN Acc: {knn_acc:.4f} | Emb Norm: {avg_norm:.4f}")
+        logger.info(
+            f"[SupCon] Train Loss: {train_loss:.4f} (supcon {parts['supcon']:.4f}, "
+            f"vmf {parts['vmf']:.4f}, rep {parts['repulse']:.4f}) | "
+            f"Val KNN Acc: {knn_acc:.4f} | Emb Norm: {avg_norm:.4f}"
+        )
 
         if knn_acc > best_knn:
             best_knn = knn_acc
@@ -237,7 +395,7 @@ def train_supcon(
                 "epochs_no_improve": epochs_no_improve,
                 "history": history,
             }
-            if use_prototypes:
+            if prototypes is not None:
                 ckpt_data["prototypes_state_dict"] = prototypes.state_dict()
             tmp_path = ckpt_path + ".tmp"
             torch.save(ckpt_data, tmp_path)
@@ -248,6 +406,30 @@ def train_supcon(
             break
 
         scheduler.step(knn_acc)
+
+    # Sonda SpHOR sul modello che ha appena finito la Fase 1, PRIMA di
+    # ripristinare i pesi migliori: cosi' prototipi e backbone sono la coppia
+    # coerente. Il checkpoint salvato resta quello con la KNN migliore, e la
+    # sonda a centroidi in train_fold_supcon misura quello.
+    sphor_metrics: dict = {}
+    if prototypes is not None:
+        feats, labels = _projected_embeddings(model, proj_head, val_loader, device)
+        probe_acc, probe_f1 = _prototype_probe(prototypes, feats, labels)
+        alignment = prototypes.alignment(feats, labels)
+        sphor_metrics = {
+            "warmup_epochs": warmup,
+            "ramp_epochs": ramp,
+            "kappa": float(vmf_kappa),
+            "repulse_weight": float(repulse_weight),
+            "alignment_val": alignment,
+            "probe_accuracy": probe_acc,
+            "probe_f1": probe_f1,
+            "prototypes": prototypes.prototypes.detach().cpu().clone(),
+        }
+        logger.info(
+            f"  SpHOR — prototipi: cos medio col centroide {alignment:.4f} | "
+            f"probe (spazio proiezione) Acc {probe_acc:.4f}, F1 {probe_f1:.4f}"
+        )
 
     model.load_state_dict(best_backbone_wts)
     logger.info(f"[SupCon] Phase 1 complete. Best KNN Acc: {best_knn:.4f}")
@@ -261,6 +443,7 @@ def train_supcon(
     return model, {
         "best_knn_acc": best_knn,
         "supcon_history": history,
+        "sphor": sphor_metrics,
     }
 
 
