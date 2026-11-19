@@ -88,6 +88,36 @@ docker compose -f compose.training.yml run --rm training \
 `compose.yml` è il compose **di produzione** (immagine GHCR pinnata, nessun build):
 non si usa in locale.
 
+### Training lungo: watchdog di alimentazione
+
+Su questo portatile il caricatore **non tiene il passo della GPU**: con l'AC
+collegato la batteria scende lo stesso (misurato: `status=Discharging` con
+`AC/online=1`). Un training di ore senza guardia rischia lo spegnimento a metà
+fold.
+
+`scripts/power-watchdog.py` sorveglia il processo e i suoi discendenti (worker
+del DataLoader compresi) e li ferma con `SIGSTOP` sotto la soglia, li riprende
+con `SIGCONT` sopra la soglia alta:
+
+```bash
+python scripts/power-watchdog.py --pidfile /tmp/opencode/ablation.pid   --pause-at 35 --resume-at 60          # isteresi: pausa ≤35%, ripresa ≥60%
+python scripts/power-watchdog.py --pid 1234 --once --dry-run   # prova
+```
+
+`SIGSTOP`/`SIGCONT` e non un checkpoint: il processo resta congelato con il suo
+contesto CUDA, quindi non si perde né si corrompe niente. Con il cavo staccato
+si mette in pausa già sotto il 90% (senza fonte la macchina muore in fretta);
+con l'AC collegato vale la sola isteresi, altrimenti sotto carico non partirebbe
+mai. Lo stato è in `~/.local/state/orchid/power-watchdog.json`, così un
+watchdog riavviato sa se il processo era in pausa. `tests/test_power_watchdog.py`
+copre la decisione (isteresi, scarica lenta, cavo staccato, pid morto) e fa un
+test reale di `SIGSTOP`/`SIGCONT` su un processo vivo.
+
+`scripts/ablation_sphor.py` è l'ablazione che decide il metodo SpHOR: quattro
+varianti (SupCon, +vMF, +repulsione hinge, κ più alto) su una fold di II-A con
+DINOv2-Small, misurate in AUROC open-set. Gira sulla stessa macchina, quindi
+sotto lo stesso watchdog.
+
 ## Deploy
 
 Build in CI, deploy da questa macchina (la VPS è raggiungibile solo via tailnet).
