@@ -147,6 +147,10 @@ def train(name: str) -> None:
         epochs=60,
         ce_epochs=50,
         patience=0,
+        # Il modello da valutare e' quello con cui il metodo finisce (ultima
+        # epoca, peso pieno), non l'epoca migliore per KNN: su SpHOR quella
+        # cade nel warm-up e due varianti darebbero lo stesso checkpoint.
+        restore_best=False,
         tag=f"abl-{name.lower()}",
         warmup_epochs=20,
         ramp_epochs=20,

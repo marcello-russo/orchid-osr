@@ -63,6 +63,7 @@ def kfold_experiment(
     ramp_epochs=20,
     repulse_mode="squared",
     repulse_threshold=0.3,
+    restore_best=True,
 ):
     """K-fold cross-validation con augmentation bilanciata per fold.
     optimizer_type: None = usa entry.optimizer dal registry, 'adam' = forza Adam per CE baseline.
@@ -111,6 +112,7 @@ def kfold_experiment(
             "ramp_epochs": ramp_epochs if (loss_type == "supcon" and use_prototypes) else None,
             "repulse_mode": repulse_mode if (loss_type == "supcon" and use_prototypes) else None,
             "repulse_threshold": repulse_threshold if (loss_type == "supcon" and use_prototypes) else None,
+            "restore_best": restore_best if loss_type == "supcon" else None,
             "full_finetune": full_finetune,
             "ncd_mode": ncd_mode if loss_type == "supcon" else None,
             "normalize_embeddings": True if loss_type == "supcon" else False,
@@ -280,6 +282,7 @@ def kfold_experiment(
                         ramp_epochs=ramp_epochs,
                         repulse_mode=repulse_mode,
                         repulse_threshold=repulse_threshold,
+                        restore_best=restore_best,
                     )
                 else:
                     model, fold_metrics = train_fold(
