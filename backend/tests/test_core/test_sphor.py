@@ -34,6 +34,13 @@ class _StubModel(nn.Module):
         return self.net(x)
 
 
+class _FrozenStub(_StubModel):
+    """Embedding costanti: la KNN di validazione non migliora mai."""
+
+    def get_embeddings(self, x: torch.Tensor) -> torch.Tensor:
+        return torch.ones(x.shape[0], self.embedding_dim, device=x.device)
+
+
 class _TripleDataset(Dataset):
     """(features, label, path) come i loader veri del progetto."""
 
@@ -64,8 +71,10 @@ class TestPrototypes:
         labels = torch.tensor([0, 0, 1])
         alignment = prots.init_from_features(feats, labels)
         assert alignment > 0.99
-        normalized = torch.nn.functional.normalize(prots.prototypes.detach(), dim=1)
-        assert torch.allclose(normalized[0], feats[0], atol=1e-5)
+        stored = prots.prototypes.detach()
+        # il parametro salvato e' gia' unitario, non solo normalizzato in forward
+        assert torch.allclose(stored.norm(dim=1), torch.ones(3), atol=1e-5)
+        assert torch.allclose(stored[0], feats[0], atol=1e-5)
 
     def test_vmf_loss_is_lower_when_features_sit_on_their_prototype(self):
         prots = SphericalPrototypes(num_classes=2, proj_dim=4)
@@ -160,6 +169,56 @@ class TestTrainSupcon:
         _, metrics = self._run(tmp_path)
         for key, values in metrics["supcon_history"].items():
             assert all(isinstance(v, float) for v in values), key
+
+    def test_early_stopping_does_not_cut_the_warmup(self, tmp_path):
+        """Con una KNN che non migliora, patience scatta all'epoca 0: il warm-up
+        non deve essere tagliato, altrimenti i prototipi non vengono mai
+        inizializzati e l'esperimento SpHOR finisce senza SpHOR."""
+        model = _FrozenStub()
+        train_loader, val_loader = _loaders()
+        _, metrics = train_supcon(
+            model,
+            train_loader,
+            val_loader,
+            num_epochs=10,
+            learning_rate=1e-3,
+            device=torch.device("cpu"),
+            checkpoint_dir=str(tmp_path),
+            proj_dim=16,
+            use_prototypes=True,
+            warmup_epochs=3,
+            ramp_epochs=2,
+            patience=1,
+        )
+        weights = metrics["supcon_history"]["vmf_weight"]
+        assert len(weights) >= 4
+        assert any(w > 0 for w in weights)
+
+    def test_prototypes_stay_on_the_unit_sphere(self, tmp_path):
+        _, metrics = self._run(tmp_path)
+        norms = metrics["sphor"]["prototypes"].norm(dim=1)
+        assert torch.allclose(norms, torch.ones_like(norms), atol=1e-5)
+
+    def test_resume_with_incompatible_optimizer_restarts(self, tmp_path):
+        """Un checkpoint con 2 param group (run senza SpHOR) non deve far
+        crashare il resume con SpHOR acceso: si riparte da zero."""
+        torch.save(
+            {
+                "epoch": 1,
+                "model_state_dict": _StubModel().state_dict(),
+                "proj_head_state_dict": ProjectionHead(32, 16).state_dict(),
+                "prototypes_state_dict": SphericalPrototypes(3, 16).state_dict(),
+                # 1 solo param group = run senza SpHOR (i prototipi non c'erano)
+                "optimizer_state_dict": {"state": [], "param_groups": [{}]},
+                "scheduler_state_dict": {},
+                "best_knn": 0.9,
+                "epochs_no_improve": 0,
+                "history": {"train_loss": [1.0, 0.9], "val_knn_acc": [0.5, 0.5], "val_embedding_norm": [1.0, 1.0]},
+            },
+            tmp_path / "last_ckpt_supcon.pt",
+        )
+        _, metrics = self._run(tmp_path, epochs=3, resume=True)
+        assert len(metrics["supcon_history"]["train_loss"]) == 3
 
     def test_checkpoint_without_prototypes_restarts_instead_of_crashing(self, tmp_path):
         _, _ = self._run(tmp_path, epochs=2)
