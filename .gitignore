@@ -71,4 +71,5 @@ ProjectDocker/
 *_1/
 *_2/
 *_adapter/
-
+# output dell'ablazione SpHOR (artefatto, non sorgente)
+ablation_sphor.json
