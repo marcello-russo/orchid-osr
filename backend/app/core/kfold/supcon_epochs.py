@@ -237,6 +237,8 @@ def train_supcon(
     warmup_epochs: int = 20,
     vmf_kappa: float = 10.0,
     ramp_epochs: int = 20,
+    repulse_mode: str = "squared",
+    repulse_threshold: float = 0.3,
 ) -> tuple[ClassifierModel, dict]:
     """Phase 1: train backbone + projection head with SupCon loss.
 
@@ -271,12 +273,18 @@ def train_supcon(
     if use_prototypes:
         from app.core.losses import SphericalPrototypes
 
-        prototypes = SphericalPrototypes(model.num_classes, proj_dim).to(device)
+        prototypes = SphericalPrototypes(
+            model.num_classes,
+            proj_dim,
+            repulse_mode=repulse_mode,
+            repulse_threshold=repulse_threshold,
+        ).to(device)
         criterion.prototypes = prototypes
         criterion._repulse_weight = repulse_weight
         logger.info(
             f"  Spherical prototypes: {model.num_classes} classi, dim {proj_dim}, "
-            f"warm-up {warmup_epochs} ep, ramp {ramp_epochs} ep, kappa={vmf_kappa}, repulse={repulse_weight}"
+            f"warm-up {warmup_epochs} ep, ramp {ramp_epochs} ep, kappa={vmf_kappa}, "
+            f"repulse={repulse_weight} ({repulse_mode}, soglia {repulse_threshold})"
         )
 
     optimizer = _make_optimizer(model, proj_head, learning_rate, optimizer_type, weight_decay)
@@ -446,6 +454,8 @@ def train_supcon(
             "ramp_epochs": ramp,
             "kappa": float(vmf_kappa),
             "repulse_weight": float(repulse_weight),
+            "repulse_mode": repulse_mode,
+            "repulse_threshold": float(repulse_threshold),
             "alignment_val": alignment,
             "probe_accuracy": probe_acc,
             "probe_f1": probe_f1,

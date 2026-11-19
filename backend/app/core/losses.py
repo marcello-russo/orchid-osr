@@ -84,9 +84,19 @@ class SphericalPrototypes(nn.Module):  # type: ignore[misc]
 
     """
 
-    def __init__(self, num_classes: int, proj_dim: int = 128) -> None:
+    def __init__(
+        self,
+        num_classes: int,
+        proj_dim: int = 128,
+        repulse_mode: str = "squared",
+        repulse_threshold: float = 0.3,
+    ) -> None:
         super().__init__()
+        if repulse_mode not in ("squared", "hinge"):
+            raise ValueError(f"repulse_mode sconosciuta: {repulse_mode}")
         self.num_classes = num_classes
+        self.repulse_mode = repulse_mode
+        self.repulse_threshold = repulse_threshold
         self.prototypes = nn.Parameter(torch.zeros(num_classes, proj_dim))
         nn.init.kaiming_normal_(self.prototypes)
 
@@ -168,11 +178,17 @@ class SphericalPrototypes(nn.Module):  # type: ignore[misc]
         return torch.mm(features, prototypes.T)
 
     def repulse_loss(self) -> torch.Tensor:
-        """Orthogonal repulsion loss: encourages prototypes to be orthogonal.
+        """Repulsion between prototypes.
 
-        Minimises squared cosine similarity between all prototype pairs.
-        This creates a 'spherical' space where each class occupies a distinct
-        direction, improving separability for open-set detection.
+        Due modalita':
+
+        - ``squared`` (default): penalizza *tutti* i coseni al quadrato, quindi
+          spinge ogni coppia verso i 90°. E' il prior del paper, ma su specie
+          ultra-fini i centroidi veri sono correlati per costruzione: spingerli
+          tutti a zero allontana i prototipi dai dati.
+        - ``hinge``: penalizza solo le coppie che si avvicinano troppo
+          (``|cos| > repulse_threshold``). Impedisce il collasso senza
+          pretendere che specie simili diventino ortogonali.
 
         Returns
         -------
@@ -185,5 +201,7 @@ class SphericalPrototypes(nn.Module):  # type: ignore[misc]
         denom = self.num_classes * (self.num_classes - 1)
         if denom <= 0:  # una sola classe: non c'e' nulla da respingere
             return torch.zeros((), device=sim.device, requires_grad=True)
-        loss = (off_diag**2).sum() / denom
-        return loss
+        if self.repulse_mode == "hinge":
+            excess = torch.clamp(off_diag.abs() - self.repulse_threshold, min=0.0)
+            return (excess**2).sum() / denom
+        return (off_diag**2).sum() / denom

@@ -15,6 +15,10 @@ def train(
     vmf_kappa: Annotated[float, typer.Option(help="Concentrazione kappa della loss vMF (hard assignment)")] = 10.0,
     ramp_epochs: Annotated[int, typer.Option(help="Epoche su cui il peso della vMF cresce 0 -> 1")] = 20,
     repulse_weight: Annotated[float, typer.Option(help="Peso della repulsione ortogonale tra prototipi")] = 0.01,
+    repulse_mode: Annotated[
+        str, typer.Option(help="Repulsione: 'squared' (tutti i coseni) o 'hinge' (solo sopra soglia)")
+    ] = "squared",
+    repulse_threshold: Annotated[float, typer.Option(help="Soglia del coseno per la repulsione 'hinge'")] = 0.3,
     novel: Annotated[str | None, typer.Option(help="Override novel: garganica,majellensis")] = None,
     profile: Annotated[str, typer.Option(help="cpu|gpu")] = "gpu",
     embeddings: Annotated[bool, typer.Option(help="Extract embeddings (alias)")] = False,
@@ -37,4 +41,6 @@ def train(
         vmf_kappa=vmf_kappa,
         ramp_epochs=ramp_epochs,
         repulse_weight=repulse_weight,
+        repulse_mode=repulse_mode,
+        repulse_threshold=repulse_threshold,
     )
