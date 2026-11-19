@@ -214,6 +214,18 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="In pausa se sta scaricando e la batteria e' sotto questa soglia (%%)",
     )
     parser.add_argument("--interval", type=float, default=DEFAULT_INTERVAL, help="Secondi tra i controlli")
+    parser.add_argument(
+        "--confirmations",
+        type=int,
+        default=None,
+        help="Letture consecutive concordi prima di agire (default: 2, 1 con --once)",
+    )
+    parser.add_argument(
+        "--unplugged-confirmations",
+        type=int,
+        default=4,
+        help="Conferme per la regola 'cavo staccato': su questa macchina l'AC sfarfalla (default: 4)",
+    )
     parser.add_argument("--dry-run", action="store_true", help="Non invia segnali, stampa solo le decisioni")
     parser.add_argument("--once", action="store_true", help="Un solo controllo (per test e cron)")
     parser.add_argument(
@@ -229,6 +241,10 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     global STATE_FILE
     STATE_FILE = Path(args.state_file)
+
+    # `--once` e' un controllo singolo (test, cron): non ha senso chiedergli
+    # due conferme, altrimenti non agisce mai.
+    confirmations = args.confirmations if args.confirmations is not None else (1 if args.once else 2)
 
     pid = args.pid
     if pid is None:
@@ -262,6 +278,9 @@ def main(argv: list[str] | None = None) -> int:
     signal.signal(signal.SIGTERM, _stop)
     signal.signal(signal.SIGINT, _stop)
 
+    pending: str | None = None
+    pending_count = 0
+
     while not stop["flag"]:
         if not alive(pid):
             log(f"pid {pid} terminato: esco")
@@ -279,6 +298,28 @@ def main(argv: list[str] | None = None) -> int:
             unplugged_pause_at=args.unplugged_pause_at,
         )
         detail = f"batteria {power['capacity']}% {power['status']} ac={power['ac_online']}"
+
+        # Debounce: una lettura sola non basta. Un cavo che fa contatto per un
+        # istante non deve fermare un training.
+        if action == "keep":
+            pending, pending_count = None, 0
+        elif action == pending:
+            pending_count += 1
+        else:
+            pending, pending_count = action, 1
+        needed = max(1, confirmations)
+        # La regola "cavo staccato" scatta sopra la soglia di capacita': qui il
+        # sensore AC sfarfalla (ac=0 per decine di secondi con status=Charging),
+        # quindi pretende piu' conferme della soglia normale.
+        if action == "pause" and power["capacity"] is not None and power["capacity"] > args.pause_at:
+            needed = max(needed, args.unplugged_confirmations)
+        if action != "keep" and pending_count < needed:
+            if args.dry_run:
+                log(f"[dry-run] {action}? ({detail}) — in attesa di conferma")
+            if args.once:
+                return 0
+            time.sleep(args.interval)
+            continue
 
         if action == "pause":
             if args.dry_run:
