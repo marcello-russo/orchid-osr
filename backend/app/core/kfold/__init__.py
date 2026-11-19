@@ -127,6 +127,9 @@ def kfold_experiment(
             ("seed", seed),
             ("patience", patience),
             ("gradient_accumulation_steps", gradient_accumulation_steps),
+            ("warmup_epochs", warmup_epochs),
+            ("vmf_kappa", vmf_kappa),
+            ("ramp_epochs", ramp_epochs),
         ]:
             saved_val = saved.get(param)
             if saved_val is not None and saved_val != cli_val:
@@ -138,6 +141,11 @@ def kfold_experiment(
         seed = saved.get("seed", seed)
         patience = saved.get("patience", patience)
         gradient_accumulation_steps = saved.get("gradient_accumulation_steps", gradient_accumulation_steps)
+        # I tre parametri SpHOR possono essere None in config (run senza --sphor):
+        # in quel caso valgono i default della CLI, non None.
+        warmup_epochs = saved["warmup_epochs"] if saved.get("warmup_epochs") is not None else warmup_epochs
+        vmf_kappa = saved["vmf_kappa"] if saved.get("vmf_kappa") is not None else vmf_kappa
+        ramp_epochs = saved["ramp_epochs"] if saved.get("ramp_epochs") is not None else ramp_epochs
 
     if aggregate_only:
         return aggregate_and_test(

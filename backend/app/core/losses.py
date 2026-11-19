@@ -110,8 +110,10 @@ class SphericalPrototypes(nn.Module):  # type: ignore[misc]
         for k in range(self.num_classes):
             mask = labels == k
             if bool(mask.any()):
-                updated[k] = feats[mask].mean(dim=0)
-        self.prototypes.data.copy_(updated)
+                updated[k] = F.normalize(feats[mask].mean(dim=0), dim=0)
+        # Anche le classi senza campioni restano sulla sfera: l'invariante e'
+        # "tutti i prototipi sono unitari", non "quelli inizializzati".
+        self.prototypes.data.copy_(F.normalize(updated, dim=1))
         return self.alignment(features, labels)
 
     @torch.no_grad()
@@ -165,7 +167,7 @@ class SphericalPrototypes(nn.Module):  # type: ignore[misc]
         prototypes = F.normalize(self.prototypes, dim=1)
         return torch.mm(features, prototypes.T)
 
-    def repulse_loss(self, temperature: float = 0.07) -> torch.Tensor:
+    def repulse_loss(self) -> torch.Tensor:
         """Orthogonal repulsion loss: encourages prototypes to be orthogonal.
 
         Minimises squared cosine similarity between all prototype pairs.

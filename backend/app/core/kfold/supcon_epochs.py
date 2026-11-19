@@ -77,7 +77,7 @@ def train_supcon_one_epoch(
     """
     model.train()
     proj_head.train()
-    running = {"loss": 0.0, "supcon": 0.0, "vmf": 0.0, "repulse": 0.0}
+    running = {key: torch.zeros((), device=device) for key in ("loss", "supcon", "vmf", "repulse")}
     num_samples = 0
     optimizer.zero_grad(set_to_none=True)
 
@@ -115,16 +115,23 @@ def train_supcon_one_epoch(
             if prototypes is not None:
                 torch.nn.utils.clip_grad_norm_([prototypes.prototypes], max_norm=2.0)
             optimizer.step()
+            if prototypes is not None:
+                # I prototipi restano sulla sfera unitaria: il gradiente li
+                # muove nella direzione giusta, ma senza questa proiezione la
+                # loro norma cresce (weight decay 0) e il passo efficace sulla
+                # direzione si riduce a ogni epoca.
+                with torch.no_grad():
+                    prototypes.prototypes.data.copy_(F.normalize(prototypes.prototypes.data, dim=1))
             optimizer.zero_grad(set_to_none=True)
 
         n = inputs.size(0)
-        running["loss"] += float(loss.item()) * gradient_accumulation_steps * n
-        running["supcon"] += float(supcon.item()) * n
-        running["vmf"] += float(vmf.item()) * n
-        running["repulse"] += float(repulse.item()) * n
+        running["loss"] += loss.detach() * gradient_accumulation_steps * n
+        running["supcon"] += supcon.detach() * n
+        running["vmf"] += vmf.detach() * n
+        running["repulse"] += repulse.detach() * n
         num_samples += n
 
-    return {key: value / max(num_samples, 1) for key, value in running.items()}
+    return {key: float(value.item()) / max(num_samples, 1) for key, value in running.items()}
 
 
 def _projected_embeddings(
@@ -311,7 +318,14 @@ def train_supcon(
 
     if resume and ckpt_path and os.path.exists(ckpt_path):
         ckpt = torch.load(ckpt_path, map_location=device)
-        if use_prototypes and "prototypes_state_dict" not in ckpt:
+        saved_groups = len(ckpt["optimizer_state_dict"].get("param_groups", []))
+        if saved_groups != len(optimizer.param_groups):
+            # SpHOR acceso/spento rispetto al run originale: `load_state_dict`
+            # solleverebbe ValueError a meta' resume. Meglio ripartire puliti.
+            logger.warning(
+                f"Checkpoint con {saved_groups} param group, attesi {len(optimizer.param_groups)}: riparto da zero"
+            )
+        elif use_prototypes and "prototypes_state_dict" not in ckpt:
             # Checkpoint di un run precedente al metodo SpHOR vero: ripartire
             # da li' significherebbe mescolare due loss diverse.
             logger.warning("Checkpoint SupCon senza prototipi: riparto da zero (metodo cambiato)")
@@ -327,6 +341,13 @@ def train_supcon(
             epochs_no_improve = ckpt["epochs_no_improve"]
             for key, value in ckpt["history"].items():
                 history[key] = value
+            # Un checkpoint vecchio non ha le chiavi nuove: le liste devono
+            # restare lunghe quanto train_loss, altrimenti il fold JSON esce
+            # con history di lunghezze diverse.
+            done = len(history["train_loss"])
+            for key in ("supcon_loss", "vmf_loss", "repulse_loss", "vmf_weight"):
+                if len(history.get(key, [])) != done:
+                    history[key] = [0.0] * done
             best_backbone_wts = copy.deepcopy(model.state_dict())
             protos_ready = prototypes is not None and start_epoch >= warmup
             logger.info(f"SupCon resumed from epoch {start_epoch}, best KNN: {best_knn:.4f}")
@@ -401,7 +422,11 @@ def train_supcon(
             torch.save(ckpt_data, tmp_path)
             os.replace(tmp_path, ckpt_path)
 
-        if patience > 0 and epochs_no_improve >= patience:
+        # Il warm-up non si taglia: se la KNN smette di migliorare all'epoca 0,
+        # con patience 15 si fermerebbe prima dell'init dei prototipi e
+        # l'esperimento "SpHOR" finirebbe senza SpHOR (il bug di prima, in
+        # un'altra forma).
+        if patience > 0 and epochs_no_improve >= patience and not in_warmup:
             logger.info(f"[SupCon] Early stopping at epoch {epoch + 1}")
             break
 
