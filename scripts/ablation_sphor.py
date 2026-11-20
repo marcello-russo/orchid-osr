@@ -112,18 +112,28 @@ def evaluate(name: str) -> dict:
     tr_emb, _, tr_lab = extract(entry, DataLoader(train_ds, batch_size=32, shuffle=False), device)
     te_emb, te_logits, te_lab = extract(entry, DataLoader(test_ds, batch_size=32, shuffle=False), device)
 
+    # Il train si filtra alle classi note (i prototipi/centroidi sono solo per
+    # quelle); il test NO: la specie nascosta e' il positivo dell'AUROC, e
+    # filtrarla via prima di calcolare `is_novel` lasciava zero positivi
+    # (AUROC = nan, visto nella prima passata).
     tr_mapped, keep_tr = map_labels(tr_lab, train_ds.classes, model_classes)
-    te_mapped, keep_te = map_labels(te_lab, test_ds.classes, model_classes)
-
-    # is_novel: 1 per le immagini della specie nascosta, 0 per le note
     novel_idx = test_ds.classes.index(NOVEL)
-    is_novel = (te_lab[keep_te] == novel_idx).astype(int)
+    is_novel = (te_lab == novel_idx).astype(int)
+    if is_novel.sum() == 0 or is_novel.sum() == len(is_novel):
+        raise RuntimeError(f"AUROC impossibile: {is_novel.sum()} positivi su {len(is_novel)} nel test")
 
-    results = {"model": MODEL, "fold": FOLD, "novel": NOVEL, "n_train": int(keep_tr.sum()), "n_test": int(keep_te.sum())}
+    results = {
+        "model": MODEL,
+        "fold": FOLD,
+        "novel": NOVEL,
+        "n_train": int(keep_tr.sum()),
+        "n_test": int(len(te_lab)),
+        "n_novel": int(is_novel.sum()),
+    }
     for detector_name in ("Mahalanobis", "KNN", "Energy", "Ensemble"):
         det = get_detector(detector_name)
         det.fit(tr_emb[keep_tr], tr_mapped)
-        scores = det.score(te_emb[keep_te], logits=te_logits[keep_te])
+        scores = det.score(te_emb, logits=te_logits)
         auroc = float(roc_auc_score(is_novel, scores))
         fpr, tpr, _ = roc_curve(is_novel, scores)
         tpr_at_fpr95 = float(tpr[np.searchsorted(fpr, 0.05, side="left")])
