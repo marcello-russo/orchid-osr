@@ -525,7 +525,7 @@
     "clust_nmi": "NMI",
     "clust_ari": "ARI",
     "clust_f": "F",
-    "clust_random": "Casuale (0.50)",
+    "clust_random": "Casuale (0,50)",
     "clust_auroc_suffix": "AUROC per classe",
     "contesto_p1_before": "Il genere ",
     "contesto_p1_after": " (Orchidaceae) comprende orchidee terrestri diffuse in tutto il bacino del Mediterraneo. Le piante sono perenni, con foglie basali a rosetta e uno stelo fiorale che produce da 2 a 12 fiori. Ogni fiore è caratterizzato da un grande labello vellutato che costituisce l'elemento morfologico più vistoso e diagnostico.",
