@@ -29,6 +29,9 @@ const ResearchPage = lazy(() =>
 const UserManagementPage = lazy(() =>
   import("@/pages/UserManagementPage").then((m) => ({ default: m.UserManagementPage }))
 );
+const NotFoundPage = lazy(() =>
+  import("@/pages/NotFoundPage").then((m) => ({ default: m.NotFoundPage }))
+);
 
 function PageFallback() {
   return (
@@ -76,6 +79,13 @@ function App() {
               element={<ErrorBoundary><Suspense fallback={<PageFallback />}><EmbeddingsPage /></Suspense></ErrorBoundary>}
             />
           </Route>
+
+          {/* Senza catch-all un indirizzo sconosciuto mostrava il layout con
+              il contenuto vuoto: nessun messaggio, sembrava un errore. */}
+          <Route
+            path="*"
+            element={<Suspense fallback={<PageFallback />}><NotFoundPage /></Suspense>}
+          />
 
           <Route element={<ProtectedRoute role="admin" />}>
             <Route

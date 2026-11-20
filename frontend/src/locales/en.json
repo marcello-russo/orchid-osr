@@ -61,7 +61,12 @@
     "open_menu": "Open menu",
     "cancel": "Cancel",
     "copy": "Copy",
-    "parameter": "Parameter"
+    "parameter": "Parameter",
+    "rate_limited": "Too many requests: try again in a minute.",
+    "not_found_title": "Page not found",
+    "not_found_text": "This address doesn't exist or has moved.",
+    "go_home": "Back to home",
+    "theme_toggle": "Toggle theme"
   },
   "dashboard": {
     "title": "OrchID OSR-NCD Dashboard",
@@ -292,7 +297,9 @@
     "test_label": "test",
     "no_images": "No images found.",
     "not_available_title": "Dataset not available",
-    "not_available_description": "The full Ophrys image dataset is not available in this deployment. Images are still served on-demand in the Latent Space viewer via HuggingFace CDN."
+    "not_available_description": "The full Ophrys image dataset is not available in this deployment. Images are still served on-demand in the Latent Space viewer via HuggingFace CDN.",
+    "prev_page": "Previous photos",
+    "next_page": "Next photos"
   },
   "compare": {
     "title": "Experiment Comparison",
