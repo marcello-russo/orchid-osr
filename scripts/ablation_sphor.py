@@ -180,13 +180,60 @@ def train(name: str) -> None:
     print(f"=== {name} finita in {(time.time() - start) / 3600:.2f} h ===", flush=True)
 
 
+COMPLEXITY = ("A", "B", "C", "D")
+MARGIN = 0.01  # quanto deve battere SupCon per giustificare il metodo
+TIE = 0.005  # a parita' quasi, si sceglie la variante piu' semplice
+
+
+def decide(report: dict) -> dict:
+    """Regola fissata prima di vedere i numeri.
+
+    Vincente = la variante piu' semplice entro TIE dal miglior AUROC Ensemble.
+    Se non batte SupCon di almeno MARGIN, vince A: il metodo non paga e non si
+    lancia nessun grid.
+    """
+    auroc = {n: (report.get(n) or {}).get("Ensemble", {}).get("auroc") for n in COMPLEXITY}
+    auroc = {n: v for n, v in auroc.items() if isinstance(v, (int, float))}
+    if "A" not in auroc or len(auroc) < 2:
+        return {"winner": None, "reason": "valutazione incompleta"}
+    best = max(auroc.values())
+    simplest = next(n for n in COMPLEXITY if auroc.get(n) is not None and auroc[n] >= best - TIE)
+    margin = auroc[simplest] - auroc["A"]
+    if margin < MARGIN:
+        return {
+            "winner": "A",
+            "auroc": round(auroc["A"], 4),
+            "margin": round(margin, 4),
+            "reason": f"nessuna variante SpHOR batte SupCon di almeno {MARGIN} AUROC "
+            f"(migliore: {simplest} {auroc[simplest]:.4f})",
+            "run_grid": False,
+        }
+    return {
+        "winner": simplest,
+        "auroc": round(auroc[simplest], 4),
+        "margin": round(margin, 4),
+        "reason": f"{simplest} batte SupCon di {margin:+.4f} AUROC (Ensemble, fold 0)",
+        "run_grid": True,
+        "params": VARIANTS[simplest],
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--eval-only", action="store_true")
     parser.add_argument("--only", default="", help="Sottoinsieme di varianti, es. A,C")
+    parser.add_argument("--decide", action="store_true", help="Legge ablation_sphor.json e scrive il verdetto")
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+
+    root = Path(__file__).resolve().parents[1]
+    if args.decide:
+        report = json.loads((root / "ablation_sphor.json").read_text(encoding="utf-8"))
+        verdict = decide(report)
+        (root / "ablation_decision.json").write_text(json.dumps(verdict, indent=2, ensure_ascii=False), encoding="utf-8")
+        print(json.dumps(verdict, indent=2, ensure_ascii=False))
+        return 0
     names = [n.strip().upper() for n in args.only.split(",") if n.strip()] or list(VARIANTS)
 
     if not args.eval_only:
