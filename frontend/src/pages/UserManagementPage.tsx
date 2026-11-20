@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import i18n from "@/lib/i18n";
 import { fetchInvites, generateInvites, deleteUser } from "@/lib/api";
 import { useAppStore } from "@/stores/useAppStore";
 import type { Invite } from "@/lib/types";
@@ -227,12 +228,12 @@ export function UserManagementPage() {
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {inv.created_at
-                        ? new Date(inv.created_at).toLocaleDateString()
+                        ? new Date(inv.created_at).toLocaleDateString(i18n.language)
                         : "—"}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {inv.expires_at
-                        ? new Date(inv.expires_at).toLocaleString()
+                        ? new Date(inv.expires_at).toLocaleString(i18n.language)
                         : t("invites.never_expires")}
                     </TableCell>
                     <TableCell className="text-sm">

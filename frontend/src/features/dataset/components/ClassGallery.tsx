@@ -39,8 +39,11 @@ export function ClassGallery({ classInfo, split, totalImages }: ClassGalleryProp
     isInView && !skipQuery // Pass isInView to enable the query, skip if 0 images
   );
 
+  // Senza account il backend serve sempre le prime 3 foto (offset ignorato):
+  // un pager "2 / 62" che ricarica le stesse immagini sarebbe una bugia.
+  const user = useAppStore((s) => s.user);
   const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
-  const hasMore = offset + PAGE_SIZE < total;
+  const hasMore = !!user && offset + PAGE_SIZE < total;
   const isFetchingNext = isLoading || isPlaceholderData;
 
   return (
@@ -52,7 +55,7 @@ export function ClassGallery({ classInfo, split, totalImages }: ClassGalleryProp
             <span className="text-xs text-muted-foreground whitespace-nowrap">
               {classInfo.total} {t("dataset.images")} ({classInfo.train_count} {t("dataset.train_label")} / {classInfo.test_count} {t("dataset.test_label")})
             </span>
-            {totalPages > 1 && (
+            {!!user && totalPages > 1 && (
               <div className="flex items-center gap-1">
                 <Button
                   variant="outline"
