@@ -118,6 +118,12 @@ varianti (SupCon, +vMF, +repulsione hinge, κ più alto) su una fold di II-A con
 DINOv2-Small, misurate in AUROC open-set. Gira sulla stessa macchina, quindi
 sotto lo stesso watchdog.
 
+**Ripresa dopo un reboot.** Il blocco del clock non sopravvive al riavvio e
+`/tmp` viene svuotato: `scripts/start-grid.sh` rifà tutto in un comando (freno
+GPU, grid, watchdog). Le fold già complete vengono saltate e una fold interrotta
+riparte dal suo `last_ckpt_supcon.pt`, quindi rilanciarlo non butta il lavoro.
+`EXPS`, `MODELS`, `CLOCK`, `PAUSE_AT` sono variabili d'ambiente.
+
 **Freno alla GPU.** Il watchdog evita lo spegnimento, ma non riduce il consumo:
 quello lo fa `scripts/gpu-throttle.sh`. Su questa Quadro T2000 `nvidia-smi -pl`
 non viene applicato (il driver riporta `power.limit: N/A`), quindi il freno è il
