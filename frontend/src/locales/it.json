@@ -61,7 +61,12 @@
     "open_menu": "Apri menu",
     "cancel": "Annulla",
     "copy": "Copia",
-    "parameter": "Parametro"
+    "parameter": "Parametro",
+    "rate_limited": "Troppe richieste: riprova tra un minuto.",
+    "not_found_title": "Pagina non trovata",
+    "not_found_text": "L'indirizzo non esiste o è stato spostato.",
+    "go_home": "Torna alla home",
+    "theme_toggle": "Cambia tema"
   },
   "dashboard": {
     "title": "Dashboard OrchID OSR",
@@ -292,7 +297,9 @@
     "test_label": "test",
     "no_images": "Nessuna immagine trovata.",
     "not_available_title": "Dataset non disponibile",
-    "not_available_description": "Il dataset completo non è disponibile in questo deployment. Le immagini sono comunque servite on-demand nel visualizzatore Spazio Latente tramite CDN HuggingFace."
+    "not_available_description": "Il dataset completo non è disponibile in questo deployment. Le immagini sono comunque servite on-demand nel visualizzatore Spazio Latente tramite CDN HuggingFace.",
+    "prev_page": "Foto precedenti",
+    "next_page": "Foto successive"
   },
   "compare": {
     "title": "Confronto Esperimenti",

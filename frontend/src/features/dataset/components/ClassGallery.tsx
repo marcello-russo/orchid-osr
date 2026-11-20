@@ -61,6 +61,7 @@ export function ClassGallery({ classInfo, split, totalImages }: ClassGalleryProp
                   variant="outline"
                   size="icon"
                   className="size-7"
+                  aria-label={t("dataset.prev_page")}
                   disabled={offset === 0 || isFetchingNext}
                   onClick={() => setOffset((o) => Math.max(0, o - PAGE_SIZE))}
                 >
@@ -73,6 +74,7 @@ export function ClassGallery({ classInfo, split, totalImages }: ClassGalleryProp
                   variant="outline"
                   size="icon"
                   className="size-7"
+                  aria-label={t("dataset.next_page")}
                   disabled={!hasMore || isFetchingNext}
                   onClick={() => setOffset((o) => o + PAGE_SIZE)}
                 >
