@@ -277,6 +277,7 @@
     "original": "Originale"
   },
   "dataset": {
+    "preview_banner": "Anteprima pubblica: 3 foto per specie. Accedi per la galleria completa.",
     "title": "Dataset Explorer",
     "subtitle": "Esplora la collezione di immagini Ophrys usata per training e valutazione.",
     "tabs": {

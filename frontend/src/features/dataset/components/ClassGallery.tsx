@@ -120,9 +120,12 @@ function ImageWithAuth({ imageUrl, token, alt }: { imageUrl: string; token: stri
   const [isLoaded, setIsLoaded] = useState(false);
   const blobUrlRef = useRef<string | null>(null);
   useEffect(() => {
-    if (!token) return;
+    // Senza token si scarica lo stesso: il backend serve l'anteprima pubblica
+    // (3 foto per classe) e rifiuta il resto. Prima qui c'era un `return` che
+    // lasciava la galleria pubblica vuota.
     let cancelled = false;
-    fetch(imageUrl, { headers: { Authorization: `Bearer ${token}` } })
+    const init = token ? { headers: { Authorization: `Bearer ${token}` } } : undefined;
+    fetch(imageUrl, init)
       .then(r => r.blob())
       .then(blob => {
         if (cancelled) return;

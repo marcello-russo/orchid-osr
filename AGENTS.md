@@ -327,6 +327,34 @@ In container `DB_PATH` punta a `/data/orchid.db` (volume nominato): senza, il lo
 - **Code scanning (CodeQL)**: non attivo. Su un repository privato di un'organizzazione richiede GitHub Advanced Security, che un account *member* non può abilitare: il workflow falliva solo in fase di upload (`Advanced Security must be enabled`). Un job perennemente rosso è peggio di un buco dichiarato, quindi il file è stato tolto e la copertura statica è affidata a ruff `S`. Se GHAS viene attivato, il workflow si riprende dalla storia (`git show 5c05b23:.github/workflows/codeql.yml`, `security-extended` + `build-mode: none`).
 
 
+### Superficie pubblica (chi arriva senza account)
+
+Vetrina, senza login: `/`, `/experiments`, `/experiments/:id`, `/research`,
+`/dataset` (anteprima), `/classify` (demo). Le API corrispondenti sono aperte:
+`/api/experiments*`, `/api/comparison`, `/api/species`, `/api/dataset/classes`,
+`/api/dataset/classes/{classe}/images`, `/api/dataset/images/...`, `/openapi.json`.
+
+Con account (`user`): `/embeddings` e, per il dataset, la galleria completa.
+Admin: `/admin/users`, inviti, pass, cache modelli.
+
+Due limiti stanno **nel backend**, non nella UI (la UI li nasconde e basta non
+sarebbe un limite):
+
+- **anteprima dataset**: chi non ha un token riceve al massimo
+  `PREVIEW_PER_CLASS` (3) immagini per classe con `offset` forzato a 0, e il
+  proxy immagini risponde 403 su ogni file fuori da quel set. Il dataset HF è
+  privato, quindi il proxy è l'unica via ai byte: senza questo, "anteprima" non
+  sarebbe vera.
+- **`/classify`**: aperta ma con `@limiter.limit("20/minute")` per IP. Nei test
+  il limiter è disattivato dal conftest (`tests/test_api/conftest.py`);
+  `tests/test_api/test_public_surface.py` lo riaccende, verifica il 429 e lo
+  rispegne.
+
+Attenzione a `ImageWithAuth` (`features/dataset/components/ClassGallery.tsx`):
+deve fare il fetch **anche senza token** (header solo se c'è), altrimenti la
+galleria pubblica resta vuota — era esattamente il bug trovato verificando la
+pagina in browser, non leggendo il codice.
+
 ### Server vs CLI
 - `python server.py` starts the FastAPI API on `0.0.0.0:5000`
 - `python cli.py` runs training/preprocessing offline
