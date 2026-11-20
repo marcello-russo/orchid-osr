@@ -138,6 +138,7 @@ def kfold_experiment(
             ("ramp_epochs", ramp_epochs),
             ("repulse_mode", repulse_mode),
             ("repulse_threshold", repulse_threshold),
+            ("restore_best", restore_best),
         ]:
             saved_val = saved.get(param)
             if saved_val is not None and saved_val != cli_val:
@@ -158,6 +159,7 @@ def kfold_experiment(
         repulse_threshold = (
             saved["repulse_threshold"] if saved.get("repulse_threshold") is not None else repulse_threshold
         )
+        restore_best = saved["restore_best"] if saved.get("restore_best") is not None else restore_best
 
     if aggregate_only:
         return aggregate_and_test(
