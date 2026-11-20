@@ -39,9 +39,14 @@ def main() -> int:
     parser.add_argument("--models", default=DEFAULT_MODELS)
     parser.add_argument("--variant", default=None, help="Default: quella scelta dall'ablazione")
     parser.add_argument("--tag", default="sphor-v2")
-    parser.add_argument("--epochs", type=int, default=150)
+    # Protocollo deciso dall'ablazione: budget fisso e modello finale. Con
+    # l'early stopping la KNN sceglie l'epoca del warm-up (misurato: 0.9172
+    # contro 0.9049 della fase congiunta) e si spedirebbe SupCon chiamandolo
+    # SpHOR; l'AUROC invece premia la fine della fase congiunta.
+    parser.add_argument("--epochs", type=int, default=60)
     parser.add_argument("--ce-epochs", type=int, default=50)
-    parser.add_argument("--patience", type=int, default=15)
+    parser.add_argument("--patience", type=int, default=0)
+    parser.add_argument("--restore-best", action="store_true", help="Torna alla selezione per KNN (default: spento)")
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -80,6 +85,7 @@ def main() -> int:
                     epochs=args.epochs,
                     ce_epochs=args.ce_epochs,
                     patience=args.patience,
+                    restore_best=args.restore_best,
                     tag=args.tag,
                     **params,
                 )
