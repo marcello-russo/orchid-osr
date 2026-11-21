@@ -51,3 +51,15 @@ def test_two_hidden_classes():
     out = drop_hidden_classes(_bundle(names, labels), ["N1", "N2"])
     assert out.train_class_names == ["A", "B"]
     assert out.train_labels.tolist() == [0, 1, 0, 1]
+
+
+def test_upload_ncd_usa_i_nomi_canonici():
+    """Upload e API devono usare lo stesso nome: il sync appiattisce una volta.
+
+    La mappa exp4→exp9_ncd ha spedito i risultati NCD di II-A nel posto
+    sbagliato (e sovrascritto i dati della tesi).
+    """
+    from app.hf.ncd import MODELS
+
+    for local_prefix, remote_prefix in MODELS:
+        assert local_prefix == remote_prefix, f"{local_prefix} → {remote_prefix}"
