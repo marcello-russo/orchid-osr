@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -56,6 +57,7 @@ export function UserManagementPage() {
   const [role, setRole] = useState("user");
   const [generating, setGenerating] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState(false);
   const currentUser = useAppStore(
     useShallow((s) => ({ username: s.user?.username, role: s.user?.role }))
   );
@@ -67,6 +69,9 @@ export function UserManagementPage() {
       setInvites(data.invites);
       setUsers(data.users);
     } catch (e) {
+      // prima l'errore finiva solo in console e la tabella restava vuota
+      setLoadError(true);
+      toast.error(t("common.error"));
       console.error("Failed to load invites", e);
     } finally {
       setLoading(false);
@@ -83,6 +88,7 @@ export function UserManagementPage() {
       await generateInvites(count, role);
       await load();
     } catch (e) {
+      toast.error(t("common.error"));
       console.error("Failed to generate invites", e);
     } finally {
       setGenerating(false);
@@ -118,6 +124,15 @@ export function UserManagementPage() {
           <p className="text-muted-foreground">{t("invites.description")}</p>
         </div>
       </div>
+
+      {loadError && (
+        <div className="flex items-center justify-between gap-4 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+          <span>{t("common.error")}</span>
+          <Button variant="outline" size="sm" onClick={load}>
+            {t("common.retry")}
+          </Button>
+        </div>
+      )}
 
       <Card>
         <CardHeader>
