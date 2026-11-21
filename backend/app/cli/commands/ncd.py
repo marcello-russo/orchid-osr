@@ -10,6 +10,7 @@ def ncd(
     model: Annotated[str, typer.Option(help="Model variant")] = "resnet18",
     stats: Annotated[bool, typer.Option("--stats", help="Only build osr_stats.npz calibration")] = False,
     delong: Annotated[bool, typer.Option("--delong", help="Only print DeLong report (needs osr_scores.npz)")] = False,
+    tag: Annotated[str, typer.Option(help="Suffisso della dir esperimento (es. sphor-v2)")] = "",
 ) -> None:
     """Run NCD / GCD pipeline (OSR + clustering + figures) on GPU if available."""
     if stats:
@@ -29,9 +30,9 @@ def ncd(
         raise SystemExit(subprocess.call([sys.executable, str(script)]))  # noqa: S603
     from app.cli.runner import run_experiment
 
-    typer.echo(f"ncd exp={exp} model={model} (GPU auto)")
+    typer.echo(f"ncd exp={exp} model={model}{f' tag={tag}' if tag else ''} (GPU auto)")
     # Usa la stessa logica di train ma in fase ncd (estrazione embedding su GPU + clustering SS-KM + OSR)
-    run_experiment(exp_id=exp, model_variant=model, phases=["ncd"])
+    run_experiment(exp_id=exp, model_variant=model, phases=["ncd"], tag=tag)
 
 
 def ncd_comparison() -> None:
