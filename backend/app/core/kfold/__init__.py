@@ -94,6 +94,7 @@ def kfold_experiment(
             "seed": seed,
             "num_classes": num_classes,
             "class_names": class_names,
+            "exclude_classes": exclude_classes,
             "raw_dataset_dir": raw_dataset_dir,
             "test_dataset_dir": test_dataset_dir,
             "patience": patience,
@@ -160,6 +161,12 @@ def kfold_experiment(
             saved["repulse_threshold"] if saved.get("repulse_threshold") is not None else repulse_threshold
         )
         restore_best = saved["restore_best"] if saved.get("restore_best") is not None else restore_best
+        # Gli override della CLI vanno PERSISTITI: senza, il config continua a
+        # dichiarare il protocollo del primo tentativo (150 epoche, patience 15,
+        # best_knn) mentre la run fa altro (60 epoche, final_epoch). Successo
+        # davvero sulla dir di II-A.
+        with open(config_path, "w") as f:
+            json.dump(saved, f, indent=2)
 
     if aggregate_only:
         return aggregate_and_test(

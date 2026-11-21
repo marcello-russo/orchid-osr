@@ -19,6 +19,16 @@ STATE="${STATE:-/tmp/opencode}"
 
 mkdir -p "$STATE"
 
+# HF_TOKEN serve all'upload dei risultati a fine esperimento: senza, il run
+# finisce e non carica niente (successo: le run nuove sono rimaste solo in
+# locale perché lo script non leggeva .env).
+if [ -f .env ]; then
+  set -a
+  # shellcheck disable=SC1091
+  . ./.env
+  set +a
+fi
+
 # CLOCK=max toglie il blocco: la GPU boosta fino al limite di potenza (40 W).
 if [ "$CLOCK" = "max" ]; then
   ./scripts/gpu-throttle.sh --reset >/dev/null 2>&1 || echo "attenzione: reset del clock non riuscito" >&2
