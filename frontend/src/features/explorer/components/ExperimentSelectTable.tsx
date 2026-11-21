@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from "react-i18next";
+import { formatPercent } from "@/lib/format";
 
 interface Props {
   currentId: string;
@@ -70,7 +71,7 @@ export function ExperimentSelectTable({ currentId, onCompare }: Props) {
                   </TableCell>
                   <TableCell className="text-right font-mono">
                     {exp.mean_f1 != null
-                      ? `${(exp.mean_f1 * 100).toFixed(2)}%${exp.std_f1 != null ? ` ± ${(exp.std_f1 * 100).toFixed(2)}%` : ""}`
+                      ? `${formatPercent(exp.mean_f1, 2)}${exp.std_f1 != null ? ` ± ${formatPercent(exp.std_f1, 2)}` : ""}`
                       : "—"}
                   </TableCell>
                 </TableRow>

@@ -6,6 +6,7 @@ import {
 } from "recharts";
 
 import type { NcdClusteringResult } from "@/lib/types";
+import { formatPercent } from "@/lib/format";
 
 const CHART_COLORS = ["#3B82F6", "#8B5CF6", "#F59E0B", "#EF4444"];
 const CLUSTER_PALETTE = ["#3B82F6", "#8B5CF6", "#22C55E", "#EF4444"];
@@ -53,7 +54,7 @@ export function AblationChart({ ablation }: { ablation: Record<string, number> }
           </Bar>
           <Tooltip
             contentStyle={{ background: "hsl(var(--background))", border: "1px solid hsl(var(--border))", borderRadius: 8 }}
-            formatter={(value) => [`${(Number(value ?? 0) * 100).toFixed(1)}%`, "AUROC"]}
+            formatter={(value) => [`${formatPercent(Number(value ?? 0), 1)}`, "AUROC"]}
           />
         </BarChart>
       </ResponsiveContainer>
@@ -100,7 +101,7 @@ export function ClusteringComparisonChart({ clustering }: { clustering: Record<s
           ))}
           <Tooltip
             contentStyle={{ background: "hsl(var(--background))", border: "1px solid hsl(var(--border))", borderRadius: 8 }}
-            formatter={(value) => [`${(Number(value ?? 0) * 100).toFixed(1)}%`]}
+            formatter={(value) => [`${formatPercent(Number(value ?? 0), 1)}`]}
           />
           <Legend wrapperStyle={{ fontSize: 12 }} />
         </BarChart>
@@ -149,7 +150,7 @@ export function PerClassAurocChart({
           </Bar>
           <Tooltip
             contentStyle={{ background: "hsl(var(--background))", border: "1px solid hsl(var(--border))", borderRadius: 8 }}
-            formatter={(value) => [`${(Number(value ?? 0) * 100).toFixed(1)}%`]}
+            formatter={(value) => [`${formatPercent(Number(value ?? 0), 1)}`]}
           />
         </BarChart>
       </ResponsiveContainer>

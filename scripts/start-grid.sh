@@ -7,6 +7,7 @@
 #   scripts/start-grid.sh                       # II-A + II-B, DINOv2-Small
 #   EXPS=3 MODELS=resnet18,resnet50 scripts/start-grid.sh
 #   CLOCK=1100 PAUSE_AT=35 scripts/start-grid.sh
+#   CLOCK=max scripts/start-grid.sh      # nessun blocco: boost fino a 40 W
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -18,7 +19,10 @@ STATE="${STATE:-/tmp/opencode}"
 
 mkdir -p "$STATE"
 
-if ! ./scripts/gpu-throttle.sh --clock "$CLOCK" >/dev/null 2>&1; then
+# CLOCK=max toglie il blocco: la GPU boosta fino al limite di potenza (40 W).
+if [ "$CLOCK" = "max" ]; then
+  ./scripts/gpu-throttle.sh --reset >/dev/null 2>&1 || echo "attenzione: reset del clock non riuscito" >&2
+elif ! ./scripts/gpu-throttle.sh --clock "$CLOCK" >/dev/null 2>&1; then
   echo "attenzione: freno GPU non applicato (serve sudo -n)" >&2
 fi
 

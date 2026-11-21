@@ -11,6 +11,7 @@ import { foldToEpochPoints } from "../types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ConfusionMatrixChart } from "./ConfusionMatrixChart";
 import { cn } from "@/lib/utils";
+import { formatNumber, formatPercent } from "@/lib/format";
 
 interface Props {
   experiments: ExperimentDetail[];
@@ -206,7 +207,7 @@ export function CompareModeView({ experiments }: Props) {
                       return (
                         <td key={experiments[i].id} className={cn("text-center py-2 px-3 tabular-nums", v === best && "font-bold")}>
                           {v != null
-                            ? `${(v * 100).toFixed(2)}%${std != null ? ` ± ${(std * 100).toFixed(2)}%` : ""}`
+                            ? `${formatPercent(v, 2)}${std != null ? ` ± ${formatPercent(std, 2)}` : ""}`
                             : "—"}
                         </td>
                       );
@@ -300,7 +301,7 @@ function LossChart({ epochData, expColors }: { epochData: EpochRow[]; expColors:
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />
             <XAxis dataKey="epoch" tick={{ fontSize: 13 }} />
             <YAxis tick={{ fontSize: 13 }} />
-            <Tooltip formatter={(v) => Number(v).toFixed(4)} contentStyle={{ fontSize: 12, borderRadius: 8 }} />
+            <Tooltip formatter={(v) => formatNumber(Number(v), 4)} contentStyle={{ fontSize: 12, borderRadius: 8 }} />
             <Legend wrapperStyle={{ fontSize: 12 }} />
             {expColors.map((ec) => {
               if (mode === "val") {
@@ -348,8 +349,8 @@ function MetricsChart({ epochData, expColors }: { epochData: EpochRow[]; expColo
           <ComposedChart data={epochData} margin={{ top: 10, right: 20, left: 0, bottom: 20 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />
             <XAxis dataKey="epoch" tick={{ fontSize: 13 }} />
-            <YAxis tick={{ fontSize: 13 }} domain={[0, 1]} tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`} />
-            <Tooltip formatter={(v) => `${(Number(v) * 100).toFixed(2)}%`} contentStyle={{ fontSize: 12, borderRadius: 8 }} />
+            <YAxis tick={{ fontSize: 13 }} domain={[0, 1]} tickFormatter={(v: number) => `${formatPercent(v, 0)}`} />
+            <Tooltip formatter={(v) => `${formatPercent(Number(v), 2)}`} contentStyle={{ fontSize: 12, borderRadius: 8 }} />
             <Legend wrapperStyle={{ fontSize: 12 }} />
             {expColors.map((ec) => {
               const dk = metric === "f1" ? `${ec.id}_f1` : `${ec.id}_acc`;
@@ -383,8 +384,8 @@ function FoldsChart({ foldData, expColors }: { foldData: Record<string, number |
           <BarChart data={foldData} margin={{ top: 20, right: 20, left: 0, bottom: 40 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />
             <XAxis dataKey="fold" tick={{ fontSize: 13 }} />
-            <YAxis tick={{ fontSize: 13 }} tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`} domain={[0, 1]} />
-            <Tooltip formatter={(v) => `${(Number(v) * 100).toFixed(2)}%`} contentStyle={{ fontSize: 12, borderRadius: 8 }} />
+            <YAxis tick={{ fontSize: 13 }} tickFormatter={(v: number) => `${formatPercent(v, 0)}`} domain={[0, 1]} />
+            <Tooltip formatter={(v) => `${formatPercent(Number(v), 2)}`} contentStyle={{ fontSize: 12, borderRadius: 8 }} />
             <Legend wrapperStyle={{ fontSize: 12 }} />
             {expColors.map((ec) => (
               <Bar key={ec.id} dataKey={ec.id} name={ec.id} fill={ec.color}

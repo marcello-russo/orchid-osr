@@ -19,6 +19,7 @@ import { foldToEpochPoints } from "../types";
 import { useChartSize } from "../hooks/useChartSize";
 
 import { cn } from "@/lib/utils";
+import { formatPercent } from "@/lib/format";
 
 interface MetricCurvesChartProps {
   folds: FoldData[];
@@ -106,7 +107,7 @@ export function MetricCurvesChart({ folds, selectedFold }: MetricCurvesChartProp
             <XAxis dataKey="epoch" tick={{ fontSize: 14 }} />
             <YAxis tick={{ fontSize: 14 }} domain={[0, 1]} />
             <Tooltip
-              formatter={(value) => (Number(value) * 100).toFixed(2) + "%"}
+              formatter={(value) => formatPercent(Number(value), 2)}
               labelFormatter={(l) => `${t("experiment_detail.charts.epoch")}${l}`}
             />
             <Legend
@@ -119,7 +120,7 @@ export function MetricCurvesChart({ folds, selectedFold }: MetricCurvesChartProp
                 y={meanBestF1}
                 stroke={CHART_COLORS[1]}
                 strokeDasharray="4 4"
-                label={{ value: `${t("experiment_detail.charts.mean_best_f1")}${(meanBestF1 * 100).toFixed(2)}%`, fontSize: 13, fill: CHART_COLORS[1] }}
+                label={{ value: `${t("experiment_detail.charts.mean_best_f1")}${formatPercent(meanBestF1, 2)}`, fontSize: 13, fill: CHART_COLORS[1] }}
               />
             )}
             {visibleFolds.map((f) => (
