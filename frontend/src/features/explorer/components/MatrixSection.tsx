@@ -8,6 +8,7 @@ import type { ExperimentSummary } from "@/lib/types";
 import {
   getArchitectureFamily, FAMILY_COLORS, LABEL_TO_VARIANT,
 } from "@/features/explorer/types";
+import { formatPercent } from "@/lib/format";
 
 interface MatrixSectionProps {
   lookup: Record<string, Record<string, ExperimentSummary>>;
@@ -61,8 +62,8 @@ export function MatrixSection({
     const exp = lookup[variant]?.[col];
     const value = exp ? accessor(exp) : null;
     const isBest = value !== null && value === bestPerColumn[col];
-    const formattedValue = value !== null ? `${(value * 100).toFixed(1)}%` : "—";
-    const stdValue = exp?.std_f1 != null ? ` ± ${(exp.std_f1 * 100).toFixed(1)}%` : "";
+    const formattedValue = value !== null ? `${formatPercent(value, 1)}` : "—";
+    const stdValue = exp?.std_f1 != null ? ` ± ${formatPercent(exp.std_f1, 1)}` : "";
 
     return (
       <td
@@ -151,10 +152,10 @@ export function MatrixSection({
             <p className="font-semibold">{tooltip.exp.name}</p>
             <p>{tooltipLabel}: {tooltip.formattedValue}</p>
             {tooltip.value !== null && tooltip.exp.std_f1 != null && (
-              <p>Std: ±{(tooltip.exp.std_f1 * 100).toFixed(2)}%</p>
+              <p>Std: ±{formatPercent(tooltip.exp.std_f1, 2)}</p>
             )}
             {tooltip.exp.test_accuracy != null && (
-              <p>Test Acc: {(tooltip.exp.test_accuracy * 100).toFixed(2)}%</p>
+              <p>Test Acc: {formatPercent(tooltip.exp.test_accuracy, 2)}</p>
             )}
           </div>
         </div>,

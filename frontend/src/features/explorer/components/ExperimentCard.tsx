@@ -7,6 +7,7 @@ import { FlaskConical } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { ExperimentSummary } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { formatPercent } from "@/lib/format";
 
 interface ExperimentCardProps {
   experiment: ExperimentSummary;
@@ -45,13 +46,13 @@ export function ExperimentCard({ experiment }: ExperimentCardProps) {
             )}
             {experiment.mean_f1 !== null && (
               <span>
-                {`${t("experiment_detail.charts.f1_label")}:`} {(experiment.mean_f1 * 100).toFixed(2)}%
-                {experiment.std_f1 != null && ` ± ${(experiment.std_f1 * 100).toFixed(2)}%`}
+                {`${t("experiment_detail.charts.f1_label")}:`} {formatPercent(experiment.mean_f1, 2)}
+                {experiment.std_f1 != null && ` ± ${formatPercent(experiment.std_f1, 2)}`}
               </span>
             )}
             {experiment.test_accuracy !== null && (
               <span>
-                {`${t("experiment_detail.charts.test_label")}:`} {(experiment.test_accuracy * 100).toFixed(2)}%
+                {`${t("experiment_detail.charts.test_label")}:`} {formatPercent(experiment.test_accuracy, 2)}
               </span>
             )}
             {experiment.num_folds !== null && (

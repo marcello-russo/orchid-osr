@@ -21,6 +21,7 @@ import {
 } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import type { ModelOption } from "@/lib/types";
+import { formatNumber, formatPercent } from "@/lib/format";
 
 /* ── Tag display ── */
 
@@ -86,7 +87,7 @@ function ModelSelect({
               <Flower2 className="size-4 text-primary shrink-0" />
               <span>{sel.name}</span>
               <Badge variant="outline" className="text-[10px] font-mono px-1.5 py-0">
-                F1 {(sel.mean_f1! * 100).toFixed(1)}%{sel.std_f1 != null ? ` ± ${(sel.std_f1 * 100).toFixed(1)}%` : ""}
+                F1 {formatPercent(sel.mean_f1!, 1)}{sel.std_f1 != null ? ` ± ${formatPercent(sel.std_f1, 1)}` : ""}
               </Badge>
               {sel.tags?.map((tag) => <TagBadge key={tag} tag={tag} />)}
               {!sel.is_cached && (
@@ -114,7 +115,7 @@ function ModelSelect({
                 </span>
                 <div className="flex gap-2">
                   {cache.is_downloading ? (
-                    <span className="text-primary">{cache.download_progress.toFixed(0)}%</span>
+                    <span className="text-primary">{formatNumber(cache.download_progress, 0)}</span>
                   ) : (
                     <button className="hover:text-foreground cursor-pointer flex items-center gap-1" onClick={() => { downloadAllModels().then(onCacheRefresh); }}>
                       <Download className="size-3" /> {t("classify.cache.download_all")}
@@ -149,7 +150,7 @@ function ModelSelect({
                       <div className="font-medium truncate">{m.name}</div>
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <span className="text-[11px] text-muted-foreground">
-                          F1 {(m.mean_f1! * 100).toFixed(1)}%{m.std_f1 != null ? ` ± ${(m.std_f1 * 100).toFixed(1)}%` : ""}
+                          F1 {formatPercent(m.mean_f1!, 1)}{m.std_f1 != null ? ` ± ${formatPercent(m.std_f1, 1)}` : ""}
                         </span>
                         {m.tags?.map((tag) => <TagBadge key={tag} tag={tag} />)}
                       </div>
@@ -353,7 +354,7 @@ export function ClassifyPage() {
             <div className="space-y-1">
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>{t("classify.cache.downloading")}</span>
-                <span>{cache.download_progress.toFixed(0)}%</span>
+                <span>{formatNumber(cache.download_progress, 0)}%</span>
               </div>
               <div className="h-1 rounded-full bg-muted overflow-hidden">
                 <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${cache.download_progress}%` }} />
@@ -428,7 +429,7 @@ export function ClassifyPage() {
                           {t("classify.results.novel_body")}
                         </p>
                         <p className="text-xs text-amber-600 dark:text-amber-400 mt-3">
-                          {t("classify.results.novel_closest")} {classify.data.predicted_species} ({(classify.data.confidence * 100).toFixed(1)}%)
+                          {t("classify.results.novel_closest")} {classify.data.predicted_species} ({formatPercent(classify.data.confidence, 1)})
                         </p>
                       </div>
                     </div>
@@ -440,7 +441,7 @@ export function ClassifyPage() {
                       <span className="text-lg">✅</span>
                       <span className="text-2xl font-bold">{classify.data.predicted_species}</span>
                       <span className="text-lg text-muted-foreground">
-                        {(classify.data.confidence * 100).toFixed(1)}%
+                        {formatPercent(classify.data.confidence, 1)}
                       </span>
                     </div>
                     <div className="space-y-2">
@@ -452,7 +453,7 @@ export function ClassifyPage() {
                               style={{ width: `${p.confidence * 100}%` }} />
                           </div>
                           <span className="w-14 text-xs text-right text-muted-foreground shrink-0">
-                            {(p.confidence * 100).toFixed(1)}%
+                            {formatPercent(p.confidence, 1)}
                           </span>
                         </div>
                       ))}

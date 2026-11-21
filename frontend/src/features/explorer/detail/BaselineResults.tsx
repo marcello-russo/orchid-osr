@@ -16,6 +16,7 @@ import {
 import { useRef } from "react";
 import { useChartSize } from "@/features/explorer/hooks/useChartSize";
 import { useChartColors } from "@/features/explorer/hooks/useChartColors";
+import { formatPercent } from "@/lib/format";
 
 export interface TestMetrics {
   accuracy: number;
@@ -30,7 +31,7 @@ export function MetricCard({ label, value }: { label: string; value: number }) {
     <Card>
       <CardContent className="pt-4 pb-3 text-center">
         <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="text-xl font-bold text-primary">{(value * 100).toFixed(2)}%</p>
+        <p className="text-xl font-bold text-primary">{formatPercent(value, 2)}</p>
       </CardContent>
     </Card>
   );
@@ -70,8 +71,8 @@ export function BaselineResults({ metrics }: { metrics: TestMetrics }) {
               <BarChart data={classData} width={width} height={height}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />
                 <XAxis dataKey="name" tick={{ fontSize: 13 }} />
-                <YAxis type="number" domain={[0, 1]} tick={{ fontSize: 14 }} tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`} />
-                <Tooltip formatter={(value) => (Number(value) * 100).toFixed(2) + "%"} />
+                <YAxis type="number" domain={[0, 1]} tick={{ fontSize: 14 }} tickFormatter={(v: number) => `${formatPercent(v, 0)}`} />
+                <Tooltip formatter={(value) => formatPercent(Number(value), 2)} />
                 <Bar dataKey="F1" fill={chartColors[0]} radius={[4, 4, 0, 0]} barSize={24} isAnimationActive={false} />
                 <Bar dataKey="Precision" fill={chartColors[1]} radius={[4, 4, 0, 0]} barSize={24} isAnimationActive={false} />
                 <Bar dataKey="Recall" fill={chartColors[2]} radius={[4, 4, 0, 0]} barSize={24} isAnimationActive={false} />
@@ -102,9 +103,9 @@ export function BaselineResults({ metrics }: { metrics: TestMetrics }) {
                 {Object.entries(metrics.per_class_metrics!).map(([className, c]) => (
                   <TableRow key={className}>
                     <TableCell className="font-medium">{className}</TableCell>
-                    <TableCell className="text-right font-mono">{(c.precision * 100).toFixed(2)}%</TableCell>
-                    <TableCell className="text-right font-mono">{(c.recall * 100).toFixed(2)}%</TableCell>
-                    <TableCell className="text-right font-mono">{(c.f1 * 100).toFixed(2)}%</TableCell>
+                    <TableCell className="text-right font-mono">{formatPercent(c.precision, 2)}</TableCell>
+                    <TableCell className="text-right font-mono">{formatPercent(c.recall, 2)}</TableCell>
+                    <TableCell className="text-right font-mono">{formatPercent(c.f1, 2)}</TableCell>
                     <TableCell className="text-right whitespace-nowrap">{c.support}</TableCell>
                   </TableRow>
                 ))}

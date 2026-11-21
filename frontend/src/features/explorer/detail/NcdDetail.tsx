@@ -8,6 +8,7 @@ import { AblationChart, ClusteringComparisonChart, PerClassAurocChart } from "@/
 import { Scatter2D } from "@/features/embeddings/Scatter2D";
 import { Scatter3D } from "@/features/embeddings/Scatter3D";
 import type { NcdClusteringResult } from "@/lib/types";
+import { formatNumber, formatPercent } from "@/lib/format";
 
 
 const SPECIES_PALETTE: Record<string, string> = {
@@ -71,14 +72,14 @@ export function NcdDetail({ modelVariant, exp }: { modelVariant: string; exp?: n
         <div className="rounded-xl border border-border/40 bg-background p-4 text-center">
           <div className="text-xs text-muted-foreground uppercase font-bold mb-1">{t("experiment_detail.ncd_auroc")}</div>
           <div className={`text-2xl font-black ${meanAuroc < 0.5 ? "text-red-500" : "text-green-500"}`}>
-            {(meanAuroc * 100).toFixed(1)}%
+            {formatPercent(meanAuroc, 1)}
           </div>
           <div className="flex flex-wrap justify-center gap-1.5 mt-1.5">
             {["Ensemble", "Mahalanobis", "KNN", "Energy"].map((d) => {
               const val = detectors?.[d]?.auroc;
               return val != null ? (
                 <span key={d} className="text-[10px] px-1.5 py-0.5 rounded bg-muted font-mono">
-                  {d[0]}: {(val * 100).toFixed(1)}%
+                  {d[0]}: {formatPercent(val, 1)}
                 </span>
               ) : null;
             })}
@@ -92,28 +93,28 @@ export function NcdDetail({ modelVariant, exp }: { modelVariant: string; exp?: n
                 {t("experiment_detail.ncd_novel_label")}
               </span>
             </div>
-            <div className="text-2xl font-black text-red-500">{(novelAuroc * 100).toFixed(1)}%</div>
+            <div className="text-2xl font-black text-red-500">{formatPercent(novelAuroc, 1)}</div>
             <div className="text-[10px] text-muted-foreground mt-0.5">{t("experiment.vs_random")}</div>
           </div>
         )}
         <div className="rounded-xl border border-border/40 bg-background p-4 text-center">
           <div className="text-xs text-muted-foreground uppercase font-bold mb-1">NMI</div>
           <div className="text-2xl font-black text-purple-500">
-            {bestClustering?.nmi ? bestClustering.nmi.toFixed(3) : "—"}
+            {bestClustering?.nmi ? formatNumber(bestClustering.nmi, 3) : "—"}
           </div>
           <div className="text-[10px] text-muted-foreground mt-0.5">clustering</div>
         </div>
         <div className="rounded-xl border border-border/40 bg-background p-4 text-center">
           <div className="text-xs text-muted-foreground uppercase font-bold mb-1">{t("experiment_detail.ncd_best_acc")}</div>
           <div className="text-2xl font-black text-green-500">
-            {bestClustering?.acc ? `${(bestClustering.acc * 100).toFixed(1)}%` : "—"}
+            {bestClustering?.acc ? `${formatPercent(bestClustering.acc, 1)}` : "—"}
           </div>
           <div className="text-[10px] text-muted-foreground mt-0.5">{bestClustering?.k ? `k=${bestClustering.k}` : ""}</div>
         </div>
         <div className="rounded-xl border border-border/40 bg-background p-4 text-center">
           <div className="text-xs text-muted-foreground uppercase font-bold mb-1">{t("experiment_detail.ncd_silhouette")}</div>
           <div className={`text-2xl font-black ${(silhouette ?? 0) > 0.1 ? "text-yellow-500" : "text-muted-foreground"}`}>
-            {silhouette !== null ? silhouette.toFixed(3) : "—"}
+            {silhouette !== null ? formatNumber(silhouette, 3) : "—"}
           </div>
           <div className="text-[10px] text-muted-foreground mt-0.5">
             {clustering.kmeans_best?.k ? `k=${clustering.kmeans_best.k}` : ""}
@@ -179,11 +180,11 @@ export function NcdDetail({ modelVariant, exp }: { modelVariant: string; exp?: n
               {Object.entries(clustering).map(([key, val]) => (
                 <tr key={key}>
                   <td className="py-2 px-4 font-bold">{key}</td>
-                  <td className="text-center py-2 px-2 font-mono">{val.acc?.toFixed(4) ?? "—"}</td>
-                  <td className="text-center py-2 px-2 font-mono">{val.nmi?.toFixed(4) ?? "—"}</td>
-                  <td className="text-center py-2 px-2 font-mono">{val.ari?.toFixed(4) ?? "—"}</td>
-                  <td className="text-center py-2 px-2 font-mono">{val.ami?.toFixed(4) ?? "—"}</td>
-                  <td className="text-center py-2 px-2 font-mono">{val.f_measure?.toFixed(4) ?? "—"}</td>
+                  <td className="text-center py-2 px-2 font-mono">{val.acc != null ? formatNumber(val.acc, 4) : "—"}</td>
+                  <td className="text-center py-2 px-2 font-mono">{val.nmi != null ? formatNumber(val.nmi, 4) : "—"}</td>
+                  <td className="text-center py-2 px-2 font-mono">{val.ari != null ? formatNumber(val.ari, 4) : "—"}</td>
+                  <td className="text-center py-2 px-2 font-mono">{val.ami != null ? formatNumber(val.ami, 4) : "—"}</td>
+                  <td className="text-center py-2 px-2 font-mono">{val.f_measure != null ? formatNumber(val.f_measure, 4) : "—"}</td>
                   <td className="text-center py-2 px-2 font-mono">{val.k ?? val.n_clusters ?? "—"}</td>
                 </tr>
               ))}
@@ -216,9 +217,9 @@ export function NcdDetail({ modelVariant, exp }: { modelVariant: string; exp?: n
                   <tr key={pc.left_out}
                     className={pc.left_out === novelClassName || pc.left_out.toLowerCase().includes("garganica") ? "bg-red-500/10 font-bold" : ""}>
                     <td className="py-2 px-4 font-bold">{pc.left_out}</td>
-                    <td className="text-center py-2 px-2 font-mono">{(pc.auroc * 100).toFixed(1)}%</td>
-                    <td className="text-center py-2 px-2 font-mono">{(pc.known_acc * 100).toFixed(1)}%</td>
-                    <td className="text-center py-2 px-2 font-mono">{(pc.unknown_recall * 100).toFixed(1)}%</td>
+                    <td className="text-center py-2 px-2 font-mono">{formatPercent(pc.auroc, 1)}</td>
+                    <td className="text-center py-2 px-2 font-mono">{formatPercent(pc.known_acc, 1)}</td>
+                    <td className="text-center py-2 px-2 font-mono">{formatPercent(pc.unknown_recall, 1)}</td>
                   </tr>
                 ))}
                 {novelAuroc !== undefined && (
@@ -229,10 +230,10 @@ export function NcdDetail({ modelVariant, exp }: { modelVariant: string; exp?: n
                         {t("experiment_detail.ncd_novel_label")}
                       </span>
                     </td>
-                    <td className="text-center py-2 px-2 font-mono text-red-500">{(novelAuroc * 100).toFixed(1)}%</td>
+                    <td className="text-center py-2 px-2 font-mono text-red-500">{formatPercent(novelAuroc, 1)}</td>
                     <td className="text-center py-2 px-2 font-mono">—</td>
                     <td className="text-center py-2 px-2 font-mono">
-                      {openset?.novel_class?.unknown_recall ? `${(openset.novel_class.unknown_recall * 100).toFixed(1)}%` : "—"}
+                      {openset?.novel_class?.unknown_recall ? `${formatPercent(openset.novel_class.unknown_recall, 1)}` : "—"}
                     </td>
                   </tr>
                 )}
