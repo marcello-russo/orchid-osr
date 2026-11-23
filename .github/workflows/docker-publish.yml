@@ -28,10 +28,10 @@ permissions:
 
 env:
   # Slug minuscolo: GHCR rifiuta i repository name con maiuscole,
-  # e `github.repository` restituisce "squidslab/OrchID".
-  IMAGE: ghcr.io/squidslab/orchid-app
-  PACKAGE: orchid-app
-  OWNER: squidslab
+  # e `github.repository` restituisce "marcello-russo/orchid-osr".
+  IMAGE: ghcr.io/marcello-russo/orchid-osr
+  PACKAGE: orchid-osr
+  OWNER: marcello-russo
   # Versioni GHCR tenute per il rollback (oltre a quella appena pubblicata).
   # Mai scendere sotto 3: rollback reale = tag precedente con immagine viva.
   KEEP_VERSIONS: "3"

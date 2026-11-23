@@ -19,7 +19,7 @@
 <p align="center">
   <strong>Tesi magistrale — Università degli Studi di Napoli Federico II (DIETI)</strong>
   <br/>
-  <a href="https://github.com/squidslab/OrchID">GitHub</a> ·
+  <a href="https://github.com/marcello-russo/orchid-osr">GitHub</a> ·
   <a href="https://arxiv.org/abs/2503.08049">Articolo SpHOR</a>
 </p>
 
@@ -166,7 +166,7 @@ Download: `snapshot_download("marcellorusso/orchid-osr-dataset", repo_type="data
 
 Una sola immagine (`app`) su GHCR, costruita in CI e deployata con uno script:
 
-- **Tag `v*`** → workflow GitHub → `ghcr.io/squidslab/orchid-app:<tag>` (con il `GITHUB_TOKEN` del repo), **GitHub Release con le note generate dai commit** e prune GHCR che tiene le 3 versioni più recenti
+- **Tag `v*`** → workflow GitHub → `ghcr.io/marcello-russo/orchid-osr:<tag>` (con il `GITHUB_TOKEN` del repo), **GitHub Release con le note generate dai commit** e prune GHCR che tiene le 3 versioni più recenti
 - **`scripts/deploy-vps.sh [tag]`** (default: ultimo tag) → `compose.yml` + `edge.yml` presi **dal tag**, `pull` + `up -d` in `/srv/orchid` → healthcheck in loopback (rollback al tag precedente se fallisce)
 - **Nessun database:** tutto su filesystem (JSON, .pt, .npy); dataset e pesi su HuggingFace
 - **Live demo:** https://osr.marrusso.dev

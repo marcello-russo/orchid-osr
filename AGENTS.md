@@ -147,7 +147,7 @@ Il tag è l'unica fonte di verità, come in `personale/actions`:
 
 1. `git tag -a vX.Y.Z` + push del tag → workflow `Publish Docker images`:
    build con il `GITHUB_TOKEN` del repo (nessun secret aggiuntivo), push di
-   `ghcr.io/squidslab/orchid-app:<tag>` (+ `:sha-<commit>`), **GitHub Release
+   `ghcr.io/marcello-russo/orchid-osr:<tag>` (+ `:sha-<commit>`), **GitHub Release
    con le note generate dai commit** e prune GHCR che tiene le ultime
    `KEEP_VERSIONS` (3) versioni taggate
 2. `scripts/deploy-vps.sh [tag]` (default: ultimo tag) → `compose.yml` +
@@ -204,7 +204,7 @@ deploy da un working tree sporco):
 
 Perché non un workflow di deploy: l'SSH della VPS è aperto solo su `tailscale0`
 e il runner self-hosted `central` è registrato solo su `marcello-russo/actions`.
-Dall'account member di `squidslab/OrchID` non si possono creare secret né runner,
+Sul repo d'organizzazione `squidslab/OrchID` un account member non può creare secret né runner,
 quindi il passo di deploy è locale. Se l'owner dell'org aggiunge
 `DISPATCH_TOKEN` (o un runner), si torna al dispatcher centrale di
 `personale/actions` senza cambiare altro.

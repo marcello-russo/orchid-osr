@@ -4,12 +4,12 @@
 # Perché non parte dalla CI: l'SSH della VPS è aperto solo su `tailscale0`
 # (default deny, vedi docs/plans/2026-11-10-hardening.md in `personale/actions`)
 # e il runner self-hosted `central` è registrato solo su `marcello-russo/actions`.
-# Dall'account member di `squidslab/OrchID` non si possono creare né secret né
+# Sul vecchio repo d'organizzazione non si potevano creare né secret né
 # runner, quindi il deploy parte da questa macchina (nella tailnet).
 #
 # Contratto identico a `personale/actions` (docs/vps-deploy.md): il tag è
 # l'unica fonte di verità. La CI ha già costruito e pubblicato
-# `ghcr.io/squidslab/orchid-app:<tag>`; qui si prendono `compose.yml` ed
+# `ghcr.io/marcello-russo/orchid-osr:<tag>`; qui si prendono `compose.yml` ed
 # `edge.yml` **dal tag** (non dal working tree: un rollback deve riportare
 # anche la config di allora) e si fa solo `pull` + `up -d`.
 #

@@ -19,7 +19,7 @@
 <p align="center">
   <strong>Master's thesis — University of Naples Federico II (DIETI)</strong>
   <br/>
-  <a href="https://github.com/squidslab/OrchID">GitHub</a> ·
+  <a href="https://github.com/marcello-russo/orchid-osr">GitHub</a> ·
   <a href="https://arxiv.org/abs/2503.08049">SpHOR Paper</a>
 </p>
 
@@ -182,7 +182,7 @@ Download from HuggingFace: `snapshot_download("marcellorusso/orchid-osr-dataset"
 
 Una sola immagine (`app`) su GHCR, costruita in CI e deployata con uno script:
 
-- **Tag `v*`** → workflow GitHub → `ghcr.io/squidslab/orchid-app:<tag>` (con il `GITHUB_TOKEN` del repo), **GitHub Release con le note generate dai commit** e prune GHCR che tiene le 3 versioni più recenti
+- **Tag `v*`** → workflow GitHub → `ghcr.io/marcello-russo/orchid-osr:<tag>` (con il `GITHUB_TOKEN` del repo), **GitHub Release con le note generate dai commit** e prune GHCR che tiene le 3 versioni più recenti
 - **`scripts/deploy-vps.sh [tag]`** (default: ultimo tag) → `compose.yml` + `edge.yml` presi **dal tag**, `pull` + `up -d` in `/srv/orchid` → healthcheck in loopback (rollback al tag precedente se fallisce)
 - **Nessun database:** tutto su filesystem (JSON, .pt, .npy); dataset e pesi su HuggingFace
 - **Live demo:** https://osr.marrusso.dev
@@ -206,7 +206,7 @@ l'host non ha il sorgente, prende solo l'immagine pinnata.
 
 ## Links
 
-- **GitHub:** [squidslab/OrchID](https://github.com/squidslab/OrchID)
+- **GitHub:** [marcello-russo/orchid-osr](https://github.com/marcello-russo/orchid-osr)
 - **Models:** `marcellorusso/orchid-osr-models`
 - **Dataset:** `marcellorusso/orchid-osr-dataset`
 

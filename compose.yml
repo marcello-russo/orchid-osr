@@ -5,7 +5,7 @@ name: orchid
 
 services:
   app:
-    image: "ghcr.io/squidslab/orchid-app:${ORCHID_VERSION:?ORCHID_VERSION mancante (es. v0.2.0)}"
+    image: "ghcr.io/marcello-russo/orchid-osr:${ORCHID_VERSION:?ORCHID_VERSION mancante (es. v0.2.0)}"
     container_name: orchid-app
     restart: unless-stopped
     env_file:
