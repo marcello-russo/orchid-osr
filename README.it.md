@@ -164,18 +164,11 @@ Download: `snapshot_download("marcellorusso/orchid-osr-dataset", repo_type="data
 
 ## Deploy
 
-Una sola immagine (`app`) su GHCR, costruita in CI e deployata con uno script:
+L'applicazione è una sola immagine `app`, costruita in CI a ogni tag `v*`; la demo gira su
+https://osr.marrusso.dev. I dettagli di deploy non fanno parte di questo repository.
 
-- **Tag `v*`** → workflow GitHub → `ghcr.io/marcello-russo/orchid-osr:<tag>` (con il `GITHUB_TOKEN` del repo), **GitHub Release con le note generate dai commit** e prune GHCR che tiene le 3 versioni più recenti
-- **`scripts/deploy-vps.sh [tag]`** (default: ultimo tag) → `compose.yml` + `edge.yml` presi **dal tag**, `pull` + `up -d` in `/srv/orchid` → healthcheck in loopback (rollback al tag precedente se fallisce)
-- **Nessun database:** tutto su filesystem (JSON, .pt, .npy); dataset e pesi su HuggingFace
-- **Live demo:** https://osr.marrusso.dev
-
-Si tagga quando una versione deve andare online (patch = fix, minor =
-funzionalità, major = cambi incompatibili): i tag sono il registro delle
-versioni pubblicate, non la cronologia dello sviluppo. Il deploy parte dalla
-macchina di sviluppo perché l'SSH della VPS è aperto solo sulla tailnet;
-l'host non ha il sorgente, prende solo l'immagine pinnata.
+Si tagga con patch per i fix, minor per le funzionalità, major per i cambi incompatibili: i tag
+registrano le versioni pubblicate, non la cronologia dello sviluppo.
 
 ---
 
