@@ -1,0 +1,15 @@
+cff-version: 1.2.0
+message: "If you use this code, please cite the thesis."
+title: "Classificazione Ultra-Fine-Grained e Riconoscimento Open-Set delle Orchidee Ophrys tramite Apprendimento Contrastivo Profondo"
+type: thesis
+authors:
+  - family-names: Russo
+    given-names: Marcello
+year: 2026
+institution: "Università degli Studi di Napoli Federico II"
+keywords:
+  - ultra-fine-grained classification
+  - open-set recognition
+  - contrastive learning
+  - Ophrys
+  - deep learning
