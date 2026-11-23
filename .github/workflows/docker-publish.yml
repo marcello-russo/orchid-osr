@@ -3,7 +3,7 @@
 # Il tag `vX.Y.Z` è l'unico atto deliberato: da lì la CI costruisce l'immagine
 # unica (`runtime`, CPU), la pubblica su GHCR, crea la GitHub Release con le
 # note generate dai commit e pota le versioni vecchie del pacchetto. Il deploy
-# è un passo separato e locale (`scripts/deploy-vps.sh`, la VPS risponde solo
+# è un passo separato, fuori da questo repository
 # sulla tailnet): prende compose.yml ed edge.yml *dal tag*, non dal working tree.
 #
 # Stesso contratto di `personale/actions` (docs/docker-publish.md), ridotto a
