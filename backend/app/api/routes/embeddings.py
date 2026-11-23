@@ -18,6 +18,9 @@ PUBLIC_EXPERIMENT = "exp4_sphor_ncd_dinov2_small"
 PUBLIC_METHOD = "tsne_3d"
 
 _ALLOWED_EXPERIMENTS: set[str] = set()
+# Il payload pubblico è statico: costruirlo una volta sola evita di rileggere
+# 460 KB di metadata.json a ogni richiesta.
+_PUBLIC_CACHE: EmbeddingResponse | None = None
 
 
 def _load_allowed_experiments() -> set[str]:
@@ -158,6 +161,8 @@ async def get_public_embeddings(request: Request, response: Response) -> Embeddi
     di immagine: chi non ha un account vede la nuvola colorata per specie, non
     il dataset. Cacheabile perché statico.
     """
-    result = _build_response(Path(settings.results_dir) / PUBLIC_EXPERIMENT, PUBLIC_METHOD, public=True)
+    global _PUBLIC_CACHE
+    if _PUBLIC_CACHE is None:
+        _PUBLIC_CACHE = _build_response(Path(settings.results_dir) / PUBLIC_EXPERIMENT, PUBLIC_METHOD, public=True)
     response.headers["Cache-Control"] = "public, max-age=3600"
-    return result
+    return _PUBLIC_CACHE

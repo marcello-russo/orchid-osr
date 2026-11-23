@@ -48,6 +48,12 @@ export function ResearchPage() {
         {/* Main */}
         <main className="research-content relative xl:ml-64 py-12 max-w-4xl">
           <HeroSection />
+          {/* Nota di trasparenza: le tabelle di I-C/II sono della run con cui la
+              tesi è stata discussa; i numeri nuovi esistono solo per DINOv2-Small
+              finché le altre architetture non vengono rifatte. */}
+          <div className="mx-1 my-8 rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-sm text-amber-700 dark:text-amber-400">
+            {t("research.numbers_note")}
+          </div>
           <IntroSection />
           <ContextSection />
           <DatasetSection />
