@@ -176,6 +176,8 @@ All experiments use 5-fold stratified CV with seed 57 over 6 backbones.
 
 Download from HuggingFace: `snapshot_download("marcellorusso/orchid-osr-dataset", repo_type="dataset")`
 
+> **The dataset and the model weights are not in this repository.** They live in private HuggingFace repos (`marcellorusso/orchid-osr-dataset`, `-models`): you need an `HF_TOKEN` with access, then `orchid hf download` / `orchid hf sync`. Without it the API still starts, but the dataset gallery and the model list stay empty.
+
 ---
 
 ## Deploy

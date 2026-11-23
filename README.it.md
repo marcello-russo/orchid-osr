@@ -160,6 +160,8 @@ Vedi [AGENTS.md](AGENTS.md) per tutti i comandi.
 
 Download: `snapshot_download("marcellorusso/orchid-osr-dataset", repo_type="dataset")`
 
+> **Dataset e pesi non sono in questo repository.** Stanno in repo HuggingFace privati (`marcellorusso/orchid-osr-dataset`, `-models`): serve un `HF_TOKEN` con accesso, poi `orchid hf download` / `orchid hf sync`. Senza, l'API parte lo stesso ma la galleria del dataset e la lista dei modelli restano vuote.
+
 ---
 
 ## Deploy
