@@ -58,9 +58,11 @@ describe("MatrixSection", () => {
     expect(screen.getByText("ResNet-18")).toBeInTheDocument();
   });
 
-  it("renders formatted values with %", () => {
+  it("renders values with the locale separator", () => {
+    // la lingua viene da <html lang>: in italiano la virgola, non il punto
+    document.documentElement.lang = "it";
     render(<MatrixSection {...defaultProps} />);
-    expect(screen.getByText("85.0%")).toBeInTheDocument();
+    expect(screen.getByText("85,0%")).toBeInTheDocument();
   });
 
   it("renders best column star", () => {

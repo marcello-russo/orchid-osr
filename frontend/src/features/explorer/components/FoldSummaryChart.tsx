@@ -14,6 +14,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { FoldData } from "@/lib/types";
 import { useChartSize } from "../hooks/useChartSize";
+import { formatPercent } from "@/lib/format";
 
 
 interface FoldSummaryChartProps {
@@ -45,8 +46,8 @@ export function FoldSummaryChart({ folds, meanF1, stdF1, selectedFold = null }: 
 
   const titleSuffix =
     meanF1 != null
-      ? ` — ${t("experiment_detail.charts.fold_mean_f1")}${(meanF1 * 100).toFixed(2)}%${
-          stdF1 != null ? ` ± ${(stdF1 * 100).toFixed(2)}%` : ""
+      ? ` — ${t("experiment_detail.charts.fold_mean_f1")}${formatPercent(meanF1, 2)}${
+          stdF1 != null ? ` ± ${formatPercent(stdF1, 2)}` : ""
         }`
       : "";
 
@@ -59,10 +60,10 @@ export function FoldSummaryChart({ folds, meanF1, stdF1, selectedFold = null }: 
         <div ref={ref} style={{ width: "100%", height: height || 400, minHeight: 350 }}>
           <BarChart data={data} layout="vertical" width={width || 800} height={height || 400}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.4} />
-            <XAxis type="number" domain={[0, 1]} tick={{ fontSize: 14 }} tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`} />
+            <XAxis type="number" domain={[0, 1]} tick={{ fontSize: 14 }} tickFormatter={(v: number) => `${formatPercent(v, 0)}`} />
             <YAxis type="category" dataKey="name" tick={{ fontSize: 14 }} width={80} />
             <Tooltip
-              formatter={(value) => (Number(value) * 100).toFixed(2) + "%"}
+              formatter={(value) => formatPercent(Number(value), 2)}
             />
             <Legend wrapperStyle={{ fontSize: 13 }} align="right" />
             <Bar dataKey="F1" fill={CHART_COLORS[0]} radius={[0, 4, 4, 0]} barSize={20} isAnimationActive={false} />

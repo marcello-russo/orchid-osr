@@ -11,7 +11,7 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import FileResponse, Response
 from PIL import Image
 
-from app.api.deps import require_role
+from app.api.deps import get_current_user_optional
 from app.api.schemas import ClassImagesResponse, DatasetClassesResponse, DatasetClassInfo, DatasetImage
 from app.config import settings
 
@@ -24,8 +24,13 @@ _CROPPED_DIR = "cropped_256x512"
 _HF_BRANCH = "main"
 _LISTING_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "dataset_listing.json"
 
+# Quante immagini per classe vede chi non ha un account. Il limite e' applicato
+# qui, non solo nella UI: l'anteprima pubblica deve restare un'anteprima.
+PREVIEW_PER_CLASS = 3
+
 _http_client: httpx.AsyncClient | None = None
 _listing_cache: dict[str, Any] | None = None
+_preview_cache: set[tuple[str, str, str]] | None = None
 
 
 async def _get_http_client() -> httpx.AsyncClient:
@@ -68,8 +73,27 @@ def _validate_segment(value: str) -> str:
     return value
 
 
+def _preview_paths() -> set[tuple[str, str, str]]:
+    """(split, classe, file) servibili senza account: le prime N per classe."""
+    global _preview_cache
+    if _preview_cache is not None:
+        return _preview_cache
+    listing = _get_listing()
+    out: set[tuple[str, str, str]] = set()
+    for class_name in settings.class_names:
+        files = listing.get("files", {}).get("train", {}).get(class_name, [])
+        if not files:
+            class_dir = _get_dataset_base() / "train" / class_name
+            if class_dir.is_dir():
+                files = sorted(f.name for f in class_dir.iterdir() if f.is_file() and f.suffix.lower() in _IMAGE_EXTS)
+        for filename in files[:PREVIEW_PER_CLASS]:
+            out.add(("train", class_name, filename))
+    _preview_cache = out
+    return out
+
+
 @router.get("/classes", response_model=DatasetClassesResponse)
-async def list_classes(user: dict[str, Any] = Depends(require_role("user"))) -> DatasetClassesResponse:
+async def list_classes() -> DatasetClassesResponse:
     listing = _get_listing()
     classes: list[DatasetClassInfo] = []
     total_train = 0
@@ -129,13 +153,17 @@ async def list_class_images(
     split: str = "train",
     limit: int = 12,
     offset: int = 0,
-    user: dict[str, Any] = Depends(require_role("user")),
+    user: dict[str, Any] | None = Depends(get_current_user_optional),
 ) -> ClassImagesResponse:
     class_name = _validate_segment(class_name)
     if class_name not in settings.class_names:
         raise HTTPException(status_code=404, detail="Classe non presente nel dataset dello studio")
     if split not in _VALID_SPLITS:
         raise HTTPException(status_code=400, detail="Invalid split. Use: train or test")
+
+    if user is None:
+        limit = min(limit, PREVIEW_PER_CLASS)
+        offset = 0
 
     listing = _get_listing()
     all_files = listing.get("files", {}).get(split, {}).get(class_name, [])
@@ -281,6 +309,7 @@ async def serve_image(
     class_name: str,
     filename: str,
     size: int | None = Query(None, gt=0, le=1024),
+    user: dict[str, Any] | None = Depends(get_current_user_optional),
 ) -> Response:
     """Serve a dataset image file, optionally resized and converted to WebP.
 
@@ -290,6 +319,11 @@ async def serve_image(
     split = _validate_segment(split)
     class_name = _validate_segment(class_name)
     filename = _validate_segment(filename)
+    if user is None and (split, class_name, filename) not in _preview_paths():
+        raise HTTPException(
+            status_code=403,
+            detail="Anteprima pubblica: accedi per vedere la galleria completa",
+        )
     # Gli embedding usano nomi split NCD (es. test_ncd_exp9): normalizza
     if split.startswith("test"):
         split = "test"

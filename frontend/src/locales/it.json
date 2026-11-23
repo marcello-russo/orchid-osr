@@ -61,7 +61,12 @@
     "open_menu": "Apri menu",
     "cancel": "Annulla",
     "copy": "Copia",
-    "parameter": "Parametro"
+    "parameter": "Parametro",
+    "rate_limited": "Troppe richieste: riprova tra un minuto.",
+    "not_found_title": "Pagina non trovata",
+    "not_found_text": "L'indirizzo non esiste o è stato spostato.",
+    "go_home": "Torna alla home",
+    "theme_toggle": "Cambia tema"
   },
   "dashboard": {
     "title": "Dashboard OrchID OSR",
@@ -277,6 +282,7 @@
     "original": "Originale"
   },
   "dataset": {
+    "preview_banner": "Anteprima pubblica: 3 foto per specie. Accedi per la galleria completa.",
     "title": "Dataset Explorer",
     "subtitle": "Esplora la collezione di immagini Ophrys usata per training e valutazione.",
     "tabs": {
@@ -291,7 +297,9 @@
     "test_label": "test",
     "no_images": "Nessuna immagine trovata.",
     "not_available_title": "Dataset non disponibile",
-    "not_available_description": "Il dataset completo non è disponibile in questo deployment. Le immagini sono comunque servite on-demand nel visualizzatore Spazio Latente tramite CDN HuggingFace."
+    "not_available_description": "Il dataset completo non è disponibile in questo deployment. Le immagini sono comunque servite on-demand nel visualizzatore Spazio Latente tramite CDN HuggingFace.",
+    "prev_page": "Foto precedenti",
+    "next_page": "Foto successive"
   },
   "compare": {
     "title": "Confronto Esperimenti",
@@ -524,7 +532,7 @@
     "clust_nmi": "NMI",
     "clust_ari": "ARI",
     "clust_f": "F",
-    "clust_random": "Casuale (0.50)",
+    "clust_random": "Casuale (0,50)",
     "clust_auroc_suffix": "AUROC per classe",
     "contesto_p1_before": "Il genere ",
     "contesto_p1_after": " (Orchidaceae) comprende orchidee terrestri diffuse in tutto il bacino del Mediterraneo. Le piante sono perenni, con foglie basali a rosetta e uno stelo fiorale che produce da 2 a 12 fiori. Ogni fiore è caratterizzato da un grande labello vellutato che costituisce l'elemento morfologico più vistoso e diagnostico.",

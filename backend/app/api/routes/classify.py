@@ -5,10 +5,11 @@ from typing import Any
 
 import numpy as np
 import torch
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from PIL import Image
 
 from app.api.cache import get_model, get_osr_stats
+from app.api.routes.auth import limiter
 from app.api.schemas import (
     ClassifyRequest,
     ClassifyResponse,
@@ -74,12 +75,16 @@ def decode_base64_image(image_base64: str, model_type: str) -> torch.Tensor:
 
 
 @router.post("/classify", response_model=ClassifyResponse)
-async def classify_image(request: ClassifyRequest) -> ClassifyResponse:
+@limiter.limit("20/minute")
+async def classify_image(request: Request, body: ClassifyRequest) -> ClassifyResponse:  # noqa: ARG001
     """Classify an orchid image.
+
+    Aperta a tutti (e' la demo), ma con un limite per IP: senza, chiunque puo'
+    far girare il modello quanto vuole.
 
     Args:
     ----
-        request: ClassifyRequest with base64 encoded image
+        body: ClassifyRequest with base64 encoded image
 
     Returns:
     -------
@@ -87,7 +92,7 @@ async def classify_image(request: ClassifyRequest) -> ClassifyResponse:
 
     """
     # Get model and device
-    model_type = request.model_type
+    model_type = body.model_type
     valid = available_models()
     if model_type not in valid:
         raise HTTPException(status_code=400, detail=f"Unknown model type: {model_type}. Available: {valid}")
@@ -95,7 +100,7 @@ async def classify_image(request: ClassifyRequest) -> ClassifyResponse:
     device = get_device()
 
     # Decode and preprocess image
-    image_tensor = decode_base64_image(request.image_base64, model_type)
+    image_tensor = decode_base64_image(body.image_base64, model_type)
     image_tensor = image_tensor.to(device)
 
     # Run inference
@@ -139,7 +144,12 @@ def _compute_ensemble(embedding: np.ndarray, logits: torch.Tensor, stats: dict[s
 
 
 @router.post("/classify/upload", response_model=ClassifyUploadResponse)
-async def classify_upload(file: UploadFile = File(...), model_id: str | None = Form(None)) -> ClassifyUploadResponse:
+@limiter.limit("20/minute")
+async def classify_upload(
+    request: Request,  # noqa: ARG001
+    file: UploadFile = File(...),
+    model_id: str | None = Form(None),
+) -> ClassifyUploadResponse:
     """Classify an orchid image uploaded as multipart form data."""
     # Load model first to determine model_type for correct transform
     model = get_model(model_id=model_id) if model_id else get_model(available_models()[0])

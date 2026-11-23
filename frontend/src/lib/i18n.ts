@@ -5,6 +5,12 @@ import LanguageDetector from "i18next-browser-languagedetector";
 import en from "../locales/en.json";
 import it from "../locales/it.json";
 
+i18n.on("languageChanged", (lng) => {
+  // senza questo, `<html lang>` resta quello iniziale e screen reader e
+  // motori di ricerca leggono la lingua sbagliata dopo un cambio.
+  document.documentElement.lang = lng;
+});
+
 i18n
   .use(LanguageDetector)
   .use(initReactI18next)

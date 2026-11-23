@@ -44,6 +44,12 @@ export async function fetchApi<T>(path: string, opts?: { method?: string; body?:
       else if (parsed.detail?.[0]?.msg) detail = parsed.detail[0].msg;
     } catch {/* empty */}
     const snippet = detail.length > 200 ? detail.slice(0, 200) + "..." : detail;
+    if (res.status === 429) {
+        const { toast } = await import("sonner");
+        const message = i18n.t("common.rate_limited");
+        toast.error(message);
+        throw new Error(message);
+    }
     if (res.status >= 400 && res.status < 500) {
         const { toast } = await import("sonner");
         toast.error(`${i18n.t("research.api_error")} ${res.status}: ${snippet}`);

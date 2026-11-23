@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Database } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAppStore } from "@/stores/useAppStore";
 import { useDatasetClasses } from "@/features/dataset/hooks/useDataset";
 import { ClassGallery } from "@/features/dataset/components/ClassGallery";
 import { DistributionChart } from "@/features/dataset/components/DistributionChart";
@@ -10,6 +11,7 @@ import { DistributionChart } from "@/features/dataset/components/DistributionCha
 export function DatasetPage() {
   const { t } = useTranslation();
   const { data, isLoading, error } = useDatasetClasses();
+  const user = useAppStore((s) => s.user);
   const [split, setSplit] = useState<"train" | "test">("train");
 
   if (isLoading) {
@@ -55,6 +57,14 @@ export function DatasetPage() {
           <p className="text-muted-foreground text-sm mt-1">{t("dataset.subtitle")}</p>
         </div>
       </div>
+
+      {/* Chi non ha un account vede un'anteprima: 3 foto per specie, limite
+          applicato dal backend, non solo qui. */}
+      {!user && (
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-sm text-amber-700 dark:text-amber-400">
+          {t("dataset.preview_banner")}
+        </div>
+      )}
 
       {/* Distribution chart */}
       <DistributionChart classes={data.classes} />

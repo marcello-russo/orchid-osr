@@ -621,3 +621,52 @@ class TestResumeFromConfig:
 
         assert num_epochs == 26
         assert patience == 0
+
+
+def test_config_persiste_gli_override_della_cli(tmp_path):
+    """Il config deve riflettere quello che il run esegue davvero.
+
+    Successo il contrario su II-A: config con 150 epoche / patience 15 /
+    best_knn, run vera a 60 epoche / final_epoch, perché il merge degli
+    override non riscriveva il file.
+    """
+    import json
+
+    from app.core.kfold import kfold_experiment
+
+    out = tmp_path / "exp"
+    out.mkdir()
+    (out / "config.json").write_text(
+        json.dumps(
+            {
+                "type": "kfold",
+                "model_variant": "resnet18",
+                "num_folds": 1,
+                "num_epochs": 150,
+                "patience": 15,
+                "restore_best": True,
+                "batch_size": 8,
+                "learning_rate": 0.001,
+                "seed": 57,
+            }
+        )
+    )
+
+    # il dataset non esiste: il run fallisce dopo aver scritto il config
+    with pytest.raises(Exception):
+        kfold_experiment(
+            raw_dataset_dir=str(tmp_path / "nope"),
+            test_dataset_dir=str(tmp_path / "nope"),
+            output_dir=str(out),
+            kfold_dir=str(out),  # il config vive nella dir kfold, non in output_dir
+            num_folds=1,
+            num_epochs=60,
+            patience=0,
+            use_prototypes=True,
+            restore_best=False,
+        )
+
+    saved = json.loads((out / "config.json").read_text())
+    assert saved["num_epochs"] == 60
+    assert saved["patience"] == 0
+    assert saved["restore_best"] is False

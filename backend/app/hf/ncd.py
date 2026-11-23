@@ -16,9 +16,14 @@ REPO_ID = settings.hf_models_repo
 DEFAULT_EXP_BASE = str(Path(__file__).resolve().parent.parent.parent / "experiments")
 
 # (local_dir_prefix, hf_root) pairs — hf_root = remote HF root folder.
+# (prefisso locale, prefisso sul repo HF). Devono coincidere: il sync appiattisce
+# una sola volta, quindi `exp9_ncd/exp9_ncd_x/...` diventa `experiments/exp9_ncd_x`
+# e l'API — che cerca `exp4_*` — non lo trova. La mappa exp3→exp8 / exp4→exp9 era
+# un residuo della rinumerazione: ha fatto finire i risultati NCD di II-A nel
+# posto sbagliato, sovrascrivendo anche i dati della tesi (poi ripristinati).
 MODELS = [
-    ("exp3_sphor", "exp8_sphor"),
-    ("exp4_sphor_ncd", "exp9_ncd"),
+    ("exp3_sphor", "exp3_sphor"),
+    ("exp4_sphor_ncd", "exp4_sphor_ncd"),
     ("exp5_sphor_ncd", "exp5_sphor_ncd"),
     ("exp10_mgh_ncd", "exp10_mgh_ncd"),
 ]

@@ -18,6 +18,7 @@ import type { FoldData } from "@/lib/types";
 import { foldToEpochPoints } from "../types";
 import { useChartSize } from "../hooks/useChartSize";
 import { cn } from "@/lib/utils";
+import { formatNumber } from "@/lib/format";
 
 interface LossCurvesChartProps {
   folds: FoldData[];
@@ -103,7 +104,7 @@ export function LossCurvesChart({ folds, selectedFold }: LossCurvesChartProps) {
             <XAxis dataKey="epoch" tick={{ fontSize: 14 }} />
             <YAxis tick={{ fontSize: 14 }} domain={['auto', 'auto']} />
             <Tooltip
-              formatter={(value) => Number(value).toFixed(2)}
+              formatter={(value) => formatNumber(Number(value), 2)}
               labelFormatter={(l) => `${t("experiment_detail.charts.epoch")}${l}`}
             />
             <Legend

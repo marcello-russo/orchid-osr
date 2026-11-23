@@ -88,6 +88,58 @@ docker compose -f compose.training.yml run --rm training \
 `compose.yml` è il compose **di produzione** (immagine GHCR pinnata, nessun build):
 non si usa in locale.
 
+### Training lungo: watchdog di alimentazione
+
+Su questo portatile il caricatore **non tiene il passo della GPU**: con l'AC
+collegato la batteria scende lo stesso (misurato: `status=Discharging` con
+`AC/online=1`). Un training di ore senza guardia rischia lo spegnimento a metà
+fold.
+
+`scripts/power-watchdog.py` sorveglia il processo e i suoi discendenti (worker
+del DataLoader compresi) e li ferma con `SIGSTOP` sotto la soglia, li riprende
+con `SIGCONT` sopra la soglia alta:
+
+```bash
+python scripts/power-watchdog.py --pidfile /tmp/opencode/ablation.pid   --pause-at 35 --resume-at 60          # isteresi: pausa ≤35%, ripresa ≥60%
+python scripts/power-watchdog.py --pid 1234 --once --dry-run   # prova
+```
+
+`SIGSTOP`/`SIGCONT` e non un checkpoint: il processo resta congelato con il suo
+contesto CUDA, quindi non si perde né si corrompe niente. Con il cavo staccato
+si mette in pausa già sotto il 90% (senza fonte la macchina muore in fretta);
+con l'AC collegato vale la sola isteresi, altrimenti sotto carico non partirebbe
+mai. Lo stato è in `~/.local/state/orchid/power-watchdog.json`, così un
+watchdog riavviato sa se il processo era in pausa. `tests/test_power_watchdog.py`
+copre la decisione (isteresi, scarica lenta, cavo staccato, pid morto) e fa un
+test reale di `SIGSTOP`/`SIGCONT` su un processo vivo.
+
+`scripts/ablation_sphor.py` è l'ablazione che decide il metodo SpHOR: quattro
+varianti (SupCon, +vMF, +repulsione hinge, κ più alto) su una fold di II-A con
+DINOv2-Small, misurate in AUROC open-set. Gira sulla stessa macchina, quindi
+sotto lo stesso watchdog.
+
+**Ripresa dopo un reboot.** Il blocco del clock non sopravvive al riavvio e
+`/tmp` viene svuotato: `scripts/start-grid.sh` rifà tutto in un comando (freno
+GPU, grid, watchdog). Le fold già complete vengono saltate e una fold interrotta
+riparte dal suo `last_ckpt_supcon.pt`, quindi rilanciarlo non butta il lavoro.
+`EXPS`, `MODELS`, `CLOCK`, `PAUSE_AT` sono variabili d'ambiente.
+
+**Freno alla GPU.** Il watchdog evita lo spegnimento, ma non riduce il consumo:
+quello lo fa `scripts/gpu-throttle.sh`. Su questa Quadro T2000 `nvidia-smi -pl`
+non viene applicato (il driver riporta `power.limit: N/A`), quindi il freno è il
+clock:
+
+```bash
+scripts/gpu-throttle.sh --status
+scripts/gpu-throttle.sh --clock 900    # 1200 MHz/~29 W/66 °C -> 900 MHz/~21.5 W/61 °C
+scripts/gpu-throttle.sh --reset
+```
+
+Misurato: −27% di potenza e −5 °C per circa +15% di tempo per epoca (74 s → 86 s
+su DINOv2-Small, batch 8). Il blocco non sopravvive al reboot e non tocca il
+risultato del training, solo la velocità. Con il clock a 900 MHz la batteria,
+prima in scarica lenta anche con l'AC collegato, torna a caricare.
+
 ## Deploy
 
 Build in CI, deploy da questa macchina (la VPS è raggiungibile solo via tailnet).
@@ -281,6 +333,34 @@ In container `DB_PATH` punta a `/data/orchid.db` (volume nominato): senza, il lo
 - **Code scanning (CodeQL)**: non attivo. Su un repository privato di un'organizzazione richiede GitHub Advanced Security, che un account *member* non può abilitare: il workflow falliva solo in fase di upload (`Advanced Security must be enabled`). Un job perennemente rosso è peggio di un buco dichiarato, quindi il file è stato tolto e la copertura statica è affidata a ruff `S`. Se GHAS viene attivato, il workflow si riprende dalla storia (`git show 5c05b23:.github/workflows/codeql.yml`, `security-extended` + `build-mode: none`).
 
 
+### Superficie pubblica (chi arriva senza account)
+
+Vetrina, senza login: `/`, `/experiments`, `/experiments/:id`, `/research`,
+`/dataset` (anteprima), `/classify` (demo). Le API corrispondenti sono aperte:
+`/api/experiments*`, `/api/comparison`, `/api/species`, `/api/dataset/classes`,
+`/api/dataset/classes/{classe}/images`, `/api/dataset/images/...`, `/openapi.json`.
+
+Con account (`user`): `/embeddings` e, per il dataset, la galleria completa.
+Admin: `/admin/users`, inviti, pass, cache modelli.
+
+Due limiti stanno **nel backend**, non nella UI (la UI li nasconde e basta non
+sarebbe un limite):
+
+- **anteprima dataset**: chi non ha un token riceve al massimo
+  `PREVIEW_PER_CLASS` (3) immagini per classe con `offset` forzato a 0, e il
+  proxy immagini risponde 403 su ogni file fuori da quel set. Il dataset HF è
+  privato, quindi il proxy è l'unica via ai byte: senza questo, "anteprima" non
+  sarebbe vera.
+- **`/classify`**: aperta ma con `@limiter.limit("20/minute")` per IP. Nei test
+  il limiter è disattivato dal conftest (`tests/test_api/conftest.py`);
+  `tests/test_api/test_public_surface.py` lo riaccende, verifica il 429 e lo
+  rispegne.
+
+Attenzione a `ImageWithAuth` (`features/dataset/components/ClassGallery.tsx`):
+deve fare il fetch **anche senza token** (header solo se c'è), altrimenti la
+galleria pubblica resta vuota — era esattamente il bug trovato verificando la
+pagina in browser, non leggendo il codice.
+
 ### Server vs CLI
 - `python server.py` starts the FastAPI API on `0.0.0.0:5000`
 - `python cli.py` runs training/preprocessing offline
@@ -307,6 +387,14 @@ La Fase 1 di SupCon diventa tre tempi (`--sphor`):
    λ_rep=0,01. Il termine vMF è un assegnamento **hard** (κ=`--vmf-kappa`,
    default 10): ogni foto è tirata verso il prototipo della propria classe,
    quindi i prototipi seguono i dati. `L_rep` li tiene ortogonali.
+
+L'early stopping **non scatta prima della fine del ramp**: se la KNN raggiunge
+il massimo durante il warm-up (succede), con patience 15 la run si fermerebbe
+prima che i termini SpHOR abbiano peso e il modello salvato sarebbe quello del
+warm-up — due varianti diverse darebbero lo stesso checkpoint. È successo
+davvero nell'ablazione (B e C, stesso file): per confrontare le varianti si usa
+un budget fisso (`patience=0`), per il grid il conteggio della patience parte
+dopo il ramp.
 
 I prototipi vivono nello spazio di proiezione e vengono scartati con la
 projection head: il loro effetto resta nel backbone, che è ciò che vedono i

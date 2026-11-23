@@ -61,7 +61,12 @@
     "open_menu": "Open menu",
     "cancel": "Cancel",
     "copy": "Copy",
-    "parameter": "Parameter"
+    "parameter": "Parameter",
+    "rate_limited": "Too many requests: try again in a minute.",
+    "not_found_title": "Page not found",
+    "not_found_text": "This address doesn't exist or has moved.",
+    "go_home": "Back to home",
+    "theme_toggle": "Toggle theme"
   },
   "dashboard": {
     "title": "OrchID OSR-NCD Dashboard",
@@ -277,6 +282,7 @@
     "original": "Original"
   },
   "dataset": {
+    "preview_banner": "Public preview: 3 photos per species. Sign in for the full gallery.",
     "title": "Dataset Explorer",
     "subtitle": "Explore the Ophrys image collection used for training and evaluation.",
     "tabs": {
@@ -291,7 +297,9 @@
     "test_label": "test",
     "no_images": "No images found.",
     "not_available_title": "Dataset not available",
-    "not_available_description": "The full Ophrys image dataset is not available in this deployment. Images are still served on-demand in the Latent Space viewer via HuggingFace CDN."
+    "not_available_description": "The full Ophrys image dataset is not available in this deployment. Images are still served on-demand in the Latent Space viewer via HuggingFace CDN.",
+    "prev_page": "Previous photos",
+    "next_page": "Next photos"
   },
   "compare": {
     "title": "Experiment Comparison",
@@ -603,7 +611,7 @@
     "exp4_osr_convnext": "ConvNeXt-Tiny reaches AUROC 0.850: the most balanced configuration between closed-set precision and open-set robustness.",
     "exp4_osr_resnet": "ResNet-18 remains weak (AUROC 0.507): the limited backbone capacity does not support the geometric structure required for OSR.",
     "exp4_osr_ensemble": "The Ensemble is the most robust detector, being the best for the three most performant configurations (DINOv2-Base, ConvNeXt-Tiny, ConvNeXt-Small).",
-    "exp4_osr_auroc_caption": "OSR AUROC per architecture in Studio II-A with O. garganica as the novel class (best detector per architecture). DINOv2-Base (0.875) and ConvNeXt-Tiny (0.850) clearly exceed the chance level (0.5); ResNet-18 remains the weakest (0.507).",
+    "exp4_osr_auroc_caption": "OSR AUROC by architecture in Studio II-A with O. garganica as the novel class (best detector per architecture). DINOv2-Base (0.875) and ConvNeXt-Tiny (0.850) clearly exceed the chance level (0.5); ResNet-18 remains the weakest (0.507).",
     "exp4_subs_clustering": "Clustering Analysis",
     "exp4_clustering": "Unsupervised clustering on Studio II-A embeddings recovers species for high-capacity models: uninformed K-means (K=6, mean over 10 seeds) discovers the novel class only with DINOv2-Base (ACC new 0.83±0.03, NMI 0.79), while semi-supervised SS-KM preserves the global structure (pool NMI 0.921–0.928). Weaker architectures recover the structure only partially.",
     "exp4_tsne_novel_caption": "t-SNE projection of Studio II-A embeddings for DINOv2-Base: the five known species (circles) are well separated, while the novel class O. garganica (crosses) sits at the margins of the known clusters, remaining detectable by the open-set detectors.",

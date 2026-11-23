@@ -18,6 +18,7 @@ import {
 import { useSort } from "@/hooks/useSort";
 import { SortHeader } from "@/components/ui/SortHeader";
 import type { ExperimentSummary } from "@/lib/types";
+import { formatPercent } from "@/lib/format";
 
 const SORTABLE_COLUMNS = [
   { key: "id", labelKey: "experiments.table.experiment" },
@@ -200,21 +201,21 @@ export function ExperimentsPage() {
                         </div>
                       </TableCell>
                       <TableCell className="text-right font-mono text-sm tabular-nums">
-                        {exp.mean_f1 != null ? `${(exp.mean_f1 * 100).toFixed(2)}%` : "—"}
+                        {exp.mean_f1 != null ? `${formatPercent(exp.mean_f1, 2)}` : "—"}
                         {exp.std_f1 != null && (
                           <span className="text-muted-foreground text-xs ml-1">
-                            ±{(exp.std_f1 * 100).toFixed(2)}%
+                            ±{formatPercent(exp.std_f1, 2)}
                           </span>
                         )}
                       </TableCell>
                       <TableCell className="text-right font-mono text-sm tabular-nums">
-                        {exp.test_f1 != null ? `${(exp.test_f1 * 100).toFixed(2)}%` : "—"}
+                        {exp.test_f1 != null ? `${formatPercent(exp.test_f1, 2)}` : "—"}
                       </TableCell>
                       <TableCell className="text-right font-mono text-sm tabular-nums">
-                        {exp.test_accuracy != null ? `${(exp.test_accuracy * 100).toFixed(2)}%` : "—"}
+                        {exp.test_accuracy != null ? `${formatPercent(exp.test_accuracy, 2)}` : "—"}
                       </TableCell>
                       <TableCell className="text-right font-mono text-sm tabular-nums">
-                        {exp.ncd_auroc != null ? `${(exp.ncd_auroc * 100).toFixed(2)}%` : "—"}
+                        {exp.ncd_auroc != null ? `${formatPercent(exp.ncd_auroc, 2)}` : "—"}
                       </TableCell>
                       <TableCell className="text-right text-sm text-muted-foreground">
                         {exp.folds_completed ?? "—"}/{exp.num_folds ?? "—"}
