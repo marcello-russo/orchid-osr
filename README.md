@@ -203,6 +203,20 @@ l'host non ha il sorgente, prende solo l'immagine pinnata.
 
 ---
 
+## Cite
+
+```bibtex
+@mastersthesis{russo2026orchid,
+  author  = {Russo, Marcello},
+  title   = {Classificazione Ultra-Fine-Grained e Riconoscimento Open-Set delle
+             Orchidee Ophrys tramite Apprendimento Contrastivo Profondo},
+  school  = {Università degli Studi di Napoli Federico II},
+  year    = {2026},
+  type    = {Tesi di Laurea Magistrale in Informatica},
+  address = {Napoli, Italia}
+}
+```
+
 ## Links
 
 - **GitHub:** [marcello-russo/orchid-osr](https://github.com/marcello-russo/orchid-osr)
