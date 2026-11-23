@@ -1,4 +1,4 @@
-# PRODUZIONE (/srv/orchid) — solo pull, mai build.
+# PRODUZIONE — solo pull, mai build.
 # Uso: ORCHID_VERSION=v0.2.0 docker compose pull && docker compose up -d
 # La versione è obbligatoria: fail-fast invece di `latest` silenzioso.
 name: orchid
