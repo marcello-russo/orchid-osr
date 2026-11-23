@@ -113,7 +113,6 @@ def decide(
     """
     if capacity is None:
         return "keep"
-    discharging = bool(status) and status.lower().startswith("discharg")
     unplugged = ac_online == 0
     if not paused:
         if capacity <= pause_at:
