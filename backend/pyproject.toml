@@ -1,0 +1,175 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[project]
+name = "orchid-osr"
+version = "0.1.0"
+description = "Ultra-fine-grained classification of Ophrys orchids via deep learning"
+requires-python = ">=3.10"
+dependencies = [
+    "bcrypt==4.2.1",
+    "captum",
+    "fastapi",
+    "httpx",
+    "huggingface_hub",
+    "matplotlib",
+    "numpy",
+    "opencv-python",
+    "pandas",
+    "peft>=0.10.0,<0.20.0",
+    "pillow",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "pyjwt>=2.15.0,<3",
+    "python-dotenv",
+    "python-multipart",
+    "scikit-learn",
+    "scipy",
+    "slowapi>=0.1.9",
+    "torch",
+    "torchvision",
+    "transformers>=4.40.0,<5.0.0",
+    "typer",
+    "uvicorn",
+]
+
+[project.scripts]
+orchid = "app.cli.main:app"
+orchid-osr = "app.cli.main:app"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-timeout>=2.3.0",
+    "ruff~=0.5.0",
+]
+ml = [
+    "jupyter",
+    "notebook",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+# S = regole di sicurezza di flake8-bandit (la stessa famiglia di bandit).
+# Stanno nel gate che già esiste invece di un workflow separato: costano zero
+# tempo e non possono divergere da ruff.
+select = ["E", "F", "I", "W", "S"]
+
+ignore = [
+    # assert come validazione di input in codice numerico: idiomatico qui, e il
+    # codice non gira mai con -O. Se un giorno ci si appoggia per la sicurezza
+    # (es. controlli su path) questa riga va tolta.
+    "S101",
+    # 0.0.0.0 è il default di api_host: in container il bind deve essere su tutte
+    # le interfacce, l'ingresso è limitato da compose/docker (loopback + tunnel).
+    "S104",
+    # Falsi positivi su nomi di variabili che contengono "secret"/"password"
+    # (es. secret_path): il valore non è un segreto.
+    "S105",
+    # try/except/pass e try/except/continue nei cleanup: "consider logging"
+    # sarebbe rumore, il fallimento è già gestito dal chiamante.
+    "S110",
+    "S112",
+    # md5 in preprocessing/split.py calcola il fingerprint per deduplicare le
+    # immagini: non è un uso crittografico e non protegge nulla.
+    "S324",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Nei test alcune regole di sicurezza sono rumore per costruzione: `assert` è
+# il modo di verificare, le password sono fittizie, i path `/tmp/...` sono
+# segnaposto che nessuno scrive davvero e `tempfile.mktemp` serve a provare
+# funzioni che ricevono un path. Una sola voce, viva: `tests/test_quality_gate.py`
+# verifica che i pattern puntino a directory esistenti (in passato c'erano
+# ignore su file e cartelle che non esistevano più).
+"tests/**" = ["S107", "S108", "S306"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.coverage.run]
+branch = true
+# Le figure della tesi non si misurano a righe: sono plotting puro, verificate
+# dal check phash (orchid figures --check). L'API invece si misura: era esclusa
+# e la route di /api/experiments (548 righe) non era coperta da nessun test.
+omit = ["app/figures/*"]
+
+[tool.coverage.report]
+# Misurato: 51,7% (610 test, `pytest -m "not slow"`, branch coverage). La soglia
+# sta 3 punti sotto, non a 0: così una regressione reale (API o preprocessing
+# che perdono i test) fa fallire la CI, mentre aggiungere codice di training
+# non ancora testabile non la fa fallire per un decimale. Unica fonte: la CI
+# non passa più `--cov-fail-under` (averla in due posti l'aveva fatta divergere).
+fail_under = 48
+show_missing = true
+
+[tool.mypy]
+strict = true
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "app.core.*"
+ignore_errors = true
+
+# ...tranne il percorso auth/DB, che è controllato davvero: mypy applica
+# l'override più specifico, quindi questi riaccendono il gate dentro il
+# wildcard qui sopra. `tests/test_ci_mypy.py` verifica la precedenza.
+[[tool.mypy.overrides]]
+module = ["app.core.auth", "app.core.auth_store", "app.core.db"]
+ignore_errors = false
+
+[[tool.mypy.overrides]]
+module = "app.visualization.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "app.explainability.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "scripts.*"
+ignore_errors = true
+
+# --- Cosa il gate controlla davvero -----------------------------------------
+# `mypy app/cli` era un gate vuoto: ogni modulo di app/cli aveva
+# `ignore_errors = true`, quindi passavano solo i due __init__.py. Un tipo
+# sbagliato in un comando non faceva fallire niente (e infatti due bug veri —
+# `sync_figures` e `ensure_admin_exists`, funzioni che non esistono più — sono
+# arrivati fin qui indisturbati).
+#
+# Ora app/cli e app/hf sono controllati nei corpi e nelle firme già annotate;
+# il resto è debito dichiarato (vedi AGENTS.md, "Tipizzazione") e resta
+# ignorato esplicitamente, non per omissione.
+#
+# Perché non `disallow_untyped_defs` anche qui: il CLI legacy è scritto senza
+# annotazioni, e chiederle tutte trasformerebbe il gate in 53 errori di sola
+# annotazione, cioè di nuovo un gate da spegnere. Le tre flag sotto sono
+# l'unica deroga; tutto il resto di strict resta attivo.
+[[tool.mypy.overrides]]
+module = "app.cli.*"
+disallow_untyped_defs = false
+disallow_untyped_calls = false
+disallow_incomplete_defs = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Il timeout serve a intercettare gli hang (deadlock, rete senza timeout), non a
+# cronometrare il training: un test che qui dura 45s su un runner condiviso può
+# metterci minuti (è già successo: `test_overfit_single_batch` ucciso a 60s con
+# 526 test verdi in locale). 300s intercetta comunque un blocco e non trasforma
+# un runner lento in un rosso.
+timeout = 300
+timeout_method = "thread"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "api: marks API integration tests (require server running)",
+]
+addopts = "-m 'not slow'"

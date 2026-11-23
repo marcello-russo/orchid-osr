@@ -1,0 +1,38 @@
+name: orchid-mps
+channels:
+  - pytorch
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.10
+  # PyTorch with MPS support (on Mac arm64, default pytorch build supports MPS)
+  - pytorch
+  - torchvision
+  - torchaudio
+  # Core Data Science / CV
+  - numpy
+  - pandas
+  - matplotlib
+  - scikit-learn
+  - pillow
+  - opencv
+  # App / Notebook
+  - flask
+  - jupyter
+  - notebook
+  # Utilities
+  - python-dotenv
+  - captum
+  # Dependencies best installed via pip or not standard in main conda channels
+  - pip
+  - pip:
+    - torcheval
+    - transformers>=4.40.0
+    - peft>=0.10.0
+    - fastapi
+    - uvicorn
+    - python-multipart
+    - httpx
+    - pydantic>=2.0.0
+    - pydantic-settings>=2.0.0
+    - pytest>=7.0.0

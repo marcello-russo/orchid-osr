@@ -1,0 +1,76 @@
+# --- Python -----------------------------------------------------------------
+__pycache__/
+*.py[cod]
+backend/*.egg-info/
+backend/build/
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# --- Dati, esperimenti, pesi (stanno su HuggingFace, non nel repo) ----------
+dataset*/
+backend/dataset*/
+backend/test_dataset/
+backend/experiments/
+backend/inference*/
+backend/models*/
+backend/orchid-ncd-models/
+backend/logs*/
+backend/temp_kfold/
+temp_kfold/
+inference*/
+archive/
+*.npy
+*.pt
+*.safetensors
+*.log
+embeddings.npy
+smart-train.log
+
+# --- Frontend ---------------------------------------------------------------
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/coverage/
+frontend/src/stores/
+
+# --- Segreti e stato locale -------------------------------------------------
+.env
+keys/
+backend/users.json
+backend/data/users.json
+backend/data/jwt_secret.txt
+backend/data/orchid.db
+# WAL e shared-memory di SQLite: nascono all'apertura del DB, non sono sorgente
+backend/data/orchid.db-wal
+backend/data/orchid.db-shm
+backend/data/osr_stats/
+
+# --- Documenti non versionati -----------------------------------------------
+documents/
+docs/experiments-draft.md
+docs/plans/
+docs/specs/
+docs/superpowers/
+docs/training-status.md
+superpowers/
+
+# --- Sistema e IDE ----------------------------------------------------------
+.DS_Store
+.idea/
+.vscode/
+.ipynb_checkpoints/
+.worktrees/
+
+# --- Storici / build di altre piattaforme -----------------------------------
+ProjectDocker/
+*_done
+*_1/
+*_2/
+*_adapter/
+# output dell'ablazione SpHOR (artefatto, non sorgente)
+ablation_sphor.json
+ablation_decision.json

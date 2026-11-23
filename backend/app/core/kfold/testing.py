@@ -1,0 +1,365 @@
+# app/core/kfold/testing.py
+"""Testing and aggregation functions for k-fold cross-validation."""
+
+import logging
+import os
+from pathlib import Path
+
+import numpy as np
+import torch
+from torch.utils.data import DataLoader
+
+from app.config import settings
+
+try:
+    from dotenv import load_dotenv
+
+    _env = Path(__file__).resolve().parent.parent.parent.parent / ".env"
+    load_dotenv(_env)
+except ImportError:
+    pass
+
+logger = logging.getLogger(__name__)
+
+
+def _upload_to_hf(output_dir, model_variant):
+    """Upload only essential model files to HuggingFace: best fold weights + metadata."""
+    try:
+        from huggingface_hub import HfApi
+    except ImportError:
+        return
+
+    api = HfApi(token=os.environ.get("HF_TOKEN"))
+    try:
+        api.whoami()
+    except Exception:
+        logger.info("HF token not configured, skipping upload")
+        return
+
+    exp_name = os.path.basename(output_dir)
+    if exp_name.startswith("exp4"):
+        exp_group = "exp4_sphor_ncd"
+    elif exp_name.startswith("exp3"):
+        exp_group = "exp3_sphor"
+    elif exp_name.startswith("exp2"):
+        exp_group = "exp2_supcon"
+    else:
+        exp_group = "exp1_ce"
+    remote_dir = f"{exp_group}/{exp_name}"
+    logger.info(f"Uploading results to HF: {settings.hf_models_repo}/{remote_dir}/")
+
+    # Read results to find best fold
+    results_path = os.path.join(output_dir, "results.json")
+    best_fold = None
+    if os.path.exists(results_path):
+        import json
+
+        with open(results_path) as f:
+            results = json.load(f)
+        best_fold = results.get("best_fold")
+
+    try:
+        # Upload essential files: results.json, config.json, best_fold_N.pt only
+        for fname in ["results.json", "config.json"]:
+            fpath = os.path.join(output_dir, fname)
+            if os.path.exists(fpath):
+                logger.info(f"  Uploading {fname}")
+                api.upload_file(
+                    repo_id=settings.hf_models_repo,
+                    path_or_fileobj=fpath,
+                    path_in_repo=f"{remote_dir}/{fname}",
+                )
+
+        if best_fold is not None:
+            best_pt = f"best_fold_{best_fold}.pt"
+            fpath = os.path.join(output_dir, best_pt)
+            if os.path.exists(fpath):
+                logger.info(f"  Uploading {best_pt}")
+                api.upload_file(
+                    repo_id=settings.hf_models_repo,
+                    path_or_fileobj=fpath,
+                    path_in_repo=f"{remote_dir}/{best_pt}",
+                )
+            # Upload LoRA adapter if present
+            adapter_dir = os.path.join(output_dir, f"best_fold_{best_fold}_adapter")
+            if os.path.isdir(adapter_dir):
+                logger.info("  Uploading adapter directory")
+                api.upload_folder(
+                    repo_id=settings.hf_models_repo,
+                    folder_path=adapter_dir,
+                    path_in_repo=f"{remote_dir}/best_fold_{best_fold}_adapter",
+                )
+
+        logger.info(f"Upload to HF complete: {settings.hf_models_repo}/{remote_dir}/")
+    except Exception as e:
+        logger.warning(f"HF upload failed: {e}")
+
+
+def aggregate_results(fold_results):
+    """Aggrega i risultati dei fold: mean +- std.
+
+    Returns
+    -------
+        dict con mean_accuracy, std_accuracy, mean_f1, std_f1, best_fold
+
+    """
+    all_f1 = [r["best_f1"] for r in fold_results]
+    all_acc = [r["best_accuracy"] for r in fold_results]
+
+    best_list_idx = int(np.argmax(all_f1))
+    best_result = fold_results[best_list_idx]
+    best_fold = best_result.get("fold", best_list_idx)
+
+    return {
+        "mean_accuracy": float(np.mean(all_acc)),
+        "std_accuracy": float(np.std(all_acc)),
+        "mean_f1": float(np.mean(all_f1)),
+        "std_f1": float(np.std(all_f1)),
+        "best_fold": best_fold,
+        "fold_results": fold_results,
+    }
+
+
+def final_test(best_model_path, model_variant, num_classes, test_dataset_dir, class_names, batch_size, device):
+    """Valutazione finale del modello migliore sul test set.
+
+    Gestisce il mapping delle classi: il modello ha 6 classi (class_names),
+    il test set puo' avere un sottoinsieme con indici diversi (es. ImageFolder
+    assegna O. sphegodes all'indice 3, ma nel modello e' all'indice 4).
+
+    Returns
+    -------
+        dict con metriche complete
+
+    """
+    from sklearn.metrics import (
+        accuracy_score,
+        f1_score,
+        precision_score,
+        recall_score,
+    )
+    from sklearn.metrics import (
+        confusion_matrix as sk_confusion_matrix,
+    )
+
+    from app.core.models import create_model, create_transform
+    from app.preprocessing.dataset_tool import ImageFolderWithName
+
+    transform = create_transform(model_variant)
+
+    # Carica modello
+    model = create_model(model_variant, num_classes=num_classes, pretrained=False, normalize_embeddings=True)
+    model.load_weights(best_model_path)
+    model = model.to(device)
+
+    # Carica test set
+    test_dataset = ImageFolderWithName(test_dataset_dir, transform=transform)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+
+    test_class_names = test_dataset.classes
+    logger.info(f"Test set: {len(test_dataset)} immagini, classi: {test_class_names}")
+    logger.info(f"Modello: {num_classes} classi, classi modello: {class_names}")
+
+    # Mapping: test_class_names -> model class indices
+    model_class_to_idx = {name: idx for idx, name in enumerate(class_names)}
+    test_to_model = {}
+    for test_idx, cls_name in enumerate(test_class_names):
+        if cls_name in model_class_to_idx:
+            test_to_model[test_idx] = model_class_to_idx[cls_name]
+        else:
+            logger.warning(f"Classe '{cls_name}' del test set non trovata nel modello!")
+
+    logger.info(f"Mapping test->modello: {test_to_model}")
+
+    # Raccolta predizioni
+    model.eval()
+    all_predictions = []
+    all_labels = []
+
+    with torch.no_grad():
+        for inputs, labels, _ in test_loader:
+            inputs = inputs.to(device)
+            outputs = model(inputs)
+            _, predicted = torch.max(outputs, 1)
+
+            all_predictions.extend(predicted.cpu().numpy())
+            all_labels.extend(labels.numpy())
+
+    all_predictions = np.array(all_predictions)
+    all_labels_raw = np.array(all_labels)
+
+    # Filtra campioni con classe non mappata e remappa le label
+    valid_mask = np.isin(all_labels_raw, list(test_to_model.keys()))
+    all_labels_mapped = np.array([test_to_model[label] for label in all_labels_raw[valid_mask]])
+    all_predictions = all_predictions[valid_mask]
+    if valid_mask.sum() < len(all_labels_raw):
+        logger.warning(f"Filtrati {len(all_labels_raw) - valid_mask.sum()} campioni con classe non mappata")
+
+    # Classi presenti nel test set (indici nel modello)
+    present_indices = sorted(test_to_model.values())
+
+    # Calcola metriche aggregate solo sulle classi presenti nel test
+    accuracy = accuracy_score(all_labels_mapped, all_predictions)
+    f1_macro = f1_score(all_labels_mapped, all_predictions, average="macro", zero_division=0.0, labels=present_indices)
+    precision_macro = precision_score(
+        all_labels_mapped, all_predictions, average="macro", zero_division=0.0, labels=present_indices
+    )
+    recall_macro = recall_score(
+        all_labels_mapped, all_predictions, average="macro", zero_division=0.0, labels=present_indices
+    )
+
+    # Confusion matrix completa: righe = tutte le classi del modello, colonne = tutte le classi del modello
+    all_model_indices = list(range(num_classes))
+    cm_full = sk_confusion_matrix(all_labels_mapped, all_predictions, labels=all_model_indices)
+
+    # Metriche per TUTTE le classi del modello
+    per_class_metrics = {}
+    f1_per_class = {}
+
+    for model_idx in all_model_indices:
+        cls_name = class_names[model_idx]
+        support = int((all_labels_mapped == model_idx).sum())
+        tp = int(cm_full[model_idx, model_idx])
+        fp = int(cm_full[:, model_idx].sum()) - tp
+        fn = int(cm_full[model_idx, :].sum()) - tp
+
+        if support > 0:
+            prec = tp / (tp + fp) if (tp + fp) > 0 else 0.0
+            rec = tp / (tp + fn) if (tp + fn) > 0 else 0.0
+            f1 = 2 * prec * rec / (prec + rec) if (prec + rec) > 0 else 0.0
+        else:
+            # Classe non presente nel test set: solo falsi positivi
+            prec = 0.0
+            rec = 0.0
+            f1 = 0.0
+
+        per_class_metrics[cls_name] = {
+            "precision": float(prec),
+            "recall": float(rec),
+            "f1": float(f1),
+            "support": support,
+            "tp": tp,
+            "fp": fp,
+            "fn": fn,
+        }
+        f1_per_class[cls_name] = float(f1)
+
+    results = {
+        "accuracy": float(accuracy),
+        "f1_macro": float(f1_macro),
+        "precision_macro": float(precision_macro),
+        "recall_macro": float(recall_macro),
+        "f1_per_class": f1_per_class,
+        "confusion_matrix": cm_full.tolist(),
+        "confusion_matrix_labels": class_names,
+        "per_class_metrics": per_class_metrics,
+    }
+
+    logger.info(f"Test Accuracy: {accuracy:.4f}")
+    logger.info(f"Test F1 Macro: {f1_macro:.4f} (solo classi presenti nel test)")
+    for model_idx in all_model_indices:
+        cls_name = class_names[model_idx]
+        m = per_class_metrics[cls_name]
+        status = f"P={m['precision']:.4f} R={m['recall']:.4f} F1={m['f1']:.4f}"
+        if m["support"] == 0:
+            status += f"  (non nel test, {m['fp']} falsi positivi)"
+        logger.info(f"  {cls_name}: {status}")
+
+    return results
+
+
+def aggregate_and_test(
+    output_dir,
+    model_variant,
+    num_folds,
+    num_epochs,
+    batch_size,
+    learning_rate,
+    seed,
+    test_dataset_dir,
+    num_classes,
+    class_names,
+):
+    """Legge i risultati dei fold completati, aggrega, fa test finale e genera report."""
+    import json
+
+    from app.core.kfold.reporting import generate_report
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    # Leggi risultati fold completati
+    fold_results = []
+    for fold_idx in range(num_folds):
+        fold_json = os.path.join(output_dir, f"fold_{fold_idx}.json")
+        if os.path.exists(fold_json):
+            with open(fold_json) as f:
+                fold_results.append(json.load(f))
+        else:
+            logger.warning(f"Fold {fold_idx} non trovato: {fold_json}")
+
+    if not fold_results:
+        logger.error("Nessun fold completato trovato. Esegui prima i fold singoli.")
+        return None
+
+    logger.info(f"Trovati {len(fold_results)}/{num_folds} fold completati")
+
+    # Leggi batch_size effettivo dai fold JSON (piu' affidabile del parametro)
+    effective_batch_size = batch_size
+    if fold_results and "batch_size" in fold_results[0]:
+        effective_batch_size = fold_results[0]["batch_size"]
+        if effective_batch_size != batch_size:
+            logger.warning(
+                f"batch_size dal parametro ({batch_size}) != batch_size dai fold ({effective_batch_size}). "
+                f"Uso il valore dai fold."
+            )
+
+    # Aggrega
+    aggregated = aggregate_results(fold_results)
+
+    logger.info(f"\n{'=' * 50}")
+    logger.info(f"RISULTATI K-FOLD ({len(fold_results)} folds)")
+    logger.info(f"{'=' * 50}")
+    logger.info(f"Accuracy: {aggregated['mean_accuracy']:.4f} +/- {aggregated['std_accuracy']:.4f}")
+    logger.info(f"F1 Macro: {aggregated['mean_f1']:.4f} +/- {aggregated['std_f1']:.4f}")
+
+    # Test finale con modello migliore
+    best_fold = aggregated["best_fold"]
+    best_model_path = os.path.join(output_dir, f"best_fold_{best_fold}.pt")
+
+    logger.info(f"\nTest finale con modello fold {best_fold} su {test_dataset_dir}")
+    test_metrics = final_test(
+        best_model_path, model_variant, num_classes, test_dataset_dir, class_names, effective_batch_size, device
+    )
+
+    logger.info(f"Test Accuracy: {test_metrics['accuracy']:.4f}")
+    logger.info(f"Test F1 Macro: {test_metrics['f1_macro']:.4f}")
+
+    # Risultato completo
+    results = {
+        **aggregated,
+        "model_variant": model_variant,
+        "num_folds": num_folds,
+        "num_epochs": num_epochs,
+        "batch_size": effective_batch_size,
+        "learning_rate": learning_rate,
+        "seed": seed,
+        "best_model_path": os.path.basename(best_model_path),
+        "test_metrics": test_metrics,
+    }
+
+    # Salva JSON
+    json_path = os.path.join(output_dir, "results.json")
+    with open(json_path, "w") as f:
+        json.dump(results, f, indent=2, default=str)
+    logger.info(f"Risultati salvati in: {json_path}")
+
+    # Genera report (sempre, prima dell'upload HF)
+    generate_report(results, model_variant, output_dir)
+
+    # Upload to HuggingFace se disponibile (best-effort)
+    try:
+        _upload_to_hf(output_dir, model_variant)
+    except Exception as e:
+        logger.warning(f"HF upload fallito (report salvato localmente): {e}")
+
+    return results

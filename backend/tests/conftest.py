@@ -1,0 +1,127 @@
+# tests/conftest.py
+import os
+import pathlib
+import tempfile
+
+# La SPA viene montata solo se `frontend/dist` esiste: senza questo, i test
+# sulle route SPA passerebbero in locale (dove la dist c'è) e fallirebbero in
+# CI (dove il job backend non la costruisce). Fissiamo qui una dist minima in
+# una directory temporanea, prima che `app.api.main` venga importato.
+_DIST = pathlib.Path(tempfile.mkdtemp(prefix="orchid-dist-"))
+(_DIST / "assets").mkdir()
+(_DIST / "index.html").write_text("<!doctype html><html><body>test</body></html>", encoding="utf-8")
+(_DIST / "assets" / "app.js").write_text("// test", encoding="utf-8")
+os.environ["FRONTEND_DIST"] = str(_DIST)
+
+import numpy as np  # noqa: E402
+import pytest  # noqa: E402
+import torch  # noqa: E402
+from torch.utils.data import DataLoader, Dataset  # noqa: E402
+
+
+def set_seed(seed: int = 42):
+    """Set all seeds for reproducibility."""
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+
+
+@pytest.fixture(autouse=True)
+def deterministic_mode():
+    """Ensure deterministic behavior for all tests.
+
+    Configura cuDNN solo se CUDA e' realmente disponibile.
+    Usa un timeout esplicito per evitare freeze su driver rotto.
+    """
+    set_seed(42)
+    cuda_ok = False
+    if torch.cuda.is_available():
+        try:
+            _ = torch.tensor([1.0], device="cuda")
+            cuda_ok = True
+        except Exception:
+            cuda_ok = False
+    if cuda_ok:
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+    yield
+    if cuda_ok:
+        torch.backends.cudnn.deterministic = False
+        torch.backends.cudnn.benchmark = True
+
+
+@pytest.fixture
+def auth_store_db(tmp_path, monkeypatch):
+    """DB auth isolato per test: nessun file reale, nessun import legacy."""
+    from app.core import auth as auth_module
+    from app.core import auth_store
+    from app.core import db as db_module
+
+    monkeypatch.setattr(db_module, "DB_PATH", str(tmp_path / "orchid.db"))
+    monkeypatch.setattr(db_module, "_SCHEMA_READY", set())
+    monkeypatch.setattr(auth_module, "USERS_PATH", tmp_path / "users.json")
+    auth_store.reset_for_tests()
+    auth_module.LOGIN_ATTEMPTS_CACHE.clear()
+    auth_module._CACHE_LAST_SYNC = 0.0
+    yield tmp_path / "orchid.db"
+    auth_store.reset_for_tests()
+
+
+@pytest.fixture
+def device():
+    """Get available device."""
+    return torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
+@pytest.fixture
+def tiny_dataset():
+    """Create a tiny dataset for fast testing (10 samples, 2 classes)."""
+    return TinyDataset(n_samples=10, n_classes=2, img_size=224)
+
+
+@pytest.fixture
+def tiny_dataloader(tiny_dataset):
+    """DataLoader for tiny dataset."""
+    return DataLoader(tiny_dataset, batch_size=10, shuffle=False)
+
+
+class TinyDataset(Dataset):
+    """Minimal dataset for testing - random images with labels."""
+
+    def __init__(self, n_samples: int = 10, n_classes: int = 2, img_size: int = 224):
+        self.n_samples = n_samples
+        self.n_classes = n_classes
+        self.img_size = img_size
+
+        # Generate random images (3 channels, img_size x img_size)
+        self.images = torch.randn(n_samples, 3, img_size, img_size)
+        # Generate labels
+        self.labels = torch.randint(0, n_classes, (n_samples,))
+
+    def __len__(self):
+        return self.n_samples
+
+    def __getitem__(self, idx):
+        return self.images[idx], self.labels[idx], f"img_{idx}"
+
+
+@pytest.fixture
+def class_names_6():
+    """Standard 6 orchid class names."""
+    return ["O. exaltata", "O. garganica", "O. incubacea", "O. majellensis", "O. sphegodes", "O. sphegodes_Palena"]
+
+
+@pytest.fixture
+def class_names_4():
+    """Internet dataset class names (4 classes)."""
+    return ["O. exaltata", "O. garganica", "O. incubacea", "O. sphegodes"]
+
+
+@pytest.fixture
+def class_names_2():
+    """Minimal 2-class names for fast tests."""
+    return [
+        "O. exaltata",
+        "O. garganica",
+    ]

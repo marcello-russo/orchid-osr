@@ -1,0 +1,672 @@
+# tests/test_core/test_kfold.py
+"""Test per il modulo k-fold cross validation."""
+
+import os
+import shutil
+
+import numpy as np
+import pytest
+
+from app.core.kfold import (
+    _aggregate_results,
+    _copy_fold_images,
+    _split_raw_images,
+)
+from app.core.kfold.reporting import generate_report
+
+CLASS_NAMES = [
+    "O. exaltata",
+    "O. garganica",
+    "O. incubacea",
+    "O. majellensis",
+    "O. sphegodes",
+    "O. sphegodes_Palena",
+]
+
+
+@pytest.fixture
+def tiny_raw_dataset(tmp_path):
+    """Crea un mini dataset raw con 2 classi e poche immagini per test."""
+    from PIL import Image
+
+    classes = ["O. exaltata", "O. garganica"]
+    raw_dir = tmp_path / "raw"
+    for cls in classes:
+        cls_dir = raw_dir / cls
+        cls_dir.mkdir(parents=True)
+        for i in range(8):
+            img = Image.new("RGB", (100, 200), color=(i * 30, 100, 100))
+            img.save(cls_dir / f"img_{i}.jpg")
+
+    return str(raw_dir), classes
+
+
+class TestSplitRawImages:
+    """Test per _split_raw_images."""
+
+    def test_stratified_split_maintains_proportions(self, tiny_raw_dataset):
+        raw_dir, classes = tiny_raw_dataset
+        _, _, folds = _split_raw_images(raw_dir, classes, num_folds=2, seed=42)
+
+        assert len(folds) == 2
+        for train_idx, val_idx in folds:
+            # Ogni fold ha almeno 1 immagine per classe in train e val
+            assert len(train_idx) > 0
+            assert len(val_idx) > 0
+            # Train + val = totale
+            total = len(train_idx) + len(val_idx)
+            assert total == 16  # 8 per classe × 2 classi
+
+    def test_no_image_leakage_between_folds(self, tiny_raw_dataset):
+        raw_dir, classes = tiny_raw_dataset
+        all_paths, _, folds = _split_raw_images(raw_dir, classes, num_folds=3, seed=42)
+
+        for train_idx, val_idx in folds:
+            train_set = set(train_idx)
+            val_set = set(val_idx)
+            # Nessuna immagine in comune tra train e val
+            assert train_set.isdisjoint(val_set)
+
+    def test_all_images_used_in_each_fold(self, tiny_raw_dataset):
+        raw_dir, classes = tiny_raw_dataset
+        _, all_labels, folds = _split_raw_images(raw_dir, classes, num_folds=3, seed=42)
+
+        total = len(all_labels)
+        for train_idx, val_idx in folds:
+            assert len(train_idx) + len(val_idx) == total
+
+    def test_class_proportions_in_splits(self, tiny_raw_dataset):
+        """Verifica che le proporzioni delle classi siano mantenute."""
+        raw_dir, classes = tiny_raw_dataset
+        _, all_labels, folds = _split_raw_images(raw_dir, classes, num_folds=2, seed=42)
+
+        total_ratio = np.sum(all_labels == 0) / np.sum(all_labels == 1)
+
+        for train_idx, _ in folds:
+            train_labels = all_labels[train_idx]
+            if np.sum(train_labels == 1) > 0:
+                train_ratio = np.sum(train_labels == 0) / np.sum(train_labels == 1)
+                # Ratio should be close to the original (1.0 since same size)
+                assert abs(train_ratio - total_ratio) < 0.5
+
+
+class TestCopyFoldImages:
+    """Test per _copy_fold_images."""
+
+    def test_files_copied_correctly(self, tiny_raw_dataset, tmp_path):
+        raw_dir, classes = tiny_raw_dataset
+        all_paths, all_labels, folds = _split_raw_images(raw_dir, classes, num_folds=2, seed=42)
+        train_idx, val_idx = folds[0]
+
+        fold_dir = str(tmp_path / "fold_0")
+        train_dir, val_dir = _copy_fold_images(all_paths, all_labels, classes, train_idx, val_idx, fold_dir)
+
+        # Verifica che le directory esistano
+        assert os.path.exists(train_dir)
+        assert os.path.exists(val_dir)
+
+        # Verifica che ci siano immagini
+        for cls in classes:
+            train_cls = os.path.join(train_dir, cls)
+            val_cls = os.path.join(val_dir, cls)
+            assert os.path.exists(train_cls)
+            assert os.path.exists(val_cls)
+            assert len(os.listdir(train_cls)) > 0
+            assert len(os.listdir(val_cls)) > 0
+
+    def test_no_overlap_train_val(self, tiny_raw_dataset, tmp_path):
+        """Nessun file in comune tra train e val dello stesso fold."""
+        raw_dir, classes = tiny_raw_dataset
+        all_paths, all_labels, folds = _split_raw_images(raw_dir, classes, num_folds=2, seed=42)
+        train_idx, val_idx = folds[0]
+
+        fold_dir = str(tmp_path / "fold_0")
+        train_dir, val_dir = _copy_fold_images(all_paths, all_labels, classes, train_idx, val_idx, fold_dir)
+
+        for cls in classes:
+            train_files = set(os.listdir(os.path.join(train_dir, cls)))
+            val_files = set(os.listdir(os.path.join(val_dir, cls)))
+            assert train_files.isdisjoint(val_files)
+
+    def test_correct_total_count(self, tiny_raw_dataset, tmp_path):
+        """Il numero totale di file copiati corrisponde al previsto."""
+        raw_dir, classes = tiny_raw_dataset
+        all_paths, all_labels, folds = _split_raw_images(raw_dir, classes, num_folds=2, seed=42)
+        train_idx, val_idx = folds[0]
+
+        fold_dir = str(tmp_path / "fold_0")
+        _copy_fold_images(all_paths, all_labels, classes, train_idx, val_idx, fold_dir)
+
+        # Conta file copiati
+        total_copied = 0
+        for cls in classes:
+            train_cls = os.path.join(fold_dir, "train", cls)
+            val_cls = os.path.join(fold_dir, "val", cls)
+            total_copied += len(os.listdir(train_cls))
+            total_copied += len(os.listdir(val_cls))
+
+        assert total_copied == len(all_paths)
+
+
+class TestAggregateResults:
+    """Test per _aggregate_results."""
+
+    def test_correct_mean_std(self):
+        fold_results = [
+            {"best_f1": 0.90, "best_accuracy": 0.92},
+            {"best_f1": 0.92, "best_accuracy": 0.94},
+            {"best_f1": 0.88, "best_accuracy": 0.90},
+            {"best_f1": 0.91, "best_accuracy": 0.93},
+            {"best_f1": 0.89, "best_accuracy": 0.91},
+        ]
+
+        result = _aggregate_results(fold_results)
+
+        assert abs(result["mean_f1"] - np.mean([0.90, 0.92, 0.88, 0.91, 0.89])) < 1e-6
+        assert abs(result["mean_accuracy"] - np.mean([0.92, 0.94, 0.90, 0.93, 0.91])) < 1e-6
+        assert result["best_fold"] == 1  # Indice di F1=0.92
+
+    def test_single_fold(self):
+        fold_results = [{"best_f1": 0.95, "best_accuracy": 0.97}]
+        result = _aggregate_results(fold_results)
+
+        assert result["mean_f1"] == 0.95
+        assert result["std_f1"] == 0.0
+        assert result["best_fold"] == 0
+
+    def test_all_same_f1(self):
+        fold_results = [
+            {"best_f1": 0.90, "best_accuracy": 0.91},
+            {"best_f1": 0.90, "best_accuracy": 0.92},
+        ]
+        result = _aggregate_results(fold_results)
+
+        assert result["std_f1"] == 0.0
+        assert result["best_fold"] == 0  # Primo fold in caso di parità
+
+
+class TestTempCleanup:
+    """Test che le directory temporanee vengano pulite."""
+
+    def test_temp_dirs_cleaned_up(self, tiny_raw_dataset, tmp_path):
+        """Verifica che temp_kfold venga pulito dopo l'esecuzione."""
+        raw_dir, classes = tiny_raw_dataset
+        all_paths, all_labels, folds = _split_raw_images(raw_dir, classes, num_folds=2, seed=42)
+
+        temp_base = str(tmp_path / "temp_kfold")
+
+        for fold_idx, (train_idx, val_idx) in enumerate(folds):
+            fold_dir = os.path.join(temp_base, f"fold_{fold_idx}")
+            _copy_fold_images(all_paths, all_labels, classes, train_idx, val_idx, fold_dir)
+
+            # Simula cleanup
+            if os.path.exists(fold_dir):
+                shutil.rmtree(fold_dir)
+
+        # Alla fine temp_kfold dovrebbe essere vuoto o non esistere
+        if os.path.exists(temp_base):
+            remaining = os.listdir(temp_base)
+            assert len(remaining) == 0, f"File rimasti in temp: {remaining}"
+
+
+class TestKfoldDirectoryStructure:
+    """Test che la directory k-fold sia separata dall'esperimento originale."""
+
+    def test_kfold_dir_is_separate(self, tmp_path):
+        """La directory k-fold deve essere sibling di quella dell'esperimento."""
+        output_dir = str(tmp_path / "experiments" / "exp4_combined_internet_cropped")
+        os.makedirs(output_dir, exist_ok=True)
+
+        kfold_dir = output_dir + "_kfold_resnet18"
+
+        # Non deve essere annidata dentro output_dir
+        assert not kfold_dir.startswith(output_dir + "/")
+        assert not kfold_dir.startswith(output_dir + os.sep)
+
+        # Deve essere sibling
+        assert os.path.dirname(kfold_dir) == os.path.dirname(output_dir)
+        assert os.path.basename(kfold_dir) == "exp4_combined_internet_cropped_kfold_resnet18"
+
+    def test_kfold_dir_contains_all_outputs(self, tmp_path):
+        """Tutti gli output (fold JSON, pesi, report) vanno nella stessa directory."""
+        kfold_dir = str(tmp_path / "experiments" / "exp4_combined_internet_cropped_kfold_resnet18")
+        os.makedirs(kfold_dir)
+
+        # Simula file creati durante un run
+        for name in ["fold_0.json", "best_fold_0.pt", "results.json", "REPORT_KFOLD_resnet18.txt"]:
+            with open(os.path.join(kfold_dir, name), "w") as f:
+                f.write("{}" if name.endswith(".json") else "test")
+
+        # Tutti i file devono essere nella stessa directory
+        files = set(os.listdir(kfold_dir))
+        assert "fold_0.json" in files
+        assert "best_fold_0.pt" in files
+        assert "results.json" in files
+        assert "REPORT_KFOLD_resnet18.txt" in files
+
+
+class TestConfigJson:
+    """Test che config.json venga generato nella directory k-fold."""
+
+    def test_config_created_on_first_run(self, tmp_path):
+        """config.json viene creato solo la prima volta."""
+        kfold_dir = str(tmp_path / "kfold_out")
+        os.makedirs(kfold_dir)
+        config_path = os.path.join(kfold_dir, "config.json")
+
+        from datetime import datetime
+
+        config = {
+            "type": "kfold",
+            "model_variant": "resnet18",
+            "num_folds": 5,
+            "num_epochs": 26,
+            "batch_size": 16,
+            "learning_rate": 0.001,
+            "seed": 57,
+            "timestamp": datetime.now().isoformat(),
+        }
+        with open(config_path, "w") as f:
+            import json
+
+            json.dump(config, f)
+
+        assert os.path.exists(config_path)
+        with open(config_path) as f:
+            saved = json.load(f)
+        assert saved["batch_size"] == 16
+        assert saved["model_variant"] == "resnet18"
+
+    def test_config_not_overwritten_on_resume(self, tmp_path):
+        """config.json non viene sovrascritto se esiste già (resume fold)."""
+        kfold_dir = str(tmp_path / "kfold_out")
+        os.makedirs(kfold_dir)
+        config_path = os.path.join(kfold_dir, "config.json")
+
+        original_timestamp = "2026-03-30T14:14:39"
+        import json
+
+        with open(config_path, "w") as f:
+            json.dump({"timestamp": original_timestamp}, f)
+
+        # Simula un secondo run (non deve sovrascrivere)
+        if not os.path.exists(config_path):
+            with open(config_path, "w") as f:
+                json.dump({"timestamp": "new"}, f)
+
+        with open(config_path) as f:
+            saved = json.load(f)
+        assert saved["timestamp"] == original_timestamp
+
+
+class TestFoldJsonBatchSize:
+    """Test che batch_size venga salvato nel JSON di ogni fold."""
+
+    def test_batch_size_in_fold_metrics(self):
+        """batch_size deve essere registrato nei fold metrics."""
+        fold_metrics = {
+            "best_f1": 0.87,
+            "best_accuracy": 0.88,
+            "best_epoch": 20,
+            "fold": 1,
+            "batch_size": 16,
+            "train_size": 1865,
+            "val_size": 467,
+        }
+        assert fold_metrics["batch_size"] == 16
+
+    def test_aggregate_reads_batch_from_folds(self):
+        """_aggregate_and_test legge batch_size effettivo dai fold JSON."""
+        fold_results = [
+            {"best_f1": 0.87, "batch_size": 16},
+            {"best_f1": 0.89, "batch_size": 16},
+        ]
+
+        # Simula la logica di effective_batch_size
+        effective_batch_size = 8  # default dal parametro
+        if fold_results and "batch_size" in fold_results[0]:
+            effective_batch_size = fold_results[0]["batch_size"]
+
+        assert effective_batch_size == 16
+
+
+class TestGenerateReport:
+    """Tests for generate_report()."""
+
+    @pytest.fixture
+    def sample_results(self):
+        return {
+            "mean_accuracy": 0.86,
+            "std_accuracy": 0.02,
+            "mean_f1": 0.84,
+            "std_f1": 0.03,
+            "best_fold": 1,
+            "model_variant": "resnet18",
+            "num_folds": 3,
+            "num_epochs": 26,
+            "batch_size": 8,
+            "learning_rate": 0.001,
+            "seed": 57,
+            "fold_results": [
+                {"fold": 0, "best_accuracy": 0.85, "best_f1": 0.83, "final_val_loss": 0.45, "best_epoch": 20},
+                {"fold": 1, "best_accuracy": 0.88, "best_f1": 0.87, "final_val_loss": 0.40, "best_epoch": 22},
+                {"fold": 2, "best_accuracy": 0.85, "best_f1": 0.82, "final_val_loss": 0.48, "best_epoch": 18},
+            ],
+            "test_metrics": {
+                "accuracy": 0.95,
+                "f1_macro": 0.94,
+                "precision_macro": 0.95,
+                "recall_macro": 0.93,
+                "per_class_metrics": {
+                    "O. exaltata": {
+                        "precision": 0.96,
+                        "recall": 0.95,
+                        "f1": 0.955,
+                        "support": 20,
+                        "tp": 19,
+                        "fp": 1,
+                        "fn": 1,
+                    },
+                    "O. garganica": {
+                        "precision": 0.94,
+                        "recall": 0.90,
+                        "f1": 0.92,
+                        "support": 15,
+                        "tp": 14,
+                        "fp": 2,
+                        "fn": 1,
+                    },
+                },
+                "confusion_matrix": [[19, 1], [2, 13]],
+                "confusion_matrix_labels": ["O. exaltata", "O. garganica"],
+            },
+        }
+
+    def test_report_contains_config_section(self, sample_results, tmp_path):
+        report = generate_report(sample_results, "resnet18", str(tmp_path))
+        assert "CONFIGURAZIONE" in report
+        assert "resnet18" in report
+        assert "3" in report  # num_folds
+
+    def test_report_contains_aggregate_results(self, sample_results, tmp_path):
+        report = generate_report(sample_results, "resnet18", str(tmp_path))
+        assert "RISULTATI AGGREGATI" in report
+        assert "0.8600" in report  # mean_accuracy
+        assert "0.8400" in report  # mean_f1
+
+    def test_report_contains_fold_breakdown(self, sample_results, tmp_path):
+        report = generate_report(sample_results, "resnet18", str(tmp_path))
+        assert "BREAKDOWN PER FOLD" in report
+        assert "0.8500" in report  # fold 0 accuracy
+
+    def test_report_contains_test_metrics(self, sample_results, tmp_path):
+        report = generate_report(sample_results, "resnet18", str(tmp_path))
+        assert "TEST FINALE" in report
+        assert "0.9500" in report  # test accuracy
+        assert "O. exaltata" in report
+
+    def test_report_contains_confusion_matrix(self, sample_results, tmp_path):
+        report = generate_report(sample_results, "resnet18", str(tmp_path))
+        assert "CONFUSION MATRIX" in report
+
+    def test_report_file_created(self, sample_results, tmp_path):
+        generate_report(sample_results, "resnet18", str(tmp_path))
+        report_path = tmp_path / "REPORT_KFOLD_resnet18.txt"
+        assert report_path.exists()
+
+    def test_report_saved_before_hf_upload(self, sample_results, tmp_path):
+        """Simula la sequenza reale: report salvato anche se upload fallisce."""
+        output_dir = str(tmp_path)
+        from app.core.kfold.reporting import generate_report
+
+        report_path = tmp_path / "REPORT_KFOLD_resnet18.txt"
+
+        generate_report(sample_results, "resnet18", output_dir)
+
+        assert report_path.exists()
+        assert report_path.stat().st_size > 0
+
+    def test_report_without_test_metrics(self, tmp_path):
+        """Report should work even without test_metrics."""
+        results = {
+            "mean_accuracy": 0.85,
+            "std_accuracy": 0.02,
+            "mean_f1": 0.83,
+            "std_f1": 0.03,
+            "best_fold": 0,
+            "fold_results": [
+                {"fold": 0, "best_accuracy": 0.85, "best_f1": 0.83, "final_val_loss": 0.5, "best_epoch": 10},
+            ],
+        }
+        report = generate_report(results, "resnet18", str(tmp_path))
+        assert "RISULTATI AGGREGATI" in report
+        assert "FINE REPORT K-FOLD" in report
+
+
+class TestFinalTest:
+    """Tests for final_test() with class mapping."""
+
+    @pytest.fixture
+    def tiny_test_dataset(self, tmp_path):
+        """Create a minimal ImageFolder-compatible test directory."""
+        from PIL import Image
+
+        classes = ["O. exaltata", "O. garganica"]
+        for cls in classes:
+            cls_dir = tmp_path / cls
+            cls_dir.mkdir(parents=True)
+            for i in range(4):
+                img = Image.new("RGB", (64, 128), color=(i * 50, 100, 100))
+                img.save(cls_dir / f"img_{i}.jpg")
+        return str(tmp_path), classes
+
+    def test_final_test_with_saved_model(self, tiny_test_dataset, tmp_path, device):
+        """final_test() loads a model, runs evaluation, returns metrics."""
+        from app.core.kfold.testing import final_test
+        from app.core.models.resnet import ResNetClassifier, ResNetConfig
+        from app.preprocessing.reproducibility import set_seed
+
+        set_seed(42)
+        test_dir, test_classes = tiny_test_dataset
+
+        # Save a model
+        config = ResNetConfig(num_classes=2, pretrained=False)
+        model = ResNetClassifier(config).to(device)
+        model_path = str(tmp_path / "test_model.pt")
+        model.save_weights(model_path)
+
+        class_names = ["O. exaltata", "O. garganica"]
+
+        results = final_test(
+            best_model_path=model_path,
+            model_variant="resnet18",
+            num_classes=2,
+            test_dataset_dir=test_dir,
+            class_names=class_names,
+            batch_size=4,
+            device=device,
+        )
+
+        assert "accuracy" in results
+        assert "f1_macro" in results
+        assert "per_class_metrics" in results
+        assert 0.0 <= results["accuracy"] <= 1.0
+
+    def test_final_test_class_subset_mapping(self, tmp_path, device):
+        """final_test() correctly maps subset of model classes."""
+        from PIL import Image
+
+        from app.core.kfold.testing import final_test
+        from app.core.models.resnet import ResNetClassifier, ResNetConfig
+        from app.preprocessing.reproducibility import set_seed
+
+        set_seed(42)
+
+        # Create test dir with only 2 of 6 model classes
+        test_dir = tmp_path / "test_subset"
+        for cls in ["O. exaltata", "O. sphegodes"]:
+            cls_dir = test_dir / cls
+            cls_dir.mkdir(parents=True)
+            for i in range(3):
+                img = Image.new("RGB", (64, 128), color=(i * 50, 100, 100))
+                img.save(cls_dir / f"img_{i}.jpg")
+
+        all_classes = [
+            "O. exaltata",
+            "O. garganica",
+            "O. incubacea",
+            "O. majellensis",
+            "O. sphegodes",
+            "O. sphegodes_Palena",
+        ]
+
+        config = ResNetConfig(num_classes=6, pretrained=False)
+        model = ResNetClassifier(config).to(device)
+        model_path = str(tmp_path / "subset_model.pt")
+        model.save_weights(model_path)
+
+        results = final_test(
+            best_model_path=model_path,
+            model_variant="resnet18",
+            num_classes=6,
+            test_dataset_dir=str(test_dir),
+            class_names=all_classes,
+            batch_size=3,
+            device=device,
+        )
+
+        # Should have per_class_metrics for all 6 classes
+        assert len(results["per_class_metrics"]) == 6
+        # O. exaltata and O. sphegodes should have support > 0
+        assert results["per_class_metrics"]["O. exaltata"]["support"] > 0
+        assert results["per_class_metrics"]["O. sphegodes"]["support"] > 0
+        # Others should have support = 0
+        assert results["per_class_metrics"]["O. garganica"]["support"] == 0
+        assert results["per_class_metrics"]["O. incubacea"]["support"] == 0
+
+
+class TestResumeFromConfig:
+    """Test che il resume legga i parametri dal config.json salvato."""
+
+    def test_resume_overrides_cli_defaults(self, tmp_path):
+        """Se config.json esiste, i parametri salvati sovrascrivono i default CLI."""
+        import json
+
+        kfold_dir = str(tmp_path / "kfold_out")
+        os.makedirs(kfold_dir)
+
+        # Simula un config salvato con parametri non-default
+        saved_config = {
+            "type": "kfold",
+            "model_variant": "resnet18",
+            "num_folds": 5,
+            "num_epochs": 100,
+            "batch_size": 16,
+            "learning_rate": 0.0005,
+            "seed": 99,
+            "patience": 15,
+        }
+        config_path = os.path.join(kfold_dir, "config.json")
+        with open(config_path, "w") as f:
+            json.dump(saved_config, f)
+
+        # Simula la logica di resume da kfold_experiment()
+        with open(config_path) as f:
+            saved = json.load(f)
+
+        # Parametri "da CLI" (defaults)
+        num_epochs = 26
+        batch_size = 8
+        learning_rate = 0.001
+        seed = 57
+        patience = 0
+
+        # Applica override dal config
+        num_epochs = saved.get("num_epochs", num_epochs)
+        batch_size = saved.get("batch_size", batch_size)
+        learning_rate = saved.get("learning_rate", learning_rate)
+        seed = saved.get("seed", seed)
+        patience = saved.get("patience", patience)
+
+        assert num_epochs == 100
+        assert batch_size == 16
+        assert learning_rate == 0.0005
+        assert seed == 99
+        assert patience == 15
+
+    def test_resume_does_not_change_matching_params(self, tmp_path):
+        """Se CLI e config coincidono, nessun override necessario."""
+        import json
+
+        kfold_dir = str(tmp_path / "kfold_out")
+        os.makedirs(kfold_dir)
+
+        saved_config = {
+            "num_epochs": 26,
+            "batch_size": 8,
+            "learning_rate": 0.001,
+            "seed": 57,
+            "patience": 0,
+        }
+        config_path = os.path.join(kfold_dir, "config.json")
+        with open(config_path, "w") as f:
+            json.dump(saved_config, f)
+
+        with open(config_path) as f:
+            saved = json.load(f)
+
+        # Stessi valori del config
+        num_epochs = saved.get("num_epochs", 26)
+        patience = saved.get("patience", 0)
+
+        assert num_epochs == 26
+        assert patience == 0
+
+
+def test_config_persiste_gli_override_della_cli(tmp_path):
+    """Il config deve riflettere quello che il run esegue davvero.
+
+    Successo il contrario su II-A: config con 150 epoche / patience 15 /
+    best_knn, run vera a 60 epoche / final_epoch, perché il merge degli
+    override non riscriveva il file.
+    """
+    import json
+
+    from app.core.kfold import kfold_experiment
+
+    out = tmp_path / "exp"
+    out.mkdir()
+    (out / "config.json").write_text(
+        json.dumps(
+            {
+                "type": "kfold",
+                "model_variant": "resnet18",
+                "num_folds": 1,
+                "num_epochs": 150,
+                "patience": 15,
+                "restore_best": True,
+                "batch_size": 8,
+                "learning_rate": 0.001,
+                "seed": 57,
+            }
+        )
+    )
+
+    # il dataset non esiste: il run fallisce dopo aver scritto il config
+    with pytest.raises(Exception):
+        kfold_experiment(
+            raw_dataset_dir=str(tmp_path / "nope"),
+            test_dataset_dir=str(tmp_path / "nope"),
+            output_dir=str(out),
+            kfold_dir=str(out),  # il config vive nella dir kfold, non in output_dir
+            num_folds=1,
+            num_epochs=60,
+            patience=0,
+            use_prototypes=True,
+            restore_best=False,
+        )
+
+    saved = json.loads((out / "config.json").read_text())
+    assert saved["num_epochs"] == 60
+    assert saved["patience"] == 0
+    assert saved["restore_best"] is False

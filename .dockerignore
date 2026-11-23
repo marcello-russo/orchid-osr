@@ -1,0 +1,83 @@
+# Heavy dev/experiment data (not needed for inference image)
+backend/experiments/
+backend/models/
+backend/dataset/
+backend/test_dataset/
+dataset/
+models/
+models_1/
+inference/
+results/
+results_1/
+logs/
+logs_1/
+logs_2/
+
+# Tests and CI (not needed in prod)
+backend/tests/
+backend/scripts/ci/
+.github/
+
+# Upload scripts (only needed on dev machine)
+backend/scripts/hf_tools/upload_*
+
+# Docs
+docs/
+*.md
+README*
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+
+# Python
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+env/
+*.egg-info/
+.eggs/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Docker
+.docker/
+Dockerfile
+compose*.yml
+edge.yml
+
+# Frontend dev (built separately in Docker multi-stage)
+node_modules/
+frontend/node_modules/
+frontend/dist/
+
+# Secrets
+.env
+
+# Dati locali che non devono entrare nell'immagine:
+#  - merged_weights: 1,7 GB di checkpoint fusi, servono solo agli upload su HF
+#  - users.json / jwt_secret.txt / orchid.db: in produzione la fonte è il volume
+#    /data (l'entrypoint esporta USERS_PATH e JWT_SECRET_PATH), quindi le copie
+#    locali sarebbero al massimo un segreto in più dentro l'immagine
+backend/data/merged_weights/
+backend/data/users.json
+backend/data/jwt_secret.txt
+backend/data/orchid.db
+backend/data/osr_stats/
+
+# Misc
+*.log
+*.tmp
+**/.DS_Store
+superpowers/
+assets/

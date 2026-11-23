@@ -1,0 +1,16 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.5.0
+    hooks:
+      - id: ruff
+        args: [--fix]
+        files: ^backend/(app|tests|scripts)/
+      - id: ruff-format
+        files: ^backend/(app|tests|scripts)/
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy (app/cli, come in CI)
+        entry: bash -c 'cd backend && mypy app/cli --ignore-missing-imports'
+        language: system
+        pass_filenames: false

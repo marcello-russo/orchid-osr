@@ -1,0 +1,201 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# Un push nuovo sullo stesso ref annulla il run precedente: i minuti del runner
+# non si spendono su commit già superati.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+          cache: "pip"
+      # Stesse versioni dell'immagine: torch/torchvision dall'indice CPU
+      # (un wheel CUDA da ~5 GB esaurisce il disco del runner), tutto il resto
+      # dal lock. Se la CI installasse i range di pyproject, un verde qui non
+      # direbbe nulla sull'immagine che va in produzione.
+      - run: pip install --no-deps --index-url https://download.pytorch.org/whl/cpu -r torch-pins.txt
+      - run: pip install -r requirements-dev.txt
+      # Come nell'immagine: registra il comando `orchid` e valida il packaging.
+      # --no-build-isolation: la build usa il setuptools del lock (in
+      # requirements.txt) invece di scaricare l'ultimo da PyPI al momento.
+      - run: pip install --no-deps --no-build-isolation .
+      - run: ruff check app/ tests/ scripts/
+      - run: ruff format --check app/ tests/ scripts/ --diff
+      # Niente --cov-fail-under qui: la soglia è in pyproject.toml (fonte unica).
+      - run: pytest -q --cov=app --cov=scripts --cov-report=term
+
+  mypy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+          cache: "pip"
+      # mypy con gli stessi tipi che ha in locale, cioè con le dipendenze vere
+      # del progetto: senza fastapi/starlette ogni `@router.get(...)` vale `Any`
+      # e `strict` segnala 62 `untyped-decorator` sul runner e zero in locale
+      # (successo davvero con la v0.4.0: verde qui, rosso in CI). Idem typer per
+      # `@app.command()`. Si installa il lock intero — niente elenco da tenere
+      # allineato a mano — alla versione esatta di `requirements.txt`: un gate
+      # il cui esito dipende dalla release di ieri non è un gate.
+      #
+      # torch però va preso dall'indice CPU **prima**, come nel job backend:
+      # accelerate/peft/captum lo tirano dentro come dipendenza e senza il pin
+      # arrivano 3,2 GB di wheel CUDA non versionate (una versione di torch
+      # scelta da PyPI quel giorno, cioè il gate che dipende dalla release di
+      # ieri). Con 2.15.0+cpu già soddisfatto, `pip install` del lock non tocca
+      # torch: risolve solo il resto.
+      - name: mypy + le dipendenze i cui tipi controlla
+        run: |
+          pip install --no-deps --index-url https://download.pytorch.org/whl/cpu -r torch-pins.txt
+          pip install -r requirements.txt "mypy==1.19.1"
+      # Gate reale, in due sensi: `continue-on-error` lo rendeva decorativo
+      # prima (rosso per settimane senza fermare nulla), e ogni modulo di
+      # app/cli aveva `ignore_errors = true` in pyproject.toml, quindi
+      # passavano solo i due __init__.py (lo rendeva decorativo la seconda
+      # volta). Ora i corpi sono controllati: la sola deroga è sulle
+      # annotazioni mancanti, e `tests/test_ci_mypy.py` verifica che nessun
+      # override torni a spegnere lo scope.
+      #
+      # Lo scope copre anche API, preprocessing, config e i tre moduli
+      # auth/DB: lì `ignore_errors = false` scavalca il wildcard
+      # `app.core.*` (mypy applica il pattern più specifico).
+      - run: mypy app/cli app/api app/preprocessing app/config.py app/core/auth.py app/core/auth_store.py app/core/db.py --ignore-missing-imports
+
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      # Pinnato come mypy: l'allowlist vale per questa versione del database
+      # di vulnerabilità, non per una futura.
+      - run: pip install pip-audit==2.10.1
+      # Allowlist motivata in backend/audit-ignores.txt: qualunque altra
+      # vulnerabilità nota nelle dipendenze pinnate blocca il merge.
+      - name: Dipendenze Python (pip-audit)
+        run: bash scripts/ci/pip_audit.sh
+
+  docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - run: bash -n entrypoint.sh
+      - name: Python syntax check
+        run: python3 backend/scripts/ci/check_syntax.py
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      - name: Build and cache
+        uses: docker/build-push-action@v7
+        with:
+          target: runtime
+          tags: orchid-osr
+          load: true
+          cache-from: type=gha,scope=runtime
+          cache-to: type=gha,mode=max,scope=runtime
+      # Smoke test nella configurazione che gira davvero in produzione: con il
+      # volume /data, così passa dal ramo root→app dell'entrypoint (chown +
+      # setpriv) che altrimenti nessuno esercitava. E anche su `/`: se il
+      # `COPY --from=frontend` o la dist si rompessero, il job restava verde.
+      - name: Smoke test — API e SPA, con volume /data
+        run: |
+          # Volume nominato, non bind mount: l'entrypoint fa `chown` del volume
+          # all'utente applicativo (10001), quindi dopo il primo avvio il
+          # runner non può più cancellare il contenuto di una directory sua —
+          # `rm -rf .ci-data` faceva fallire lo step *dopo* un test riuscito.
+          # `docker volume rm` invece non ha padroni.
+          VOLUME=orchid-ci-smoke
+          docker volume rm -f "$VOLUME" >/dev/null 2>&1 || true
+          container_id=$(docker run -d -v "$VOLUME:/data" orchid-osr)
+          cleanup() {
+            docker logs "$container_id" 2>/dev/null | tail -40 || true
+            docker rm -f "$container_id" >/dev/null 2>&1 || true
+            docker volume rm -f "$VOLUME" >/dev/null 2>&1 || true
+          }
+          check() {
+            docker exec "$container_id" python3 -c "import sys, urllib.request; r = urllib.request.urlopen('http://localhost:7860/health', timeout=5); sys.exit(0 if r.status == 200 else 1)" || return 1
+            docker exec "$container_id" python3 -c "import sys, urllib.request; b = urllib.request.urlopen('http://localhost:7860/', timeout=5).read().decode(); sys.exit(0 if '<div id=\"root\">' in b else 1)"
+          }
+          for i in $(seq 1 18); do
+            sleep 5
+            if check 2>/dev/null; then
+              echo "OK: /health e / rispondono dopo $((i*5))s"
+              cleanup
+              exit 0
+            fi
+            status=$(docker inspect "$container_id" --format='{{.State.Status}}')
+            if [ "$status" = "exited" ]; then
+              echo "FAIL: container exited (code $(docker inspect "$container_id" --format='{{.State.ExitCode}}'))"
+              cleanup
+              exit 1
+            fi
+          done
+          echo "FAIL: /health o / non rispondono dopo 90s"
+          cleanup
+          exit 1
+      # Vulnerabilità dentro l'immagine finale (base image + wheel installati).
+      # `ignore-unfixed: true`: chiediamo solo ciò per cui esiste una patch —
+      # una CVE senza fix non è azionabile e bloccherebbe il progetto per sempre.
+      - name: Vulnerabilità dell'immagine (Trivy)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: orchid-osr
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          format: table
+
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: "frontend/package-lock.json"
+      - run: npm ci
+      - run: npm run lint
+      # Le traduzioni IT/EN sono un contratto: una chiave aggiunta solo da un
+      # lato non deve arrivare in produzione (il fallback silenzioso la nasconde).
+      - name: Traduzioni IT/EN allineate
+        run: npm run check-i18n
+      # 110 test già esistenti che nessuno eseguiva: girano in ~30s.
+      - name: Test (vitest)
+        run: npm test
+      - run: npm run build
+

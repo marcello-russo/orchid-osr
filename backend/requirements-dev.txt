@@ -1,0 +1,13 @@
+# Solo sviluppo/test: pytest, ruff e i loro plugin.
+# `-r requirements.txt` mantiene un solo set di versioni per runtime e test.
+#
+# Generato da pyproject.toml: bash backend/scripts/ci/sync_requirements.sh
+
+-r requirements.txt
+coverage==7.17.3
+iniconfig==2.3.1
+pluggy==1.7.0
+pytest==9.2.0
+pytest-cov==7.1.0
+pytest-timeout==2.4.0
+ruff==0.5.7

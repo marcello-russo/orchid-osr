@@ -1,0 +1,5 @@
+hostnames:
+  # Demo pubblica del progetto: auth fatta dall'app (ruoli admin/researcher/viewer).
+  - host: osr.marrusso.dev
+    class: app-auth
+    service: "http://app:7860"
