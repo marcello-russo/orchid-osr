@@ -322,7 +322,8 @@
     "deselect": "Deselect",
     "view_experiment": "View Experiment",
     "dataset_overview": "Dataset Overview",
-    "click_hint": "Click a point to inspect the image"
+    "click_hint": "Click a point to inspect the image",
+    "public_view": "Public preview — Studio II-A, DINOv2-Small"
   },
   "experiment": {
     "comparing": "Comparing:",

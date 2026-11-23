@@ -167,6 +167,10 @@ export async function fetchComparison() {
   return fetchApi<import("./types").ModelComparisonResponse>("/api/comparison");
 }
 
+export async function fetchPublicEmbeddings() {
+  return fetchApi<import("./types").EmbeddingResponse>("/api/embeddings/public");
+}
+
 export async function fetchEmbeddings(experiment?: string, method: string = "tsne_3d") {
   const params = new URLSearchParams({ method });
   if (experiment) params.set("experiment", experiment);

@@ -73,12 +73,12 @@ function App() {
             element={<ErrorBoundary><Suspense fallback={<PageFallback />}><DatasetPage /></Suspense></ErrorBoundary>}
           />
 
-          <Route element={<ProtectedRoute role="user" />}>
-            <Route
-              path="/embeddings"
-              element={<ErrorBoundary><Suspense fallback={<PageFallback />}><EmbeddingsPage /></Suspense></ErrorBoundary>}
-            />
-          </Route>
+          {/* Vetrina: chi non ha un account vede lo spazio latente in sola
+              lettura (coordinate precalcolate, nessuna immagine del dataset). */}
+          <Route
+            path="/embeddings"
+            element={<ErrorBoundary><Suspense fallback={<PageFallback />}><EmbeddingsPage /></Suspense></ErrorBoundary>}
+          />
 
           {/* Senza catch-all un indirizzo sconosciuto mostrava il layout con
               il contenuto vuoto: nessun messaggio, sembrava un errore. */}
