@@ -2,7 +2,8 @@ import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Box, RotateCw, ZoomIn, ZoomOut, Image as ImageIcon } from "lucide-react";
-import { useEmbeddings } from "@/hooks/useEmbeddings";
+import { useEmbeddings, usePublicEmbeddings } from "@/hooks/useEmbeddings";
+import { useAppStore } from "@/stores/useAppStore";
 import { Scatter3D } from "@/features/embeddings/Scatter3D";
 import { Scatter2D } from "@/features/embeddings/Scatter2D";
 import { formatPercent } from "@/lib/format";
@@ -51,7 +52,12 @@ export function EmbeddingsPage() {
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
   const [imgError, setImgError] = useState(false);
 
-  const { data, isLoading, error } = useEmbeddings(experiment, method);
+  // Chi non ha un account vede la vetrina: esperimento fisso, coordinate
+  // precalcolate, nessuna immagine del dataset.
+  const user = useAppStore((s) => s.user);
+  const authQuery = useEmbeddings(experiment, method, !!user);
+  const publicQuery = usePublicEmbeddings();
+  const { data, isLoading, error } = user ? authQuery : publicQuery;
 
   const speciesColors = useMemo(() => {
     if (!data) return {} as Record<string, string>;
@@ -106,6 +112,12 @@ export function EmbeddingsPage() {
 
       {/* Selectors — always visible */}
       <div className="flex flex-wrap gap-2">
+        {!user && (
+          <span className="text-xs text-muted-foreground bg-muted/40 rounded-lg px-2.5 py-1.5">
+            {t("embeddings.public_view")}
+          </span>
+        )}
+        {user && (
         <select value={experiment} onChange={(e) => setExperiment(e.target.value)}
           className="text-xs bg-card border border-border/50 rounded-lg px-2.5 py-1.5 text-foreground cursor-pointer appearance-auto">
           {EXP_OPTIONS.map((g) => (
@@ -114,6 +126,8 @@ export function EmbeddingsPage() {
             </optgroup>
           ))}
         </select>
+        )}
+        {user && (
         <select value={method} onChange={(e) => setMethod(e.target.value)}
           className="text-xs bg-card border border-border/50 rounded-lg px-2.5 py-1.5 text-foreground cursor-pointer appearance-auto">
           <option value="tsne_3d" className="bg-card text-foreground">{t("research.method_tsne3d")}</option>
@@ -121,6 +135,8 @@ export function EmbeddingsPage() {
           <option value="umap_2d" className="bg-card text-foreground">{t("research.method_umap2d")}</option>
           <option value="umap_3d" className="bg-card text-foreground">{t("research.method_umap3d")}</option>
         </select>
+        )}
+        {user && (
         <select value={split} onChange={(e) => setSplit(e.target.value)}
           className="text-xs bg-card border border-border/50 rounded-lg px-2.5 py-1.5 text-foreground cursor-pointer appearance-auto">
           <option value="all" className="bg-card text-foreground">{t("research.split_all")}</option>
@@ -129,6 +145,7 @@ export function EmbeddingsPage() {
           <option value="known" className="bg-card text-foreground">{t("research.split_known")}</option>
           <option value="novel" className="bg-card text-foreground">{t("research.split_novel")}</option>
         </select>
+        )}
         <Link to={`/experiments/${experiment}`}
           className="text-xs text-primary hover:underline px-2 py-1.5 font-medium">
           {t("embeddings.view_experiment")} →
@@ -192,7 +209,7 @@ export function EmbeddingsPage() {
             </div>
 
             {/* Selected point image — only when a point is selected */}
-            {selectedPoint && (
+            {selectedPoint && user && (
               <div className="rounded-xl border border-border/40 bg-muted/20 overflow-hidden">
                 <div className="aspect-square bg-muted/30 flex items-center justify-center relative">
                   {imgError ? (
@@ -224,7 +241,7 @@ export function EmbeddingsPage() {
       )}
 
       {/* Mobile bottom sheet: la foto selezionata appare subito, senza scroll */}
-      {selectedPoint && (
+      {selectedPoint && user && (
         <div className="lg:hidden fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true" aria-label={selectedPoint.species}>
           <button aria-label={t("embeddings.deselect")} onClick={() => setSelectedIdx(null)}
             className="absolute inset-0 bg-black/50 cursor-default" />

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import i18n from "@/lib/i18n";
 import { fetchInvites, generateInvites, deleteUser } from "@/lib/api";
@@ -62,7 +62,7 @@ export function UserManagementPage() {
     useShallow((s) => ({ username: s.user?.username, role: s.user?.role }))
   );
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const data = await fetchInvites();
@@ -76,11 +76,11 @@ export function UserManagementPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   const handleGenerate = async () => {
     setGenerating(true);

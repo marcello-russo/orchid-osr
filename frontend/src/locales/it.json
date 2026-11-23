@@ -322,7 +322,8 @@
     "deselect": "Deseleziona",
     "view_experiment": "Vai all'Esperimento",
     "dataset_overview": "Panoramica Dataset",
-    "click_hint": "Clicca un punto per ispezionare l'immagine"
+    "click_hint": "Clicca un punto per ispezionare l'immagine",
+    "public_view": "Anteprima pubblica — Studio II-A, DINOv2-Small"
   },
   "experiment": {
     "comparing": "Confronto:",
