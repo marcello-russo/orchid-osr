@@ -33,11 +33,6 @@ Sei specie di *Ophrys* morfologicamente simili, una classe novel nascosta (*O. g
 
 ## Risultati (dalla tesi)
 
-> **Questi numeri sono quelli della build della tesi (`v0.5.1`).** Per **DINOv2-Small** è disponibile
-> la run più recente su 5 fold: **II-A F1 0,929 / AUROC 0,780**, **II-B F1 0,923 / AUROC 0,836**.
-> Le altre architetture sono in aggiornamento; `scripts/ablation_sphor.py` documenta il confronto tra
-> varianti.
-
 ### Studio I-A (Exp 1) — Baseline Cross-Entropy
 
 | Modello | F1 Test |

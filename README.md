@@ -33,10 +33,6 @@ Six morphologically similar *Ophrys* species, one held-out novel class (*O. garg
 
 ## Results (from thesis)
 
-> **These figures are from the thesis build (`v0.5.1`).** A newer 5-fold run of Studio II-A and II-B
-> is available for **DINOv2-Small**: **II-A F1 0.929 / AUROC 0.780**, **II-B F1 0.923 / AUROC 0.836**.
-> The other architectures are being re-run; `scripts/ablation_sphor.py` documents the variant comparison.
-
 ### Studio I-A (Exp 1) — Cross-Entropy Baseline
 
 | Model | F1 Test |
