@@ -17,7 +17,7 @@ fallisce anche su un solo errore di console o una richiesta fallita (i
 Uso:
 
     scripts/smoke-pages.py                                  # https://osr.marrusso.dev
-    scripts/smoke-pages.py --url http://127.0.0.1:8000 --env-file /srv/orchid/secrets/app.env
+    scripts/smoke-pages.py --url http://127.0.0.1:8000 --env-file .env
     ORCHID_SMOKE_CHROME=/path/to/chrome scripts/smoke-pages.py
 
 Serve Playwright con Chromium (`pip install playwright && playwright install
@@ -39,7 +39,7 @@ import urllib.request
 from pathlib import Path
 
 DEFAULT_URL = os.environ.get("ORCHID_URL", "https://osr.marrusso.dev")
-DEFAULT_ENV_FILE = os.environ.get("ORCHID_SMOKE_ENV", "/srv/orchid/secrets/app.env")
+DEFAULT_ENV_FILE = os.environ.get("ORCHID_SMOKE_ENV", ".env")
 DETAIL_EXPERIMENT = "exp4_sphor_ncd_dinov2_base"
 USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36"
 SECTIONS = (
