@@ -1,41 +1,55 @@
 # tests/test_ci_release.py
-"""Il job della release deve ripubblicare una bozza, non saltarla.
+"""La catena tag → build → Release → deploy deve restare una sola catena.
 
-`git push :refs/tags/vX` seguito dal tag nuovo sulla commit corretta è il modo
-normale di correggere un rilascio, ma GitHub converte la release orfana in
-**bozza**. Il job diceva "release già presente: nessuna modifica" e usciva: la
-versione restava fuori da "Latest", con le note del commit sbagliato, e nessuno
-se ne accorgeva (è successo con la v0.4.0). Questo test legge il workflow vero.
+Publish e deploy sono due caller di ~20 righe che delegano al dispatcher
+centrale (`marcello-russo/actions`): qui non si costruisce nulla, si manda un
+segnale. Il legame fragile è nei payload: se `draft_release` tornasse al
+default, la Release resterebbe in bozza e **il deploy non partirebbe mai**
+(l'evento `release: published` non arriverebbe); se il deploy perdesse
+`assets`, l'host resterebbe sul compose vecchio e il tag non sarebbe più la
+fonte di verità. Questo test legge i workflow veri, non una copia.
 """
 
 import pathlib
 import re
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-PUBLISH = ROOT / ".github" / "workflows" / "docker-publish.yml"
+WORKFLOWS = ROOT / ".github" / "workflows"
 
 
-def _release_step() -> str:
-    """Il blocco `run: |` dello step che crea la release (senza commenti)."""
-    text = PUBLISH.read_text(encoding="utf-8")
-    start = text.index("GitHub Release (note dai commit)")
-    end = text.index("prune:", start)
-    block = text[start:end]
-    return "\n".join(line for line in block.splitlines() if not line.lstrip().startswith("#"))
+def _flat(name: str) -> str:
+    """Il file senza commenti: i commenti non devono soddisfare le asserzioni."""
+    lines = (WORKFLOWS / name).read_text(encoding="utf-8").splitlines()
+    return " ".join(line for line in lines if not line.lstrip().startswith("#"))
 
 
-def test_a_draft_release_is_republished_not_skipped():
-    step = _release_step()
-    assert "isDraft" in step, "il job non distingue una bozza da una release pubblicata"
-    assert re.search(r"gh release edit \"\$TAG\" --draft=false", step), "manca la ripubblicazione della bozza"
-    # La guardia "esci subito" deve essere condizionata alla non-bozza: se
-    # tornasse incondizionata, il caso bozza resterebbe muto.
-    guard = re.search(r'if gh release view "\$TAG".*?exit 0', step, re.DOTALL)
-    assert guard is not None, "manca la guardia sulla release già presente"
-    assert "--json isDraft" in guard.group(0), "la guardia esce anche sulle bozze"
+def test_publish_publishes_the_release_so_the_deploy_can_start():
+    publish = _flat("docker-publish.yml")
+    assert "event_type=docker-publish" in publish
+    assert (
+        "client_payload[draft_release]=false" in publish
+    ), "con la Release in bozza l'evento `release: published` non arriva e il deploy non parte"
+    assert re.search(
+        r'client_payload\[services\]=.\[\{"service":"app"', publish
+    ), "il payload deve dichiarare il servizio app e i path che lo ricompilano"
 
 
-def test_notes_come_from_the_commits_between_tags():
-    step = _release_step()
-    assert "--no-merges" in step, "le note devono elencare i commit, non il merge"
-    assert "git describe --tags --abbrev=0" in step, "la base del diff è il tag antenato, non il semver più alto"
+def test_deploy_starts_from_the_published_release():
+    deploy = _flat("deploy-vps.yml")
+    assert re.search(r"release:\s+types: \[published\]", deploy), "il deploy deve partire dalla Release pubblicata"
+    assert "event_type=vps-deploy" in deploy
+    for field in (
+        "compose_dir]=/srv/orchid",
+        "compose_file]=compose.yml",
+        "version_var]=ORCHID_VERSION",
+        "assets]='compose.yml:compose.yml edge.yml:edge.yml'",
+        "health_url]=https://osr.marrusso.dev/health",
+    ):
+        assert field in deploy, f"payload di deploy incompleto: {field}"
+
+
+def test_the_tag_is_the_only_version_source():
+    """Mai un `latest` o un tag hardcoded nel compose di produzione."""
+    compose = (ROOT / "compose.yml").read_text(encoding="utf-8")
+    assert "ghcr.io/marcello-russo/orchid-osr-app:${ORCHID_VERSION:" in compose
+    assert ":latest" not in compose

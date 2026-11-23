@@ -179,8 +179,11 @@ Download from HuggingFace: `snapshot_download("marcellorusso/orchid-osr-dataset"
 
 ## Deploy
 
-The application ships as a single `app` image built in CI on every `v*` tag; the live demo runs at
-https://osr.marrusso.dev. Deployment details are deliberately not part of this repository.
+A tag is the only manual act. On `v*` the shared pipeline builds the `app` image, pushes it to GHCR
+and publishes the GitHub Release; publishing the Release is what promotes that same tag to the live
+demo at https://osr.marrusso.dev. The host pulls the versioned image and restarts the stack, with
+`compose.yml` taken from the tag: a rollback is an older tag re-published, and the configuration
+comes back with it.
 
 Tag rules: patch for fixes, minor for features, major for incompatible changes. Tags record published
 versions, not the development history.

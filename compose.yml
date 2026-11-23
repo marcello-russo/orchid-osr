@@ -1,11 +1,11 @@
 # PRODUZIONE — solo pull, mai build.
-# Uso: ORCHID_VERSION=v0.2.0 docker compose pull && docker compose up -d
-# La versione è obbligatoria: fail-fast invece di `latest` silenzioso.
+# Il deploy lo esegue il dispatcher centrale: `ORCHID_VERSION` arriva dal tag
+# della Release, non da un `latest` silenzioso (fail-fast se manca).
 name: orchid
 
 services:
   app:
-    image: "ghcr.io/marcello-russo/orchid-osr:${ORCHID_VERSION:?ORCHID_VERSION mancante (es. v0.2.0)}"
+    image: "ghcr.io/marcello-russo/orchid-osr-app:${ORCHID_VERSION:?ORCHID_VERSION mancante (es. v0.9.0)}"
     container_name: orchid-app
     restart: unless-stopped
     env_file:

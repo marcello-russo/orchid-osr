@@ -164,8 +164,10 @@ Download: `snapshot_download("marcellorusso/orchid-osr-dataset", repo_type="data
 
 ## Deploy
 
-L'applicazione è una sola immagine `app`, costruita in CI a ogni tag `v*`; la demo gira su
-https://osr.marrusso.dev. I dettagli di deploy non fanno parte di questo repository.
+Il tag è l'unico atto manuale. Su `v*` la pipeline condivisa costruisce l'immagine `app`, la pubblica
+su GHCR e pubblica la Release; è la Release che promuove quel tag sulla demo
+https://osr.marrusso.dev. L'host tira giù l'immagine versionata e riavvia lo stack, con `compose.yml`
+preso dal tag: un rollback è un tag precedente ripubblicato, e la configurazione torna con lui.
 
 Si tagga con patch per i fix, minor per le funzionalità, major per i cambi incompatibili: i tag
 registrano le versioni pubblicate, non la cronologia dello sviluppo.

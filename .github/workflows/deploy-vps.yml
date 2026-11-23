@@ -1,0 +1,50 @@
+# Deploy delegato al dispatcher centrale (marcello-russo/actions).
+#
+# Solo promozione esplicita: pubblicare la Release deploya quel tag. Rollback =
+# ripubblicare (o dispatchare) un tag precedente, che riporta anche il compose
+# di allora — il tag è l'unica fonte di verità, l'host è solo cache.
+#
+# Il compose e `edge.yml` viaggiano nel payload come `assets`: vengono presi
+# dal repo a quel tag, verificati per hash e applicati in `/srv/orchid` in una
+# transazione (pull prima dello swap: se l'immagine non c'è, la versione viva
+# non viene toccata). I secret restano sull'host, non passano da qui.
+name: Deploy VPS
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag da deployare (es. v0.9.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Dispatch deploy al repo actions
+        env:
+          GH_TOKEN: ${{ secrets.DISPATCH_TOKEN }}
+        run: |
+          set -euo pipefail
+          TAG="${{ inputs.tag || github.event.release.tag_name }}"
+          [ -n "$TAG" ] || { echo "::error::nessun tag (ne' input ne' Release)"; exit 1; }
+          gh api repos/marcello-russo/actions/dispatches \
+            -f event_type=vps-deploy \
+            -f client_payload[repo]="${{ github.repository }}" \
+            -f client_payload[sha]="${{ github.sha }}" \
+            -f client_payload[tag]="$TAG" \
+            -f client_payload[target]=vps \
+            -f client_payload[compose_dir]=/srv/orchid \
+            -f client_payload[compose_file]=compose.yml \
+            -f client_payload[version_var]=ORCHID_VERSION \
+            -f client_payload[assets]='compose.yml:compose.yml edge.yml:edge.yml' \
+            -f client_payload[health_url]=https://osr.marrusso.dev/health \
+            -f client_payload[enforce_layout]=true
+          echo "dispatch deploy $TAG inviato"

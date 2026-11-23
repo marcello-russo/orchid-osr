@@ -1,14 +1,16 @@
-# Rilascio di OrchID OSR: un tag = una versione pubblicata.
+# Publish delegata al dispatcher centrale (marcello-russo/actions).
 #
-# Il tag `vX.Y.Z` è l'unico atto deliberato: da lì la CI costruisce l'immagine
-# unica (`runtime`, CPU), la pubblica su GHCR, crea la GitHub Release con le
-# note generate dai commit e pota le versioni vecchie del pacchetto. Il deploy
-# è un passo separato, fuori da questo repository
-# sulla tailnet): prende compose.yml ed edge.yml *dal tag*, non dal working tree.
+# Su tag `v*` questo job manda solo un segnale: build, push su GHCR, Release e
+# prune avvengono nel repo `actions`, sul suo runner e con i suoi secret. Qui
+# resta `DISPATCH_TOKEN`: nessun token di registry, nessuna chiave SSH.
 #
-# Stesso contratto di `personale/actions` (docs/docker-publish.md), ridotto a
-# un servizio solo: nessun `latest`, nessun build dall'host, rollback = tag
-# precedente.
+# Flusso completo: `git tag vX.Y.Z && git push origin vX.Y.Z` → immagine
+# pubblicata → Release pubblicata (draft_release=false) → deploy su VPS
+# (deploy-vps.yml, innescato dalla Release).
+#
+# `services` è la mappa dei path→servizio del dispatcher: un tag che tocca solo
+# benign (docs, CI, compose, scripts/) ri-tagga l'immagine precedente in pochi
+# secondi; un tag che tocca `backend/**` o `frontend/**` ricompila.
 name: Publish Docker images
 
 on:
@@ -17,192 +19,41 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Tag esistente da (ri)pubblicare (es. v0.2.4)"
+        description: "Tag esistente da (ri)costruire (es. v0.9.0)"
         required: true
         type: string
 
-# contents: write → Release; packages: write → push e prune su GHCR.
 permissions:
-  contents: write
-  packages: write
-
-env:
-  # Slug minuscolo: GHCR rifiuta i repository name con maiuscole,
-  # e `github.repository` restituisce "marcello-russo/orchid-osr".
-  IMAGE: ghcr.io/marcello-russo/orchid-osr
-  PACKAGE: orchid-osr
-  OWNER: marcello-russo
-  # Versioni GHCR tenute per il rollback (oltre a quella appena pubblicata).
-  # Mai scendere sotto 3: rollback reale = tag precedente con immagine viva.
-  KEEP_VERSIONS: "3"
+  contents: read
 
 jobs:
   publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
-    outputs:
-      tag: ${{ steps.meta.outputs.tag }}
-      commit: ${{ steps.meta.outputs.commit }}
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - name: Resolve tag
-        id: meta
-        run: |
-          set -euo pipefail
-          TAG="${{ inputs.tag }}"
-          [ -n "$TAG" ] || TAG="${GITHUB_REF#refs/tags/}"
-          # Il tag deve esistere davvero: un dispatch con un refuso non deve
-          # creare un'immagine con una versione inventata.
-          git rev-parse -q --verify "refs/tags/${TAG}^{commit}" >/dev/null \
-            || { echo "::error::tag $TAG inesistente nel repo"; exit 1; }
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "commit=$(git rev-parse --short "$TAG")" >> "$GITHUB_OUTPUT"
-          echo "publishing $TAG ($(git rev-parse --short "$TAG"))"
-
-      - uses: docker/setup-buildx-action@v4
-
-      - uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          target: runtime
-          platforms: linux/amd64
-          push: true
-          provenance: false
-          sbom: false
-          tags: |
-            ${{ env.IMAGE }}:${{ steps.meta.outputs.tag }}
-            ${{ env.IMAGE }}:sha-${{ github.sha }}
-          labels: |
-            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
-            org.opencontainers.image.revision=${{ github.sha }}
-            org.opencontainers.image.version=${{ steps.meta.outputs.tag }}
-          cache-from: type=gha,scope=runtime
-          cache-to: type=gha,mode=max,scope=runtime
-
-      # L'immagine che finisce in GHCR è quella che va in produzione: la si
-      # tira giù e la si accende qui. Se non parte, il job è rosso e il
-      # deploy non ha senso — meglio scoprirlo adesso che dall'host.
-      - name: Smoke test sull'immagine pubblicata
-        env:
-          TAG: ${{ steps.meta.outputs.tag }}
-        run: |
-          set -euo pipefail
-          # Volume nominato: l'entrypoint fa `chown` del volume all'utente
-          # applicativo (10001), quindi una directory del runner non sarebbe
-          # più cancellabile dopo il primo avvio.
-          VOLUME=orchid-publish-smoke
-          docker volume rm -f "$VOLUME" >/dev/null 2>&1 || true
-          docker pull "$IMAGE:$TAG"
-          cid=$(docker run -d -v "$VOLUME:/data" "$IMAGE:$TAG")
-          cleanup() {
-            docker logs "$cid" 2>/dev/null | tail -30 || true
-            docker rm -f "$cid" >/dev/null 2>&1 || true
-            docker volume rm -f "$VOLUME" >/dev/null 2>&1 || true
-          }
-          for i in $(seq 1 18); do
-            sleep 5
-            if docker exec "$cid" python3 -c "import sys, urllib.request; sys.exit(0 if urllib.request.urlopen('http://localhost:7860/health', timeout=5).status == 200 else 1)" 2>/dev/null; then
-              echo "OK: $IMAGE:$TAG risponde su /health dopo $((i*5))s"
-              cleanup
-              exit 0
-            fi
-            if [ "$(docker inspect "$cid" --format='{{.State.Status}}')" = "exited" ]; then
-              echo "::error::l'immagine $TAG esce subito"
-              cleanup
-              exit 1
-            fi
-          done
-          echo "::error::l'immagine $TAG non risponde su /health"
-          cleanup
-          exit 1
-
-  release:
-    needs: publish
-    runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v7
-
-      - name: GitHub Release (note dai commit)
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ needs.publish.outputs.tag }}
-          REPO: ${{ github.repository }}
-        run: |
-          set -euo pipefail
-          # Il checkout qui è sul commit del tag quando il run nasce da un push
-          # di tag; su dispatch il tag va recuperato esplicitamente, altrimenti
-          # `--verify-tag` fallisce.
-          git fetch --tags --force origin "refs/tags/${TAG}:refs/tags/${TAG}" || true
-          # Una release esistente può essere una **bozza**: GitHub trasforma in
-          # bozza la release di un tag cancellato e ricreato (è successo con la
-          # v0.4.0, ritaggata dopo un fix alla CI). Uscire qui lascerebbe la
-          # versione fuori da "Latest", con le note del commit vecchio. Solo una
-          # release già pubblicata è definitiva.
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            if [ "$(gh release view "$TAG" --json isDraft -q .isDraft)" != "true" ]; then
-              echo "release $TAG già presente: nessuna modifica"
-              exit 0
-            fi
-            echo "release $TAG era una bozza (tag ricreato): la ripubblico"
-          fi
-          # Note dai commit, non da --generate-notes: in questo repo si pusha
-          # dritto su main senza PR, e le note generate dalla API sarebbero solo
-          # un link "Full Changelog".
-          # Base del diff: il tag antenato più vicino (describe), non il tag
-          # semver più alto: se si tagga un commit vecchio il confronto resta
-          # quello giusto.
-          PREV="$(git describe --tags --abbrev=0 "${TAG}^" 2>/dev/null || true)"
-          [ -n "$PREV" ] || PREV="$(git tag -l 'v*' --sort=-v:refname | grep -vx "$TAG" | head -n1 || true)"
-          NOTES="$(mktemp)"
-          {
-            if [ -n "$PREV" ]; then
-              echo "## Cosa cambia rispetto a \`$PREV\`"
-              echo
-              git log --no-merges --pretty='- %s (`%h`)' "$PREV..$TAG"
-              echo
-              echo "**Full Changelog**: https://github.com/${REPO}/compare/${PREV}...${TAG}"
-            else
-              echo "## Primo rilascio"
-              echo
-              git log --no-merges --pretty='- %s (`%h`)' "$TAG"
-            fi
-          } > "$NOTES"
-          # --latest: una release nuova è la versione più recente. Una release
-          # esistente (re-dispatch, rollback) non muove il badge, così il deploy
-          # di un tag vecchio non rende "Latest" la versione vecchia.
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release edit "$TAG" --draft=false --latest --title "$TAG" --notes-file "$NOTES"
-            echo "release $TAG aggiornata e pubblicata"
-          else
-            gh release create "$TAG" --verify-tag --latest --title "$TAG" --notes-file "$NOTES"
-            echo "release $TAG creata"
-          fi
-
-  prune:
-    # Housekeeping, non un gate: se il token non può cancellare (permessi del
-    # pacchetto) il deploy resta valido e il run resta verde con un warning.
-    needs: publish
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
+      # `ref` esplicito: su dispatch `github.sha` sarebbe l'HEAD di main, non
+      # il commit del tag che si sta ricostruendo.
       - uses: actions/checkout@v7
         with:
-          sparse-checkout: backend/scripts/ci
-      - name: Tieni le ultime ${{ env.KEEP_VERSIONS }} versioni taggate
+          ref: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
+          fetch-depth: 1
+
+      - name: Dispatch build al repo actions
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OWNER: ${{ env.OWNER }}
-          PACKAGE: ${{ env.PACKAGE }}
-          KEEP: ${{ env.KEEP_VERSIONS }}
-        run: python3 backend/scripts/ci/prune_versions.py
+          GH_TOKEN: ${{ secrets.DISPATCH_TOKEN }}
+        run: |
+          set -euo pipefail
+          TAG="${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}"
+          SHA="$(git rev-parse HEAD)"
+          # Un servizio solo: l'immagine `app` (stage runtime). I path sono
+          # quelli che un `COPY` porta nell'immagine: fuori da qui ogni file è
+          # benign e il dispatcher ri-tagga invece di ricompilare.
+          gh api repos/marcello-russo/actions/dispatches \
+            -f event_type=docker-publish \
+            -f client_payload[repo]="${{ github.repository }}" \
+            -f client_payload[sha]="$SHA" \
+            -f client_payload[tag]="$TAG" \
+            -f client_payload[services]='[{"service":"app","context":".","dockerfile":"Dockerfile","paths":["backend/**","frontend/**","entrypoint.sh","Dockerfile"]}]' \
+            -f client_payload[keep_versions]=3 \
+            -f client_payload[draft_release]=false
+          echo "dispatch publish $TAG ($SHA) inviato"
