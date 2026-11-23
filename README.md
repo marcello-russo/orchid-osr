@@ -33,12 +33,9 @@ Six morphologically similar *Ophrys* species, one held-out novel class (*O. garg
 
 ## Results (from thesis)
 
-> **Where these numbers come from.** They are the thesis figures (build `v0.5.1`). SpHOR has since
-> been reimplemented — SupCon warm-up, prototypes initialised on class centroids, hard vMF assignment
-> with a linear ramp, repulsion on the unit sphere — because the first implementation left the
-> prototypes out of the optimiser (they never moved). For **DINOv2-Small** the new 5-fold test figures
-> are **II-A F1 0.929 / AUROC 0.780** and **II-B F1 0.923 / AUROC 0.836**; the other architectures are
-> being re-run. `scripts/ablation_sphor.py` documents the variant comparison.
+> **These figures are from the thesis build (`v0.5.1`).** A newer 5-fold run of Studio II-A and II-B
+> is available for **DINOv2-Small**: **II-A F1 0.929 / AUROC 0.780**, **II-B F1 0.923 / AUROC 0.836**.
+> The other architectures are being re-run; `scripts/ablation_sphor.py` documents the variant comparison.
 
 ### Studio I-A (Exp 1) — Cross-Entropy Baseline
 

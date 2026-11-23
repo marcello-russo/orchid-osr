@@ -403,20 +403,17 @@ rivelatori OSR. Per riproducibilità finiscono in un sidecar
 allineamento e sonda (accuracy/F1 sullo spazio di proiezione). La vecchia sonda
 a centroidi resta come `centroid_probe_*`, diagnostico del solo backbone.
 
-**Il dettaglio che rende il metodo reale o finto**: i prototipi devono stare
+**Il vincolo che tiene in piedi il metodo**: i prototipi devono stare
 nell'optimizer (`optimizer.add_param_group` in `train_supcon`). Senza, il
-gradiente della repulsione si accumula su `.grad` e non viene mai applicato:
-`--sphor` diventa un no-op e l'esperimento è solo un seed diverso. È esattamente
-quello che è successo fino alla v0.6.0 — `tests/test_core/test_sphor.py` cade se
+gradiente della repulsione si accumula su `.grad` e non viene mai applicato, e
+`--sphor` non cambia il modello. `tests/test_core/test_sphor.py` cade se
 qualcuno toglie quel `add_param_group`, se i prototipi non si muovono dopo N
 step o se il ramp non parte da 0.
 
-**Numeri della tesi.** I risultati discussi il 29/10 sono quelli prodotti dal
-codice fino alla **v0.5.1**, dove i prototipi erano decorativi. Dalla v0.6.0 il
-metodo è quello vero, quindi un rerun di I-C/II-A/II-B **non riproduce** quei
-numeri: per la tesi si fa checkout di `v0.5.1`, per la demo conta l'ultima run.
-La tesi non si tocca (è già discussa): è una differenza da sapere, non un
-errore da correggere nel testo.
+**Riproducibilita'.** I risultati discussi il 29/10 sono quelli del tag
+**v0.5.1**; le run successive usano il protocollo attuale (warm-up + vMF +
+repulsione) e quindi non riproducono quei numeri: per la tesi si fa checkout di
+`v0.5.1`, per la demo conta l'ultima run.
 
 Studio II-A è identico ma esclude *O. garganica* (1.629 immagini note); II-B
 esclude anche *O. majellensis* (1.477). `--sphor` per tutti e tre.

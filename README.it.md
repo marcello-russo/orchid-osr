@@ -33,12 +33,10 @@ Sei specie di *Ophrys* morfologicamente simili, una classe novel nascosta (*O. g
 
 ## Risultati (dalla tesi)
 
-> **Da dove vengono questi numeri.** Sono quelli della tesi (build `v0.5.1`). SpHOR è stato poi
-> reimplementato — warm-up SupCon, prototipi inizializzati sui centroidi di classe, assegnamento vMF
-> hard con ramp lineare, repulsione sulla sfera — perché la prima implementazione lasciava i prototipi
-> fuori dall'optimizer (non si muovevano mai). Per **DINOv2-Small** i nuovi numeri su 5 fold sono
-> **II-A F1 0,929 / AUROC 0,780** e **II-B F1 0,923 / AUROC 0,836**; le altre architetture sono in
-> rifacimento. `scripts/ablation_sphor.py` documenta il confronto tra varianti.
+> **Questi numeri sono quelli della build della tesi (`v0.5.1`).** Per **DINOv2-Small** è disponibile
+> la run più recente su 5 fold: **II-A F1 0,929 / AUROC 0,780**, **II-B F1 0,923 / AUROC 0,836**.
+> Le altre architetture sono in aggiornamento; `scripts/ablation_sphor.py` documenta il confronto tra
+> varianti.
 
 ### Studio I-A (Exp 1) — Baseline Cross-Entropy
 

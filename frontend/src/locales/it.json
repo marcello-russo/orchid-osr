@@ -624,6 +624,6 @@
     "dataset_intro": "Il dataset comprende immagini di sei entità tassonomiche del complesso O. sphegodes, tutte fotografate nel territorio italiano, principalmente in Puglia e sul Gargano. Le immagini provengono da due fonti: le fotografie da campo scattate dai ricercatori costituiscono la fonte primaria per O. majellensis e O. sphegodes Palena (specie senza corrispettivi in banche dati); le immagini raccolte da banche dati internet aperte coprono le quattro specie più comuni: O. exaltata, O. garganica, O. incubacea e O. sphegodes.",
     "split_known": "Solo note",
     "split_novel": "Solo novel",
-    "numbers_note": "Nota sui numeri: le tabelle di Studio I-C e Studio II riportano i risultati della build v0.5.1, quella con cui la tesi è stata discussa. Il metodo SpHOR è stato reimplementato (warm-up, vMF, ramp): per DINOv2-Small i numeri nuovi sono II-A F1 0,929 e AUROC 0,780, II-B F1 0,923 e AUROC 0,836. Le altre architetture sono in rifacimento."
+    "numbers_note": "Nota sui numeri: le tabelle di Studio I-C e Studio II riportano i risultati della build v0.5.1. Per DINOv2-Small sono disponibili i numeri della run più recente: II-A F1 0,929 e AUROC 0,780, II-B F1 0,923 e AUROC 0,836. Le altre architetture sono in aggiornamento."
   }
 }
