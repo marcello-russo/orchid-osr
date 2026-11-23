@@ -7,9 +7,9 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Python-3.12-3776AB?style=flat&logo=python&logoColor=white" alt="Python"/>
-  <img src="https://img.shields.io/badge/PyTorch-2.6-EE4C2C?style=flat&logo=pytorch&logoColor=white" alt="PyTorch"/>
-  <img src="https://img.shields.io/badge/FastAPI-0.115-009688?style=flat&logo=fastapi&logoColor=white" alt="FastAPI"/>
+  <img src="https://img.shields.io/badge/Python-3.11-3776AB?style=flat&logo=python&logoColor=white" alt="Python"/>
+  <img src="https://img.shields.io/badge/PyTorch-2.15-EE4C2C?style=flat&logo=pytorch&logoColor=white" alt="PyTorch"/>
+  <img src="https://img.shields.io/badge/FastAPI-0.163-009688?style=flat&logo=fastapi&logoColor=white" alt="FastAPI"/>
   <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat&logo=react&logoColor=white" alt="React"/>
   <img src="https://img.shields.io/badge/SQLite-003B57?style=flat&logo=sqlite&logoColor=white" alt="SQLite"/>
   <br/>
@@ -32,6 +32,13 @@ Sei specie di *Ophrys* morfologicamente simili, una classe novel nascosta (*O. g
 ---
 
 ## Risultati (dalla tesi)
+
+> **Da dove vengono questi numeri.** Sono quelli della tesi (build `v0.5.1`). SpHOR è stato poi
+> reimplementato — warm-up SupCon, prototipi inizializzati sui centroidi di classe, assegnamento vMF
+> hard con ramp lineare, repulsione sulla sfera — perché la prima implementazione lasciava i prototipi
+> fuori dall'optimizer (non si muovevano mai). Per **DINOv2-Small** i nuovi numeri su 5 fold sono
+> **II-A F1 0,929 / AUROC 0,780** e **II-B F1 0,923 / AUROC 0,836**; le altre architetture sono in
+> rifacimento. `scripts/ablation_sphor.py` documenta il confronto tra varianti.
 
 ### Studio I-A (Exp 1) — Baseline Cross-Entropy
 
@@ -121,25 +128,18 @@ npm run dev                 # → http://localhost:5175
 ### Training
 
 ```bash
-cd backend
-python cli.py --cross-validate --exp 1 --model resnet18    # CE baseline
-python cli.py --cross-validate --exp 2 --model resnet18    # SupCon
-python cli.py --cross-validate --exp 3 --model resnet18 --sphor   # SpHOR
-python cli.py --cross-validate --exp 4 --model dinov2_small --sphor   # NCD (novel class nascosta)
-python cli.py --ncd --exp 4 --model dinov2_small                  # valutazione OSR + clustering
-python cli.py --cross-validate --exp 3 --model resnet18 --novel garganica,majellensis  # generico: 2 novel override
+orchid train --exp 1 --model resnet18                 # baseline CE
+orchid train --exp 2 --model resnet18                 # SupCon
+orchid train --exp 3 --model resnet18 --sphor         # SpHOR
+orchid train --exp 4 --model dinov2_small --sphor     # NCD (novel class nascosta)
+orchid ncd   --exp 4 --model dinov2_small             # valutazione OSR + clustering
+orchid train --exp 3 --model resnet18 --sphor --novel garganica,majellensis
+orchid figures --all                                  # rigenera documents/_figures/
 ```
 
-### Orchid CLI (Typer)
-
-```bash
-orchid --help
-orchid train --help
-orchid train --exp 4 --model dinov2_small --sphor
-orchid figures --all  # rigenera le figure in documents/_figures/ (§3.5 riproducibile)
-```
-
-> `python cli.py` rimane disponibile come alias deprecato di `orchid`.
+`orchid --help` elenca tutto; `python cli.py` è un alias deprecato che esegue la
+stessa app Typer (i vecchi flag `--cross-validate` non esistono più). Prima va
+scaricato il dataset (`orchid hf download`).
 
 Vedi [AGENTS.md](AGENTS.md) per tutti i comandi.
 
@@ -183,4 +183,4 @@ l'host non ha il sorgente, prende solo l'immagine pinnata.
 
 ## Licenza
 
-[MIT](LICENSE)
+[LGPL-3.0](LICENSE)

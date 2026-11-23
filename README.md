@@ -7,9 +7,9 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Python-3.12-3776AB?style=flat&logo=python&logoColor=white" alt="Python"/>
-  <img src="https://img.shields.io/badge/PyTorch-2.6-EE4C2C?style=flat&logo=pytorch&logoColor=white" alt="PyTorch"/>
-  <img src="https://img.shields.io/badge/FastAPI-0.115-009688?style=flat&logo=fastapi&logoColor=white" alt="FastAPI"/>
+  <img src="https://img.shields.io/badge/Python-3.11-3776AB?style=flat&logo=python&logoColor=white" alt="Python"/>
+  <img src="https://img.shields.io/badge/PyTorch-2.15-EE4C2C?style=flat&logo=pytorch&logoColor=white" alt="PyTorch"/>
+  <img src="https://img.shields.io/badge/FastAPI-0.163-009688?style=flat&logo=fastapi&logoColor=white" alt="FastAPI"/>
   <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat&logo=react&logoColor=white" alt="React"/>
   <img src="https://img.shields.io/badge/SQLite-003B57?style=flat&logo=sqlite&logoColor=white" alt="SQLite"/>
   <br/>
@@ -32,6 +32,13 @@ Six morphologically similar *Ophrys* species, one held-out novel class (*O. garg
 ---
 
 ## Results (from thesis)
+
+> **Where these numbers come from.** They are the thesis figures (build `v0.5.1`). SpHOR has since
+> been reimplemented — SupCon warm-up, prototypes initialised on class centroids, hard vMF assignment
+> with a linear ramp, repulsion on the unit sphere — because the first implementation left the
+> prototypes out of the optimiser (they never moved). For **DINOv2-Small** the new 5-fold test figures
+> are **II-A F1 0.929 / AUROC 0.780** and **II-B F1 0.923 / AUROC 0.836**; the other architectures are
+> being re-run. `scripts/ablation_sphor.py` documents the variant comparison.
 
 ### Studio I-A (Exp 1) — Cross-Entropy Baseline
 
@@ -123,25 +130,18 @@ npm run dev                 # → http://localhost:5175
 ### Training
 
 ```bash
-cd backend
-python cli.py --cross-validate --exp 1 --model resnet18    # CE baseline
-python cli.py --cross-validate --exp 2 --model resnet18    # SupCon
-python cli.py --cross-validate --exp 3 --model resnet18 --sphor   # SpHOR
-python cli.py --cross-validate --exp 4 --model dinov2_small --sphor   # NCD (hidden novel class)
-python cli.py --ncd --exp 4 --model dinov2_small                  # OSR + clustering evaluation
-python cli.py --cross-validate --exp 3 --model resnet18 --novel garganica,majellensis  # generic: 2 novel override
+orchid train --exp 1 --model resnet18                 # CE baseline
+orchid train --exp 2 --model resnet18                 # SupCon
+orchid train --exp 3 --model resnet18 --sphor         # SpHOR
+orchid train --exp 4 --model dinov2_small --sphor     # NCD (hidden novel class)
+orchid ncd   --exp 4 --model dinov2_small             # OSR + clustering evaluation
+orchid train --exp 3 --model resnet18 --sphor --novel garganica,majellensis
+orchid figures --all                                  # regenerate documents/_figures/
 ```
 
-### Orchid CLI (Typer)
-
-```bash
-orchid --help
-orchid train --help
-orchid train --exp 4 --model dinov2_small --sphor
-orchid figures --all  # rigenera le figure in documents/_figures/ (§3.5 riproducibile)
-```
-
-> `python cli.py` remains available as a deprecated alias for `orchid`.
+`orchid --help` lists everything; `python cli.py` is a deprecated alias that
+runs the same Typer app (the old `--cross-validate` flags no longer exist).
+The dataset must be downloaded first (`orchid hf download`).
 
 See [AGENTS.md](AGENTS.md) for the full command reference.
 
@@ -153,9 +153,9 @@ See [AGENTS.md](AGENTS.md) for the full command reference.
 |-----|--------|--------|--------|-------------|
 | I-A | 1 | CE baseline | 1 (CE) | Standard cross-entropy, backbone + head trained jointly |
 | I-B | 2 | SupCon | 2 (SupCon → CE) | Supervised contrastive pretraining → linear probe |
-| I-C | 3 | SpHOR | 2 (SupCon+SpHOR → CE) | Orthogonal spherical prototypes for open-set regularisation |
-| II-A | 4 | NCD | 2 (SupCon+SpHOR → CE) | O. garganica excluded as hidden novel class; OSR + clustering evaluation |
-| II-B | 5 | NCD (2 novel) | 2 (SupCon+SpHOR → CE) | O. garganica + O. majellensis excluded as hidden novel classes; OSR + clustering evaluation |
+| I-C | 3 | SpHOR | 2 (warm-up SupCon → vMF + repulsion → CE) | Orthogonal spherical prototypes for open-set regularisation |
+| II-A | 4 | NCD | 2 (warm-up SupCon → vMF + repulsion → CE) | O. garganica excluded as hidden novel class; OSR + clustering evaluation |
+| II-B | 5 | NCD (2 novel) | 2 (warm-up SupCon → vMF + repulsion → CE) | O. garganica + O. majellensis excluded as hidden novel classes; OSR + clustering evaluation |
 
 All experiments use 5-fold stratified CV with seed 57 over 6 backbones.
 
@@ -214,4 +214,4 @@ l'host non ha il sorgente, prende solo l'immagine pinnata.
 
 ## License
 
-[MIT](LICENSE)
+[LGPL-3.0](LICENSE)
