@@ -5,6 +5,7 @@ import { Box, RotateCw, ZoomIn, ZoomOut, Image as ImageIcon } from "lucide-react
 import { useEmbeddings } from "@/hooks/useEmbeddings";
 import { Scatter3D } from "@/features/embeddings/Scatter3D";
 import { Scatter2D } from "@/features/embeddings/Scatter2D";
+import { formatPercent } from "@/lib/format";
 
 const PALETTE = [
   "#3B82F6", "#D97706", "#10B981", "#8B5CF6",
@@ -182,7 +183,7 @@ export function EmbeddingsPage() {
                         {species}
                       </span>
                       <span className="font-bold tabular-nums text-foreground/80">{count}</span>
-                      <span className="text-muted-foreground/50 text-[10px]">({total > 0 ? ((count / total) * 100).toFixed(0) : "0"}%)</span>
+                      <span className="text-muted-foreground/50 text-[10px]">({total > 0 ? formatPercent((count / total), 0) : "0"}%)</span>
                     </button>
                   );
                 })}

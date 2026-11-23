@@ -18,6 +18,7 @@ import { ChartCarousel } from "@/features/explorer/detail/ChartCarousel";
 import { BaselineResults } from "@/features/explorer/detail/BaselineResults";
 import { NcdDetail } from "@/features/explorer/detail/NcdDetail";
 import { LogsPanel } from "@/features/explorer/detail/LogsPanel";
+import { formatPercent } from "@/lib/format";
 
 export function ExperimentDetailPage() {
   const { t } = useTranslation();
@@ -131,13 +132,13 @@ export function ExperimentDetailPage() {
 
           {summary.test_accuracy !== null && (
             <span className="font-medium text-primary">
-              {t("experiment_detail.metrics.accuracy")}: {(summary.test_accuracy * 100).toFixed(2)}%
+              {t("experiment_detail.metrics.accuracy")}: {formatPercent(summary.test_accuracy, 2)}
               <InfoTooltip text={TOOLTIPS.testAccuracy} />
             </span>
           )}
           {summary.test_f1 !== null && (
             <span className="font-medium text-primary">
-              {t("experiment_detail.metrics.f1")}: {(summary.test_f1 * 100).toFixed(2)}%
+              {t("experiment_detail.metrics.f1")}: {formatPercent(summary.test_f1, 2)}
               <InfoTooltip text={TOOLTIPS.f1macro} />
             </span>
           )}

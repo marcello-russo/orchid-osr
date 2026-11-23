@@ -7,6 +7,8 @@ nulla rispetto a SupCon (era solo un seed diverso). Se qualcuno rimuove il
 `add_param_group` in `train_supcon`, questo file cade.
 """
 
+from pathlib import Path
+
 import pytest
 import torch
 import torch.nn as nn
@@ -128,6 +130,16 @@ class TestOneEpoch:
         assert parts["loss"] >= parts["supcon"]
 
 
+def test_fold_supcon_does_not_silently_enable_patience():
+    """`train_fold_supcon` faceva `patience=patience or 15`: con `--patience 0`
+    (documentato come disabilitato) la Fase 1 si fermava comunque, e in
+    un'ablazione due varianti finivano con budget diversi."""
+    source = Path(__file__).resolve().parents[2] / "app" / "core" / "kfold" / "training.py"
+    text = source.read_text(encoding="utf-8")
+    assert "patience=patience or 15" not in text
+    assert "patience=patience," in text
+
+
 class TestTrainSupcon:
     def _run(self, tmp_path, epochs=3, warmup=1, ramp=2, resume=False):
         model = _StubModel()
@@ -193,6 +205,83 @@ class TestTrainSupcon:
         weights = metrics["supcon_history"]["vmf_weight"]
         assert len(weights) >= 4
         assert any(w > 0 for w in weights)
+
+    def test_early_stopping_cannot_fire_during_the_ramp(self, tmp_path):
+        """Con patience 1 e una KNN piatta, la run deve arrivare almeno alla
+        fine del ramp: selezionare un'epoca del warm-up vorrebbe dire spedire
+        un modello SupCon come se fosse SpHOR (ablazione B e C: stesso
+        checkpoint)."""
+        model = _FrozenStub()
+        train_loader, val_loader = _loaders()
+        _, metrics = train_supcon(
+            model,
+            train_loader,
+            val_loader,
+            num_epochs=10,
+            learning_rate=1e-3,
+            device=torch.device("cpu"),
+            checkpoint_dir=str(tmp_path),
+            proj_dim=16,
+            use_prototypes=True,
+            warmup_epochs=2,
+            ramp_epochs=2,
+            patience=1,
+        )
+        weights = metrics["supcon_history"]["vmf_weight"]
+        # warm-up 2 + ramp 2 = epoca 4 e' la prima a peso pieno, poi patience 1
+        assert len(weights) >= 5
+        assert weights[-1] == pytest.approx(1.0)
+
+    def test_patience_zero_really_runs_all_epochs(self, tmp_path):
+        """`--patience 0` e' documentato come "disabilitato": la Fase 1 deve
+        arrivare in fondo, altrimenti due varianti hanno budget diversi."""
+        model = _FrozenStub()
+        train_loader, val_loader = _loaders()
+        _, metrics = train_supcon(
+            model,
+            train_loader,
+            val_loader,
+            num_epochs=5,
+            learning_rate=1e-3,
+            device=torch.device("cpu"),
+            checkpoint_dir=str(tmp_path),
+            proj_dim=16,
+            use_prototypes=True,
+            warmup_epochs=1,
+            ramp_epochs=1,
+            patience=0,
+        )
+        assert len(metrics["supcon_history"]["train_loss"]) == 5
+
+    def test_restore_best_false_keeps_the_last_epoch(self, tmp_path, monkeypatch):
+        """Le ablazioni vogliono il modello con cui il metodo finisce, non
+        l'epoca migliore per KNN (che su SpHOR cade nel warm-up)."""
+        import app.core.kfold.supcon_epochs as se
+
+        monkeypatch.setattr(se, "validate_supcon", lambda model, loader, device: (0.5, 1.0))
+
+        def run(restore_best: bool, sub: str):
+            torch.manual_seed(0)
+            model = _StubModel()
+            train_loader, val_loader = _loaders()
+            trained, _ = se.train_supcon(
+                model,
+                train_loader,
+                val_loader,
+                num_epochs=4,
+                learning_rate=1e-2,
+                device=torch.device("cpu"),
+                checkpoint_dir=str(tmp_path / sub),
+                proj_dim=16,
+                use_prototypes=False,
+                patience=0,
+                restore_best=restore_best,
+            )
+            return next(trained.parameters()).detach().clone()
+
+        best = run(True, "best")
+        last = run(False, "last")
+        assert not torch.equal(best, last)
 
     def test_prototypes_stay_on_the_unit_sphere(self, tmp_path):
         _, metrics = self._run(tmp_path)

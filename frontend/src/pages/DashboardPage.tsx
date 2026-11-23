@@ -21,6 +21,7 @@ import { useSpecies } from "@/features/explorer/hooks/useSpecies";
 import { KpiCard } from "@/features/explorer/components/KpiCard";
 import { ExperimentCard } from "@/features/explorer/components/ExperimentCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatNumber, formatPercent } from "@/lib/format";
 
 export function DashboardPage() {
   const { t } = useTranslation();
@@ -135,13 +136,13 @@ export function DashboardPage() {
         />
         <KpiCard
           title={t("dashboard.kpis.best_test_accuracy")}
-          value={bestTestAcc > 0 ? `${(bestTestAcc * 100).toFixed(2)}%` : "—"}
+          value={bestTestAcc > 0 ? `${formatPercent(bestTestAcc, 2)}` : "—"}
           icon={TrendingUp}
           delay={100}
         />
         <KpiCard
           title={t("dashboard.kpis.best_f1")}
-          value={bestF1Val > 0 ? `${(bestF1Val * 100).toFixed(2)}% ± ${(bestF1Std * 100).toFixed(2)}%` : "—"}
+          value={bestF1Val > 0 ? `${formatPercent(bestF1Val, 2)} ± ${formatPercent(bestF1Std, 2)}` : "—"}
           icon={BarChart3}
           delay={150}
         />
@@ -168,13 +169,13 @@ export function DashboardPage() {
           <div className="grid grid-cols-2 gap-3">
             <KpiCard
               title={t("dashboard.kpis.best_ncd_auroc")}
-              value={bestNcdAuroc > 0 ? `${(bestNcdAuroc * 100).toFixed(2)}%` : "—"}
+              value={bestNcdAuroc > 0 ? `${formatPercent(bestNcdAuroc, 2)}` : "—"}
               icon={ScanSearch}
               delay={300}
             />
             <KpiCard
               title={t("dashboard.kpis.best_ncd_nmi")}
-              value={bestNcdNmi > 0 ? bestNcdNmi.toFixed(4) : "—"}
+              value={bestNcdNmi > 0 ? formatNumber(bestNcdNmi, 4) : "—"}
               icon={BarChart3}
               delay={350}
             />
@@ -212,7 +213,7 @@ export function DashboardPage() {
                       <td className="px-4 py-2.5 font-medium">{s.name}</td>
                       <td className="px-4 py-2.5 text-right font-mono">{s.image_count}</td>
                       <td className="px-4 py-2.5 text-right font-mono">
-                        {((s.image_count / speciesData.total_images) * 100).toFixed(2)}%
+                        {formatPercent((s.image_count / speciesData.total_images), 2)}
                       </td>
                     </tr>
                   ))}

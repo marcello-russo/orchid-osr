@@ -3,6 +3,7 @@
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { fetchExperimentLog } from "@/lib/api";
+import { formatNumber } from "@/lib/format";
 
 export function LogsPanel({ experimentId }: { experimentId: string }) {
   const { t } = useTranslation();
@@ -23,7 +24,7 @@ export function LogsPanel({ experimentId }: { experimentId: string }) {
   return (
     <div className="p-4">
       <div className="flex justify-between items-center mb-2">
-        <p className="text-xs text-muted-foreground">{t("experiment_detail.log_size")} {(data.size / 1024).toFixed(1)} KB</p>
+        <p className="text-xs text-muted-foreground">{t("experiment_detail.log_size")} {formatNumber(data.size / 1024, 1)} KB</p>
         <button
           onClick={() => navigator.clipboard.writeText(data.log ?? "")}
           className="text-xs px-2 py-1 rounded bg-muted hover:bg-muted/80"

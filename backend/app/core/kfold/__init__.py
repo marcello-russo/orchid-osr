@@ -61,6 +61,9 @@ def kfold_experiment(
     warmup_epochs=20,
     vmf_kappa=10.0,
     ramp_epochs=20,
+    repulse_mode="squared",
+    repulse_threshold=0.3,
+    restore_best=True,
 ):
     """K-fold cross-validation con augmentation bilanciata per fold.
     optimizer_type: None = usa entry.optimizer dal registry, 'adam' = forza Adam per CE baseline.
@@ -91,6 +94,7 @@ def kfold_experiment(
             "seed": seed,
             "num_classes": num_classes,
             "class_names": class_names,
+            "exclude_classes": exclude_classes,
             "raw_dataset_dir": raw_dataset_dir,
             "test_dataset_dir": test_dataset_dir,
             "patience": patience,
@@ -107,6 +111,9 @@ def kfold_experiment(
             "warmup_epochs": warmup_epochs if (loss_type == "supcon" and use_prototypes) else None,
             "vmf_kappa": vmf_kappa if (loss_type == "supcon" and use_prototypes) else None,
             "ramp_epochs": ramp_epochs if (loss_type == "supcon" and use_prototypes) else None,
+            "repulse_mode": repulse_mode if (loss_type == "supcon" and use_prototypes) else None,
+            "repulse_threshold": repulse_threshold if (loss_type == "supcon" and use_prototypes) else None,
+            "restore_best": restore_best if loss_type == "supcon" else None,
             "full_finetune": full_finetune,
             "ncd_mode": ncd_mode if loss_type == "supcon" else None,
             "normalize_embeddings": True if loss_type == "supcon" else False,
@@ -130,6 +137,9 @@ def kfold_experiment(
             ("warmup_epochs", warmup_epochs),
             ("vmf_kappa", vmf_kappa),
             ("ramp_epochs", ramp_epochs),
+            ("repulse_mode", repulse_mode),
+            ("repulse_threshold", repulse_threshold),
+            ("restore_best", restore_best),
         ]:
             saved_val = saved.get(param)
             if saved_val is not None and saved_val != cli_val:
@@ -146,6 +156,17 @@ def kfold_experiment(
         warmup_epochs = saved["warmup_epochs"] if saved.get("warmup_epochs") is not None else warmup_epochs
         vmf_kappa = saved["vmf_kappa"] if saved.get("vmf_kappa") is not None else vmf_kappa
         ramp_epochs = saved["ramp_epochs"] if saved.get("ramp_epochs") is not None else ramp_epochs
+        repulse_mode = saved["repulse_mode"] if saved.get("repulse_mode") is not None else repulse_mode
+        repulse_threshold = (
+            saved["repulse_threshold"] if saved.get("repulse_threshold") is not None else repulse_threshold
+        )
+        restore_best = saved["restore_best"] if saved.get("restore_best") is not None else restore_best
+        # Gli override della CLI vanno PERSISTITI: senza, il config continua a
+        # dichiarare il protocollo del primo tentativo (150 epoche, patience 15,
+        # best_knn) mentre la run fa altro (60 epoche, final_epoch). Successo
+        # davvero sulla dir di II-A.
+        with open(config_path, "w") as f:
+            json.dump(saved, f, indent=2)
 
     if aggregate_only:
         return aggregate_and_test(
@@ -268,6 +289,9 @@ def kfold_experiment(
                         warmup_epochs=warmup_epochs,
                         vmf_kappa=vmf_kappa,
                         ramp_epochs=ramp_epochs,
+                        repulse_mode=repulse_mode,
+                        repulse_threshold=repulse_threshold,
+                        restore_best=restore_best,
                     )
                 else:
                     model, fold_metrics = train_fold(

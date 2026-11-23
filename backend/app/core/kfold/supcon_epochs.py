@@ -237,6 +237,9 @@ def train_supcon(
     warmup_epochs: int = 20,
     vmf_kappa: float = 10.0,
     ramp_epochs: int = 20,
+    repulse_mode: str = "squared",
+    repulse_threshold: float = 0.3,
+    restore_best: bool = True,
 ) -> tuple[ClassifierModel, dict]:
     """Phase 1: train backbone + projection head with SupCon loss.
 
@@ -271,12 +274,18 @@ def train_supcon(
     if use_prototypes:
         from app.core.losses import SphericalPrototypes
 
-        prototypes = SphericalPrototypes(model.num_classes, proj_dim).to(device)
+        prototypes = SphericalPrototypes(
+            model.num_classes,
+            proj_dim,
+            repulse_mode=repulse_mode,
+            repulse_threshold=repulse_threshold,
+        ).to(device)
         criterion.prototypes = prototypes
         criterion._repulse_weight = repulse_weight
         logger.info(
             f"  Spherical prototypes: {model.num_classes} classi, dim {proj_dim}, "
-            f"warm-up {warmup_epochs} ep, ramp {ramp_epochs} ep, kappa={vmf_kappa}, repulse={repulse_weight}"
+            f"warm-up {warmup_epochs} ep, ramp {ramp_epochs} ep, kappa={vmf_kappa}, "
+            f"repulse={repulse_weight} ({repulse_mode}, soglia {repulse_threshold})"
         )
 
     optimizer = _make_optimizer(model, proj_head, learning_rate, optimizer_type, weight_decay)
@@ -422,11 +431,16 @@ def train_supcon(
             torch.save(ckpt_data, tmp_path)
             os.replace(tmp_path, ckpt_path)
 
-        # Il warm-up non si taglia: se la KNN smette di migliorare all'epoca 0,
-        # con patience 15 si fermerebbe prima dell'init dei prototipi e
-        # l'esperimento "SpHOR" finirebbe senza SpHOR (il bug di prima, in
-        # un'altra forma).
-        if patience > 0 and epochs_no_improve >= patience and not in_warmup:
+        # Ne' il warm-up ne' il ramp si tagliano. Se la KNN raggiunge il
+        # massimo durante il warm-up (succede: e' la fase in cui il contrastivo
+        # fa il lavoro grosso), con patience 15 la run si fermerebbe prima che
+        # i termini SpHOR abbiano peso, e il modello salvato sarebbe quello del
+        # warm-up: due varianti diverse darebbero lo stesso checkpoint byte per
+        # byte e l'esperimento misurerebbe SupCon spacciato per SpHOR. E'
+        # successo davvero: ablazione B e C, checkpoint identico.
+        if prototypes is not None and epoch < warmup + ramp:
+            epochs_no_improve = 0
+        if patience > 0 and epochs_no_improve >= patience:
             logger.info(f"[SupCon] Early stopping at epoch {epoch + 1}")
             break
 
@@ -446,9 +460,12 @@ def train_supcon(
             "ramp_epochs": ramp,
             "kappa": float(vmf_kappa),
             "repulse_weight": float(repulse_weight),
+            "repulse_mode": repulse_mode,
+            "repulse_threshold": float(repulse_threshold),
             "alignment_val": alignment,
             "probe_accuracy": probe_acc,
             "probe_f1": probe_f1,
+            "model_selection": "best_knn" if restore_best else "final_epoch",
             "prototypes": prototypes.prototypes.detach().cpu().clone(),
         }
         logger.info(
@@ -456,8 +473,15 @@ def train_supcon(
             f"probe (spazio proiezione) Acc {probe_acc:.4f}, F1 {probe_f1:.4f}"
         )
 
-    model.load_state_dict(best_backbone_wts)
-    logger.info(f"[SupCon] Phase 1 complete. Best KNN Acc: {best_knn:.4f}")
+    # restore_best=False serve alle ablazioni: si vuole il modello con cui il
+    # metodo finisce (ultima epoca, peso pieno), non l'epoca migliore per KNN —
+    # che su SpHOR cade spesso nel warm-up e renderebbe due varianti identiche.
+    if restore_best:
+        model.load_state_dict(best_backbone_wts)
+    logger.info(
+        f"[SupCon] Phase 1 complete. Best KNN Acc: {best_knn:.4f} "
+        f"({'pesi migliori' if restore_best else 'ultima epoca'})"
+    )
 
     if ckpt_path and os.path.exists(ckpt_path):
         os.remove(ckpt_path)

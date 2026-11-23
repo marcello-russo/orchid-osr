@@ -396,6 +396,8 @@ def _run_experiment_loop(args, phases: list[str], exp_ids: list[int]) -> int:
                 warmup_epochs=args.warmup_epochs,
                 vmf_kappa=args.vmf_kappa,
                 ramp_epochs=args.ramp_epochs,
+                repulse_mode=args.repulse_mode,
+                repulse_threshold=args.repulse_threshold,
                 pair_weights=(
                     _build_pair_weights(
                         args.hard_weight,
@@ -600,6 +602,18 @@ Examples:
         type=float,
         default=10.0,
         help="Concentrazione kappa della loss vMF (assegnamento hard) in SpHOR (default: 10.0)",
+    )
+    parser.add_argument(
+        "--repulse-mode",
+        choices=["squared", "hinge"],
+        default="squared",
+        help="Repulsione tra prototipi: 'squared' (tutti i coseni) o 'hinge' (solo sopra soglia)",
+    )
+    parser.add_argument(
+        "--repulse-threshold",
+        type=float,
+        default=0.3,
+        help="Soglia del coseno per la repulsione 'hinge' (default: 0.3)",
     )
     parser.add_argument(
         "--ramp-epochs",

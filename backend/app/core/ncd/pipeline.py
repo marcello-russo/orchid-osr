@@ -51,6 +51,36 @@ def _get_device(timeout: float = 5.0) -> torch.device:
     return torch.device("cuda" if result[0] else "cpu")
 
 
+def drop_hidden_classes(bundle, exclude_classes):
+    """Toglie le classi nascoste dal train e RINUMERA le label.
+
+    La GCD costruisce lo spazio delle label da `train_class_names` e usa
+    `label < num_classes` come maschera dei campioni etichettati. Lasciando gli
+    indici originali (con il buco della classe nascosta) la maschera scambia
+    noti e novel: e' successo davvero, con ACC new 0.996 su una specie che il
+    modello non aveva mai visto. Il train dir contiene tutte le specie, quindi
+    il filtro deve stare qui e non in symlink creati a mano.
+    """
+    if not exclude_classes or not bundle.train_class_names:
+        return bundle
+    kept_classes = [c for c in bundle.train_class_names if c not in exclude_classes]
+    old_names = list(bundle.train_class_names)
+    keep = np.array([old_names[int(label)] in kept_classes for label in bundle.train_labels])
+    bundle.train_embeddings = bundle.train_embeddings[keep]
+    bundle.train_labels = np.array(
+        [kept_classes.index(old_names[int(label)]) for label in bundle.train_labels[keep]],
+        dtype=np.int64,
+    )
+    bundle.train_class_names = kept_classes
+    logger.info(
+        "Filtrate %d immagini delle classi nascoste dal train (restano %d, classi %s)",
+        int((~keep).sum()),
+        int(keep.sum()),
+        kept_classes,
+    )
+    return bundle
+
+
 def run_ncd_pipeline(
     exp_dir: str,
     model_variant: str,
@@ -110,6 +140,13 @@ def run_ncd_pipeline(
         collect_logits=collect_logits,
         exp_dir=exp_dir,
     )
+
+    # Le classi nascoste non devono entrare nel fit dei rivelatori né nel
+    # labeled set della GCD. Il train dir le contiene tutte, e la pipeline si
+    # affidava a symlink creati a mano (`train_ncd_exp4`/`train_ncd_exp5`) che
+    # non esistono nel dataset HF: senza questo filtro l'AUROC cade a 0.5 e la
+    # SS-KM "scopre" una specie che era già nel train (ACC new 0.996).
+    bundle = drop_hidden_classes(bundle, exclude_classes)
 
     results: dict = {
         "model_variant": model_variant,
@@ -235,7 +272,9 @@ def run_ncd_pipeline(
     if run_osr:
         novel_candidates: list[str] = []
         if ncd_mode and all_classes:
-            train_classes = set(bundle.train_class_names)
+            # dalle label effettivamente presenti, non dall'elenco delle
+            # cartelle: dopo il filtro sopra le due cose non coincidono più
+            train_classes = {bundle.train_class_names[int(i)] for i in np.unique(bundle.train_labels)}
             novel_candidates = [c for c in all_classes if c not in train_classes]
             if novel_candidates:
                 logger.info("Novel class(es): %s", novel_candidates)

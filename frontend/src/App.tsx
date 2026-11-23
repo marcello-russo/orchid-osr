@@ -29,6 +29,9 @@ const ResearchPage = lazy(() =>
 const UserManagementPage = lazy(() =>
   import("@/pages/UserManagementPage").then((m) => ({ default: m.UserManagementPage }))
 );
+const NotFoundPage = lazy(() =>
+  import("@/pages/NotFoundPage").then((m) => ({ default: m.NotFoundPage }))
+);
 
 function PageFallback() {
   return (
@@ -54,24 +57,35 @@ function App() {
             element={<ErrorBoundary><Suspense fallback={<PageFallback />}><ExperimentDetailPage /></Suspense></ErrorBoundary>}
           />
 
+          {/* Vetrina pubblica: la tesi, l'anteprima del dataset (3 foto per
+              specie, il limite è nel backend) e la demo di classificazione
+              (con rate limit per IP). I numeri erano già pubblici via API. */}
+          <Route
+            path="/classify"
+            element={<ErrorBoundary><Suspense fallback={<PageFallback />}><ClassifyPage /></Suspense></ErrorBoundary>}
+          />
+          <Route
+            path="/research"
+            element={<ErrorBoundary><Suspense fallback={<PageFallback />}><ResearchPage /></Suspense></ErrorBoundary>}
+          />
+          <Route
+            path="/dataset"
+            element={<ErrorBoundary><Suspense fallback={<PageFallback />}><DatasetPage /></Suspense></ErrorBoundary>}
+          />
+
           <Route element={<ProtectedRoute role="user" />}>
-            <Route
-              path="/classify"
-              element={<ErrorBoundary><Suspense fallback={<PageFallback />}><ClassifyPage /></Suspense></ErrorBoundary>}
-            />
             <Route
               path="/embeddings"
               element={<ErrorBoundary><Suspense fallback={<PageFallback />}><EmbeddingsPage /></Suspense></ErrorBoundary>}
             />
-            <Route
-              path="/research"
-              element={<ErrorBoundary><Suspense fallback={<PageFallback />}><ResearchPage /></Suspense></ErrorBoundary>}
-            />
-            <Route
-              path="/dataset"
-              element={<ErrorBoundary><Suspense fallback={<PageFallback />}><DatasetPage /></Suspense></ErrorBoundary>}
-            />
           </Route>
+
+          {/* Senza catch-all un indirizzo sconosciuto mostrava il layout con
+              il contenuto vuoto: nessun messaggio, sembrava un errore. */}
+          <Route
+            path="*"
+            element={<Suspense fallback={<PageFallback />}><NotFoundPage /></Suspense>}
+          />
 
           <Route element={<ProtectedRoute role="admin" />}>
             <Route
