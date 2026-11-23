@@ -312,7 +312,7 @@ plt.rcParams.update(MATPLOTLIB_RC)
 def build_closed(fig_dir: Path, exps: dict) -> list[Path]:
     fig, ax = plt.subplots(figsize=(8,4))
     # ... grouped bar Exp1-5 vs F1, color PALETTE ...
-    out_png = fig_dir / "benchmark_bar.png"
+    out_png = fig_dir / "benchmark_bar.webp"
     fig.savefig(out_png, dpi=300, bbox_inches="tight")
     fig.savefig(out_png.with_suffix(".webp"), dpi=300)
     fig.savefig(out_png.with_suffix(".pdf"))
