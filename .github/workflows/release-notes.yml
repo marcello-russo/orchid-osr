@@ -1,0 +1,56 @@
+# Note della Release dai commit.
+#
+# Il dispatcher centrale crea la Release con `--generate-notes`, che in questo
+# repo produce solo il link "Full Changelog": le note le costruisce dai PR
+# uniti, e qui si pusha dritto su `main`. Questo job riscrive il corpo con
+# l'elenco dei commit fra il tag precedente e questo, come nelle release fino
+# alla v0.8.1.
+#
+# Tocca solo il corpo: la Release è già pubblicata, quindi il deploy (che parte
+# da `release: published`) non viene innescato di nuovo.
+name: Release notes
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  notes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          # La base del diff è il tag antenato: senza storia e tag non c'è.
+          fetch-depth: 0
+
+      - name: Corpo della Release dai commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event.release.tag_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          # Base del diff: il tag antenato più vicino (describe), non il semver
+          # più alto — se si taglia da un commit vecchio il confronto resta suo.
+          PREV="$(git describe --tags --abbrev=0 "${TAG}^" 2>/dev/null || true)"
+          BODY="$(mktemp)"
+          {
+            if [ -n "$PREV" ]; then
+              echo "## Cosa cambia rispetto a \`$PREV\`"
+              echo
+              git log --no-merges --pretty='- %s (`%h`)' "$PREV..$TAG"
+              echo
+              echo "**Full Changelog**: https://github.com/${REPO}/compare/${PREV}...${TAG}"
+            else
+              echo "## Primo rilascio"
+              echo
+              git log --no-merges --pretty='- %s (`%h`)' "$TAG"
+            fi
+          } > "$BODY"
+          gh release edit "$TAG" --repo "$REPO" --notes-file "$BODY"
+          echo "note di $TAG aggiornate ($(grep -c '^- ' "$BODY") commit)"

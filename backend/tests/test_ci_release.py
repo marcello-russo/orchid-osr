@@ -53,3 +53,11 @@ def test_the_tag_is_the_only_version_source():
     compose = (ROOT / "compose.yml").read_text(encoding="utf-8")
     assert "ghcr.io/marcello-russo/orchid-osr-app:${ORCHID_VERSION:" in compose
     assert ":latest" not in compose
+
+
+def test_release_notes_come_from_the_commits():
+    """Qui si pusha su main: `--generate-notes` darebbe solo il link."""
+    notes = _flat("release-notes.yml")
+    assert "git log --no-merges" in notes, "le note devono elencare i commit, non i merge"
+    assert "git describe --tags --abbrev=0" in notes, "la base del diff è il tag antenato, non il semver più alto"
+    assert "gh release edit" in notes
