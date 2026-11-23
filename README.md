@@ -225,4 +225,4 @@ l'host non ha il sorgente, prende solo l'immagine pinnata.
 
 ## License
 
-[LGPL-3.0](LICENSE)
+[Apache-2.0](LICENSE)
