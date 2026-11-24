@@ -1,5 +1,6 @@
 import React, { useRef, useState, useMemo, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { speciesLabel } from "@/lib/format";
 import { Canvas, type ThreeEvent } from "@react-three/fiber";
 import { OrbitControls, Html } from "@react-three/drei";
 import * as THREE from "three";
@@ -134,7 +135,7 @@ function Tooltip({ point, speciesColors }: {
           className="inline-block size-2 rounded-full mr-1.5 align-middle"
           style={{ backgroundColor: speciesColors[point.species] || PALETTE[0] }}
         />
-        <span className="font-medium">{point.species}</span>
+        <span className="font-medium">{speciesLabel(point.species)}</span>
       </div>
     </Html>
   );

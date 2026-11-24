@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState, useCallback } from "react";
+import { speciesLabel } from "@/lib/format";
 
 interface Point2D {
   x: number; y: number; species: string; idx: number;
@@ -162,7 +163,7 @@ export function Scatter2D({ points, speciesColors, onSelect }: Scatter2DProps) {
           style={{ left: tooltipPos.x, top: tooltipPos.y, transform: "translate(-50%, -100%)" }}>
           <span className="inline-block size-2 rounded-full mr-1.5 align-middle"
             style={{ backgroundColor: speciesColors[hovered.species] || PALETTE[0] }} />
-          <span className="font-medium">{hovered.species}</span>
+          <span className="font-medium">{speciesLabel(hovered.species)}</span>
         </div>
       )}
     </div>

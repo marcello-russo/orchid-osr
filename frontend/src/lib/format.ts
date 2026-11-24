@@ -45,3 +45,12 @@ export function formatDate(iso: string, lang?: string, withTime = false): string
   if (Number.isNaN(date.getTime())) return "—";
   return date.toLocaleString(locale(lang), withTime ? undefined : { dateStyle: "medium" });
 }
+
+/**
+ * Nome di una specie per la UI: le chiavi del dataset usano l'underscore
+ * (`O. sphegodes_Palena`) perché sono nomi di cartella, ma in pagina e in
+ * legenda vanno scritti come nel testo della tesi (`O. sphegodes Palena`).
+ */
+export function speciesLabel(name: string): string {
+  return name.replace(/_/g, " ");
+}

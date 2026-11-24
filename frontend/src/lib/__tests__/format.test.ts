@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatDate, formatNumber, formatPercent } from "../format";
+import { formatDate, formatNumber, formatPercent, speciesLabel } from "../format";
 
 describe("formatNumber / formatPercent", () => {
   it("usa la virgola in italiano", () => {
@@ -20,5 +20,14 @@ describe("formatNumber / formatPercent", () => {
   it("formatta le date nella lingua richiesta", () => {
     expect(formatDate("2026-11-20T10:30:00", "it")).toContain("2026");
     expect(formatDate("non-una-data", "it")).toBe("—");
+  });
+});
+
+describe("speciesLabel", () => {
+  it("scrive il nome come nella tesi, senza underscore", () => {
+    expect(speciesLabel("O. sphegodes_Palena")).toBe("O. sphegodes Palena");
+  });
+  it("lascia intatti i nomi già puliti", () => {
+    expect(speciesLabel("O. garganica")).toBe("O. garganica");
   });
 });

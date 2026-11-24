@@ -6,7 +6,7 @@ import { useEmbeddings, usePublicEmbeddings } from "@/hooks/useEmbeddings";
 import { useAppStore } from "@/stores/useAppStore";
 import { Scatter3D } from "@/features/embeddings/Scatter3D";
 import { Scatter2D } from "@/features/embeddings/Scatter2D";
-import { formatPercent } from "@/lib/format";
+import { formatPercent, speciesLabel } from "@/lib/format";
 
 const PALETTE = [
   "#3B82F6", "#D97706", "#10B981", "#8B5CF6",
@@ -197,7 +197,7 @@ export function EmbeddingsPage() {
                       <span className={`size-2.5 rounded-full shrink-0 transition-all ${isHidden ? "opacity-30" : ""}`}
                         style={{ backgroundColor: speciesColors[species] || PALETTE[0] }} />
                       <span className={`flex-1 truncate transition-all ${isHidden ? "text-muted-foreground/40 line-through" : "text-muted-foreground"}`}>
-                        {species}
+                        {speciesLabel(species)}
                       </span>
                       <span className="font-bold tabular-nums text-foreground/80">{count}</span>
                       <span className="text-muted-foreground/50 text-[10px]">({total > 0 ? formatPercent((count / total), 0) : "0"}%)</span>

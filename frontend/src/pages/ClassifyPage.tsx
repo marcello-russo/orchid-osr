@@ -21,7 +21,7 @@ import {
 } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import type { ModelOption } from "@/lib/types";
-import { formatNumber, formatPercent } from "@/lib/format";
+import { formatNumber, formatPercent, speciesLabel } from "@/lib/format";
 
 /* ── Tag display ── */
 
@@ -429,7 +429,7 @@ export function ClassifyPage() {
                           {t("classify.results.novel_body")}
                         </p>
                         <p className="text-xs text-amber-600 dark:text-amber-400 mt-3">
-                          {t("classify.results.novel_closest")} {classify.data.predicted_species} ({formatPercent(classify.data.confidence, 1)})
+                          {t("classify.results.novel_closest")} {speciesLabel(classify.data.predicted_species)} ({formatPercent(classify.data.confidence, 1)})
                         </p>
                       </div>
                     </div>
@@ -439,7 +439,7 @@ export function ClassifyPage() {
                   <div>
                     <div className="flex items-center gap-2 mb-4">
                       <span className="text-lg">✅</span>
-                      <span className="text-2xl font-bold">{classify.data.predicted_species}</span>
+                      <span className="text-2xl font-bold">{speciesLabel(classify.data.predicted_species)}</span>
                       <span className="text-lg text-muted-foreground">
                         {formatPercent(classify.data.confidence, 1)}
                       </span>
@@ -447,7 +447,7 @@ export function ClassifyPage() {
                     <div className="space-y-2">
                       {topPredictions.map((p, i) => (
                         <div key={i} className="flex items-center gap-3">
-                          <span className="w-36 text-sm truncate shrink-0">{p.species}</span>
+                          <span className="w-36 text-sm truncate shrink-0">{speciesLabel(p.species)}</span>
                           <div className="flex-1 h-6 rounded bg-muted overflow-hidden">
                             <div className="h-full rounded bg-primary/80 transition-all"
                               style={{ width: `${p.confidence * 100}%` }} />

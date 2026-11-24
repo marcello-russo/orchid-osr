@@ -8,10 +8,10 @@ export function IntroSection() {
   return (
     <Section id="intro" title={t("research.sect_intro")}>
       <P>
-        {t("research.intro_p1_before")}<em>Ophrys</em>{t("research.intro_p1_mid")}<Cite id="yu2021benchmark" />{t("research.intro_p1_after")}
+        {t("research.intro_p1_before")}<em>Ophrys</em>{t("research.intro_p1_mid")}{" "}<Cite id="yu2021benchmark" />{t("research.intro_p1_after")}
       </P>
       <P>
-        {t("research.intro_p2_before")}<Cite id="khosla2020supervised" />{t("research.intro_p2_mid")}<Cite id="bahavan2026sphor" />{t("research.intro_p2_after")}
+        {t("research.intro_p2_before")}{" "}<Cite id="khosla2020supervised" />{t("research.intro_p2_mid")}{" "}<Cite id="bahavan2026sphor" />{t("research.intro_p2_after")}
       </P>
       <SubSection title={t("research.subs_contrib")}>
         <ul className="list-disc list-inside text-muted-foreground space-y-1 text-sm">

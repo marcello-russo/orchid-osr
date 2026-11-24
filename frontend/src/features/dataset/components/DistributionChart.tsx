@@ -5,6 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "rec
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useChartSize } from "@/features/explorer/hooks/useChartSize";
 import type { DatasetClassInfo } from "@/lib/types";
+import { speciesLabel } from "@/lib/format";
 
 interface DistributionChartProps {
   classes: DatasetClassInfo[];
@@ -20,8 +21,8 @@ export function DistributionChart({ classes }: DistributionChartProps) {
 
   const isMobile = width < 400;
   const data = classes.map((c) => ({
-    name: c.name,
-    shortName: c.name.replace("O. ", ""),
+    name: speciesLabel(c.name),
+    shortName: speciesLabel(c.name).replace("O. ", ""),
     Train: c.train_count,
     Test: c.test_count,
   }));
