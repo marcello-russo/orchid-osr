@@ -7,6 +7,32 @@ import { useChartSize } from "@/features/explorer/hooks/useChartSize";
 import type { DatasetClassInfo } from "@/lib/types";
 import { speciesLabel } from "@/lib/format";
 
+/**
+ * Etichetta dell'asse Y su una riga sola.
+ *
+ * Recharts spezza i nomi di categoria quando stima che non entrino, e la stima
+ * usa il font di default invece di quello del tick: `O. sphegodes Palena`
+ * finiva su due righe anche con 150 px liberi. Un tick custom toglie la stima
+ * dall'equazione.
+ */
+function OneLineTick({
+  x,
+  y,
+  payload,
+  fontSize,
+}: {
+  x?: number;
+  y?: number;
+  payload?: { value?: string | number };
+  fontSize?: number;
+}) {
+  return (
+    <text x={x} y={y} dy={4} textAnchor="end" fontSize={fontSize} fill="currentColor">
+      {String(payload?.value ?? "")}
+    </text>
+  );
+}
+
 interface DistributionChartProps {
   classes: DatasetClassInfo[];
 }
@@ -46,8 +72,8 @@ export function DistributionChart({ classes }: DistributionChartProps) {
             <YAxis
               type="category"
               dataKey={isMobile ? "shortName" : "name"}
-              tick={{ fontSize: isMobile ? 10 : 11 }}
-              width={isMobile ? 96 : 150}
+              tick={<OneLineTick fontSize={isMobile ? 10 : 11} />}
+              width={isMobile ? 100 : 150}
             />
             <Tooltip />
             <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "8px" }} />
