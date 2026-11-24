@@ -46,8 +46,8 @@ export function DistributionChart({ classes }: DistributionChartProps) {
             <YAxis
               type="category"
               dataKey={isMobile ? "shortName" : "name"}
-              tick={{ fontSize: 11 }}
-              width={isMobile ? 80 : 120}
+              tick={{ fontSize: isMobile ? 10 : 11 }}
+              width={isMobile ? 96 : 150}
             />
             <Tooltip />
             <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "8px" }} />

@@ -151,6 +151,10 @@ app = FastAPI(
     # "1.0.0" hardcoded che non corrispondeva a nessuna release.
     version=os.environ.get("ORCHID_VERSION", "dev"),
     lifespan=lifespan,
+    # In produzione il compose passa API_DOCS=false: la documentazione
+    # interattiva non serve a chi usa la demo.
+    docs_url="/docs" if settings.api_docs else None,
+    redoc_url="/redoc" if settings.api_docs else None,
 )
 
 

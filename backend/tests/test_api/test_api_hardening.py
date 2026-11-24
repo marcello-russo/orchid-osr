@@ -305,3 +305,41 @@ class TestAssetMount:
             check=True,
             timeout=180,
         )
+
+
+class TestApiDocsToggle:
+    """`/docs` e `/redoc` si spengono; la mappa macchina resta.
+
+    In produzione la documentazione interattiva non serve a chi usa la demo e
+    amplia solo la superficie pubblica. `/openapi.json` invece resta: la demo
+    dichiara lì la versione in esecuzione, ed è quello che il deploy verifica.
+    """
+
+    def test_docs_are_on_by_default(self):
+        from app.api.main import app
+
+        assert app.docs_url == "/docs"
+        assert app.redoc_url == "/redoc"
+
+    def test_api_docs_false_closes_the_ui_only(self):
+        # Senza `docs_url` il percorso non risponde 404: cade nella rotta che
+        # serve la SPA (200 + index.html), quindi si verifica il contenuto — la
+        # UI Swagger non deve esserci — non lo status.
+        env = {**os.environ, "API_DOCS": "false"}
+        code = (
+            "from fastapi.testclient import TestClient;"
+            "from app.api.main import app;"
+            "assert app.docs_url is None, app.docs_url;"
+            "assert app.redoc_url is None;"
+            "c = TestClient(app);"
+            "assert 'swagger-ui' not in c.get('/docs').text;"
+            "assert 'redoc' not in c.get('/redoc').text.lower()[:2000] or 'root' in c.get('/redoc').text;"
+            "assert c.get('/openapi.json').status_code == 200"
+        )
+        subprocess.run(  # noqa: S603
+            [sys.executable, "-c", code],
+            env=env,
+            cwd=Path(__file__).resolve().parents[2],
+            check=True,
+            timeout=180,
+        )

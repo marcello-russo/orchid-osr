@@ -15,6 +15,7 @@ services:
     environment:
       API_PORT: "7860"
       DATA_DIR: /data
+      API_DOCS: "false"
       # Versione visibile in /openapi.json: la stessa del tag dell'immagine,
       # così "cosa gira adesso" si verifica dall'API e non solo da .deployed.
       ORCHID_VERSION: "${ORCHID_VERSION}"

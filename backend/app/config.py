@@ -76,6 +76,9 @@ class Settings(BaseSettings):
     # API configuration
     api_host: str = "0.0.0.0"
     api_port: int = 5000
+    # /docs e /redoc: utili in sviluppo, in produzione espongono solo la mappa
+    # delle API a chi non ne ha bisogno. /openapi.json resta (versione e smoke).
+    api_docs: bool = True
     api_reload: bool = False
     # Origini ammesse per CORS: serve solo al dev server Vite, in produzione la
     # SPA è same-origin. CSV da env (CORS_ORIGINS="http://a,http://b").
